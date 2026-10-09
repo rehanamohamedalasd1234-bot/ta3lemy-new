@@ -16,12 +16,11 @@ html,body{font-family:'Cairo','Segoe UI',Tahoma,sans-serif;background:var(--crea
 .top-bar{background:linear-gradient(135deg,var(--primary),var(--primary-light));color:var(--white);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-radius:0 0 24px 24px;box-shadow:var(--shadow);position:sticky;top:0;z-index:100}
 .top-bar .logo{display:flex;align-items:center;gap:10px;font-size:17px;font-weight:bold}
 .owner-avatar{width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid var(--white);background:var(--white);cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.2)}
-.icon-btn{background:rgba(255,255,255,0.2);border:none;color:var(--white);width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;transition:background 0.2s}
-.icon-btn:active{background:rgba(255,255,255,0.35)}
+.icon-btn{background:rgba(255,255,255,0.2);border:none;color:var(--white);width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer}
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--white);display:flex;justify-content:space-around;padding:8px 4px 10px;box-shadow:0 -3px 14px rgba(0,0,0,0.15);border-top:2px solid var(--primary-soft);z-index:100}
-.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 2px;background:transparent;border:none;color:var(--dark-gray);font-size:11px;font-family:inherit;font-weight:700;cursor:pointer;border-radius:12px;transition:all 0.2s}
-.nav-item .icon{font-size:24px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.15))}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 2px;background:transparent;border:none;color:var(--dark-gray);font-size:11px;font-family:inherit;font-weight:700;cursor:pointer;border-radius:12px}
 .nav-item.active{background:var(--primary-pale);color:var(--primary);transform:translateY(-3px)}
+.nav-item .icon{font-size:24px;line-height:1}
 .content{flex:1;padding:16px;padding-bottom:100px;overflow-y:auto}
 #splashScreen{background:linear-gradient(135deg,var(--primary),var(--primary-light));align-items:center;justify-content:center}
 .splash-content{text-align:center;color:var(--white)}
@@ -36,36 +35,32 @@ html,body{font-family:'Cairo','Segoe UI',Tahoma,sans-serif;background:var(--crea
 .login-title{text-align:center;font-size:28px;font-weight:bold;color:var(--primary);margin-bottom:8px}
 .login-sub{text-align:center;color:var(--gray);margin-bottom:32px;font-size:15px}
 .role-selector{display:flex;gap:10px;margin-bottom:20px}
-.role-btn{flex:1;padding:14px 8px;background:var(--white);border:2px solid #E0E0E0;border-radius:14px;font-family:inherit;font-size:14px;font-weight:700;color:var(--dark-gray);cursor:pointer;transition:all 0.2s}
-.role-btn.active{background:var(--primary);color:var(--white);border-color:var(--primary);box-shadow:var(--shadow)}
+.role-btn{flex:1;padding:14px 8px;background:var(--white);border:2px solid #E0E0E0;border-radius:14px;font-family:inherit;font-size:14px;font-weight:700;color:var(--dark-gray);cursor:pointer}
+.role-btn.active{background:var(--primary);color:var(--white);border-color:var(--primary)}
 .form-group{margin-bottom:16px}
 .form-label{font-size:13px;font-weight:700;color:var(--dark-gray);margin-bottom:6px;display:block}
-.form-input{width:100%;padding:14px 16px;background:var(--white);border:2px solid #E0E0E0;border-radius:14px;font-family:inherit;font-size:15px;color:var(--black);outline:none;transition:all 0.2s}
+.form-input{width:100%;padding:14px 16px;background:var(--white);border:2px solid #E0E0E0;border-radius:14px;font-family:inherit;font-size:15px;color:var(--black);outline:none}
 .form-input:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-pale)}
 textarea.form-input{resize:vertical;min-height:100px}
-.btn-primary{width:100%;padding:16px;background:linear-gradient(135deg,var(--primary),var(--primary-light));color:var(--white);border:none;border-radius:14px;font-family:inherit;font-size:16px;font-weight:bold;cursor:pointer;box-shadow:var(--shadow);transition:transform 0.2s}
-.btn-primary:active{transform:scale(0.98)}
+.btn-primary{width:100%;padding:16px;background:linear-gradient(135deg,var(--primary),var(--primary-light));color:var(--white);border:none;border-radius:14px;font-family:inherit;font-size:16px;font-weight:bold;cursor:pointer}
 .btn-primary:disabled{opacity:0.6;cursor:not-allowed}
-.toast{position:fixed;bottom:110px;left:50%;transform:translateX(-50%) translateY(120px);background:var(--black);color:var(--white);padding:14px 26px;border-radius:26px;font-size:14px;font-weight:600;z-index:2000;opacity:0;transition:all 0.3s;pointer-events:none;max-width:88%;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,0.3)}
+.toast{position:fixed;bottom:110px;left:50%;transform:translateX(-50%) translateY(120px);background:var(--black);color:var(--white);padding:14px 26px;border-radius:26px;font-size:14px;font-weight:600;z-index:2000;opacity:0;transition:all 0.3s;pointer-events:none;max-width:88%;text-align:center}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.search-box{background:var(--white);border-radius:16px;padding:14px 18px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow);margin-bottom:16px;border:2px solid transparent;transition:all 0.2s}
-.search-box input{flex:1;border:none;outline:none;font-family:inherit;font-size:15px;background:transparent;color:var(--black)}
+.search-box{background:var(--white);border-radius:16px;padding:14px 18px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow);margin-bottom:16px}
+.search-box input{flex:1;border:none;outline:none;font-family:inherit;font-size:15px;background:transparent}
 .section-title{font-size:18px;font-weight:bold;margin:22px 0 12px;color:var(--primary);display:flex;align-items:center;gap:8px}
-.ad-banner{background:linear-gradient(135deg,#FF6B6B,#FF8E53);border-radius:20px;padding:60px 24px;color:var(--white);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;box-shadow:0 6px 24px rgba(255,107,107,0.35);min-height:350px;position:relative;overflow:hidden;margin-bottom:20px}
+.ad-banner{background:linear-gradient(135deg,#FF6B6B,#FF8E53);border-radius:20px;padding:60px 24px;color:var(--white);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:350px;position:relative;overflow:hidden;margin-bottom:20px}
 .ad-banner img,.ad-banner video{width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0}
 .ad-banner-content{position:relative;z-index:1;text-align:center}
 .ad-banner-title{font-size:32px;font-weight:bold;margin-bottom:6px}
-.ad-banner-sub{font-size:18px;opacity:0.95}
-.wisdom-bar{background:linear-gradient(90deg,#7B1FA2,#9C27B0,#7B1FA2);border-radius:12px;padding:14px;color:var(--white);font-size:14px;font-weight:600;overflow:hidden;white-space:nowrap;box-shadow:var(--shadow);margin:12px 0;direction:ltr}
+.wisdom-bar{background:linear-gradient(90deg,#7B1FA2,#9C27B0,#7B1FA2);border-radius:12px;padding:14px;color:var(--white);font-size:14px;font-weight:600;overflow:hidden;white-space:nowrap;margin:12px 0;direction:ltr}
 .wisdom-bar-content{display:inline-block;padding-right:100%;animation:scrollWisdom 30s linear infinite;direction:rtl}
 @keyframes scrollWisdom{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
 .cards-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.big-card{padding:22px 10px;border-radius:18px;text-align:center;color:var(--white);cursor:pointer;box-shadow:var(--shadow);transition:transform 0.2s}
-.big-card:active{transform:scale(0.96)}
+.big-card{padding:22px 10px;border-radius:18px;text-align:center;color:var(--white);cursor:pointer}
 .big-card-icon{font-size:38px;margin-bottom:8px}
 .big-card-label{font-size:14px;font-weight:bold}
-.azhar-card,.quran-card{border-radius:18px;padding:24px;display:flex;align-items:center;gap:14px;color:var(--white);cursor:pointer;box-shadow:var(--shadow);transition:transform 0.2s}
-.azhar-card:active,.quran-card:active{transform:scale(0.98)}
+.azhar-card,.quran-card{border-radius:18px;padding:24px;display:flex;align-items:center;gap:14px;color:var(--white);cursor:pointer}
 .azhar-card{background:linear-gradient(135deg,#C9A227,#E6C75E)}
 .quran-card{background:linear-gradient(135deg,#00695C,#26A69A)}
 .azhar-icon,.quran-icon{font-size:42px}
@@ -74,17 +69,14 @@ textarea.form-input{resize:vertical;min-height:100px}
 .azhar-sub,.quran-sub{font-size:13px;opacity:0.95}
 .azhar-arrow,.quran-arrow{font-size:28px;font-weight:bold}
 .tools-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-.tool-btn{background:var(--white);border-radius:16px;padding:16px 6px;text-align:center;cursor:pointer;box-shadow:var(--shadow);transition:transform 0.2s;border:2px solid transparent}
-.tool-btn:active{transform:scale(0.95);border-color:var(--primary)}
+.tool-btn{background:var(--white);border-radius:16px;padding:16px 6px;text-align:center;cursor:pointer}
 .tool-icon{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 8px}
 .tool-label{font-size:12px;font-weight:700;color:var(--dark-gray)}
-.stats-card{background:var(--white);border-radius:18px;padding:22px;display:flex;align-items:center;box-shadow:var(--shadow)}
+.stats-card{background:var(--white);border-radius:18px;padding:22px;display:flex;align-items:center}
 .stat-item{flex:1;text-align:center}
 .stat-value{font-size:26px;font-weight:bold;color:var(--primary);margin-bottom:4px}
-.stat-label{font-size:12px;color:var(--gray);font-weight:600}
-.stat-divider{width:1px;height:45px;background:#eee}
-.stage-item,.azhar-subject-item{background:var(--white);border-radius:16px;padding:16px;display:flex;align-items:center;gap:14px;cursor:pointer;box-shadow:var(--shadow);margin-bottom:12px;transition:transform 0.2s;border:2px solid transparent}
-.stage-item:active,.azhar-subject-item:active{transform:scale(0.98);border-color:var(--primary-soft)}
+.stat-label{font-size:12px;color:var(--gray)}
+.stage-item,.azhar-subject-item{background:var(--white);border-radius:16px;padding:16px;display:flex;align-items:center;gap:14px;cursor:pointer;margin-bottom:12px;border:2px solid transparent}
 .azhar-subject-item{border-right:5px solid var(--azhar)}
 .stage-icon{width:54px;height:54px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;background:var(--primary-pale)}
 .stage-info{flex:1}
@@ -92,12 +84,11 @@ textarea.form-input{resize:vertical;min-height:100px}
 .stage-sub{font-size:12px;color:var(--gray)}
 .stage-arrow{font-size:26px;color:var(--gray);font-weight:bold}
 .subjects-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-.subject-card{background:var(--white);border-radius:18px;padding:22px 12px;text-align:center;cursor:pointer;box-shadow:var(--shadow);transition:transform 0.2s}
-.subject-card:active{transform:scale(0.96)}
+.subject-card{background:var(--white);border-radius:18px;padding:22px 12px;text-align:center;cursor:pointer}
 .subject-icon{width:60px;height:60px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:30px;margin:0 auto 10px}
 .subject-name{font-size:14px;font-weight:700;color:var(--dark-gray)}
 .term-container{display:flex;flex-direction:column;gap:14px;margin-top:12px}
-.term-card{background:var(--white);border-radius:20px;padding:20px;box-shadow:var(--shadow);border-right:6px solid var(--primary);transition:transform 0.2s}
+.term-card{background:var(--white);border-radius:20px;padding:20px;border-right:6px solid var(--primary)}
 .term-card.term-2{border-right-color:var(--blue)}
 .term-header{display:flex;align-items:center;gap:12px;margin-bottom:14px}
 .term-icon{font-size:34px}
@@ -105,30 +96,22 @@ textarea.form-input{resize:vertical;min-height:100px}
 .term-card.term-2 .term-title{color:var(--blue)}
 .term-count{background:var(--primary-pale);color:var(--primary);padding:5px 12px;border-radius:12px;font-size:11px;font-weight:700}
 .term-sections{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
-.section-chip{background:var(--cream-dark);padding:12px 8px;border-radius:12px;text-align:center;font-size:12px;font-weight:700;color:var(--dark-gray);cursor:pointer;transition:all 0.2s;border:2px solid transparent}
-.section-chip:active{background:var(--primary-pale);color:var(--primary);border-color:var(--primary);transform:scale(0.97)}
-.content-header{background:linear-gradient(135deg,var(--primary),var(--primary-light));color:var(--white);padding:20px;border-radius:20px;margin-bottom:16px;box-shadow:var(--shadow-lg)}
+.section-chip{background:var(--cream-dark);padding:12px 8px;border-radius:12px;text-align:center;font-size:12px;font-weight:700;color:var(--dark-gray);cursor:pointer;border:2px solid transparent}
+.content-header{background:linear-gradient(135deg,var(--primary),var(--primary-light));color:var(--white);padding:20px;border-radius:20px;margin-bottom:16px}
 .content-header-title{font-size:20px;font-weight:bold;margin-bottom:6px}
 .content-header-sub{font-size:13px;opacity:0.95}
-.content-item{background:var(--white);border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:var(--shadow);cursor:pointer;transition:transform 0.2s;display:flex;align-items:center;gap:12px;border:2px solid transparent}
-.content-item:active{transform:scale(0.98);border-color:var(--primary-soft)}
+.content-item{background:var(--white);border-radius:16px;padding:16px;margin-bottom:12px;cursor:pointer;display:flex;align-items:center;gap:12px}
 .content-item-icon{width:48px;height:48px;border-radius:14px;background:var(--primary-pale);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
 .content-item-info{flex:1}
-.content-item-title{font-size:15px;font-weight:bold;color:var(--black);margin-bottom:4px}
+.content-item-title{font-size:15px;font-weight:bold;margin-bottom:4px}
 .content-item-sub{font-size:12px;color:var(--gray)}
 .content-item-arrow{font-size:22px;color:var(--gray)}
-.lesson-body{background:var(--white);border-radius:18px;padding:22px;line-height:2;box-shadow:var(--shadow);font-size:15px}
+.lesson-body{background:var(--white);border-radius:18px;padding:22px;line-height:2;font-size:15px}
 .lesson-body img,.lesson-body video{width:100%;border-radius:12px;margin-top:16px}
-.menu-item{background:var(--white);border-radius:16px;padding:16px;display:flex;align-items:center;gap:14px;margin-bottom:10px;cursor:pointer;box-shadow:var(--shadow);transition:transform 0.2s;border:2px solid transparent}
-.menu-item:active{transform:scale(0.98);border-color:var(--primary-soft)}
+.menu-item{background:var(--white);border-radius:16px;padding:16px;display:flex;align-items:center;gap:14px;margin-bottom:10px;cursor:pointer}
 body.dark-mode{background:#121212;color:#E0E0E0}
 body.dark-mode .menu-item,body.dark-mode .stats-card,body.dark-mode .stage-item,body.dark-mode .subject-card,body.dark-mode .tool-btn,body.dark-mode .lesson-body,body.dark-mode .content-item,body.dark-mode .term-card,body.dark-mode .search-box,body.dark-mode .form-input{background:#1E1E1E;color:#E0E0E0;border-color:#333}
-body.dark-mode .section-title{color:var(--primary-light)}
-body.dark-mode .bottom-nav{background:#1E1E1E;border-color:#333}
-body.dark-mode .nav-item{color:#B0B0B0}
-body.dark-mode .nav-item.active{background:#2A2A2A;color:var(--primary-light)}
-body.dark-mode .section-chip{background:#2A2A2A;color:#E0E0E0}
-.sideCalc-btn,.sideCalc-num{padding:14px 4px;border:none;border-radius:12px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.15s}
+.sideCalc-btn,.sideCalc-num{padding:14px 4px;border:none;border-radius:12px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer}
 .sideCalc-btn{background:rgba(255,255,255,0.15);color:#fff}
 .sideCalc-btn.op{background:rgba(255,193,7,0.9);color:#000}
 .sideCalc-btn.eq{background:rgba(255,255,255,0.95);color:#1E3A8A;font-size:22px}
@@ -154,15 +137,9 @@ body.dark-mode .section-chip{background:#2A2A2A;color:#E0E0E0}
 <button class="role-btn" onclick="selectRole(this,'teacher')">👨‍🏫 معلم</button>
 <button class="role-btn" onclick="selectRole(this,'owner')">👑 مالك</button>
 </div>
-<div class="form-group">
-<input type="text" id="usernameInput" class="form-input" placeholder="👤 اسم المستخدم">
-</div>
-<div class="form-group">
-<input type="password" id="passwordInput" class="form-input" placeholder="🔒 كلمة المرور">
-</div>
-<div class="form-group" id="ownerCodeGroup" style="display:none;">
-<input type="password" id="ownerCodeInput" class="form-input" placeholder="🔐 كود المالك">
-</div>
+<div class="form-group"><input type="text" id="usernameInput" class="form-input" placeholder="👤 اسم المستخدم"></div>
+<div class="form-group"><input type="password" id="passwordInput" class="form-input" placeholder="🔒 كلمة المرور"></div>
+<div class="form-group" id="ownerCodeGroup" style="display:none;"><input type="password" id="ownerCodeInput" class="form-input" placeholder="🔐 كود المالك"></div>
 <button class="btn-primary" onclick="login()">تسجيل الدخول</button>
 </div>
 <div id="homeScreen" class="screen">
@@ -175,7 +152,7 @@ body.dark-mode .section-chip{background:#2A2A2A;color:#E0E0E0}
 </div>
 <div class="content">
 <div class="search-box"><span>🔍</span><input type="text" placeholder="ابحث..."></div>
-<div id="mainAd" class="ad-banner" onclick="showToast('📢 إعلان')"><div class="ad-banner-content"><div class="ad-banner-title">📢 إعلان رئيسي</div><div class="ad-banner-sub">اضغط للمشاهدة</div></div></div>
+<div id="mainAd" class="ad-banner" onclick="showToast('📢 إعلان')"><div class="ad-banner-content"><div class="ad-banner-title">📢 إعلان رئيسي</div></div></div>
 <div class="section-title">📚 التعليم العام</div>
 <div class="cards-row">
 <div class="big-card" style="background:linear-gradient(135deg,#66BB6A,#4CAF50);" onclick="openStage('primary')"><div class="big-card-icon">🎒</div><div class="big-card-label">ابتدائي</div></div>
@@ -246,43 +223,41 @@ body.dark-mode .section-chip{background:#2A2A2A;color:#E0E0E0}
 <div class="search-box"><span>🔍</span><input type="text" placeholder="ابحث عن سورة..." oninput="filterSurahs(this.value)"></div>
 <div id="surahsList"></div>
 </div>
-</div><div id="radioScreen" class="screen">
+</div>
+<div id="radioScreen" class="screen">
 <div class="top-bar" style="background:linear-gradient(135deg,#D32F2F,#FF8F00);"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>📻 الإذاعات</span></div><div style="width:42px;"></div></div>
 <div class="content">
 <div id="radioPlayer" style="display:none;background:linear-gradient(135deg,#D32F2F,#FF8F00);border-radius:20px;padding:24px;text-align:center;color:#fff;margin-bottom:16px;"><div style="font-size:60px;margin-bottom:12px;">📻</div><div id="radioNowPlaying" style="font-size:18px;font-weight:bold;margin-bottom:6px;">جاري التشغيل</div><div id="radioStationName" style="font-size:13px;opacity:0.9;margin-bottom:16px;">--</div><button class="btn-primary" style="background:#fff;color:#D32F2F;max-width:200px;margin:0 auto;" onclick="stopRadio()">⏹️ إيقاف</button></div>
 <div id="radioList"></div>
 </div>
-</div>
-<div id="drawingScreen" class="screen">
+</div><div id="drawingScreen" class="screen">
 <div class="top-bar"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>✏️ لوحة الرسم</span></div><div style="width:42px;"></div></div>
 <div class="content" style="padding:0;display:flex;flex-direction:column;height:calc(100vh - 70px);">
 <div style="background:#fff;padding:8px;display:flex;gap:6px;overflow-x:auto;border-bottom:2px solid #E8F5E9;flex-shrink:0;">
-<button onclick="drawingUndo()" style="background:#E3F2FD;color:#1976D2;border:none;padding:8px 12px;border-radius:10px;font-family:inherit;font-weight:bold;font-size:13px;cursor:pointer;white-space:nowrap;">↶ تراجع</button>
-<button onclick="drawingRedo()" style="background:#E3F2FD;color:#1976D2;border:none;padding:8px 12px;border-radius:10px;font-family:inherit;font-weight:bold;font-size:13px;cursor:pointer;white-space:nowrap;">↷ إعادة</button>
-<button onclick="drawingSave()" style="background:#E8F5E9;color:#2E7D32;border:none;padding:8px 12px;border-radius:10px;font-family:inherit;font-weight:bold;font-size:13px;cursor:pointer;white-space:nowrap;">💾 حفظ</button>
-<button onclick="drawingPrint()" style="background:#F3E5F5;color:#7B1FA2;border:none;padding:8px 12px;border-radius:10px;font-family:inherit;font-weight:bold;font-size:13px;cursor:pointer;white-space:nowrap;">🖨️ طباعة</button>
-<button onclick="drawingShare()" style="background:#FFF3E0;color:#F57C00;border:none;padding:8px 12px;border-radius:10px;font-family:inherit;font-weight:bold;font-size:13px;cursor:pointer;white-space:nowrap;">📤 مشاركة</button>
-<button onclick="drawingClearAll()" style="background:#FFEBEE;color:#E53935;border:none;padding:8px 12px;border-radius:10px;font-family:inherit;font-weight:bold;font-size:13px;cursor:pointer;white-space:nowrap;">🗑️ مسح</button>
+<button onclick="drawingUndo()" style="background:#E3F2FD;color:#1976D2;border:none;padding:8px 12px;border-radius:10px;font-family:inherit;font-weight:bold;font-size:13px;cursor:pointer;">↶ تراجع</button>
+<button onclick="drawingRedo()" style="background:#E3F2FD;color:#1976D2;border:none;padding:8px 12px;border-radius:10px;font-family:inherit;font-weight:bold;font-size:13px;cursor:pointer;">↷ إعادة</button>
+<button onclick="drawingSave()" style="background:#E8F5E9;color:#2E7D32;border:none;padding:8px 12px;border-radius:10px;font-family:inherit;font-weight:bold;font-size:13px;cursor:pointer;">💾 حفظ</button>
+<button onclick="drawingPrint()" style="background:#F3E5F5;color:#7B1FA2;border:none;padding:8px 12px;border-radius:10px;font-family:inherit;font-weight:bold;font-size:13px;cursor:pointer;">🖨️ طباعة</button>
+<button onclick="drawingShare()" style="background:#FFF3E0;color:#F57C00;border:none;padding:8px 12px;border-radius:10px;font-family:inherit;font-weight:bold;font-size:13px;cursor:pointer;">📤 مشاركة</button>
+<button onclick="drawingClearAll()" style="background:#FFEBEE;color:#E53935;border:none;padding:8px 12px;border-radius:10px;font-family:inherit;font-weight:bold;font-size:13px;cursor:pointer;">🗑️ مسح</button>
 </div>
 <div style="background:#fff;padding:10px 8px;display:flex;gap:8px;overflow-x:auto;border-bottom:2px solid #E8F5E9;flex-shrink:0;align-items:center;">
-<button onclick="drawingSetEraser()" style="width:42px;height:42px;border-radius:50%;background:#F5F5F5;border:3px solid #E0E0E0;font-size:20px;cursor:pointer;flex-shrink:0;">🧽</button>
-<div style="width:2px;height:30px;background:#E0E0E0;flex-shrink:0;"></div>
-<button onclick="drawingSetColor('#000000')" style="width:36px;height:36px;border-radius:50%;background:#000;border:3px solid #fff;cursor:pointer;flex-shrink:0;"></button>
-<button onclick="drawingSetColor('#FFFFFF')" style="width:36px;height:36px;border-radius:50%;background:#fff;border:3px solid #fff;box-shadow:0 0 0 1px #ddd;cursor:pointer;flex-shrink:0;"></button>
-<button onclick="drawingSetColor('#E53935')" style="width:36px;height:36px;border-radius:50%;background:#E53935;border:3px solid #fff;cursor:pointer;flex-shrink:0;"></button>
-<button onclick="drawingSetColor('#FB8C00')" style="width:36px;height:36px;border-radius:50%;background:#FB8C00;border:3px solid #fff;cursor:pointer;flex-shrink:0;"></button>
-<button onclick="drawingSetColor('#FDD835')" style="width:36px;height:36px;border-radius:50%;background:#FDD835;border:3px solid #fff;cursor:pointer;flex-shrink:0;"></button>
-<button onclick="drawingSetColor('#43A047')" style="width:36px;height:36px;border-radius:50%;background:#43A047;border:3px solid #fff;cursor:pointer;flex-shrink:0;"></button>
-<button onclick="drawingSetColor('#00ACC1')" style="width:36px;height:36px;border-radius:50%;background:#00ACC1;border:3px solid #fff;cursor:pointer;flex-shrink:0;"></button>
-<button onclick="drawingSetColor('#1E88E5')" style="width:36px;height:36px;border-radius:50%;background:#1E88E5;border:3px solid #fff;cursor:pointer;flex-shrink:0;"></button>
-<button onclick="drawingSetColor('#5E35B1')" style="width:36px;height:36px;border-radius:50%;background:#5E35B1;border:3px solid #fff;cursor:pointer;flex-shrink:0;"></button>
-<button onclick="drawingSetColor('#EC407A')" style="width:36px;height:36px;border-radius:50%;background:#EC407A;border:3px solid #fff;cursor:pointer;flex-shrink:0;"></button>
-<button onclick="drawingSetColor('#8D6E63')" style="width:36px;height:36px;border-radius:50%;background:#8D6E63;border:3px solid #fff;cursor:pointer;flex-shrink:0;"></button>
-<button onclick="drawingSetColor('#546E7A')" style="width:36px;height:36px;border-radius:50%;background:#546E7A;border:3px solid #fff;cursor:pointer;flex-shrink:0;"></button>
-<div style="width:2px;height:30px;background:#E0E0E0;flex-shrink:0;"></div>
-<button onclick="drawingSetSize(2)" style="width:38px;height:38px;border-radius:12px;background:#F5F5F5;border:2px solid #E0E0E0;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;"><div style="width:6px;height:6px;background:#333;border-radius:50%;"></div></button>
-<button onclick="drawingSetSize(5)" style="width:38px;height:38px;border-radius:12px;background:#E8F5E9;border:2px solid #4CAF50;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;"><div style="width:12px;height:12px;background:#333;border-radius:50%;"></div></button>
-<button onclick="drawingSetSize(12)" style="width:38px;height:38px;border-radius:12px;background:#F5F5F5;border:2px solid #E0E0E0;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;"><div style="width:20px;height:20px;background:#333;border-radius:50%;"></div></button>
+<button onclick="drawingSetEraser()" style="width:42px;height:42px;border-radius:50%;background:#F5F5F5;border:3px solid #E0E0E0;font-size:20px;cursor:pointer;">🧽</button>
+<button onclick="drawingSetColor('#000000')" style="width:36px;height:36px;border-radius:50%;background:#000;border:3px solid #fff;cursor:pointer;"></button>
+<button onclick="drawingSetColor('#FFFFFF')" style="width:36px;height:36px;border-radius:50%;background:#fff;border:3px solid #fff;box-shadow:0 0 0 1px #ddd;cursor:pointer;"></button>
+<button onclick="drawingSetColor('#E53935')" style="width:36px;height:36px;border-radius:50%;background:#E53935;border:3px solid #fff;cursor:pointer;"></button>
+<button onclick="drawingSetColor('#FB8C00')" style="width:36px;height:36px;border-radius:50%;background:#FB8C00;border:3px solid #fff;cursor:pointer;"></button>
+<button onclick="drawingSetColor('#FDD835')" style="width:36px;height:36px;border-radius:50%;background:#FDD835;border:3px solid #fff;cursor:pointer;"></button>
+<button onclick="drawingSetColor('#43A047')" style="width:36px;height:36px;border-radius:50%;background:#43A047;border:3px solid #fff;cursor:pointer;"></button>
+<button onclick="drawingSetColor('#00ACC1')" style="width:36px;height:36px;border-radius:50%;background:#00ACC1;border:3px solid #fff;cursor:pointer;"></button>
+<button onclick="drawingSetColor('#1E88E5')" style="width:36px;height:36px;border-radius:50%;background:#1E88E5;border:3px solid #fff;cursor:pointer;"></button>
+<button onclick="drawingSetColor('#5E35B1')" style="width:36px;height:36px;border-radius:50%;background:#5E35B1;border:3px solid #fff;cursor:pointer;"></button>
+<button onclick="drawingSetColor('#EC407A')" style="width:36px;height:36px;border-radius:50%;background:#EC407A;border:3px solid #fff;cursor:pointer;"></button>
+<button onclick="drawingSetColor('#8D6E63')" style="width:36px;height:36px;border-radius:50%;background:#8D6E63;border:3px solid #fff;cursor:pointer;"></button>
+<button onclick="drawingSetColor('#546E7A')" style="width:36px;height:36px;border-radius:50%;background:#546E7A;border:3px solid #fff;cursor:pointer;"></button>
+<button onclick="drawingSetSize(2)" style="width:38px;height:38px;border-radius:12px;background:#F5F5F5;border:2px solid #E0E0E0;cursor:pointer;">•</button>
+<button onclick="drawingSetSize(5)" style="width:38px;height:38px;border-radius:12px;background:#E8F5E9;border:2px solid #4CAF50;cursor:pointer;">●</button>
+<button onclick="drawingSetSize(12)" style="width:38px;height:38px;border-radius:12px;background:#F5F5F5;border:2px solid #E0E0E0;cursor:pointer;">⬤</button>
 </div>
 <div style="flex:1;position:relative;background:#fff;overflow:hidden;">
 <canvas id="fullDrawingCanvas" style="display:block;width:100%;height:100%;touch-action:none;cursor:crosshair;"></canvas>
@@ -340,13 +315,14 @@ body.dark-mode .section-chip{background:#2A2A2A;color:#E0E0E0}
 <div class="form-group"><label class="form-label">المرحلة</label><select class="form-input" id="newLessonStage"><option value="primary">الابتدائية</option><option value="prep">الإعدادية</option><option value="sec">الثانوية</option></select></div>
 <div class="form-group"><label class="form-label">الصف</label><input type="text" class="form-input" id="newLessonGrade" placeholder="مثال: الأول"></div>
 <div class="form-group"><label class="form-label">المادة</label><input type="text" class="form-input" id="newLessonSubject" placeholder="مثال: اللغة العربية"></div>
-<div class="form-group"><label class="form-label">القسم</label><select class="form-input" id="newLessonType"><option value="lessons">📄 درس</option><option value="exercises">✏️ تدريبات</option><option value="exams">📝 امتحانات</option><option value="previous">📋 سنوات سابقة</option><option value="reviews">📖 مراجعات</option><option value="summaries">📑 ملخصات</option><option value="videos">🎥 فيديوهات</option></select></div>
+<div class="form-group"><label class="form-label">القسم</label><select class="form-input" id="newLessonType"><option value="lessons">📄 درس</option><option value="exercises">✏️ تدريبات</option><option value="exams">📝 امتحانات</option><option value="videos">🎥 فيديوهات</option></select></div>
 <div class="form-group"><label class="form-label">الترم</label><select class="form-input" id="newLessonTerm"><option value="1">الترم الأول</option><option value="2">الترم الثاني</option></select></div>
 <div class="form-group"><label class="form-label">📷 صورة (اختياري)</label><input type="file" class="form-input" id="newLessonImageFile" accept="image/*" style="padding:10px;"></div>
 <div class="form-group"><label class="form-label">🎥 فيديو (اختياري)</label><input type="file" class="form-input" id="newLessonVideoFile" accept="video/*" style="padding:10px;"></div>
 <button class="btn-primary" id="saveLessonBtn" onclick="saveNewLesson()">💾 حفظ الدرس</button>
 </div>
-</div><div id="ownerEditorScreen" class="screen">
+</div>
+<div id="ownerEditorScreen" class="screen">
 <div class="top-bar" style="background:linear-gradient(135deg,#B71C1C,#E53935);"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>👨‍🏫 تعديل المالك</span></div><div style="width:42px;"></div></div>
 <div class="content">
 <div class="form-group"><label class="form-label">الاسم</label><input type="text" class="form-input" id="ownerName" placeholder="الأستاذ حافظ"></div>
@@ -374,8 +350,8 @@ body.dark-mode .section-chip{background:#2A2A2A;color:#E0E0E0}
 <div id="myStationList"></div>
 </div>
 </div>
-<button id="calcToggle" onclick="toggleSideCalculator()" style="position:fixed;bottom:110px;left:16px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#2E7D32,#1976D2);color:#fff;border:none;font-size:24px;cursor:pointer;box-shadow:0 4px 16px rgba(46,125,50,0.4);z-index:900;display:none;align-items:center;justify-content:center;">🧮</button>
-<div id="sideCalculator" style="position:fixed;top:0;left:-320px;width:320px;max-width:90vw;height:100vh;background:linear-gradient(180deg,#1E3A8A,#2E7D32);z-index:1500;transition:left 0.3s ease;overflow-y:auto;box-shadow:8px 0 30px rgba(0,0,0,0.3);">
+<button id="calcToggle" onclick="toggleSideCalculator()" style="position:fixed;bottom:110px;left:16px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#2E7D32,#1976D2);color:#fff;border:none;font-size:24px;cursor:pointer;z-index:900;display:none;align-items:center;justify-content:center;">🧮</button>
+<div id="sideCalculator" style="position:fixed;top:0;left:-320px;width:320px;max-width:90vw;height:100vh;background:linear-gradient(180deg,#1E3A8A,#2E7D32);z-index:1500;transition:left 0.3s ease;overflow-y:auto;">
 <div style="padding:16px;display:flex;justify-content:space-between;align-items:center;color:#fff;border-bottom:1px solid rgba(255,255,255,0.2);">
 <div style="font-size:18px;font-weight:bold;">🧮 الحاسبة العلمية</div>
 <button onclick="toggleSideCalculator()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;width:36px;height:36px;border-radius:50%;font-size:20px;cursor:pointer;">✕</button>
@@ -427,8 +403,7 @@ body.dark-mode .section-chip{background:#2A2A2A;color:#E0E0E0}
 </div>
 </div>
 </div>
-<div id="toast" class="toast"></div>
-<script>
+<div id="toast" class="toast"></div><script>
 'use strict';
 const CLOUD_NAME='bt4sro3h';
 const UPLOAD_PRESET='hafez_upload';
@@ -455,68 +430,28 @@ function openEducation(){const l=document.getElementById('stagesList');l.innerHT
 function openStage(id){currentStage=id;const s=stagesData[id];document.getElementById('gradesTitle').textContent=s.name;const l=document.getElementById('gradesList');l.innerHTML=s.grades.map(g=>'<div class="stage-item" onclick="openGrade(\''+id+'\',\''+g+'\')"><div class="stage-icon" style="background:#E8F5E9;">🎓</div><div class="stage-info"><div class="stage-name">الصف '+g+'</div><div class="stage-sub">اضغط لعرض المواد</div></div><div class="stage-arrow">‹</div></div>').join('');screenHistory.push(currentScreen);showScreen('gradesScreen');}
 function openGrade(id,name){currentGrade=name;document.getElementById('subjectsTitle').textContent='الصف '+name;const l=document.getElementById('subjectsList');l.innerHTML=generalSubjects.map(s=>'<div class="subject-card" onclick="openSubject(\''+s.id+'\',\''+s.name+'\')"><div class="subject-icon" style="background:'+s.color+'20;color:'+s.color+';">'+s.icon+'</div><div class="subject-name">'+s.name+'</div></div>').join('');screenHistory.push(currentScreen);showScreen('subjectsScreen');}
 function openSubject(id,name){currentSubject=name;document.getElementById('termsTitle').textContent=name;document.getElementById('termsHeader').textContent=name+' - '+(currentGrade||'');renderTerms();screenHistory.push(currentScreen);showScreen('termsScreen');}
-function renderTerms(){const l=document.getElementById('termsList');const terms=[{num:1,name:'الترم الأول',icon:'📘'},{num:2,name:'الترم الثاني',icon:'📙'}];l.innerHTML=terms.map(t=>'<div class="term-card '+(t.num===2?'term-2':'')+'"><div class="term-header"><div class="term-icon">'+t.icon+'</div><div class="term-title">'+t.name+'</div><div class="term-count">منهج كامل</div></div><div class="term-sections"><div class="section-chip" onclick="openContent(\'lessons\','+t.num+',\''+t.name+'\')">📄 الدروس</div><div class="section-chip" onclick="openContent(\'exercises\','+t.num+',\''+t.name+'\')">✏️ تدريبات</div><div class="section-chip" onclick="openContent(\'exams\','+t.num+',\''+t.name+'\')">📝 امتحانات</div><div class="section-chip" onclick="openContent(\'previous\','+t.num+',\''+t.name+'\')">📋 سنوات سابقة</div><div class="section-chip" onclick="openContent(\'reviews\','+t.num+',\''+t.name+'\')">📖 مراجعات</div><div class="section-chip" onclick="openContent(\'summaries\','+t.num+',\''+t.name+'\')">📑 ملخصات</div><div class="section-chip" onclick="openContent(\'videos\','+t.num+',\''+t.name+'\')">🎥 فيديوهات</div></div></div>').join('');}
-function openContent(type,num,name){currentTerm=num;currentSection=type;const titles={lessons:'📄 الدروس',exercises:'✏️ تدريبات',exams:'📝 امتحانات',previous:'📋 سنوات سابقة',reviews:'📖 مراجعات',summaries:'📑 ملخصات',videos:'🎥 فيديوهات'};document.getElementById('contentTitle').textContent=titles[type]||'المحتوى';document.getElementById('contentHeaderTitle').textContent=(currentSubject||'')+' - '+name;document.getElementById('contentHeaderSub').textContent=titles[type];const l=document.getElementById('contentList');screenHistory.push(currentScreen);showScreen('contentScreen');try{const all=JSON.parse(localStorage.getItem('ta3lemy_lessons')||'[]');const f=all.filter(x=>x.subject===currentSubject&&x.term===num&&x.type===type&&x.grade===currentGrade);if(!f||f.length===0){l.innerHTML='<div class="empty-state"><div class="empty-state-icon">📭</div><p>لا يوجد محتوى بعد</p></div>';}else{l.innerHTML=f.map(it=>'<div class="content-item" onclick="viewContent(\''+(it.title||'').replace(/\x27/g,'')+'\',\''+(it.content||'').replace(/\x27/g,'').replace(/\n/g,' ')+'\',\''+(it.video_url||'')+'\',\''+(it.image_url||'')+'\')"><div class="content-item-icon">📄</div><div class="content-item-info"><div class="content-item-title">'+(it.title||'بدون عنوان')+'</div><div class="content-item-sub">'+(it.content?it.content.substring(0,50)+'...':'')+'</div></div><div class="content-item-arrow">‹</div></div>').join('');}}catch(e){console.error(e);l.innerHTML='<div class="empty-state">حدث خطأ</div>';}}
+function renderTerms(){const l=document.getElementById('termsList');const terms=[{num:1,name:'الترم الأول',icon:'📘'},{num:2,name:'الترم الثاني',icon:'📙'}];l.innerHTML=terms.map(t=>'<div class="term-card '+(t.num===2?'term-2':'')+'"><div class="term-header"><div class="term-icon">'+t.icon+'</div><div class="term-title">'+t.name+'</div><div class="term-count">منهج كامل</div></div><div class="term-sections"><div class="section-chip" onclick="openContent(\'lessons\','+t.num+',\''+t.name+'\')">📄 الدروس</div><div class="section-chip" onclick="openContent(\'exercises\','+t.num+',\''+t.name+'\')">✏️ تدريبات</div><div class="section-chip" onclick="openContent(\'exams\','+t.num+',\''+t.name+'\')">📝 امتحانات</div><div class="section-chip" onclick="openContent(\'videos\','+t.num+',\''+t.name+'\')">🎥 فيديوهات</div></div></div>').join('');}
+function openContent(type,num,name){currentTerm=num;currentSection=type;const titles={lessons:'📄 الدروس',exercises:'✏️ تدريبات',exams:'📝 امتحانات',videos:'🎥 فيديوهات'};document.getElementById('contentTitle').textContent=titles[type]||'المحتوى';document.getElementById('contentHeaderTitle').textContent=(currentSubject||'')+' - '+name;document.getElementById('contentHeaderSub').textContent=titles[type];const l=document.getElementById('contentList');screenHistory.push(currentScreen);showScreen('contentScreen');try{const all=JSON.parse(localStorage.getItem('ta3lemy_lessons')||'[]');const f=all.filter(x=>x.subject===currentSubject&&x.term===num&&x.type===type&&x.grade===currentGrade);if(!f||f.length===0){l.innerHTML='<div class="empty-state"><div class="empty-state-icon">📭</div><p>لا يوجد محتوى بعد</p></div>';}else{l.innerHTML=f.map(it=>'<div class="content-item" onclick="viewContent(\''+(it.title||'').replace(/\x27/g,'')+'\',\''+(it.content||'').replace(/\x27/g,'').replace(/\n/g,' ')+'\',\''+(it.video_url||'')+'\',\''+(it.image_url||'')+'\')"><div class="content-item-icon">📄</div><div class="content-item-info"><div class="content-item-title">'+(it.title||'بدون عنوان')+'</div><div class="content-item-sub">'+(it.content?it.content.substring(0,50)+'...':'')+'</div></div><div class="content-item-arrow">‹</div></div>').join('');}}catch(e){console.error(e);l.innerHTML='<div class="empty-state">حدث خطأ</div>';}}
 function viewContent(title,content,videoUrl,imageUrl){document.getElementById('viewerTitle').textContent=title;let h='<h2 style="color:#2E7D32;margin-bottom:16px;">'+title+'</h2>';if(imageUrl)h+='<img src="'+imageUrl+'">';if(content)h+='<div style="line-height:2;font-size:15px;">'+content+'</div>';if(videoUrl){if(videoUrl.includes('youtube')||videoUrl.includes('youtu.be')){const v=videoUrl.split('v=')[1]||videoUrl.split('/').pop();h+='<iframe style="width:100%;height:250px;margin-top:16px;border-radius:12px;" src="https://www.youtube.com/embed/'+v+'" frameborder="0" allowfullscreen></iframe>';}else{h+='<video controls style="width:100%;margin-top:16px;border-radius:12px;"><source src="'+videoUrl+'"></video>';}}document.getElementById('viewerBody').innerHTML=h;screenHistory.push(currentScreen);showScreen('viewerScreen');}
 function openAzhar(){const l=document.getElementById('azharList');l.innerHTML=azharSubjects.map(s=>'<div class="azhar-subject-item" onclick="openAzharSubject(\''+s.id+'\',\''+s.name+'\')"><div style="font-size:30px;">'+s.icon+'</div><div class="stage-info"><div class="stage-name">'+s.name+'</div></div><div class="stage-arrow" style="color:#C9A227;">‹</div></div>').join('');screenHistory.push(currentScreen);showScreen('azharScreen');}
 function openAzharSubject(id,name){currentSubject=name;currentGrade='أزهري';document.getElementById('termsTitle').textContent=name;document.getElementById('termsHeader').textContent=name;renderTerms();screenHistory.push(currentScreen);showScreen('termsScreen');}
 function openQuran(){const l=document.getElementById('surahsList');l.innerHTML=surahsData.map(s=>'<div class="content-item" onclick="showToast(\'📖 سورة '+s.name+'\')"><div class="content-item-icon" style="background:linear-gradient(135deg,#00695C,#26A69A);color:#fff;font-weight:bold;">'+s.id+'</div><div class="content-item-info"><div class="content-item-title">'+s.name+'</div><div class="content-item-sub">'+s.verses+' آية • '+s.type+'</div></div><div class="content-item-arrow">‹</div></div>').join('');screenHistory.push(currentScreen);showScreen('quranScreen');}
 function filterSurahs(q){const l=document.getElementById('surahsList');const f=surahsData.filter(s=>s.name.includes(q));l.innerHTML=f.map(s=>'<div class="content-item" onclick="showToast(\'📖 سورة '+s.name+'\')"><div class="content-item-icon" style="background:linear-gradient(135deg,#00695C,#26A69A);color:#fff;font-weight:bold;">'+s.id+'</div><div class="content-item-info"><div class="content-item-title">'+s.name+'</div></div></div>').join('');}
-function openRadio(){
-  var list=document.getElementById('radioList');
-  if(!list)return;
-  var stationHtml='';
-  try{
-    var audios=JSON.parse(localStorage.getItem('ta3lemy_station')||'[]');
-    if(audios.length>0){
-      stationHtml+='<div class="section-title">🎙️ محطتي الخاصة</div>';
-      stationHtml+=audios.map(function(a){
-        return '<div class="content-item" onclick="playMyStationAudio(\''+a.id+'\')"><div class="content-item-icon" style="background:linear-gradient(135deg,#7B1FA2,#9C27B0);color:#fff;font-size:24px;">🎵</div><div class="content-item-info"><div class="content-item-title">'+a.title+'</div><div class="content-item-sub">اضغط للتشغيل</div></div><div class="content-item-arrow">▶️</div></div>';
-      }).join('');
-      stationHtml+='<div class="section-title">📻 الإذاعات العامة</div>';
-    }
-  }catch(e){console.error(e);}
-  stationHtml+=radioStations.map(function(s,i){
-    return '<div class="content-item" onclick="playRadio('+i+')"><div class="content-item-icon" style="background:linear-gradient(135deg,#D32F2F,#FF8F00);color:#fff;font-size:24px;">📻</div><div class="content-item-info"><div class="content-item-title">'+s.name+'</div><div class="content-item-sub">اضغط للتشغيل</div></div><div class="content-item-arrow">▶️</div></div>';
-  }).join('');
-  list.innerHTML=stationHtml;
-  screenHistory.push(currentScreen);
-  showScreen('radioScreen');
-function playMyStationAudio(id){try{var audios=JSON.parse(localStorage.getItem('ta3lemy_station')||'[]');var audio=audios.find(a=>a.id===id);if(!audio){showToast('⚠️ الملف غير موجود');return;}if(radioAudio){radioAudio.pause();radioAudio=null;}radioAudio=new Audio();radioAudio.src=audio.url;radioAudio.preload='auto';radioAudio.autoplay=true;var playPromise=radioAudio.play();if(playPromise!==undefined){playPromise.then(function(){document.getElementById('radioPlayer').style.display='block';document.getElementById('radioStationName').textContent=audio.title;document.getElementById('radioNowPlaying').textContent='🎵 جاري التشغيل...';showToast('▶️ '+audio.title);}).catch(function(err){console.error('Play error:',err);showToast('⚠️ اضغط على الشاشة');});}}catch(e){console.error('playMyStationAudio:',e);}}    var audio=audios.find(a=>a.id===id);
-    if(!audio){showToast('⚠️ الملف غير موجود');return;}
-    if(radioAudio){radioAudio.pause();radioAudio=null;}
-    radioAudio=new Audio();
-    radioAudio.src=audio.url;
-    radioAudio.preload='auto';
-    radioAudio.autoplay=true;
-    radioAudio.controls=false;
-    var playPromise=radioAudio.play();
-    if(playPromise!==undefined){
-      playPromise.then(function(){
-        document.getElementById('radioPlayer').style.display='block';
-        document.getElementById('radioStationName').textContent=audio.title;
-        document.getElementById('radioNowPlaying').textContent='🎵 جاري التشغيل...';
-        showToast('▶️ '+audio.title);
-      }).catch(function(err){
-        console.error('Play error:',err);
-        showToast('⚠️ اضغط على الشاشة لتشغيل الصوت');
-      });
-    }
-  }catch(e){console.error('playMyStationAudio:',e);}
-}(\''+x.id+'\')"><div class="content-item-icon" style="background:linear-gradient(135deg,#7B1FA2,#9C27B0);color:#fff;font-size:24px;">🎵</div><div class="content-item-info"><div class="content-item-title">'+x.title+'</div><div class="content-item-sub">من محطتي</div></div><div class="content-item-arrow">▶️</div></div>').join('')+'<div class="section-title">📻 الإذاعات العامة</div>';}}catch(e){}l.innerHTML=sh+radioStations.map((s,i)=>'<div class="content-item" onclick="playRadio('+i+')"><div class="content-item-icon" style="background:linear-gradient(135deg,#D32F2F,#FF8F00);color:#fff;font-size:24px;">📻</div><div class="content-item-info"><div class="content-item-title">'+s.name+'</div><div class="content-item-sub">اضغط للتشغيل</div></div><div class="content-item-arrow">▶️</div></div>').join('');screenHistory.push(currentScreen);showScreen('radioScreen');}
+function openRadio(){const l=document.getElementById('radioList');let sh='';try{const a=JSON.parse(localStorage.getItem('ta3lemy_station')||'[]');if(a.length>0){sh='<div class="section-title">🎙️ محطتي الخاصة</div>'+a.map(x=>'<div class="content-item" onclick="playMyStationAudio(\''+x.id+'\')"><div class="content-item-icon" style="background:linear-gradient(135deg,#7B1FA2,#9C27B0);color:#fff;font-size:24px;">🎵</div><div class="content-item-info"><div class="content-item-title">'+x.title+'</div><div class="content-item-sub">من محطتي</div></div><div class="content-item-arrow">▶️</div></div>').join('')+'<div class="section-title">📻 الإذاعات العامة</div>';}}catch(e){}l.innerHTML=sh+radioStations.map((s,i)=>'<div class="content-item" onclick="playRadio('+i+')"><div class="content-item-icon" style="background:linear-gradient(135deg,#D32F2F,#FF8F00);color:#fff;font-size:24px;">📻</div><div class="content-item-info"><div class="content-item-title">'+s.name+'</div><div class="content-item-sub">اضغط للتشغيل</div></div><div class="content-item-arrow">▶️</div></div>').join('');screenHistory.push(currentScreen);showScreen('radioScreen');}
 function playRadio(i){const s=radioStations[i];if(radioAudio){radioAudio.pause();radioAudio=null;}radioAudio=new Audio(s.url);radioAudio.play().catch(e=>showToast('❌ تعذر التشغيل'));document.getElementById('radioPlayer').style.display='block';document.getElementById('radioStationName').textContent=s.name;document.getElementById('radioNowPlaying').textContent='🎵 جاري التشغيل...';showToast('▶️ '+s.name);}
 function stopRadio(){if(radioAudio){radioAudio.pause();radioAudio=null;}document.getElementById('radioPlayer').style.display='none';showToast('⏹️ تم الإيقاف');}
+function playMyStationAudio(id){try{const a=JSON.parse(localStorage.getItem('ta3lemy_station')||'[]');const x=a.find(y=>y.id===id);if(!x)return;if(radioAudio){radioAudio.pause();radioAudio=null;}radioAudio=new Audio(x.url);radioAudio.play().catch(e=>showToast('❌ اضغط مرة أخرى'));document.getElementById('radioPlayer').style.display='block';document.getElementById('radioStationName').textContent=x.title;document.getElementById('radioNowPlaying').textContent='🎵 جاري التشغيل...';showToast('▶️ '+x.title);}catch(e){console.error(e);}}
 async function addMyStationAudio(){const t=document.getElementById('myStationTitle').value.trim();const fi=document.getElementById('myStationFile');const btn=document.getElementById('saveStationBtn');if(!t){showToast('⚠️ أدخل عنوان الملف');return;}if(!fi.files||!fi.files[0]){showToast('⚠️ اختر ملف صوتي');return;}if(btn){btn.disabled=true;btn.textContent='⏳ جاري الرفع...';}const url=await uploadFile(fi.files[0],'mystation');if(btn){btn.disabled=false;btn.textContent='➕ إضافة للمحطة';}if(!url){showToast('❌ فشل الرفع');return;}try{const l=JSON.parse(localStorage.getItem('ta3lemy_station')||'[]');l.push({id:Date.now().toString(),title:t,url:url,created_at:new Date().toISOString()});localStorage.setItem('ta3lemy_station',JSON.stringify(l));showToast('✅ تم إضافة الملف');document.getElementById('myStationTitle').value='';fi.value='';loadMyStation();}catch(e){console.error(e);showToast('❌ فشل الحفظ');}}
-function loadMyStation(){const l=document.getElementById('myStationList');if(!l)return;try{const a=JSON.parse(localStorage.getItem('ta3lemy_station')||'[]');if(a.length===0){l.innerHTML='<div class="empty-state"><div class="empty-state-icon">🎵</div><p>لا توجد ملفات بعد</p></div>';return;}l.innerHTML=a.map(x=>'<div style="background:#fff;border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,0.08);"><div style="font-size:24px;">🎵</div><div style="flex:1;"><div style="font-weight:bold;font-size:14px;">'+x.title+'</div><div style="font-size:12px;color:#999;">ملف صوتي</div></div><button onclick="playMyStationAudio(\''+x.id+'\')" style="background:#E8F5E9;border:none;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:16px;">▶️</button><button onclick="deleteMyStationAudio(\''+x.id+'\')" style="background:#FFEBEE;border:none;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:16px;">🗑️</button></div>').join('');}catch(e){console.error(e);}}
+function loadMyStation(){const l=document.getElementById('myStationList');if(!l)return;try{const a=JSON.parse(localStorage.getItem('ta3lemy_station')||'[]');if(a.length===0){l.innerHTML='<div class="empty-state"><div class="empty-state-icon">🎵</div><p>لا توجد ملفات بعد</p></div>';return;}l.innerHTML=a.map(x=>'<div style="background:#fff;border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;margin-bottom:10px;"><div style="font-size:24px;">🎵</div><div style="flex:1;"><div style="font-weight:bold;font-size:14px;">'+x.title+'</div><div style="font-size:12px;color:#999;">ملف صوتي</div></div><button onclick="playMyStationAudio(\''+x.id+'\')" style="background:#E8F5E9;border:none;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:16px;">▶️</button><button onclick="deleteMyStationAudio(\''+x.id+'\')" style="background:#FFEBEE;border:none;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:16px;">🗑️</button></div>').join('');}catch(e){console.error(e);}}
 function deleteMyStationAudio(id){if(!confirm('حذف الملف؟'))return;try{let a=JSON.parse(localStorage.getItem('ta3lemy_station')||'[]');a=a.filter(x=>x.id!==id);localStorage.setItem('ta3lemy_station',JSON.stringify(a));loadMyStation();showToast('🗑️ تم الحذف');}catch(e){}}
-function playMyStationAudio(id){try{const a=JSON.parse(localStorage.getItem('ta3lemy_station')||'[]');const x=a.find(y=>y.id===id);if(!x)return;if(radioAudio){radioAudio.pause();radioAudio=null;}radioAudio=new Audio(x.url);radioAudio.play().catch(e=>showToast('❌ تعذر التشغيل'));document.getElementById('radioPlayer').style.display='block';document.getElementById('radioStationName').textContent=x.title;document.getElementById('radioNowPlaying').textContent='🎵 جاري التشغيل...';showToast('▶️ '+x.title);}catch(e){}}
 function goToProfile(){document.getElementById('profileName').textContent=currentUser?currentUser.name:'مستخدم';document.getElementById('profileRole').textContent=currentRole==='student'?'طالب':currentRole==='teacher'?'معلم':'المالك';document.getElementById('profilePoints').textContent='⭐ '+(currentUser?currentUser.points:0)+' نقطة';const m=document.getElementById('adminMenu');if(m)m.style.display=currentRole==='owner'?'flex':'none';screenHistory.push(currentScreen);showScreen('profileScreen');}
 function openOwnerProfile(){screenHistory.push(currentScreen);showScreen('ownerProfileScreen');}
 function toggleDark(){document.body.classList.toggle('dark-mode');showToast(document.body.classList.contains('dark-mode')?'🌙 وضع ليلي':'☀️ وضع نهاري');}
 function openAdsManager(){loadAds();loadMyStation();screenHistory.push(currentScreen);showScreen('adsManagerScreen');}
-function loadAds(){const l=document.getElementById('adsList');if(!l)return;try{const a=JSON.parse(localStorage.getItem('ta3lemy_ads')||'[]');if(!a||a.length===0){l.innerHTML='<div class="empty-state"><div class="empty-state-icon">📢</div><p>لا توجد إعلانات</p></div>';return;}l.innerHTML=a.map(ad=>'<div style="background:#fff;border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,0.08);"><div style="font-size:24px;">📢</div><div style="flex:1;"><div style="font-weight:bold;font-size:14px;">'+(ad.title||'بدون عنوان')+'</div><div style="font-size:12px;color:#999;">'+(ad.duration||10)+' ثانية • '+(ad.ad_type||'صورة')+'</div></div><button onclick="deleteAd(\''+ad.id+'\')" style="background:#FFEBEE;border:none;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:16px;">🗑️</button></div>').join('');}catch(e){console.error(e);}}async function addNewAd(){const t=document.getElementById('adTitle').value.trim();const ty=document.getElementById('adType').value;const du=parseInt(document.getElementById('adDuration').value)||10;const fi=document.getElementById('adFile');const btn=document.getElementById('saveAdBtn');if(!t){showToast('⚠️ أدخل عنوان الإعلان');return;}if(!fi.files||!fi.files[0]){showToast('⚠️ اختر ملف');return;}if(btn){btn.disabled=true;btn.textContent='⏳ جاري الرفع...';}const url=await uploadFile(fi.files[0],'ads');if(btn){btn.disabled=false;btn.textContent='➕ إضافة الإعلان';}if(!url){showToast('❌ فشل الرفع');return;}try{const a=JSON.parse(localStorage.getItem('ta3lemy_ads')||'[]');a.push({id:Date.now().toString(),title:t,ad_type:ty,image_url:ty==='image'?url:null,video_url:ty==='video'?url:null,duration:du,position:'home',active:true,created_at:new Date().toISOString()});localStorage.setItem('ta3lemy_ads',JSON.stringify(a));showToast('✅ تم إضافة الإعلان');document.getElementById('adTitle').value='';fi.value='';loadAds();loadAdsOnHome();}catch(e){console.error(e);showToast('❌ فشل الحفظ');}}
+function loadAds(){const l=document.getElementById('adsList');if(!l)return;try{const a=JSON.parse(localStorage.getItem('ta3lemy_ads')||'[]');if(!a||a.length===0){l.innerHTML='<div class="empty-state"><div class="empty-state-icon">📢</div><p>لا توجد إعلانات</p></div>';return;}l.innerHTML=a.map(ad=>'<div style="background:#fff;border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;margin-bottom:10px;"><div style="font-size:24px;">📢</div><div style="flex:1;"><div style="font-weight:bold;font-size:14px;">'+(ad.title||'بدون عنوان')+'</div><div style="font-size:12px;color:#999;">'+(ad.duration||10)+' ثانية • '+(ad.ad_type||'صورة')+'</div></div><button onclick="deleteAd(\''+ad.id+'\')" style="background:#FFEBEE;border:none;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:16px;">🗑️</button></div>').join('');}catch(e){console.error(e);}}
+async function addNewAd(){const t=document.getElementById('adTitle').value.trim();const ty=document.getElementById('adType').value;const du=parseInt(document.getElementById('adDuration').value)||10;const fi=document.getElementById('adFile');const btn=document.getElementById('saveAdBtn');if(!t){showToast('⚠️ أدخل عنوان الإعلان');return;}if(!fi.files||!fi.files[0]){showToast('⚠️ اختر ملف');return;}if(btn){btn.disabled=true;btn.textContent='⏳ جاري الرفع...';}const url=await uploadFile(fi.files[0],'ads');if(btn){btn.disabled=false;btn.textContent='➕ إضافة الإعلان';}if(!url){showToast('❌ فشل الرفع');return;}try{const a=JSON.parse(localStorage.getItem('ta3lemy_ads')||'[]');a.push({id:Date.now().toString(),title:t,ad_type:ty,image_url:ty==='image'?url:null,video_url:ty==='video'?url:null,duration:du,position:'home',active:true,created_at:new Date().toISOString()});localStorage.setItem('ta3lemy_ads',JSON.stringify(a));showToast('✅ تم إضافة الإعلان');document.getElementById('adTitle').value='';fi.value='';loadAds();loadAdsOnHome();}catch(e){console.error(e);showToast('❌ فشل الحفظ');}}
 function deleteAd(id){if(!confirm('حذف الإعلان؟'))return;try{let a=JSON.parse(localStorage.getItem('ta3lemy_ads')||'[]');a=a.filter(x=>x.id!==id);localStorage.setItem('ta3lemy_ads',JSON.stringify(a));loadAds();loadAdsOnHome();showToast('🗑️ تم الحذف');}catch(e){}}
-function loadAdsOnHome(){try{const a=JSON.parse(localStorage.getItem('ta3lemy_ads')||'[]');homeAds=a.filter(x=>x.active!==false);if(homeAds.length>0){homeAdIndex=0;showHomeAd(0);}}catch(e){console.error(e);}}
+function loadAdsOnHome(){try{const a=JSON.parse(localStorage.getItem('ta3lemy_ads')||'[]');homeAds=a.filter(x=>x.active!==false);if(homeAds.length>0){homeAdIndex=0;showHomeAd(0);}}catch(e){}}
 function showHomeAd(i){if(!homeAds||homeAds.length===0)return;const ad=homeAds[i];const box=document.getElementById('mainAd');if(!box)return;const du=(ad.duration||10)*1000;let h='';if(ad.ad_type==='video'&&ad.video_url){h='<video autoplay muted loop style="width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;"><source src="'+ad.video_url+'" type="video/mp4"></video>';}else if(ad.image_url){h='<img src="'+ad.image_url+'" style="width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;">';}h+='<div class="ad-banner-content" style="position:relative;z-index:1;"><div class="ad-banner-title" style="color:#fff;text-shadow:0 2px 8px rgba(0,0,0,0.7);">'+(ad.title||'')+'</div></div>';box.innerHTML=h;if(homeAdTimer)clearTimeout(homeAdTimer);if(homeAds.length>1){homeAdTimer=setTimeout(function(){homeAdIndex=(homeAdIndex+1)%homeAds.length;showHomeAd(homeAdIndex);},du);}}
 function openAdmin(){loadAdminStats();screenHistory.push(currentScreen);showScreen('adminScreen');}
 function loadAdminStats(){try{const l=JSON.parse(localStorage.getItem('ta3lemy_lessons')||'[]');const a=JSON.parse(localStorage.getItem('ta3lemy_ads')||'[]');const u=JSON.parse(localStorage.getItem('ta3lemy_users')||'[]');document.getElementById('statLessons').textContent=l.length;document.getElementById('statAds').textContent=a.length;document.getElementById('statUsers').textContent=u.length;}catch(e){}}
