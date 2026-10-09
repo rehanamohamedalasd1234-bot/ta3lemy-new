@@ -408,7 +408,10 @@ body.dark-mode .menu-item,body.dark-mode .stats-card,body.dark-mode .stage-item,
 </div>
 <div id="toast" class="toast"></div><script>
 'use strict';
-const CLOUD_NAME='bt4sro3h';
+const firebaseConfig={apiKey:"AIzaSyDq__5IildrSoDOSRPf154tgg7qs5IAQU4",authDomain:"ta3lemt-hafez.firebaseapp.com",projectId:"ta3lemt-hafez",storageBucket:"ta3lemt-hafez.firebasestorage.app",messagingSenderId:"345880002653",appId:"1:345880002653:web:8283fa8d36883124c60db4"};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.firestore();
+  const CLOUD_NAME='bt4sro3h';
 const UPLOAD_PRESET='hafez_upload';
 const OWNER_CODE='135790';
 let currentUser=null,currentRole='student',currentScreen='splashScreen',screenHistory=[];
