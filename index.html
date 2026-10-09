@@ -482,8 +482,7 @@ function openRadio(){
   list.innerHTML=stationHtml;
   screenHistory.push(currentScreen);
   showScreen('radioScreen');
-}  try{
-    var audios=JSON.parse(localStorage.getItem('ta3lemy_station')||'[]');
+function playMyStationAudio(id){try{var audios=JSON.parse(localStorage.getItem('ta3lemy_station')||'[]');var audio=audios.find(a=>a.id===id);if(!audio){showToast('⚠️ الملف غير موجود');return;}if(radioAudio){radioAudio.pause();radioAudio=null;}radioAudio=new Audio();radioAudio.src=audio.url;radioAudio.preload='auto';radioAudio.autoplay=true;var playPromise=radioAudio.play();if(playPromise!==undefined){playPromise.then(function(){document.getElementById('radioPlayer').style.display='block';document.getElementById('radioStationName').textContent=audio.title;document.getElementById('radioNowPlaying').textContent='🎵 جاري التشغيل...';showToast('▶️ '+audio.title);}).catch(function(err){console.error('Play error:',err);showToast('⚠️ اضغط على الشاشة لتشغيل الصوت');});}}catch(e){console.error('playMyStationAudio:',e);}}    var audios=JSON.parse(localStorage.getItem('ta3lemy_station')||'[]');
     var audio=audios.find(a=>a.id===id);
     if(!audio){showToast('⚠️ الملف غير موجود');return;}
     if(radioAudio){radioAudio.pause();radioAudio=null;}
