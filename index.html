@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
@@ -489,6 +489,6 @@ function loadOwnerInfo(){try{const d=JSON.parse(localStorage.getItem('ta3lemy_ow
 window.addEventListener('error',e=>console.error('❌ Error:',e.error));
 window.addEventListener('unhandledrejection',e=>console.error('❌ Promise:',e.reason));
 window.addEventListener('load',()=>{setTimeout(()=>showScreen('loginScreen'),2500);loadOwnerInfo();loadAdsOnHome();});
-</script>
+async function loadAdsOnHome(){try{const snap=await db.collection('ads').orderBy('created_at','desc').get();homeAds=[];snap.forEach(doc=>{const ad=doc.data();if(ad.active!==false){ad.id=doc.id;homeAds.push(ad);}});if(homeAds.length>0){homeAdIndex=0;showHomeAd(0);}}catch(e){console.error('loadAdsOnHome:',e);}}</script>
 </body>
 </html>
