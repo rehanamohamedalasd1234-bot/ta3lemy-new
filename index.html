@@ -243,7 +243,17 @@ body.dark-mode .section-chip{background:#2A2A2A;color:#E0E0E0}
 <div id="surahsList"></div>
 </div>
 </div>
-<div id="radioScreen" class="screen">
+<div id="surahScreen" class="screen">
+<div class="top-bar" style="background:linear-gradient(135deg,#00695C,#26A69A);"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span id="surahTitle">السورة</span></div><div style="width:42px;"></div></div>
+<div class="content" id="surahContent" style="padding-bottom:140px;"></div>
+<div id="ayahPlayer" style="display:none;position:fixed;bottom:80px;left:16px;right:16px;background:linear-gradient(135deg,#00695C,#26A69A);color:#fff;padding:12px;border-radius:16px;z-index:200;box-shadow:0 4px 16px rgba(0,0,0,0.3);">
+<div id="ayahNowPlaying" style="font-size:14px;font-weight:bold;margin-bottom:8px;text-align:center;">جاري التشغيل...</div>
+<div style="display:flex;gap:8px;">
+<button onclick="stopAyahAudio()" style="flex:1;background:rgba(255,255,255,0.2);color:#fff;border:none;padding:10px;border-radius:10px;font-family:inherit;font-weight:bold;cursor:pointer;">⏹️ إيقاف</button>
+<button onclick="showCurrentTafsir()" style="flex:1;background:rgba(255,255,255,0.2);color:#fff;border:none;padding:10px;border-radius:10px;font-family:inherit;font-weight:bold;cursor:pointer;">📖 التفسير</button>
+</div>
+</div>
+</div><div id="radioScreen" class="screen">
 <div class="top-bar" style="background:linear-gradient(135deg,#D32F2F,#FF8F00);"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>📻 الإذاعات</span></div><div style="width:42px;"></div></div>
 <div class="content">
 <div id="radioPlayer" style="display:none;background:linear-gradient(135deg,#D32F2F,#FF8F00);border-radius:20px;padding:24px;text-align:center;color:#fff;margin-bottom:16px;"><div style="font-size:60px;margin-bottom:12px;">📻</div><div id="radioNowPlaying" style="font-size:18px;font-weight:bold;margin-bottom:6px;">جاري التشغيل</div><div id="radioStationName" style="font-size:13px;opacity:0.9;margin-bottom:16px;">--</div><button class="btn-primary" style="background:#fff;color:#D32F2F;max-width:200px;margin:0 auto;" onclick="stopRadio()">⏹️ إيقاف</button></div>
