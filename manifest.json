@@ -1,10 +1,27 @@
-{
+﻿{
   "name": "منصة الأستاذ حافظ التعليمية",
   "short_name": "منصة حافظ",
+  "description": "منصة تعليمية للتعليم العام والأزهر الشريف",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#2E7D32",
   "theme_color": "#2E7D32",
   "dir": "rtl",
-  "lang": "ar"
+  "lang": "ar",
+  "icons": [
+    {
+      "src": "https://ui-avatars.com/api/?name=حافظ&background=2E7D32&color=fff&size=192&bold=true&font-size=0.5",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://ui-avatars.com/api/?name=حافظ&background=2E7D32&color=fff&size=512&bold=true&font-size=0.5",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
 }

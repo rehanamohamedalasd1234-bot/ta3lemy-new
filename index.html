@@ -508,6 +508,7 @@ async function loadOwnerInfo(){try{const snap=await db.collection('owner').limit
 window.addEventListener('error',e=>console.error('❌ Error:',e.error));
 window.addEventListener('unhandledrejection',e=>console.error('❌ Promise:',e.reason));
 window.addEventListener('load',()=>{setTimeout(()=>showScreen('loginScreen'),2500);loadOwnerInfo();loadAdsOnHome();});
+if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./service-worker.js').then(reg=>console.log('✅ SW registered')).catch(err=>console.log('❌ SW error:',err));});}
 </script>
 </body>
 </html>
