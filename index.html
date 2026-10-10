@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>???? ??????? ???? ?????????</title>
+<title>منصة الأستاذ حافظ التعليمية</title>
 <link rel="manifest" href="./manifest.json">
 <meta name="theme-color" content="#2E7D32">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
@@ -141,128 +141,128 @@ body.dark-mode .section-chip{background:#2A2A2A;color:#E0E0E0}
 </style>
 </head><body><div id="splashScreen" class="screen active">
 <div class="splash-content">
-<div class="splash-logo">??</div>
-<div class="splash-title">???? ??????? ???? ?????????</div>
-<div class="splash-subtitle">??????? ????? ??????? ??????</div>
+<div class="splash-logo">🎓</div>
+<div class="splash-title">منصة الأستاذ حافظ التعليمية</div>
+<div class="splash-subtitle">للتعليم العام والأزهر الشريف</div>
 <div class="loader"></div>
 </div>
 </div>
 <div id="loginScreen" class="screen">
-<div class="login-logo">??</div>
-<div class="login-title">?????? ??</div>
-<div class="login-sub">???? ????? ????????</div>
+<div class="login-logo">🎓</div>
+<div class="login-title">مرحباً بك</div>
+<div class="login-sub">سجّل دخولك للمتابعة</div>
 <div class="role-selector">
-<button class="role-btn active" onclick="selectRole(this,'student')">?? ????</button>
-<button class="role-btn" onclick="selectRole(this,'teacher')">????? ????</button>
-<button class="role-btn" onclick="selectRole(this,'owner')">?? ????</button>
+<button class="role-btn active" onclick="selectRole(this,'student')">🎒 طالب</button>
+<button class="role-btn" onclick="selectRole(this,'teacher')">👨‍🏫 معلم</button>
+<button class="role-btn" onclick="selectRole(this,'owner')">👑 مالك</button>
 </div>
-<div class="form-group"><input type="text" id="usernameInput" class="form-input" placeholder="?? ??? ????????"></div>
-<div class="form-group"><input type="password" id="passwordInput" class="form-input" placeholder="?? ???? ??????"></div>
-<div class="form-group" id="ownerCodeGroup" style="display:none;"><input type="password" id="ownerCodeInput" class="form-input" placeholder="?? ??? ??????"></div>
-<button class="btn-primary" onclick="login()">????? ??????</button>
+<div class="form-group"><input type="text" id="usernameInput" class="form-input" placeholder="👤 اسم المستخدم"></div>
+<div class="form-group"><input type="password" id="passwordInput" class="form-input" placeholder="🔒 كلمة المرور"></div>
+<div class="form-group" id="ownerCodeGroup" style="display:none;"><input type="password" id="ownerCodeInput" class="form-input" placeholder="🔐 كود المالك"></div>
+<button class="btn-primary" onclick="login()">تسجيل الدخول</button>
 </div>
 <div id="homeScreen" class="screen">
 <div class="top-bar">
 <div class="logo">
-<img id="ownerAvatar" class="owner-avatar" src="https://ui-avatars.com/api/?name=????&background=2E7D32&color=fff" alt="??????" onclick="openOwnerProfile()">
-<span>???? ??????? ????</span>
+<img id="ownerAvatar" class="owner-avatar" src="https://ui-avatars.com/api/?name=حافظ&background=2E7D32&color=fff" alt="المالك" onclick="openOwnerProfile()">
+<span>منصة الأستاذ حافظ</span>
 </div>
-<button class="icon-btn" onclick="goToProfile()">??</button>
+<button class="icon-btn" onclick="goToProfile()">👤</button>
 </div>
 <div class="content">
-<div class="search-box"><span>??</span><input type="text" placeholder="????..."></div>
-<div id="mainAd" class="ad-banner" onclick="showToast('?? ?????')"><div class="ad-banner-content"><div class="ad-banner-title">?? ????? ?????</div></div></div>
-<div class="section-title">?? ??????? ?????</div>
+<div class="search-box"><span>🔍</span><input type="text" placeholder="ابحث..."></div>
+<div id="mainAd" class="ad-banner" onclick="showToast('📢 إعلان')"><div class="ad-banner-content"><div class="ad-banner-title">📢 إعلان رئيسي</div></div></div>
+<div class="section-title">📚 التعليم العام</div>
 <div class="cards-row">
-<div class="big-card" style="background:linear-gradient(135deg,#66BB6A,#4CAF50);" onclick="openStage('primary')"><div class="big-card-icon">??</div><div class="big-card-label">???????</div></div>
-<div class="big-card" style="background:linear-gradient(135deg,#43A047,#2E7D32);" onclick="openStage('prep')"><div class="big-card-icon">??</div><div class="big-card-label">??????</div></div>
-<div class="big-card" style="background:linear-gradient(135deg,#2E7D32,#1B5E20);" onclick="openStage('sec')"><div class="big-card-icon">??</div><div class="big-card-label">?????</div></div>
+<div class="big-card" style="background:linear-gradient(135deg,#66BB6A,#4CAF50);" onclick="openStage('primary')"><div class="big-card-icon">🎒</div><div class="big-card-label">ابتدائي</div></div>
+<div class="big-card" style="background:linear-gradient(135deg,#43A047,#2E7D32);" onclick="openStage('prep')"><div class="big-card-icon">📗</div><div class="big-card-label">إعدادي</div></div>
+<div class="big-card" style="background:linear-gradient(135deg,#2E7D32,#1B5E20);" onclick="openStage('sec')"><div class="big-card-icon">📕</div><div class="big-card-label">ثانوي</div></div>
 </div>
-<div class="section-title">?? ?????? ??????</div>
-<div class="azhar-card" onclick="openAzhar()"><div class="azhar-icon">??</div><div class="azhar-text"><div class="azhar-title">?????? ???????</div><div class="azhar-sub">????? � ???? � ??? � ?????</div></div><div class="azhar-arrow">�</div></div>
-<div class="section-title">?? ?????? ??????</div>
-<div class="quran-card" onclick="openQuran()"><div class="quran-icon">??</div><div class="quran-text"><div class="quran-title">???? � ????? � ???</div><div class="quran-sub">?????? ???? ??????</div></div><div class="quran-arrow">�</div></div>
-<div class="section-title">?? ?????? ???????</div>
-<div class="quran-card" style="background:linear-gradient(135deg,#D32F2F,#FF8F00);" onclick="openRadio()"><div class="quran-icon">??</div><div class="quran-text"><div class="quran-title">?????? ?????</div><div class="quran-sub">?? ????? 24 ????</div></div><div class="quran-arrow">�</div></div>
-<div class="section-title">?? ????? ?????</div>
+<div class="section-title">🕌 الأزهر الشريف</div>
+<div class="azhar-card" onclick="openAzhar()"><div class="azhar-icon">🕌</div><div class="azhar-text"><div class="azhar-title">المواد الشرعية</div><div class="azhar-sub">تفسير • حديث • فقه • عقيدة</div></div><div class="azhar-arrow">‹</div></div>
+<div class="section-title">📖 القرآن الكريم</div>
+<div class="quran-card" onclick="openQuran()"><div class="quran-icon">📖</div><div class="quran-text"><div class="quran-title">اقرأ • ترديد • حفظ</div><div class="quran-sub">المصحف كامل بالصوت</div></div><div class="quran-arrow">‹</div></div>
+<div class="section-title">📻 إذاعات إسلامية</div>
+<div class="quran-card" style="background:linear-gradient(135deg,#D32F2F,#FF8F00);" onclick="openRadio()"><div class="quran-icon">📻</div><div class="quran-text"><div class="quran-title">إذاعات وقرآن</div><div class="quran-sub">بث مباشر 24 ساعة</div></div><div class="quran-arrow">‹</div></div>
+<div class="section-title">🧰 أدوات سريعة</div>
 <div class="tools-grid">
-<div class="tool-btn" onclick="openDrawing()"><div class="tool-icon" style="background:#FFF3E0;color:#F57C00;">??</div><div class="tool-label">???</div></div>
-<div class="tool-btn" onclick="openMessages()"><div class="tool-icon" style="background:#E8F5E9;color:#2E7D32;">??</div><div class="tool-label">?????</div></div>
-<div class="tool-btn" onclick="openQuran()"><div class="tool-icon" style="background:#E0F2F1;color:#00695C;">??</div><div class="tool-label">????</div></div>
-<div class="tool-btn" onclick="goToProfile()"><div class="tool-icon" style="background:#F3E5F5;color:#7B1FA2;">??</div><div class="tool-label">?????</div></div>
+<div class="tool-btn" onclick="openDrawing()"><div class="tool-icon" style="background:#FFF3E0;color:#F57C00;">✏️</div><div class="tool-label">رسم</div></div>
+<div class="tool-btn" onclick="openMessages()"><div class="tool-icon" style="background:#E8F5E9;color:#2E7D32;">💬</div><div class="tool-label">رسائل</div></div>
+<div class="tool-btn" onclick="openQuran()"><div class="tool-icon" style="background:#E0F2F1;color:#00695C;">📖</div><div class="tool-label">قرآن</div></div>
+<div class="tool-btn" onclick="goToProfile()"><div class="tool-icon" style="background:#F3E5F5;color:#7B1FA2;">👤</div><div class="tool-label">حسابي</div></div>
 </div>
-<div class="section-title">?? ???? ?????</div>
-<div class="wisdom-bar"><span class="wisdom-bar-content">?? ????? ??? ?????? ???? � ?????? ??? � ?? ?? ??? ??? ??? ??? � ?????? ????? ?? ????? ??? ????? � ??</span></div>
+<div class="section-title">💡 حكمة اليوم</div>
+<div class="wisdom-bar"><span class="wisdom-bar-content">💡 العلم نور والجهل ظلام — الإمام علي • من جد وجد ومن زرع حصد • اطلبوا العلم من المهد إلى اللحد • 💡</span></div>
 </div>
 <div class="bottom-nav">
-<button class="nav-item active" onclick="navTo('home')"><span class="icon">??</span><span>????????</span></button>
-<button class="nav-item" onclick="navTo('education')"><span class="icon">??</span><span>???????</span></button>
-<button class="nav-item" onclick="navTo('quran')"><span class="icon">??</span><span>??????</span></button>
-<button class="nav-item" onclick="openDrawing()"><span class="icon">??</span><span>???</span></button>
-<button class="nav-item" onclick="navTo('profile')"><span class="icon">??</span><span>?????</span></button>
+<button class="nav-item active" onclick="navTo('home')"><span class="icon">🏠</span><span>الرئيسية</span></button>
+<button class="nav-item" onclick="navTo('education')"><span class="icon">📚</span><span>المناهج</span></button>
+<button class="nav-item" onclick="navTo('quran')"><span class="icon">📖</span><span>القرآن</span></button>
+<button class="nav-item" onclick="openDrawing()"><span class="icon">✏️</span><span>رسم</span></button>
+<button class="nav-item" onclick="navTo('profile')"><span class="icon">👤</span><span>حسابي</span></button>
 </div>
 </div>
 <div id="educationScreen" class="screen">
-<div class="top-bar"><button class="icon-btn" onclick="goBack()">?</button><div class="logo"><span>?? ??????? ?????</span></div><div style="width:42px;"></div></div>
-<div class="content"><div class="section-title">???? ???????</div><div id="stagesList"></div></div>
+<div class="top-bar"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>📚 التعليم العام</span></div><div style="width:42px;"></div></div>
+<div class="content"><div class="section-title">اختر المرحلة</div><div id="stagesList"></div></div>
 </div>
 <div id="gradesScreen" class="screen">
-<div class="top-bar"><button class="icon-btn" onclick="goBack()">?</button><div class="logo"><span id="gradesTitle">??????</span></div><div style="width:42px;"></div></div>
+<div class="top-bar"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span id="gradesTitle">الصفوف</span></div><div style="width:42px;"></div></div>
 <div class="content"><div id="gradesList"></div></div>
 </div>
 <div id="subjectsScreen" class="screen">
-<div class="top-bar"><button class="icon-btn" onclick="goBack()">?</button><div class="logo"><span id="subjectsTitle">??????</span></div><div style="width:42px;"></div></div>
+<div class="top-bar"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span id="subjectsTitle">المواد</span></div><div style="width:42px;"></div></div>
 <div class="content"><div id="subjectsList" class="subjects-grid"></div></div>
 </div>
 <div id="termsScreen" class="screen">
-<div class="top-bar"><button class="icon-btn" onclick="goBack()">?</button><div class="logo"><span id="termsTitle">???????</span></div><div style="width:42px;"></div></div>
+<div class="top-bar"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span id="termsTitle">الترمين</span></div><div style="width:42px;"></div></div>
 <div class="content">
-<div class="content-header"><div class="content-header-title" id="termsHeader">???? ?????</div><div class="content-header-sub">???? ????? ??????</div></div>
+<div class="content-header"><div class="content-header-title" id="termsHeader">اختر الترم</div><div class="content-header-sub">ادرس وراجع وامتحن</div></div>
 <div id="termsList" class="term-container"></div>
 </div>
 </div>
 <div id="contentScreen" class="screen">
-<div class="top-bar"><button class="icon-btn" onclick="goBack()">?</button><div class="logo"><span id="contentTitle">???????</span></div><div style="width:42px;"></div></div>
+<div class="top-bar"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span id="contentTitle">المحتوى</span></div><div style="width:42px;"></div></div>
 <div class="content">
-<div class="content-header"><div class="content-header-title" id="contentHeaderTitle">???????</div><div class="content-header-sub" id="contentHeaderSub">???? ??? ?? ???? ?????</div></div>
+<div class="content-header"><div class="content-header-title" id="contentHeaderTitle">المحتوى</div><div class="content-header-sub" id="contentHeaderSub">اضغط على أي عنصر لعرضه</div></div>
 <div id="contentList"></div>
 </div>
 </div>
 <div id="viewerScreen" class="screen">
-<div class="top-bar"><button class="icon-btn" onclick="goBack()">?</button><div class="logo"><span id="viewerTitle">???????</span></div><div style="width:42px;"></div></div>
+<div class="top-bar"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span id="viewerTitle">المحتوى</span></div><div style="width:42px;"></div></div>
 <div class="content"><div class="lesson-body" id="viewerBody"></div></div>
 </div>
 <div id="azharScreen" class="screen">
-<div class="top-bar" style="background:linear-gradient(135deg,#C9A227,#E6C75E);"><button class="icon-btn" onclick="goBack()">?</button><div class="logo"><span>?? ?????? ??????</span></div><div style="width:42px;"></div></div>
-<div class="content"><div class="section-title">?????? ???????</div><div id="azharList"></div></div>
+<div class="top-bar" style="background:linear-gradient(135deg,#C9A227,#E6C75E);"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>🕌 الأزهر الشريف</span></div><div style="width:42px;"></div></div>
+<div class="content"><div class="section-title">المواد الشرعية</div><div id="azharList"></div></div>
 </div>
 <div id="quranScreen" class="screen">
-<div class="top-bar" style="background:linear-gradient(135deg,#00695C,#26A69A);"><button class="icon-btn" onclick="goBack()">?</button><div class="logo"><span>?? ?????? ??????</span></div><div style="width:42px;"></div></div>
+<div class="top-bar" style="background:linear-gradient(135deg,#00695C,#26A69A);"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>📖 القرآن الكريم</span></div><div style="width:42px;"></div></div>
 <div class="content">
-<div class="search-box"><span>??</span><input type="text" placeholder="???? ?? ????..." oninput="filterSurahs(this.value)"></div>
+<div class="search-box"><span>🔍</span><input type="text" placeholder="ابحث عن سورة..." oninput="filterSurahs(this.value)"></div>
 <div id="surahsList"></div>
 </div>
 </div>
 <div id="radioScreen" class="screen">
-<div class="top-bar" style="background:linear-gradient(135deg,#D32F2F,#FF8F00);"><button class="icon-btn" onclick="goBack()">?</button><div class="logo"><span>?? ????????</span></div><div style="width:42px;"></div></div>
+<div class="top-bar" style="background:linear-gradient(135deg,#D32F2F,#FF8F00);"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>📻 الإذاعات</span></div><div style="width:42px;"></div></div>
 <div class="content">
-<div id="radioPlayer" style="display:none;background:linear-gradient(135deg,#D32F2F,#FF8F00);border-radius:20px;padding:24px;text-align:center;color:#fff;margin-bottom:16px;"><div style="font-size:60px;margin-bottom:12px;">??</div><div id="radioNowPlaying" style="font-size:18px;font-weight:bold;margin-bottom:6px;">???? ???????</div><div id="radioStationName" style="font-size:13px;opacity:0.9;margin-bottom:16px;">--</div><button class="btn-primary" style="background:#fff;color:#D32F2F;max-width:200px;margin:0 auto;" onclick="stopRadio()">?? ?????</button></div>
+<div id="radioPlayer" style="display:none;background:linear-gradient(135deg,#D32F2F,#FF8F00);border-radius:20px;padding:24px;text-align:center;color:#fff;margin-bottom:16px;"><div style="font-size:60px;margin-bottom:12px;">📻</div><div id="radioNowPlaying" style="font-size:18px;font-weight:bold;margin-bottom:6px;">جاري التشغيل</div><div id="radioStationName" style="font-size:13px;opacity:0.9;margin-bottom:16px;">--</div><button class="btn-primary" style="background:#fff;color:#D32F2F;max-width:200px;margin:0 auto;" onclick="stopRadio()">⏹️ إيقاف</button></div>
 <div id="radioList"></div>
 </div>
 </div>
 <div id="drawingScreen" class="screen">
-<div class="top-bar"><button class="icon-btn" onclick="goBack()">?</button><div class="logo"><span>?? ???? ?????</span></div><div style="width:42px;"></div></div>
+<div class="top-bar"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>✏️ لوحة الرسم</span></div><div style="width:42px;"></div></div>
 <div class="content" style="padding:0;display:flex;flex-direction:column;height:calc(100vh - 70px);">
 <div style="background:#fff;padding:8px;display:flex;gap:6px;overflow-x:auto;border-bottom:2px solid #E8F5E9;flex-shrink:0;">
-<button onclick="drawingUndo()" style="background:#E3F2FD;color:#1976D2;border:none;padding:8px 12px;border-radius:10px;font-family:inherit;font-weight:bold;font-size:13px;cursor:pointer;white-space:nowrap;">? ?????</button>
-<button onclick="drawingRedo()" style="background:#E3F2FD;color:#1976D2;border:none;padding:8px 12px;border-radius:10px;font-family:inherit;font-weight:bold;font-size:13px;cursor:pointer;white-space:nowrap;">? ?????</button>
-<button onclick="drawingSave()" style="background:#E8F5E9;color:#2E7D32;border:none;padding:8px 12px;border-radius:10px;font-family:inherit;font-weight:bold;font-size:13px;cursor:pointer;white-space:nowrap;">?? ???</button>
-<button onclick="drawingPrint()" style="background:#F3E5F5;color:#7B1FA2;border:none;padding:8px 12px;border-radius:10px;font-family:inherit;font-weight:bold;font-size:13px;cursor:pointer;white-space:nowrap;">??? ?????</button>
-<button onclick="drawingShare()" style="background:#FFF3E0;color:#F57C00;border:none;padding:8px 12px;border-radius:10px;font-family:inherit;font-weight:bold;font-size:13px;cursor:pointer;white-space:nowrap;">?? ??????</button>
-<button onclick="drawingClearAll()" style="background:#FFEBEE;color:#E53935;border:none;padding:8px 12px;border-radius:10px;font-family:inherit;font-weight:bold;font-size:13px;cursor:pointer;white-space:nowrap;">??? ???</button>
+<button onclick="drawingUndo()" style="background:#E3F2FD;color:#1976D2;border:none;padding:8px 12px;border-radius:10px;font-family:inherit;font-weight:bold;font-size:13px;cursor:pointer;white-space:nowrap;">↶ تراجع</button>
+<button onclick="drawingRedo()" style="background:#E3F2FD;color:#1976D2;border:none;padding:8px 12px;border-radius:10px;font-family:inherit;font-weight:bold;font-size:13px;cursor:pointer;white-space:nowrap;">↷ إعادة</button>
+<button onclick="drawingSave()" style="background:#E8F5E9;color:#2E7D32;border:none;padding:8px 12px;border-radius:10px;font-family:inherit;font-weight:bold;font-size:13px;cursor:pointer;white-space:nowrap;">💾 حفظ</button>
+<button onclick="drawingPrint()" style="background:#F3E5F5;color:#7B1FA2;border:none;padding:8px 12px;border-radius:10px;font-family:inherit;font-weight:bold;font-size:13px;cursor:pointer;white-space:nowrap;">🖨️ طباعة</button>
+<button onclick="drawingShare()" style="background:#FFF3E0;color:#F57C00;border:none;padding:8px 12px;border-radius:10px;font-family:inherit;font-weight:bold;font-size:13px;cursor:pointer;white-space:nowrap;">📤 مشاركة</button>
+<button onclick="drawingClearAll()" style="background:#FFEBEE;color:#E53935;border:none;padding:8px 12px;border-radius:10px;font-family:inherit;font-weight:bold;font-size:13px;cursor:pointer;white-space:nowrap;">🗑️ مسح</button>
 </div>
 <div style="background:#fff;padding:10px 8px;display:flex;gap:8px;overflow-x:auto;border-bottom:2px solid #E8F5E9;flex-shrink:0;align-items:center;">
-<button onclick="drawingSetEraser()" style="width:42px;height:42px;border-radius:50%;background:#F5F5F5;border:3px solid #E0E0E0;font-size:20px;cursor:pointer;flex-shrink:0;">??</button>
+<button onclick="drawingSetEraser()" style="width:42px;height:42px;border-radius:50%;background:#F5F5F5;border:3px solid #E0E0E0;font-size:20px;cursor:pointer;flex-shrink:0;">🧽</button>
 <button onclick="drawingSetColor('#000000')" style="width:36px;height:36px;border-radius:50%;background:#000;border:3px solid #fff;cursor:pointer;flex-shrink:0;"></button>
 <button onclick="drawingSetColor('#FFFFFF')" style="width:36px;height:36px;border-radius:50%;background:#fff;border:3px solid #fff;box-shadow:0 0 0 1px #ddd;cursor:pointer;flex-shrink:0;"></button>
 <button onclick="drawingSetColor('#E53935')" style="width:36px;height:36px;border-radius:50%;background:#E53935;border:3px solid #fff;cursor:pointer;flex-shrink:0;"></button>
@@ -275,9 +275,9 @@ body.dark-mode .section-chip{background:#2A2A2A;color:#E0E0E0}
 <button onclick="drawingSetColor('#EC407A')" style="width:36px;height:36px;border-radius:50%;background:#EC407A;border:3px solid #fff;cursor:pointer;flex-shrink:0;"></button>
 <button onclick="drawingSetColor('#8D6E63')" style="width:36px;height:36px;border-radius:50%;background:#8D6E63;border:3px solid #fff;cursor:pointer;flex-shrink:0;"></button>
 <button onclick="drawingSetColor('#546E7A')" style="width:36px;height:36px;border-radius:50%;background:#546E7A;border:3px solid #fff;cursor:pointer;flex-shrink:0;"></button>
-<button onclick="drawingSetSize(2)" style="width:38px;height:38px;border-radius:12px;background:#F5F5F5;border:2px solid #E0E0E0;cursor:pointer;flex-shrink:0;font-size:14px;">�</button>
-<button onclick="drawingSetSize(5)" style="width:38px;height:38px;border-radius:12px;background:#E8F5E9;border:2px solid #4CAF50;cursor:pointer;flex-shrink:0;font-size:18px;">?</button>
-<button onclick="drawingSetSize(12)" style="width:38px;height:38px;border-radius:12px;background:#F5F5F5;border:2px solid #E0E0E0;cursor:pointer;flex-shrink:0;font-size:22px;">?</button>
+<button onclick="drawingSetSize(2)" style="width:38px;height:38px;border-radius:12px;background:#F5F5F5;border:2px solid #E0E0E0;cursor:pointer;flex-shrink:0;font-size:14px;">•</button>
+<button onclick="drawingSetSize(5)" style="width:38px;height:38px;border-radius:12px;background:#E8F5E9;border:2px solid #4CAF50;cursor:pointer;flex-shrink:0;font-size:18px;">●</button>
+<button onclick="drawingSetSize(12)" style="width:38px;height:38px;border-radius:12px;background:#F5F5F5;border:2px solid #E0E0E0;cursor:pointer;flex-shrink:0;font-size:22px;">⬤</button>
 </div>
 <div style="flex:1;position:relative;background:#fff;overflow:hidden;">
 <canvas id="fullDrawingCanvas" style="display:block;width:100%;height:100%;touch-action:none;cursor:crosshair;"></canvas>
@@ -285,95 +285,95 @@ body.dark-mode .section-chip{background:#2A2A2A;color:#E0E0E0}
 </div>
 </div>
 <div id="messagesScreen" class="screen">
-<div class="top-bar"><button class="icon-btn" onclick="goBack()">?</button><div class="logo"><span>?? ??????</span></div><div style="width:42px;"></div></div>
+<div class="top-bar"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>💬 رسائلي</span></div><div style="width:42px;"></div></div>
 <div class="content"><div id="messagesList"></div></div>
 </div>
 <div id="profileScreen" class="screen">
-<div class="top-bar"><button class="icon-btn" onclick="goBack()">?</button><div class="logo"><span>?? ?????</span></div><div style="width:42px;"></div></div>
+<div class="top-bar"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>👤 حسابي</span></div><div style="width:42px;"></div></div>
 <div class="content">
 <div style="background:linear-gradient(135deg,#2E7D32,#4CAF50);border-radius:22px;padding:26px;text-align:center;color:#fff;margin-bottom:22px;">
-<div style="width:100px;height:100px;background:rgba(255,255,255,0.25);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:52px;margin:0 auto 14px;">??</div>
-<div id="profileName" style="font-size:22px;font-weight:bold;">??????</div>
-<div id="profileRole" style="font-size:14px;opacity:0.95;margin-top:4px;">????</div>
-<div id="profilePoints" style="font-size:14px;margin-top:12px;background:rgba(255,255,255,0.25);display:inline-block;padding:8px 18px;border-radius:22px;font-weight:bold;">? 0 ????</div>
+<div style="width:100px;height:100px;background:rgba(255,255,255,0.25);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:52px;margin:0 auto 14px;">👤</div>
+<div id="profileName" style="font-size:22px;font-weight:bold;">مستخدم</div>
+<div id="profileRole" style="font-size:14px;opacity:0.95;margin-top:4px;">طالب</div>
+<div id="profilePoints" style="font-size:14px;margin-top:12px;background:rgba(255,255,255,0.25);display:inline-block;padding:8px 18px;border-radius:22px;font-weight:bold;">⭐ 0 نقطة</div>
 </div>
-<div class="section-title">?? ?????????</div>
-<div class="menu-item" onclick="openOwnerProfile()"><span style="font-size:26px;">?????</span><span style="flex:1;font-weight:700;">?? ??????</span><span style="color:#999;font-size:24px;">�</span></div>
-<div class="menu-item" onclick="toggleDark()"><span style="font-size:26px;">??</span><span style="flex:1;font-weight:700;">????? ??????</span><span style="color:#999;font-size:24px;">�</span></div>
-<div class="menu-item" onclick="openAdmin()" id="adminMenu" style="display:none;"><span style="font-size:26px;">???</span><span style="flex:1;font-weight:700;color:#E53935;">???? ??????</span><span style="color:#999;font-size:24px;">�</span></div>
-<div class="menu-item" onclick="logout()" style="background:#FFEBEE;"><span style="font-size:26px;">??</span><span style="flex:1;font-weight:700;color:#E53935;">????? ??????</span><span style="color:#E53935;font-size:24px;">�</span></div>
+<div class="section-title">⚙️ الإعدادات</div>
+<div class="menu-item" onclick="openOwnerProfile()"><span style="font-size:26px;">👨‍🏫</span><span style="flex:1;font-weight:700;">عن المالك</span><span style="color:#999;font-size:24px;">‹</span></div>
+<div class="menu-item" onclick="toggleDark()"><span style="font-size:26px;">🌙</span><span style="flex:1;font-weight:700;">الوضع الليلي</span><span style="color:#999;font-size:24px;">‹</span></div>
+<div class="menu-item" onclick="openAdmin()" id="adminMenu" style="display:none;"><span style="font-size:26px;">🛡️</span><span style="flex:1;font-weight:700;color:#E53935;">لوحة المالك</span><span style="color:#999;font-size:24px;">‹</span></div>
+<div class="menu-item" onclick="logout()" style="background:#FFEBEE;"><span style="font-size:26px;">🚪</span><span style="flex:1;font-weight:700;color:#E53935;">تسجيل الخروج</span><span style="color:#E53935;font-size:24px;">‹</span></div>
 </div>
 </div><div id="ownerProfileScreen" class="screen">
-<div class="top-bar"><button class="icon-btn" onclick="goBack()">?</button><div class="logo"><span>????? ?? ??????</span></div><div style="width:42px;"></div></div>
+<div class="top-bar"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>👨‍🏫 عن المالك</span></div><div style="width:42px;"></div></div>
 <div class="content" style="text-align:center;">
-<img id="ownerProfileImage" class="owner-avatar" style="width:160px;height:160px;margin:20px auto;display:block;" src="https://ui-avatars.com/api/?name=????&background=2E7D32&color=fff&size=200" alt="??????">
-<div id="ownerProfileName" style="font-size:26px;font-weight:bold;color:var(--primary);margin-top:14px;">??????? ????</div>
-<div id="ownerProfileBio" style="font-size:15px;color:var(--gray);margin-top:18px;line-height:2;padding:0 24px;">???? ???? ??????? ???? ?????????</div>
+<img id="ownerProfileImage" class="owner-avatar" style="width:160px;height:160px;margin:20px auto;display:block;" src="https://ui-avatars.com/api/?name=حافظ&background=2E7D32&color=fff&size=200" alt="المالك">
+<div id="ownerProfileName" style="font-size:26px;font-weight:bold;color:var(--primary);margin-top:14px;">الأستاذ حافظ</div>
+<div id="ownerProfileBio" style="font-size:15px;color:var(--gray);margin-top:18px;line-height:2;padding:0 24px;">مؤسس منصة الأستاذ حافظ التعليمية</div>
 </div>
 </div>
 <div id="adminScreen" class="screen">
-<div class="top-bar" style="background:linear-gradient(135deg,#B71C1C,#E53935);"><button class="icon-btn" onclick="goBack()">?</button><div class="logo"><span>??? ???? ??????</span></div><div style="width:42px;"></div></div>
+<div class="top-bar" style="background:linear-gradient(135deg,#B71C1C,#E53935);"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>🛡️ لوحة المالك</span></div><div style="width:42px;"></div></div>
 <div class="content">
-<div class="section-title">?? ??????????</div>
+<div class="section-title">📊 الإحصائيات</div>
 <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:22px;">
-<div style="background:#fff;border-radius:16px;padding:16px;text-align:center;"><div style="font-size:22px;font-weight:bold;color:#E53935;" id="statUsers">0</div><div style="font-size:11px;color:#999;margin-top:4px;">?? ??????????</div></div>
-<div style="background:#fff;border-radius:16px;padding:16px;text-align:center;"><div style="font-size:22px;font-weight:bold;color:#E53935;" id="statLessons">0</div><div style="font-size:11px;color:#999;margin-top:4px;">?? ??????</div></div>
-<div style="background:#fff;border-radius:16px;padding:16px;text-align:center;"><div style="font-size:22px;font-weight:bold;color:#E53935;" id="statAds">0</div><div style="font-size:11px;color:#999;margin-top:4px;">?? ?????????</div></div>
+<div style="background:#fff;border-radius:16px;padding:16px;text-align:center;"><div style="font-size:22px;font-weight:bold;color:#E53935;" id="statUsers">0</div><div style="font-size:11px;color:#999;margin-top:4px;">👥 المستخدمين</div></div>
+<div style="background:#fff;border-radius:16px;padding:16px;text-align:center;"><div style="font-size:22px;font-weight:bold;color:#E53935;" id="statLessons">0</div><div style="font-size:11px;color:#999;margin-top:4px;">📚 الدروس</div></div>
+<div style="background:#fff;border-radius:16px;padding:16px;text-align:center;"><div style="font-size:22px;font-weight:bold;color:#E53935;" id="statAds">0</div><div style="font-size:11px;color:#999;margin-top:4px;">📢 الإعلانات</div></div>
 </div>
-<div class="section-title">?? ??????</div>
-<div class="menu-item" onclick="openAddLesson()"><span style="font-size:26px;">?</span><span style="flex:1;font-weight:700;">????? ??? ????</span><span style="color:#999;font-size:24px;">�</span></div>
-<div class="menu-item" onclick="openAdsManager()"><span style="font-size:26px;">??</span><span style="flex:1;font-weight:700;">????? ????????? ??????</span><span style="color:#999;font-size:24px;">�</span></div>
-<div class="menu-item" onclick="openOwnerEditor()"><span style="font-size:26px;">?????</span><span style="flex:1;font-weight:700;">????? ??????? ??????</span><span style="color:#999;font-size:24px;">�</span></div>
+<div class="section-title">⚙️ التحكم</div>
+<div class="menu-item" onclick="openAddLesson()"><span style="font-size:26px;">➕</span><span style="flex:1;font-weight:700;">إضافة درس جديد</span><span style="color:#999;font-size:24px;">‹</span></div>
+<div class="menu-item" onclick="openAdsManager()"><span style="font-size:26px;">📢</span><span style="flex:1;font-weight:700;">إدارة الإعلانات ومحطتي</span><span style="color:#999;font-size:24px;">‹</span></div>
+<div class="menu-item" onclick="openOwnerEditor()"><span style="font-size:26px;">👨‍🏫</span><span style="flex:1;font-weight:700;">تعديل معلومات المالك</span><span style="color:#999;font-size:24px;">‹</span></div>
 </div>
 </div>
 <div id="addLessonScreen" class="screen">
-<div class="top-bar" style="background:linear-gradient(135deg,#B71C1C,#E53935);"><button class="icon-btn" onclick="goBack()">?</button><div class="logo"><span>? ????? ???</span></div><div style="width:42px;"></div></div>
+<div class="top-bar" style="background:linear-gradient(135deg,#B71C1C,#E53935);"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>➕ إضافة درس</span></div><div style="width:42px;"></div></div>
 <div class="content">
-<div class="form-group"><label class="form-label">????? ?????</label><input type="text" class="form-input" id="newLessonTitle" placeholder="????: ????? ?????"></div>
-<div class="form-group"><label class="form-label">???????</label><textarea class="form-input" id="newLessonContent" placeholder="???? ??????? ???..." rows="6"></textarea></div>
-<div class="form-group"><label class="form-label">???????</label><select class="form-input" id="newLessonStage"><option value="primary">??????????</option><option value="prep">?????????</option><option value="sec">????????</option></select></div>
-<div class="form-group"><label class="form-label">????</label><input type="text" class="form-input" id="newLessonGrade" placeholder="????: ?????"></div>
-<div class="form-group"><label class="form-label">??????</label><input type="text" class="form-input" id="newLessonSubject" placeholder="????: ????? ???????"></div>
-<div class="form-group"><label class="form-label">?????</label><select class="form-input" id="newLessonType"><option value="lessons">?? ???</option><option value="exercises">?? ???????</option><option value="exams">?? ????????</option><option value="videos">?? ????????</option></select></div>
-<div class="form-group"><label class="form-label">?????</label><select class="form-input" id="newLessonTerm"><option value="1">????? ?????</option><option value="2">????? ??????</option></select></div>
-<div class="form-group"><label class="form-label">?? ???? (???????)</label><input type="file" class="form-input" id="newLessonImageFile" accept="image/*" style="padding:10px;"></div>
-<div class="form-group"><label class="form-label">?? ????? (???????)</label><input type="file" class="form-input" id="newLessonVideoFile" accept="video/*" style="padding:10px;"></div>
-<button class="btn-primary" id="saveLessonBtn" onclick="saveNewLesson()">?? ??? ?????</button>
+<div class="form-group"><label class="form-label">عنوان الدرس</label><input type="text" class="form-input" id="newLessonTitle" placeholder="مثال: الدرس الأول"></div>
+<div class="form-group"><label class="form-label">المحتوى</label><textarea class="form-input" id="newLessonContent" placeholder="اكتب المحتوى هنا..." rows="6"></textarea></div>
+<div class="form-group"><label class="form-label">المرحلة</label><select class="form-input" id="newLessonStage"><option value="primary">الابتدائية</option><option value="prep">الإعدادية</option><option value="sec">الثانوية</option></select></div>
+<div class="form-group"><label class="form-label">الصف</label><input type="text" class="form-input" id="newLessonGrade" placeholder="مثال: الأول"></div>
+<div class="form-group"><label class="form-label">المادة</label><input type="text" class="form-input" id="newLessonSubject" placeholder="مثال: اللغة العربية"></div>
+<div class="form-group"><label class="form-label">القسم</label><select class="form-input" id="newLessonType"><option value="lessons">📄 درس</option><option value="exercises">✏️ تدريبات</option><option value="exams">📝 امتحانات</option><option value="videos">🎥 فيديوهات</option></select></div>
+<div class="form-group"><label class="form-label">الترم</label><select class="form-input" id="newLessonTerm"><option value="1">الترم الأول</option><option value="2">الترم الثاني</option></select></div>
+<div class="form-group"><label class="form-label">📷 صورة (اختياري)</label><input type="file" class="form-input" id="newLessonImageFile" accept="image/*" style="padding:10px;"></div>
+<div class="form-group"><label class="form-label">🎥 فيديو (اختياري)</label><input type="file" class="form-input" id="newLessonVideoFile" accept="video/*" style="padding:10px;"></div>
+<button class="btn-primary" id="saveLessonBtn" onclick="saveNewLesson()">💾 حفظ الدرس</button>
 </div>
 </div>
 <div id="ownerEditorScreen" class="screen">
-<div class="top-bar" style="background:linear-gradient(135deg,#B71C1C,#E53935);"><button class="icon-btn" onclick="goBack()">?</button><div class="logo"><span>????? ????? ??????</span></div><div style="width:42px;"></div></div>
+<div class="top-bar" style="background:linear-gradient(135deg,#B71C1C,#E53935);"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>👨‍🏫 تعديل المالك</span></div><div style="width:42px;"></div></div>
 <div class="content">
-<div class="form-group"><label class="form-label">?????</label><input type="text" class="form-input" id="ownerName" placeholder="??????? ????"></div>
-<div class="form-group"><label class="form-label">?????? ???????</label><textarea class="form-input" id="ownerBio" placeholder="???? ??????..." rows="5"></textarea></div>
-<div class="form-group"><label class="form-label">?? ???? ??????</label><input type="file" class="form-input" id="ownerImageFile" accept="image/*" style="padding:10px;"></div>
-<button class="btn-primary" onclick="saveOwnerProfile()">?? ???</button>
+<div class="form-group"><label class="form-label">الاسم</label><input type="text" class="form-input" id="ownerName" placeholder="الأستاذ حافظ"></div>
+<div class="form-group"><label class="form-label">السيرة الذاتية</label><textarea class="form-input" id="ownerBio" placeholder="اكتب السيرة..." rows="5"></textarea></div>
+<div class="form-group"><label class="form-label">📷 صورة المالك</label><input type="file" class="form-input" id="ownerImageFile" accept="image/*" style="padding:10px;"></div>
+<button class="btn-primary" onclick="saveOwnerProfile()">💾 حفظ</button>
 </div>
 </div>
 <div id="adsManagerScreen" class="screen">
-<div class="top-bar" style="background:linear-gradient(135deg,#B71C1C,#E53935);"><button class="icon-btn" onclick="goBack()">?</button><div class="logo"><span>?? ????? ?????????</span></div><div style="width:42px;"></div></div>
+<div class="top-bar" style="background:linear-gradient(135deg,#B71C1C,#E53935);"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>📢 إدارة الإعلانات</span></div><div style="width:42px;"></div></div>
 <div class="content">
-<div class="content-header" style="background:linear-gradient(135deg,#B71C1C,#E53935);"><div class="content-header-title">?? ????? ?????</div><div class="content-header-sub">???? ???? ?? ????? ???? ?????</div></div>
-<div class="form-group"><label class="form-label">????? ???????</label><input type="text" class="form-input" id="adTitle" placeholder="????: ??? 50%"></div>
-<div class="form-group"><label class="form-label">??? ???????</label><select class="form-input" id="adType"><option value="image">??? ????</option><option value="video">?? ?????</option></select></div>
-<div class="form-group"><label class="form-label">?? ???? ?????</label><input type="file" class="form-input" id="adFile" accept="image/*,video/*" style="padding:10px;"></div>
-<div class="form-group"><label class="form-label">????? (?????)</label><input type="number" class="form-input" id="adDuration" value="10" min="3" max="60"></div>
-<button class="btn-primary" id="saveAdBtn" onclick="addNewAd()">? ????? ???????</button>
-<div class="section-title">?? ????????? ???????</div>
+<div class="content-header" style="background:linear-gradient(135deg,#B71C1C,#E53935);"><div class="content-header-title">📢 إضافة إعلان</div><div class="content-header-sub">ارفع صورة أو فيديو وحدد المدة</div></div>
+<div class="form-group"><label class="form-label">عنوان الإعلان</label><input type="text" class="form-input" id="adTitle" placeholder="مثال: خصم 50%"></div>
+<div class="form-group"><label class="form-label">نوع الإعلان</label><select class="form-input" id="adType"><option value="image">🖼️ صورة</option><option value="video">🎥 فيديو</option></select></div>
+<div class="form-group"><label class="form-label">📤 اختر الملف</label><input type="file" class="form-input" id="adFile" accept="image/*,video/*" style="padding:10px;"></div>
+<div class="form-group"><label class="form-label">المدة (ثواني)</label><input type="number" class="form-input" id="adDuration" value="10" min="3" max="60"></div>
+<button class="btn-primary" id="saveAdBtn" onclick="addNewAd()">➕ إضافة الإعلان</button>
+<div class="section-title">📋 الإعلانات الحالية</div>
 <div id="adsList"></div>
-<div class="content-header" style="background:linear-gradient(135deg,#7B1FA2,#9C27B0);margin-top:30px;"><div class="content-header-title">??? ????? ??????</div><div class="content-header-sub">???? ????? ????? ????? ???? ???????</div></div>
-<div class="form-group"><label class="form-label">????? ????? ??????</label><input type="text" class="form-input" id="myStationTitle" placeholder="????: ????? ???? ?????"></div>
-<div class="form-group"><label class="form-label">?? ???? ??? ????</label><input type="file" class="form-input" id="myStationFile" accept="audio/*" style="padding:10px;"></div>
-<button class="btn-primary" id="saveStationBtn" onclick="addMyStationAudio()" style="background:linear-gradient(135deg,#7B1FA2,#9C27B0);">? ????? ??????</button>
-<div class="section-title">?? ????? ??????</div>
+<div class="content-header" style="background:linear-gradient(135deg,#7B1FA2,#9C27B0);margin-top:30px;"><div class="content-header-title">🎙️ محطتي الخاصة</div><div class="content-header-sub">ارفع ملفات صوتية تشتغل داخل التطبيق</div></div>
+<div class="form-group"><label class="form-label">عنوان الملف الصوتي</label><input type="text" class="form-input" id="myStationTitle" placeholder="مثال: تلاوة سورة الكهف"></div>
+<div class="form-group"><label class="form-label">📤 اختر ملف صوتي</label><input type="file" class="form-input" id="myStationFile" accept="audio/*" style="padding:10px;"></div>
+<button class="btn-primary" id="saveStationBtn" onclick="addMyStationAudio()" style="background:linear-gradient(135deg,#7B1FA2,#9C27B0);">➕ إضافة للمحطة</button>
+<div class="section-title">🎵 ملفات المحطة</div>
 <div id="myStationList"></div>
 </div>
 </div>
-<button id="calcToggle" onclick="toggleSideCalculator()" style="position:fixed;bottom:110px;left:16px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#2E7D32,#1976D2);color:#fff;border:none;font-size:24px;cursor:pointer;box-shadow:0 4px 16px rgba(46,125,50,0.4);z-index:900;display:none;align-items:center;justify-content:center;">??</button>
+<button id="calcToggle" onclick="toggleSideCalculator()" style="position:fixed;bottom:110px;left:16px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#2E7D32,#1976D2);color:#fff;border:none;font-size:24px;cursor:pointer;box-shadow:0 4px 16px rgba(46,125,50,0.4);z-index:900;display:none;align-items:center;justify-content:center;">🧮</button>
 <div id="sideCalculator" style="position:fixed;top:0;left:-320px;width:320px;max-width:90vw;height:100vh;background:linear-gradient(180deg,#1E3A8A,#2E7D32);z-index:1500;transition:left 0.3s ease;overflow-y:auto;box-shadow:8px 0 30px rgba(0,0,0,0.3);">
 <div style="padding:16px;display:flex;justify-content:space-between;align-items:center;color:#fff;border-bottom:1px solid rgba(255,255,255,0.2);">
-<div style="font-size:18px;font-weight:bold;">?? ??????? ???????</div>
-<button onclick="toggleSideCalculator()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;width:36px;height:36px;border-radius:50%;font-size:20px;cursor:pointer;">?</button>
+<div style="font-size:18px;font-weight:bold;">🧮 الحاسبة العلمية</div>
+<button onclick="toggleSideCalculator()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;width:36px;height:36px;border-radius:50%;font-size:20px;cursor:pointer;">✕</button>
 </div>
 <div style="padding:16px;">
 <div style="background:rgba(255,255,255,0.95);border-radius:14px;padding:16px;margin-bottom:14px;direction:ltr;">
@@ -386,35 +386,35 @@ body.dark-mode .section-chip{background:#2A2A2A;color:#E0E0E0}
 <button class="sideCalc-btn" onclick="sideCalcFunc('tan')">tan</button>
 <button class="sideCalc-btn" onclick="sideCalcInput('(')">(</button>
 <button class="sideCalc-btn" onclick="sideCalcInput(')')">)</button>
-<button class="sideCalc-btn" onclick="sideCalcFunc('asin')">sin?�</button>
-<button class="sideCalc-btn" onclick="sideCalcFunc('acos')">cos?�</button>
-<button class="sideCalc-btn" onclick="sideCalcFunc('atan')">tan?�</button>
-<button class="sideCalc-btn" onclick="sideCalcInput('p')">p</button>
+<button class="sideCalc-btn" onclick="sideCalcFunc('asin')">sin⁻¹</button>
+<button class="sideCalc-btn" onclick="sideCalcFunc('acos')">cos⁻¹</button>
+<button class="sideCalc-btn" onclick="sideCalcFunc('atan')">tan⁻¹</button>
+<button class="sideCalc-btn" onclick="sideCalcInput('π')">π</button>
 <button class="sideCalc-btn" onclick="sideCalcInput('e')">e</button>
 <button class="sideCalc-btn" onclick="sideCalcFunc('log')">log</button>
 <button class="sideCalc-btn" onclick="sideCalcFunc('ln')">ln</button>
-<button class="sideCalc-btn" onclick="sideCalcFunc('sqrt')">v</button>
-<button class="sideCalc-btn" onclick="sideCalcFunc('cbrt')">?</button>
+<button class="sideCalc-btn" onclick="sideCalcFunc('sqrt')">√</button>
+<button class="sideCalc-btn" onclick="sideCalcFunc('cbrt')">∛</button>
 <button class="sideCalc-btn" onclick="sideCalcInput('^')">x^y</button>
-<button class="sideCalc-btn" onclick="sideCalcFunc('sqr')">x�</button>
-<button class="sideCalc-btn" onclick="sideCalcFunc('cube')">x�</button>
+<button class="sideCalc-btn" onclick="sideCalcFunc('sqr')">x²</button>
+<button class="sideCalc-btn" onclick="sideCalcFunc('cube')">x³</button>
 <button class="sideCalc-btn" onclick="sideCalcInput('%')">%</button>
 <button class="sideCalc-btn" onclick="sideCalcFunc('fact')">n!</button>
 <button class="sideCalc-btn" onclick="sideCalcInput('1/')">1/x</button>
 <button class="sideCalc-num" onclick="sideCalcInput('7')">7</button>
 <button class="sideCalc-num" onclick="sideCalcInput('8')">8</button>
 <button class="sideCalc-num" onclick="sideCalcInput('9')">9</button>
-<button class="sideCalc-btn op" onclick="sideCalcInput('�')">�</button>
-<button class="sideCalc-btn clear" onclick="sideCalcDelete()">?</button>
+<button class="sideCalc-btn op" onclick="sideCalcInput('÷')">÷</button>
+<button class="sideCalc-btn clear" onclick="sideCalcDelete()">⌫</button>
 <button class="sideCalc-num" onclick="sideCalcInput('4')">4</button>
 <button class="sideCalc-num" onclick="sideCalcInput('5')">5</button>
 <button class="sideCalc-num" onclick="sideCalcInput('6')">6</button>
-<button class="sideCalc-btn op" onclick="sideCalcInput('�')">�</button>
+<button class="sideCalc-btn op" onclick="sideCalcInput('×')">×</button>
 <button class="sideCalc-btn clear" onclick="sideCalcClear()">C</button>
 <button class="sideCalc-num" onclick="sideCalcInput('1')">1</button>
 <button class="sideCalc-num" onclick="sideCalcInput('2')">2</button>
 <button class="sideCalc-num" onclick="sideCalcInput('3')">3</button>
-<button class="sideCalc-btn op" onclick="sideCalcInput('-')">-</button>
+<button class="sideCalc-btn op" onclick="sideCalcInput('-')">−</button>
 <button class="sideCalc-btn eq" onclick="sideCalcResult()" style="grid-row:span 2;">=</button>
 <button class="sideCalc-num" onclick="sideCalcInput('0')" style="grid-column:span 2;">0</button>
 <button class="sideCalc-num" onclick="sideCalcInput('.')">.</button>
@@ -433,58 +433,58 @@ let currentStage=null,currentGrade=null,currentSubject=null,currentTerm=null,cur
 let radioAudio=null,homeAds=[],homeAdIndex=0,homeAdTimer=null,sideCalcCurrent='';
 let fullCanvas,fullCtx,isDrawing=false,currentColor='#000000',currentSize=5,isEraser=false;
 let drawingHistory=[],historyIndex=-1;
-function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));const t=document.getElementById(id);if(t){t.classList.add('active');currentScreen=id;const c=t.querySelector('.content');if(c)c.scrollTop=0;const ct=document.getElementById('calcToggle');if(ct){const math=['???????','??????','??????','?????','????','????'];if(math.some(s=>(currentSubject||'').includes(s))){ct.style.display='flex';}else{ct.style.display='none';const sc=document.getElementById('sideCalculator');if(sc)sc.style.left='-320px';}}}}
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));const t=document.getElementById(id);if(t){t.classList.add('active');currentScreen=id;const c=t.querySelector('.content');if(c)c.scrollTop=0;const ct=document.getElementById('calcToggle');if(ct){const math=['رياضيات','فيزياء','كيمياء','هندسة','حاسب','علوم'];if(math.some(s=>(currentSubject||'').includes(s))){ct.style.display='flex';}else{ct.style.display='none';const sc=document.getElementById('sideCalculator');if(sc)sc.style.left='-320px';}}}}
 function showToast(msg){const t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
 function goBack(){if(screenHistory.length>0)showScreen(screenHistory.pop());else showScreen('homeScreen');}
 function navTo(dest){document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));if(event&&event.target){const p=event.target.closest('.nav-item');if(p)p.classList.add('active');}if(dest==='home')showScreen('homeScreen');else if(dest==='education')openEducation();else if(dest==='quran')openQuran();else if(dest==='profile')goToProfile();}
 function selectRole(btn,role){document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');currentRole=role;const g=document.getElementById('ownerCodeGroup');if(g)g.style.display=(role==='owner')?'block':'none';}
-function login(){const u=document.getElementById('usernameInput').value.trim();const p=document.getElementById('passwordInput').value;const oc=document.getElementById('ownerCodeInput')?document.getElementById('ownerCodeInput').value:'';if(!u||u.length<3){showToast('?? ???? ??? ??????');return;}if(p.length<4){showToast('?? ???? ?????? ?????');return;}if(currentRole==='owner'&&oc!==OWNER_CODE){showToast('?? ??? ?????? ???');return;}currentUser={name:u,role:currentRole,points:1250};showToast('? ?? ????? ??????');setTimeout(()=>showScreen('homeScreen'),800);}
-function logout(){if(confirm('????? ?????')){currentUser=null;currentRole='student';screenHistory=[];document.getElementById('usernameInput').value='';document.getElementById('passwordInput').value='';showScreen('loginScreen');showToast('?? ?? ??????');}}
-const stagesData={primary:{name:'??????? ??????????',icon:'??',grades:['?????','??????','??????','??????','??????','??????']},prep:{name:'??????? ?????????',icon:'??',grades:['?????','??????','??????']},sec:{name:'??????? ????????',icon:'??',grades:['?????','??????','??????']}};
-const generalSubjects=[{id:'arabic',name:'????? ???????',icon:'??',color:'#C2185B'},{id:'math',name:'???????',icon:'??',color:'#1976D2'},{id:'science',name:'????',icon:'??',color:'#388E3C'},{id:'physics',name:'??????',icon:'??',color:'#7B1FA2'},{id:'chem',name:'??????',icon:'??',color:'#D32F2F'},{id:'english',name:'???????',icon:'????',color:'#303F9F'},{id:'social',name:'??????',icon:'??',color:'#0097A7'},{id:'religion',name:'????? ?????',icon:'??',color:'#2E7D32'},{id:'computer',name:'???? ???',icon:'??',color:'#455A64'},{id:'art',name:'????',icon:'??',color:'#F57C00'}];
-const azharSubjects=[{id:'quran_t',name:'?????? ????????',icon:'??'},{id:'hadith',name:'?????? ??????',icon:'??'},{id:'fiqh',name:'?????',icon:'??'},{id:'aqeeda',name:'???????',icon:'??'},{id:'seera',name:'?????? ???????',icon:'??'},{id:'nahw',name:'?????',icon:'??'},{id:'sarf',name:'????? ????????',icon:'??'}];
-const surahsData=[{id:1,name:'???????',verses:7,type:'????'},{id:2,name:'??????',verses:286,type:'?????'},{id:3,name:'?? ?????',verses:200,type:'?????'},{id:4,name:'??????',verses:176,type:'?????'},{id:18,name:'?????',verses:110,type:'????'},{id:36,name:'??',verses:83,type:'????'},{id:55,name:'??????',verses:78,type:'?????'},{id:67,name:'?????',verses:30,type:'????'},{id:78,name:'?????',verses:40,type:'????'},{id:112,name:'???????',verses:4,type:'????'},{id:113,name:'?????',verses:5,type:'????'},{id:114,name:'?????',verses:6,type:'????'}];
-const radioStations=[{name:'????? ?????? ?????? - ???',url:'https://n0d.radiojar.com/8s5u5tpdtwzuv'},{name:'????? ?????? ?????? - ????????',url:'https://Qurango.net/radio/tarateel'},{name:'????? ????? ???????',url:'https://n0d.radiojar.com/0tpy1h0kxtzuv'},{name:'????? ????? ??????',url:'https://Qurango.net/radio/tafseer'},{name:'????? ?????? ?????? - ??????',url:'https://Qurango.net/radio/mishary_alafasy'}];
-async function uploadFile(file,folder){if(!file)return null;try{showToast('? ???? ?????...');const fd=new FormData();fd.append('file',file);fd.append('upload_preset',UPLOAD_PRESET);if(folder)fd.append('folder',folder);const r=await fetch('https://api.cloudinary.com/v1_1/'+CLOUD_NAME+'/auto/upload',{method:'POST',body:fd});if(!r.ok){const t=await r.text();console.error('Cloudinary error:',t);throw new Error('Upload failed');}const d=await r.json();if(!d.secure_url)throw new Error('No URL');showToast('? ?? ?????');return d.secure_url;}catch(e){console.error(e);showToast('? ??? ?????');return null;}}
-function openEducation(){const l=document.getElementById('stagesList');l.innerHTML=Object.keys(stagesData).map(k=>{const s=stagesData[k];return'<div class="stage-item" onclick="openStage(\''+k+'\')"><div class="stage-icon">'+s.icon+'</div><div class="stage-info"><div class="stage-name">'+s.name+'</div><div class="stage-sub">'+s.grades.length+' ????</div></div><div class="stage-arrow">�</div></div>';}).join('');screenHistory.push(currentScreen);showScreen('educationScreen');}
-function openStage(id){currentStage=id;const s=stagesData[id];document.getElementById('gradesTitle').textContent=s.name;const l=document.getElementById('gradesList');l.innerHTML=s.grades.map(g=>'<div class="stage-item" onclick="openGrade(\''+id+'\',\''+g+'\')"><div class="stage-icon" style="background:#E8F5E9;">??</div><div class="stage-info"><div class="stage-name">???? '+g+'</div><div class="stage-sub">???? ???? ??????</div></div><div class="stage-arrow">�</div></div>').join('');screenHistory.push(currentScreen);showScreen('gradesScreen');}
-function openGrade(id,name){currentGrade=name;document.getElementById('subjectsTitle').textContent='???? '+name;const l=document.getElementById('subjectsList');l.innerHTML=generalSubjects.map(s=>'<div class="subject-card" onclick="openSubject(\''+s.id+'\',\''+s.name+'\')"><div class="subject-icon" style="background:'+s.color+'20;color:'+s.color+';">'+s.icon+'</div><div class="subject-name">'+s.name+'</div></div>').join('');screenHistory.push(currentScreen);showScreen('subjectsScreen');}
+function login(){const u=document.getElementById('usernameInput').value.trim();const p=document.getElementById('passwordInput').value;const oc=document.getElementById('ownerCodeInput')?document.getElementById('ownerCodeInput').value:'';if(!u||u.length<3){showToast('⚠️ أدخل اسم مستخدم');return;}if(p.length<4){showToast('⚠️ كلمة المرور قصيرة');return;}if(currentRole==='owner'&&oc!==OWNER_CODE){showToast('🔐 كود المالك خطأ');return;}currentUser={name:u,role:currentRole,points:1250};showToast('✅ تم تسجيل الدخول');setTimeout(()=>showScreen('homeScreen'),800);}
+function logout(){if(confirm('تسجيل خروج؟')){currentUser=null;currentRole='student';screenHistory=[];document.getElementById('usernameInput').value='';document.getElementById('passwordInput').value='';showScreen('loginScreen');showToast('👋 تم الخروج');}}
+const stagesData={primary:{name:'المرحلة الابتدائية',icon:'🎒',grades:['الأول','الثاني','الثالث','الرابع','الخامس','السادس']},prep:{name:'المرحلة الإعدادية',icon:'📗',grades:['الأول','الثاني','الثالث']},sec:{name:'المرحلة الثانوية',icon:'📕',grades:['الأول','الثاني','الثالث']}};
+const generalSubjects=[{id:'arabic',name:'اللغة العربية',icon:'📖',color:'#C2185B'},{id:'math',name:'رياضيات',icon:'🔢',color:'#1976D2'},{id:'science',name:'علوم',icon:'🔬',color:'#388E3C'},{id:'physics',name:'فيزياء',icon:'⚛️',color:'#7B1FA2'},{id:'chem',name:'كيمياء',icon:'⚗️',color:'#D32F2F'},{id:'english',name:'إنجليزي',icon:'🇬🇧',color:'#303F9F'},{id:'social',name:'دراسات',icon:'🌍',color:'#0097A7'},{id:'religion',name:'تربية دينية',icon:'🕌',color:'#2E7D32'},{id:'computer',name:'حاسب آلي',icon:'💻',color:'#455A64'},{id:'art',name:'فنية',icon:'🎨',color:'#F57C00'}];
+const azharSubjects=[{id:'quran_t',name:'القرآن والتفسير',icon:'📖'},{id:'hadith',name:'الحديث الشريف',icon:'📜'},{id:'fiqh',name:'الفقه',icon:'⚖️'},{id:'aqeeda',name:'العقيدة',icon:'🕌'},{id:'seera',name:'السيرة النبوية',icon:'🌟'},{id:'nahw',name:'النحو',icon:'📝'},{id:'sarf',name:'الصرف والبلاغة',icon:'📚'}];
+const surahsData=[{id:1,name:'الفاتحة',verses:7,type:'مكية'},{id:2,name:'البقرة',verses:286,type:'مدنية'},{id:3,name:'آل عمران',verses:200,type:'مدنية'},{id:4,name:'النساء',verses:176,type:'مدنية'},{id:18,name:'الكهف',verses:110,type:'مكية'},{id:36,name:'يس',verses:83,type:'مكية'},{id:55,name:'الرحمن',verses:78,type:'مدنية'},{id:67,name:'الملك',verses:30,type:'مكية'},{id:78,name:'النبأ',verses:40,type:'مكية'},{id:112,name:'الإخلاص',verses:4,type:'مكية'},{id:113,name:'الفلق',verses:5,type:'مكية'},{id:114,name:'الناس',verses:6,type:'مكية'}];
+const radioStations=[{name:'إذاعة القرآن الكريم - مصر',url:'https://n0d.radiojar.com/8s5u5tpdtwzuv'},{name:'إذاعة القرآن الكريم - السعودية',url:'https://Qurango.net/radio/tarateel'},{name:'إذاعة السنة النبوية',url:'https://n0d.radiojar.com/0tpy1h0kxtzuv'},{name:'إذاعة تفسير القرآن',url:'https://Qurango.net/radio/tafseer'},{name:'إذاعة القرآن الكريم - الكويت',url:'https://Qurango.net/radio/mishary_alafasy'}];
+async function uploadFile(file,folder){if(!file)return null;try{showToast('⏳ جاري الرفع...');const fd=new FormData();fd.append('file',file);fd.append('upload_preset',UPLOAD_PRESET);if(folder)fd.append('folder',folder);const r=await fetch('https://api.cloudinary.com/v1_1/'+CLOUD_NAME+'/auto/upload',{method:'POST',body:fd});if(!r.ok){const t=await r.text();console.error('Cloudinary error:',t);throw new Error('Upload failed');}const d=await r.json();if(!d.secure_url)throw new Error('No URL');showToast('✅ تم الرفع');return d.secure_url;}catch(e){console.error(e);showToast('❌ فشل الرفع');return null;}}
+function openEducation(){const l=document.getElementById('stagesList');l.innerHTML=Object.keys(stagesData).map(k=>{const s=stagesData[k];return'<div class="stage-item" onclick="openStage(\''+k+'\')"><div class="stage-icon">'+s.icon+'</div><div class="stage-info"><div class="stage-name">'+s.name+'</div><div class="stage-sub">'+s.grades.length+' صفوف</div></div><div class="stage-arrow">‹</div></div>';}).join('');screenHistory.push(currentScreen);showScreen('educationScreen');}
+function openStage(id){currentStage=id;const s=stagesData[id];document.getElementById('gradesTitle').textContent=s.name;const l=document.getElementById('gradesList');l.innerHTML=s.grades.map(g=>'<div class="stage-item" onclick="openGrade(\''+id+'\',\''+g+'\')"><div class="stage-icon" style="background:#E8F5E9;">🎓</div><div class="stage-info"><div class="stage-name">الصف '+g+'</div><div class="stage-sub">اضغط لعرض المواد</div></div><div class="stage-arrow">‹</div></div>').join('');screenHistory.push(currentScreen);showScreen('gradesScreen');}
+function openGrade(id,name){currentGrade=name;document.getElementById('subjectsTitle').textContent='الصف '+name;const l=document.getElementById('subjectsList');l.innerHTML=generalSubjects.map(s=>'<div class="subject-card" onclick="openSubject(\''+s.id+'\',\''+s.name+'\')"><div class="subject-icon" style="background:'+s.color+'20;color:'+s.color+';">'+s.icon+'</div><div class="subject-name">'+s.name+'</div></div>').join('');screenHistory.push(currentScreen);showScreen('subjectsScreen');}
 function openSubject(id,name){currentSubject=name;document.getElementById('termsTitle').textContent=name;document.getElementById('termsHeader').textContent=name+' - '+(currentGrade||'');renderTerms();screenHistory.push(currentScreen);showScreen('termsScreen');}
-function renderTerms(){const l=document.getElementById('termsList');const terms=[{num:1,name:'????? ?????',icon:'??'},{num:2,name:'????? ??????',icon:'??'}];l.innerHTML=terms.map(t=>'<div class="term-card '+(t.num===2?'term-2':'')+'"><div class="term-header"><div class="term-icon">'+t.icon+'</div><div class="term-title">'+t.name+'</div><div class="term-count">???? ????</div></div><div class="term-sections"><div class="section-chip" onclick="openContent(\'lessons\','+t.num+',\''+t.name+'\')">?? ??????</div><div class="section-chip" onclick="openContent(\'exercises\','+t.num+',\''+t.name+'\')">?? ???????</div><div class="section-chip" onclick="openContent(\'exams\','+t.num+',\''+t.name+'\')">?? ????????</div><div class="section-chip" onclick="openContent(\'videos\','+t.num+',\''+t.name+'\')">?? ????????</div></div></div>').join('');}
-async function openContent(type,num,name){currentTerm=num;currentSection=type;const titles={lessons:'?? ??????',exercises:'?? ???????',exams:'?? ????????',videos:'?? ????????'};document.getElementById('contentTitle').textContent=titles[type]||'???????';document.getElementById('contentHeaderTitle').textContent=(currentSubject||'')+' - '+name;document.getElementById('contentHeaderSub').textContent=titles[type];const l=document.getElementById('contentList');screenHistory.push(currentScreen);showScreen('contentScreen');l.innerHTML='<div class="empty-state"><p>? ???? ???????...</p></div>';try{const snap=await db.collection('lessons').where('subject','==',currentSubject).where('term','==',num).where('type','==',type).where('grade','==',currentGrade).get();if(snap.empty){l.innerHTML='<div class="empty-state"><div class="empty-state-icon">??</div><p>?? ???? ????? ???</p></div>';return;}let html='';snap.forEach(doc=>{const it=doc.data();html+='<div class="content-item" onclick="viewContent(\''+doc.id+'\')"><div class="content-item-icon">??</div><div class="content-item-info"><div class="content-item-title">'+(it.title||'???? ?????')+'</div><div class="content-item-sub">'+(it.content?it.content.substring(0,50)+'...':'')+'</div></div><div class="content-item-arrow">�</div></div>';});l.innerHTML=html;}catch(e){console.error('openContent:',e);l.innerHTML='<div class="empty-state">??? ???</div>';}}
+function renderTerms(){const l=document.getElementById('termsList');const terms=[{num:1,name:'الترم الأول',icon:'📘'},{num:2,name:'الترم الثاني',icon:'📙'}];l.innerHTML=terms.map(t=>'<div class="term-card '+(t.num===2?'term-2':'')+'"><div class="term-header"><div class="term-icon">'+t.icon+'</div><div class="term-title">'+t.name+'</div><div class="term-count">منهج كامل</div></div><div class="term-sections"><div class="section-chip" onclick="openContent(\'lessons\','+t.num+',\''+t.name+'\')">📄 الدروس</div><div class="section-chip" onclick="openContent(\'exercises\','+t.num+',\''+t.name+'\')">✏️ تدريبات</div><div class="section-chip" onclick="openContent(\'exams\','+t.num+',\''+t.name+'\')">📝 امتحانات</div><div class="section-chip" onclick="openContent(\'videos\','+t.num+',\''+t.name+'\')">🎥 فيديوهات</div></div></div>').join('');}
+async function openContent(type,num,name){currentTerm=num;currentSection=type;const titles={lessons:'📄 الدروس',exercises:'✏️ تدريبات',exams:'📝 امتحانات',videos:'🎥 فيديوهات'};document.getElementById('contentTitle').textContent=titles[type]||'المحتوى';document.getElementById('contentHeaderTitle').textContent=(currentSubject||'')+' - '+name;document.getElementById('contentHeaderSub').textContent=titles[type];const l=document.getElementById('contentList');screenHistory.push(currentScreen);showScreen('contentScreen');l.innerHTML='<div class="empty-state"><p>⏳ جاري التحميل...</p></div>';try{const snap=await db.collection('lessons').where('subject','==',currentSubject).where('term','==',num).where('type','==',type).where('grade','==',currentGrade).get();if(snap.empty){l.innerHTML='<div class="empty-state"><div class="empty-state-icon">📭</div><p>لا يوجد محتوى بعد</p></div>';return;}let html='';snap.forEach(doc=>{const it=doc.data();html+='<div class="content-item" onclick="viewContent(\''+doc.id+'\')"><div class="content-item-icon">📄</div><div class="content-item-info"><div class="content-item-title">'+(it.title||'بدون عنوان')+'</div><div class="content-item-sub">'+(it.content?it.content.substring(0,50)+'...':'')+'</div></div><div class="content-item-arrow">‹</div></div>';});l.innerHTML=html;}catch(e){console.error('openContent:',e);l.innerHTML='<div class="empty-state">حدث خطأ</div>';}}
 async function viewContent(id){try{const doc=await db.collection('lessons').doc(id).get();if(!doc.exists)return;const it=doc.data();document.getElementById('viewerTitle').textContent=it.title||'';let h='<h2 style="color:#2E7D32;margin-bottom:16px;">'+(it.title||'')+'</h2>';if(it.image_url)h+='<img src="'+it.image_url+'">';if(it.content)h+='<div style="line-height:2;font-size:15px;">'+it.content+'</div>';if(it.video_url){if(it.video_url.includes('youtube')||it.video_url.includes('youtu.be')){const v=it.video_url.split('v=')[1]||it.video_url.split('/').pop();h+='<iframe style="width:100%;height:250px;margin-top:16px;border-radius:12px;" src="https://www.youtube.com/embed/'+v+'" frameborder="0" allowfullscreen></iframe>';}else{h+='<video controls style="width:100%;margin-top:16px;border-radius:12px;"><source src="'+it.video_url+'"></video>';}}document.getElementById('viewerBody').innerHTML=h;screenHistory.push(currentScreen);showScreen('viewerScreen');}catch(e){console.error(e);}}
-function openAzhar(){const l=document.getElementById('azharList');l.innerHTML=azharSubjects.map(s=>'<div class="azhar-subject-item" onclick="openAzharSubject(\''+s.id+'\',\''+s.name+'\')"><div style="font-size:30px;">'+s.icon+'</div><div class="stage-info"><div class="stage-name">'+s.name+'</div></div><div class="stage-arrow" style="color:#C9A227;">�</div></div>').join('');screenHistory.push(currentScreen);showScreen('azharScreen');}
-function openAzharSubject(id,name){currentSubject=name;currentGrade='?????';document.getElementById('termsTitle').textContent=name;document.getElementById('termsHeader').textContent=name;renderTerms();screenHistory.push(currentScreen);showScreen('termsScreen');}
-function openQuran(){const l=document.getElementById('surahsList');l.innerHTML=surahsData.map(s=>'<div class="content-item" onclick="showToast(\'?? ???? '+s.name+'\')"><div class="content-item-icon" style="background:linear-gradient(135deg,#00695C,#26A69A);color:#fff;font-weight:bold;">'+s.id+'</div><div class="content-item-info"><div class="content-item-title">'+s.name+'</div><div class="content-item-sub">'+s.verses+' ??? � '+s.type+'</div></div><div class="content-item-arrow">�</div></div>').join('');screenHistory.push(currentScreen);showScreen('quranScreen');}
-function filterSurahs(q){const l=document.getElementById('surahsList');const f=surahsData.filter(s=>s.name.includes(q));l.innerHTML=f.map(s=>'<div class="content-item" onclick="showToast(\'?? ???? '+s.name+'\')"><div class="content-item-icon" style="background:linear-gradient(135deg,#00695C,#26A69A);color:#fff;font-weight:bold;">'+s.id+'</div><div class="content-item-info"><div class="content-item-title">'+s.name+'</div></div></div>').join('');}
-async function openRadio(){const l=document.getElementById('radioList');let sh='';try{const snap=await db.collection('station').orderBy('created_at','desc').get();if(!snap.empty){sh='<div class="section-title">??? ????? ??????</div>';snap.forEach(doc=>{const x=doc.data();sh+='<div class="content-item" onclick="playMyStationAudio(\''+doc.id+'\')"><div class="content-item-icon" style="background:linear-gradient(135deg,#7B1FA2,#9C27B0);color:#fff;font-size:24px;">??</div><div class="content-item-info"><div class="content-item-title">'+(x.title||'')+'</div><div class="content-item-sub">?? ?????</div></div><div class="content-item-arrow">??</div></div>';});sh+='<div class="section-title">?? ???????? ??????</div>';}}catch(e){console.error(e);}l.innerHTML=sh+radioStations.map((s,i)=>'<div class="content-item" onclick="playRadio('+i+')"><div class="content-item-icon" style="background:linear-gradient(135deg,#D32F2F,#FF8F00);color:#fff;font-size:24px;">??</div><div class="content-item-info"><div class="content-item-title">'+s.name+'</div><div class="content-item-sub">???? ???????</div></div><div class="content-item-arrow">??</div></div>').join('');screenHistory.push(currentScreen);showScreen('radioScreen');}
-function playRadio(i){const s=radioStations[i];if(radioAudio){radioAudio.pause();radioAudio=null;}radioAudio=new Audio(s.url);radioAudio.play().catch(e=>showToast('? ???? ???????'));document.getElementById('radioPlayer').style.display='block';document.getElementById('radioStationName').textContent=s.name;document.getElementById('radioNowPlaying').textContent='?? ???? ???????...';showToast('?? '+s.name);}
-function stopRadio(){if(radioAudio){radioAudio.pause();radioAudio=null;}document.getElementById('radioPlayer').style.display='none';showToast('?? ?? ???????');}
-async function playMyStationAudio(id){try{const doc=await db.collection('station').doc(id).get();if(!doc.exists)return;const x=doc.data();if(radioAudio){radioAudio.pause();radioAudio=null;}radioAudio=new Audio(x.url);radioAudio.play().catch(e=>showToast('? ???? ??? ????'));document.getElementById('radioPlayer').style.display='block';document.getElementById('radioStationName').textContent=x.title||'';document.getElementById('radioNowPlaying').textContent='?? ???? ???????...';showToast('?? '+(x.title||''));}catch(e){console.error(e);}}
-async function addMyStationAudio(){const t=document.getElementById('myStationTitle').value.trim();const fi=document.getElementById('myStationFile');const btn=document.getElementById('saveStationBtn');if(!t){showToast('?? ???? ????? ?????');return;}if(!fi.files||!fi.files[0]){showToast('?? ???? ??? ????');return;}if(btn){btn.disabled=true;btn.textContent='? ???? ?????...';}const url=await uploadFile(fi.files[0],'mystation');if(btn){btn.disabled=false;btn.textContent='? ????? ??????';}if(!url){showToast('? ??? ?????');return;}try{await db.collection('station').add({title:t,url:url,created_at:new Date().toISOString()});showToast('? ?? ????? ?????');document.getElementById('myStationTitle').value='';fi.value='';loadMyStation();}catch(e){console.error(e);showToast('? ??? ?????');}}
-async function loadMyStation(){const l=document.getElementById('myStationList');if(!l)return;l.innerHTML='<div class="empty-state"><p>? ???? ???????...</p></div>';try{const snap=await db.collection('station').orderBy('created_at','desc').get();if(snap.empty){l.innerHTML='<div class="empty-state"><div class="empty-state-icon">??</div><p>?? ???? ????? ???</p></div>';return;}let html='';snap.forEach(doc=>{const x=doc.data();html+='<div style="background:#fff;border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;margin-bottom:10px;"><div style="font-size:24px;">??</div><div style="flex:1;"><div style="font-weight:bold;font-size:14px;">'+(x.title||'')+'</div><div style="font-size:12px;color:#999;">??? ????</div></div><button onclick="playMyStationAudio(\''+doc.id+'\')" style="background:#E8F5E9;border:none;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:16px;">??</button><button onclick="deleteMyStationAudio(\''+doc.id+'\')" style="background:#FFEBEE;border:none;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:16px;">???</button></div>';});l.innerHTML=html;}catch(e){console.error(e);l.innerHTML='<div class="empty-state">??? ???</div>';}}
-async function deleteMyStationAudio(id){if(!confirm('??? ??????'))return;try{await db.collection('station').doc(id).delete();loadMyStation();showToast('??? ?? ?????');}catch(e){console.error(e);}}
-function goToProfile(){document.getElementById('profileName').textContent=currentUser?currentUser.name:'??????';document.getElementById('profileRole').textContent=currentRole==='student'?'????':currentRole==='teacher'?'????':'??????';document.getElementById('profilePoints').textContent='? '+(currentUser?currentUser.points:0)+' ????';const m=document.getElementById('adminMenu');if(m)m.style.display=currentRole==='owner'?'flex':'none';screenHistory.push(currentScreen);showScreen('profileScreen');}
+function openAzhar(){const l=document.getElementById('azharList');l.innerHTML=azharSubjects.map(s=>'<div class="azhar-subject-item" onclick="openAzharSubject(\''+s.id+'\',\''+s.name+'\')"><div style="font-size:30px;">'+s.icon+'</div><div class="stage-info"><div class="stage-name">'+s.name+'</div></div><div class="stage-arrow" style="color:#C9A227;">‹</div></div>').join('');screenHistory.push(currentScreen);showScreen('azharScreen');}
+function openAzharSubject(id,name){currentSubject=name;currentGrade='أزهري';document.getElementById('termsTitle').textContent=name;document.getElementById('termsHeader').textContent=name;renderTerms();screenHistory.push(currentScreen);showScreen('termsScreen');}
+function openQuran(){const l=document.getElementById('surahsList');l.innerHTML=surahsData.map(s=>'<div class="content-item" onclick="showToast(\'📖 سورة '+s.name+'\')"><div class="content-item-icon" style="background:linear-gradient(135deg,#00695C,#26A69A);color:#fff;font-weight:bold;">'+s.id+'</div><div class="content-item-info"><div class="content-item-title">'+s.name+'</div><div class="content-item-sub">'+s.verses+' آية • '+s.type+'</div></div><div class="content-item-arrow">‹</div></div>').join('');screenHistory.push(currentScreen);showScreen('quranScreen');}
+function filterSurahs(q){const l=document.getElementById('surahsList');const f=surahsData.filter(s=>s.name.includes(q));l.innerHTML=f.map(s=>'<div class="content-item" onclick="showToast(\'📖 سورة '+s.name+'\')"><div class="content-item-icon" style="background:linear-gradient(135deg,#00695C,#26A69A);color:#fff;font-weight:bold;">'+s.id+'</div><div class="content-item-info"><div class="content-item-title">'+s.name+'</div></div></div>').join('');}
+async function openRadio(){const l=document.getElementById('radioList');let sh='';try{const snap=await db.collection('station').orderBy('created_at','desc').get();if(!snap.empty){sh='<div class="section-title">🎙️ محطتي الخاصة</div>';snap.forEach(doc=>{const x=doc.data();sh+='<div class="content-item" onclick="playMyStationAudio(\''+doc.id+'\')"><div class="content-item-icon" style="background:linear-gradient(135deg,#7B1FA2,#9C27B0);color:#fff;font-size:24px;">🎵</div><div class="content-item-info"><div class="content-item-title">'+(x.title||'')+'</div><div class="content-item-sub">من محطتي</div></div><div class="content-item-arrow">▶️</div></div>';});sh+='<div class="section-title">📻 الإذاعات العامة</div>';}}catch(e){console.error(e);}l.innerHTML=sh+radioStations.map((s,i)=>'<div class="content-item" onclick="playRadio('+i+')"><div class="content-item-icon" style="background:linear-gradient(135deg,#D32F2F,#FF8F00);color:#fff;font-size:24px;">📻</div><div class="content-item-info"><div class="content-item-title">'+s.name+'</div><div class="content-item-sub">اضغط للتشغيل</div></div><div class="content-item-arrow">▶️</div></div>').join('');screenHistory.push(currentScreen);showScreen('radioScreen');}
+function playRadio(i){const s=radioStations[i];if(radioAudio){radioAudio.pause();radioAudio=null;}radioAudio=new Audio(s.url);radioAudio.play().catch(e=>showToast('❌ تعذر التشغيل'));document.getElementById('radioPlayer').style.display='block';document.getElementById('radioStationName').textContent=s.name;document.getElementById('radioNowPlaying').textContent='🎵 جاري التشغيل...';showToast('▶️ '+s.name);}
+function stopRadio(){if(radioAudio){radioAudio.pause();radioAudio=null;}document.getElementById('radioPlayer').style.display='none';showToast('⏹️ تم الإيقاف');}
+async function playMyStationAudio(id){try{const doc=await db.collection('station').doc(id).get();if(!doc.exists)return;const x=doc.data();if(radioAudio){radioAudio.pause();radioAudio=null;}radioAudio=new Audio(x.url);radioAudio.play().catch(e=>showToast('❌ اضغط مرة أخرى'));document.getElementById('radioPlayer').style.display='block';document.getElementById('radioStationName').textContent=x.title||'';document.getElementById('radioNowPlaying').textContent='🎵 جاري التشغيل...';showToast('▶️ '+(x.title||''));}catch(e){console.error(e);}}
+async function addMyStationAudio(){const t=document.getElementById('myStationTitle').value.trim();const fi=document.getElementById('myStationFile');const btn=document.getElementById('saveStationBtn');if(!t){showToast('⚠️ أدخل عنوان الملف');return;}if(!fi.files||!fi.files[0]){showToast('⚠️ اختر ملف صوتي');return;}if(btn){btn.disabled=true;btn.textContent='⏳ جاري الرفع...';}const url=await uploadFile(fi.files[0],'mystation');if(btn){btn.disabled=false;btn.textContent='➕ إضافة للمحطة';}if(!url){showToast('❌ فشل الرفع');return;}try{await db.collection('station').add({title:t,url:url,created_at:new Date().toISOString()});showToast('✅ تم إضافة الملف');document.getElementById('myStationTitle').value='';fi.value='';loadMyStation();}catch(e){console.error(e);showToast('❌ فشل الحفظ');}}
+async function loadMyStation(){const l=document.getElementById('myStationList');if(!l)return;l.innerHTML='<div class="empty-state"><p>⏳ جاري التحميل...</p></div>';try{const snap=await db.collection('station').orderBy('created_at','desc').get();if(snap.empty){l.innerHTML='<div class="empty-state"><div class="empty-state-icon">🎵</div><p>لا توجد ملفات بعد</p></div>';return;}let html='';snap.forEach(doc=>{const x=doc.data();html+='<div style="background:#fff;border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;margin-bottom:10px;"><div style="font-size:24px;">🎵</div><div style="flex:1;"><div style="font-weight:bold;font-size:14px;">'+(x.title||'')+'</div><div style="font-size:12px;color:#999;">ملف صوتي</div></div><button onclick="playMyStationAudio(\''+doc.id+'\')" style="background:#E8F5E9;border:none;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:16px;">▶️</button><button onclick="deleteMyStationAudio(\''+doc.id+'\')" style="background:#FFEBEE;border:none;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:16px;">🗑️</button></div>';});l.innerHTML=html;}catch(e){console.error(e);l.innerHTML='<div class="empty-state">حدث خطأ</div>';}}
+async function deleteMyStationAudio(id){if(!confirm('حذف الملف؟'))return;try{await db.collection('station').doc(id).delete();loadMyStation();showToast('🗑️ تم الحذف');}catch(e){console.error(e);}}
+function goToProfile(){document.getElementById('profileName').textContent=currentUser?currentUser.name:'مستخدم';document.getElementById('profileRole').textContent=currentRole==='student'?'طالب':currentRole==='teacher'?'معلم':'المالك';document.getElementById('profilePoints').textContent='⭐ '+(currentUser?currentUser.points:0)+' نقطة';const m=document.getElementById('adminMenu');if(m)m.style.display=currentRole==='owner'?'flex':'none';screenHistory.push(currentScreen);showScreen('profileScreen');}
 function openOwnerProfile(){screenHistory.push(currentScreen);showScreen('ownerProfileScreen');}
-function toggleDark(){document.body.classList.toggle('dark-mode');showToast(document.body.classList.contains('dark-mode')?'?? ??? ????':'?? ??? ?????');}
+function toggleDark(){document.body.classList.toggle('dark-mode');showToast(document.body.classList.contains('dark-mode')?'🌙 وضع ليلي':'☀️ وضع نهاري');}
 function openAdsManager(){loadAds();loadMyStation();screenHistory.push(currentScreen);showScreen('adsManagerScreen');}
-async function loadAds(){const l=document.getElementById('adsList');if(!l)return;l.innerHTML='<div class="empty-state"><p>? ???? ???????...</p></div>';try{const snap=await db.collection('ads').orderBy('created_at','desc').get();if(snap.empty){l.innerHTML='<div class="empty-state"><div class="empty-state-icon">??</div><p>?? ???? ???????</p></div>';return;}let html='';snap.forEach(doc=>{const ad=doc.data();html+='<div style="background:#fff;border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;margin-bottom:10px;"><div style="font-size:24px;">??</div><div style="flex:1;"><div style="font-weight:bold;font-size:14px;">'+(ad.title||'???? ?????')+'</div><div style="font-size:12px;color:#999;">'+(ad.duration||10)+' ????? � '+(ad.ad_type||'????')+'</div></div><button onclick="deleteAd(\''+doc.id+'\')" style="background:#FFEBEE;border:none;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:16px;">???</button></div>';});l.innerHTML=html;}catch(e){console.error('loadAds:',e);l.innerHTML='<div class="empty-state">??? ???</div>';}}
-async function addNewAd(){const t=document.getElementById('adTitle').value.trim();const ty=document.getElementById('adType').value;const du=parseInt(document.getElementById('adDuration').value)||10;const fi=document.getElementById('adFile');const btn=document.getElementById('saveAdBtn');if(!t){showToast('?? ???? ????? ???????');return;}if(!fi.files||!fi.files[0]){showToast('?? ???? ???');return;}if(btn){btn.disabled=true;btn.textContent='? ???? ?????...';}const url=await uploadFile(fi.files[0],'ads');if(btn){btn.disabled=false;btn.textContent='? ????? ???????';}if(!url){showToast('? ??? ?????');return;}try{await db.collection('ads').add({title:t,ad_type:ty,image_url:ty==='image'?url:null,video_url:ty==='video'?url:null,duration:du,position:'home',active:true,created_at:new Date().toISOString()});showToast('? ?? ????? ???????');document.getElementById('adTitle').value='';fi.value='';loadAds();loadAdsOnHome();}catch(e){console.error(e);showToast('? ??? ?????');}}
-async function deleteAd(id){if(!confirm('??? ????????'))return;try{await db.collection('ads').doc(id).delete();loadAds();loadAdsOnHome();showToast('??? ?? ?????');}catch(e){console.error('deleteAd:',e);showToast('? ??? ?????');}}
+async function loadAds(){const l=document.getElementById('adsList');if(!l)return;l.innerHTML='<div class="empty-state"><p>⏳ جاري التحميل...</p></div>';try{const snap=await db.collection('ads').orderBy('created_at','desc').get();if(snap.empty){l.innerHTML='<div class="empty-state"><div class="empty-state-icon">📢</div><p>لا توجد إعلانات</p></div>';return;}let html='';snap.forEach(doc=>{const ad=doc.data();html+='<div style="background:#fff;border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;margin-bottom:10px;"><div style="font-size:24px;">📢</div><div style="flex:1;"><div style="font-weight:bold;font-size:14px;">'+(ad.title||'بدون عنوان')+'</div><div style="font-size:12px;color:#999;">'+(ad.duration||10)+' ثانية • '+(ad.ad_type||'صورة')+'</div></div><button onclick="deleteAd(\''+doc.id+'\')" style="background:#FFEBEE;border:none;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:16px;">🗑️</button></div>';});l.innerHTML=html;}catch(e){console.error('loadAds:',e);l.innerHTML='<div class="empty-state">حدث خطأ</div>';}}
+async function addNewAd(){const t=document.getElementById('adTitle').value.trim();const ty=document.getElementById('adType').value;const du=parseInt(document.getElementById('adDuration').value)||10;const fi=document.getElementById('adFile');const btn=document.getElementById('saveAdBtn');if(!t){showToast('⚠️ أدخل عنوان الإعلان');return;}if(!fi.files||!fi.files[0]){showToast('⚠️ اختر ملف');return;}if(btn){btn.disabled=true;btn.textContent='⏳ جاري الرفع...';}const url=await uploadFile(fi.files[0],'ads');if(btn){btn.disabled=false;btn.textContent='➕ إضافة الإعلان';}if(!url){showToast('❌ فشل الرفع');return;}try{await db.collection('ads').add({title:t,ad_type:ty,image_url:ty==='image'?url:null,video_url:ty==='video'?url:null,duration:du,position:'home',active:true,created_at:new Date().toISOString()});showToast('✅ تم إضافة الإعلان');document.getElementById('adTitle').value='';fi.value='';loadAds();loadAdsOnHome();}catch(e){console.error(e);showToast('❌ فشل الحفظ');}}
+async function deleteAd(id){if(!confirm('حذف الإعلان؟'))return;try{await db.collection('ads').doc(id).delete();loadAds();loadAdsOnHome();showToast('🗑️ تم الحذف');}catch(e){console.error('deleteAd:',e);showToast('❌ فشل الحذف');}}
 async function loadAdsOnHome(){try{const snap=await db.collection('ads').orderBy('created_at','desc').get();homeAds=[];snap.forEach(doc=>{const ad=doc.data();if(ad.active!==false){ad.id=doc.id;homeAds.push(ad);}});if(homeAds.length>0){homeAdIndex=0;showHomeAd(0);}}catch(e){console.error('loadAdsOnHome:',e);}}
 function showHomeAd(i){if(!homeAds||homeAds.length===0)return;const ad=homeAds[i];const box=document.getElementById('mainAd');if(!box)return;const du=(ad.duration||10)*1000;let h='';if(ad.ad_type==='video'&&ad.video_url){h='<video autoplay muted loop style="width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;"><source src="'+ad.video_url+'" type="video/mp4"></video>';}else if(ad.image_url){h='<img src="'+ad.image_url+'" style="width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;">';}h+='<div class="ad-banner-content" style="position:relative;z-index:1;"><div class="ad-banner-title" style="color:#fff;text-shadow:0 2px 8px rgba(0,0,0,0.7);">'+(ad.title||'')+'</div></div>';box.innerHTML=h;if(homeAdTimer)clearTimeout(homeAdTimer);if(homeAds.length>1){homeAdTimer=setTimeout(function(){homeAdIndex=(homeAdIndex+1)%homeAds.length;showHomeAd(homeAdIndex);},du);}}
 function openAdmin(){loadAdminStats();screenHistory.push(currentScreen);showScreen('adminScreen');}
 async function loadAdminStats(){try{const l=await db.collection('lessons').get();const a=await db.collection('ads').get();document.getElementById('statLessons').textContent=l.size;document.getElementById('statAds').textContent=a.size;document.getElementById('statUsers').textContent='0';}catch(e){console.error(e);}}
 function openAddLesson(){screenHistory.push(currentScreen);showScreen('addLessonScreen');}
-async function saveNewLesson(){const t=document.getElementById('newLessonTitle').value.trim();const c=document.getElementById('newLessonContent').value.trim();const st=document.getElementById('newLessonStage').value;const g=document.getElementById('newLessonGrade').value.trim();const s=document.getElementById('newLessonSubject').value.trim();const ty=document.getElementById('newLessonType').value;const te=parseInt(document.getElementById('newLessonTerm').value);const im=document.getElementById('newLessonImageFile').files[0];const vi=document.getElementById('newLessonVideoFile').files[0];const btn=document.getElementById('saveLessonBtn');if(!t){showToast('?? ???? ????? ?????');return;}if(btn){btn.disabled=true;btn.textContent='? ???? ?????...';}let iu=null,vu=null;if(im)iu=await uploadFile(im,'lessons/images');if(vi)vu=await uploadFile(vi,'lessons/videos');try{await db.collection('lessons').add({title:t,content:c,subject:s,grade:g,stage:st,term:te,type:ty,image_url:iu,video_url:vu,created_at:new Date().toISOString()});showToast('? ?? ??? ?????');document.getElementById('newLessonTitle').value='';document.getElementById('newLessonContent').value='';document.getElementById('newLessonGrade').value='';document.getElementById('newLessonSubject').value='';document.getElementById('newLessonImageFile').value='';document.getElementById('newLessonVideoFile').value='';if(btn){btn.disabled=false;btn.textContent='?? ??? ?????';}setTimeout(()=>goBack(),1000);}catch(e){console.error(e);if(btn){btn.disabled=false;btn.textContent='?? ??? ?????';}showToast('? ??? ?????');}}
+async function saveNewLesson(){const t=document.getElementById('newLessonTitle').value.trim();const c=document.getElementById('newLessonContent').value.trim();const st=document.getElementById('newLessonStage').value;const g=document.getElementById('newLessonGrade').value.trim();const s=document.getElementById('newLessonSubject').value.trim();const ty=document.getElementById('newLessonType').value;const te=parseInt(document.getElementById('newLessonTerm').value);const im=document.getElementById('newLessonImageFile').files[0];const vi=document.getElementById('newLessonVideoFile').files[0];const btn=document.getElementById('saveLessonBtn');if(!t){showToast('⚠️ أدخل عنوان الدرس');return;}if(btn){btn.disabled=true;btn.textContent='⏳ جاري الحفظ...';}let iu=null,vu=null;if(im)iu=await uploadFile(im,'lessons/images');if(vi)vu=await uploadFile(vi,'lessons/videos');try{await db.collection('lessons').add({title:t,content:c,subject:s,grade:g,stage:st,term:te,type:ty,image_url:iu,video_url:vu,created_at:new Date().toISOString()});showToast('✅ تم حفظ الدرس');document.getElementById('newLessonTitle').value='';document.getElementById('newLessonContent').value='';document.getElementById('newLessonGrade').value='';document.getElementById('newLessonSubject').value='';document.getElementById('newLessonImageFile').value='';document.getElementById('newLessonVideoFile').value='';if(btn){btn.disabled=false;btn.textContent='💾 حفظ الدرس';}setTimeout(()=>goBack(),1000);}catch(e){console.error(e);if(btn){btn.disabled=false;btn.textContent='💾 حفظ الدرس';}showToast('❌ فشل الحفظ');}}
 function openOwnerEditor(){screenHistory.push(currentScreen);showScreen('ownerEditorScreen');}
-async function saveOwnerProfile(){const n=document.getElementById('ownerName').value.trim();const b=document.getElementById('ownerBio').value.trim();const fi=document.getElementById('ownerImageFile').files[0];let iu=null;if(fi)iu=await uploadFile(fi,'owner');try{const data={name:n,bio:b};if(iu)data.image_url=iu;const snap=await db.collection('owner').limit(1).get();if(snap.empty){await db.collection('owner').add(data);}else{await db.collection('owner').doc(snap.docs[0].id).update(data);}showToast('? ?? ?????');setTimeout(()=>goBack(),1000);}catch(e){console.error(e);showToast('? ??? ?????');}}
-function openMessages(){document.getElementById('messagesList').innerHTML='<div class="content-item"><div class="content-item-icon" style="background:#E8F5E9;font-size:24px;">?????</div><div class="content-item-info"><div class="content-item-title">?. ???? - ???????</div><div class="content-item-sub">??? ?????</div></div></div>';screenHistory.push(currentScreen);showScreen('messagesScreen');}
+async function saveOwnerProfile(){const n=document.getElementById('ownerName').value.trim();const b=document.getElementById('ownerBio').value.trim();const fi=document.getElementById('ownerImageFile').files[0];let iu=null;if(fi)iu=await uploadFile(fi,'owner');try{const data={name:n,bio:b};if(iu)data.image_url=iu;const snap=await db.collection('owner').limit(1).get();if(snap.empty){await db.collection('owner').add(data);}else{await db.collection('owner').doc(snap.docs[0].id).update(data);}showToast('✅ تم الحفظ');setTimeout(()=>goBack(),1000);}catch(e){console.error(e);showToast('❌ فشل الحفظ');}}
+function openMessages(){document.getElementById('messagesList').innerHTML='<div class="content-item"><div class="content-item-icon" style="background:#E8F5E9;font-size:24px;">👨‍🏫</div><div class="content-item-info"><div class="content-item-title">أ. محمد - رياضيات</div><div class="content-item-sub">كيف حالك؟</div></div></div>';screenHistory.push(currentScreen);showScreen('messagesScreen');}
 function toggleSideCalculator(){const c=document.getElementById('sideCalculator');if(!c)return;if(c.style.left==='0px'){c.style.left='-320px';}else{c.style.left='0px';}}
 function sideCalcInput(v){sideCalcCurrent+=v;document.getElementById('sideCalcScreen').textContent=sideCalcCurrent||'0';}
 function sideCalcDelete(){sideCalcCurrent=sideCalcCurrent.slice(0,-1);document.getElementById('sideCalcScreen').textContent=sideCalcCurrent||'0';}
 function sideCalcClear(){sideCalcCurrent='';document.getElementById('sideCalcScreen').textContent='0';document.getElementById('sideCalcHistory').textContent='';}
-function sideCalcResult(){try{let e=sideCalcCurrent.replace(/�/g,'*').replace(/�/g,'/').replace(/p/g,Math.PI).replace(/e/g,Math.E).replace(/\^/g,'**');const r=eval(e);document.getElementById('sideCalcHistory').textContent=sideCalcCurrent+' =';document.getElementById('sideCalcScreen').textContent=r;sideCalcCurrent=String(r);}catch(err){showToast('?? ??? ?? ???????');}}
+function sideCalcResult(){try{let e=sideCalcCurrent.replace(/×/g,'*').replace(/÷/g,'/').replace(/π/g,Math.PI).replace(/e/g,Math.E).replace(/\^/g,'**');const r=eval(e);document.getElementById('sideCalcHistory').textContent=sideCalcCurrent+' =';document.getElementById('sideCalcScreen').textContent=r;sideCalcCurrent=String(r);}catch(err){showToast('⚠️ خطأ في العملية');}}
 function sideCalcFunc(fn){const c=parseFloat(sideCalcCurrent)||0;let r=0;switch(fn){case'sin':r=Math.sin(c);break;case'cos':r=Math.cos(c);break;case'tan':r=Math.tan(c);break;case'asin':r=Math.asin(c);break;case'acos':r=Math.acos(c);break;case'atan':r=Math.atan(c);break;case'log':r=Math.log10(c);break;case'ln':r=Math.log(c);break;case'sqrt':r=Math.sqrt(c);break;case'cbrt':r=Math.cbrt(c);break;case'sqr':r=c*c;break;case'cube':r=c*c*c;break;case'fact':r=1;for(let i=2;i<=c;i++)r*=i;break;}document.getElementById('sideCalcHistory').textContent=fn+'('+c+')';document.getElementById('sideCalcScreen').textContent=r.toFixed(6).replace(/\.?0+$/,'');sideCalcCurrent=String(r);}
 function openDrawing(){screenHistory.push(currentScreen);showScreen('drawingScreen');setTimeout(initFullCanvas,300);}
 function initFullCanvas(){fullCanvas=document.getElementById('fullDrawingCanvas');if(!fullCanvas)return;const r=fullCanvas.getBoundingClientRect();fullCanvas.width=r.width;fullCanvas.height=r.height;fullCtx=fullCanvas.getContext('2d');fullCtx.lineCap='round';fullCtx.lineJoin='round';fullCtx.fillStyle='#FFFFFF';fullCtx.fillRect(0,0,fullCanvas.width,fullCanvas.height);fullCtx.strokeStyle=currentColor;fullCtx.lineWidth=currentSize;isDrawing=false;isEraser=false;drawingHistory=[];historyIndex=-1;saveHistoryState();fullCanvas.onmousedown=startDrawing;fullCanvas.onmousemove=drawLine;fullCanvas.onmouseup=stopDrawing;fullCanvas.onmouseleave=stopDrawing;fullCanvas.addEventListener('touchstart',startDrawing,{passive:false});fullCanvas.addEventListener('touchmove',drawLine,{passive:false});fullCanvas.addEventListener('touchend',stopDrawing);setTimeout(fullLoad,500);}
@@ -492,21 +492,21 @@ function getPosition(e){const r=fullCanvas.getBoundingClientRect();let cx,cy;if(
 function startDrawing(e){e.preventDefault();isDrawing=true;const p=getPosition(e);fullCtx.beginPath();fullCtx.moveTo(p.x,p.y);fullCtx.strokeStyle=isEraser?'#FFFFFF':currentColor;fullCtx.lineWidth=isEraser?(currentSize*3):currentSize;}
 function drawLine(e){e.preventDefault();if(!isDrawing)return;const p=getPosition(e);fullCtx.strokeStyle=isEraser?'#FFFFFF':currentColor;fullCtx.lineWidth=isEraser?(currentSize*3):currentSize;fullCtx.lineTo(p.x,p.y);fullCtx.stroke();}
 function stopDrawing(){if(isDrawing){isDrawing=false;saveHistoryState();}}
-function drawingSetColor(c){currentColor=c;isEraser=false;if(fullCtx)fullCtx.strokeStyle=c;showToast('?? ?? ????? ?????');}
-function drawingSetEraser(){isEraser=true;if(fullCtx)fullCtx.strokeStyle='#FFFFFF';showToast('?? ??? ???????');}
-function drawingSetSize(s){currentSize=s;if(fullCtx)fullCtx.lineWidth=s;showToast('?? ??? ???????: '+s);}
+function drawingSetColor(c){currentColor=c;isEraser=false;if(fullCtx)fullCtx.strokeStyle=c;showToast('🎨 تم تغيير اللون');}
+function drawingSetEraser(){isEraser=true;if(fullCtx)fullCtx.strokeStyle='#FFFFFF';showToast('🧽 وضع الممحاة');}
+function drawingSetSize(s){currentSize=s;if(fullCtx)fullCtx.lineWidth=s;showToast('📏 حجم الفرشاة: '+s);}
 function saveHistoryState(){if(!fullCanvas)return;drawingHistory=drawingHistory.slice(0,historyIndex+1);drawingHistory.push(fullCanvas.toDataURL());historyIndex=drawingHistory.length-1;if(drawingHistory.length>30){drawingHistory.shift();historyIndex--;}}
-function drawingUndo(){if(historyIndex<=0){showToast('?? ?? ???? ?????');return;}historyIndex--;loadHistoryState();showToast('? ?????');}
-function drawingRedo(){if(historyIndex>=drawingHistory.length-1){showToast('?? ?? ???? ?????');return;}historyIndex++;loadHistoryState();showToast('? ?????');}
+function drawingUndo(){if(historyIndex<=0){showToast('⚠️ لا يوجد تراجع');return;}historyIndex--;loadHistoryState();showToast('↶ تراجع');}
+function drawingRedo(){if(historyIndex>=drawingHistory.length-1){showToast('⚠️ لا يوجد إعادة');return;}historyIndex++;loadHistoryState();showToast('↷ إعادة');}
 function loadHistoryState(){const img=new Image();img.onload=()=>{fullCtx.clearRect(0,0,fullCanvas.width,fullCanvas.height);fullCtx.drawImage(img,0,0);};img.src=drawingHistory[historyIndex];}
-function drawingClearAll(){if(!confirm('??? ?? ??????'))return;fullCtx.fillStyle='#FFFFFF';fullCtx.fillRect(0,0,fullCanvas.width,fullCanvas.height);localStorage.removeItem('ta3lemy_drawing');saveHistoryState();showToast('??? ?? ?????');}
-function drawingSave(){try{const d=fullCanvas.toDataURL('image/png');localStorage.setItem('ta3lemy_drawing',d);showToast('?? ?? ?????');}catch(e){showToast('?? ??? ?????');}}
-function drawingPrint(){const d=fullCanvas.toDataURL('image/png');const w=window.open('','_blank');w.document.write('<html><head><title>?????</title></head><body style="margin:0;display:flex;align-items:center;justify-content:center;"><img src="'+d+'" style="max-width:100%;" onload="window.print();window.close();"></body></html>');w.document.close();}
-function drawingShare(){fullCanvas.toBlob(async(b)=>{const f=new File([b],'drawing.png',{type:'image/png'});if(navigator.share&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f],title:'????'});showToast('?? ?? ????????');}catch(e){}}else{const d=fullCanvas.toDataURL('image/png');const a=document.createElement('a');a.download='drawing-'+Date.now()+'.png';a.href=d;a.click();showToast('?? ?? ???????');}},'image/png');}
+function drawingClearAll(){if(!confirm('مسح كل الرسم؟'))return;fullCtx.fillStyle='#FFFFFF';fullCtx.fillRect(0,0,fullCanvas.width,fullCanvas.height);localStorage.removeItem('ta3lemy_drawing');saveHistoryState();showToast('🗑️ تم المسح');}
+function drawingSave(){try{const d=fullCanvas.toDataURL('image/png');localStorage.setItem('ta3lemy_drawing',d);showToast('💾 تم الحفظ');}catch(e){showToast('⚠️ فشل الحفظ');}}
+function drawingPrint(){const d=fullCanvas.toDataURL('image/png');const w=window.open('','_blank');w.document.write('<html><head><title>طباعة</title></head><body style="margin:0;display:flex;align-items:center;justify-content:center;"><img src="'+d+'" style="max-width:100%;" onload="window.print();window.close();"></body></html>');w.document.close();}
+function drawingShare(){fullCanvas.toBlob(async(b)=>{const f=new File([b],'drawing.png',{type:'image/png'});if(navigator.share&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f],title:'رسمي'});showToast('📤 تم المشاركة');}catch(e){}}else{const d=fullCanvas.toDataURL('image/png');const a=document.createElement('a');a.download='drawing-'+Date.now()+'.png';a.href=d;a.click();showToast('📥 تم التحميل');}},'image/png');}
 function fullLoad(){const d=localStorage.getItem('ta3lemy_drawing');if(!d)return;const img=new Image();img.onload=()=>{fullCtx.drawImage(img,0,0);saveHistoryState();};img.src=d;}
 async function loadOwnerInfo(){try{const snap=await db.collection('owner').limit(1).get();if(snap.empty)return;const d=snap.docs[0].data();if(d.image_url){document.getElementById('ownerAvatar').src=d.image_url;document.getElementById('ownerProfileImage').src=d.image_url;}if(d.name){document.getElementById('ownerProfileName').textContent=d.name;document.getElementById('ownerName').value=d.name;}if(d.bio){document.getElementById('ownerProfileBio').textContent=d.bio;document.getElementById('ownerBio').value=d.bio;}}catch(e){console.error('loadOwnerInfo:',e);}}
-window.addEventListener('error',e=>console.error('? Error:',e.error));
-window.addEventListener('unhandledrejection',e=>console.error('? Promise:',e.reason));
+window.addEventListener('error',e=>console.error('❌ Error:',e.error));
+window.addEventListener('unhandledrejection',e=>console.error('❌ Promise:',e.reason));
 window.addEventListener('load',()=>{setTimeout(()=>showScreen('loginScreen'),2500);loadOwnerInfo();loadAdsOnHome();});
 </script>
 </body>
