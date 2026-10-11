@@ -406,66 +406,6 @@ body.dark-mode .section-chip{background:#2A2A2A;color:#E0E0E0}
 <canvas id="fullDrawingCanvas" style="display:block;width:100%;height:100%;touch-action:none;cursor:crosshair;"></canvas>
 </div>
 </div>
-</div><div id="messagesScreen" class="screen">
-<div class="top-bar"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>💬 الرسائل</span></div><div style="width:42px;"></div></div>
-<div class="content">
-<div class="content-header"><div class="content-header-title">💬 محادثاتي</div><div class="content-header-sub" id="messagesHeaderSub">تواصل مع المعلمين والزملاء</div></div>
-<button class="btn-primary" onclick="openNewMessage()" style="margin-bottom:16px;">➕ محادثة جديدة</button>
-<div id="messagesList"></div>
-</div>
-</div>
-
-<div id="chatScreen" class="screen">
-<div class="top-bar"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span id="chatTitle">المحادثة</span></div><div style="width:42px;"></div></div>
-<div class="content" style="padding-bottom:80px;overflow-y:auto;">
-<div id="chatMessages" class="chat-container"></div>
-</div>
-<div class="chat-input-bar">
-<input type="text" id="chatInput" placeholder="اكتب رسالتك..." onkeypress="if(event.key==='Enter')sendMessage()">
-<button onclick="sendMessage()">📤</button>
-</div>
-</div>
-
-<div id="rewardsScreen" class="screen">
-<div class="top-bar" style="background:linear-gradient(135deg,#F9A825,#FBC02D);"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>🏆 لوحة التكريم</span></div><div style="width:42px;"></div></div>
-<div class="content">
-<div class="content-header" style="background:linear-gradient(135deg,#F9A825,#FBC02D);">
-<div class="content-header-title">🏆 تكريم الشهر</div>
-<div class="content-header-sub">الطلاب والمعلمون المتميزون</div>
-</div>
-<div class="section-title">🥇 أفضل الطلاب</div>
-<div id="topStudents"></div>
-<div class="section-title">🌟 أفضل المعلمين</div>
-<div id="topTeachers"></div>
-<button class="btn-primary" onclick="showMyPoints()" style="margin-top:16px;background:linear-gradient(135deg,#F9A825,#FBC02D);">⭐ نقاطي</button>
-</div>
-</div>
-
-<div id="profileScreen" class="screen">
-<div class="top-bar"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>👤 حسابي</span></div><div style="width:42px;"></div></div>
-<div class="content">
-<div style="background:linear-gradient(135deg,#2E7D32,#4CAF50);border-radius:22px;padding:26px;text-align:center;color:#fff;margin-bottom:22px;">
-<div style="width:100px;height:100px;background:rgba(255,255,255,0.25);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:52px;margin:0 auto 14px;">👤</div>
-<div id="profileName" style="font-size:22px;font-weight:bold;">مستخدم</div>
-<div id="profileRole" style="font-size:14px;opacity:0.95;margin-top:4px;">طالب</div>
-<div id="profilePoints" style="font-size:14px;margin-top:12px;background:rgba(255,255,255,0.25);display:inline-block;padding:8px 18px;border-radius:22px;font-weight:bold;">⭐ 0 نقطة</div>
-</div>
-<div class="section-title">⚙️ الإعدادات</div>
-<div class="menu-item" onclick="openOwnerProfile()"><span style="font-size:26px;">👨‍🏫</span><span style="flex:1;font-weight:700;">عن المالك</span><span style="color:#999;font-size:24px;">‹</span></div>
-<div class="menu-item" onclick="toggleDark()"><span style="font-size:26px;">🌙</span><span style="flex:1;font-weight:700;">الوضع الليلي</span><span style="color:#999;font-size:24px;">‹</span></div>
-<div class="menu-item" onclick="openRewards()"><span style="font-size:26px;">🏆</span><span style="flex:1;font-weight:700;">لوحة التكريم</span><span style="color:#999;font-size:24px;">‹</span></div>
-<div class="menu-item" onclick="openAdmin()" id="adminMenu" style="display:none;"><span style="font-size:26px;">🛡️</span><span style="flex:1;font-weight:700;color:#E53935;">لوحة المالك</span><span style="color:#999;font-size:24px;">‹</span></div>
-<div class="menu-item" onclick="logout()" style="background:#FFEBEE;"><span style="font-size:26px;">🚪</span><span style="flex:1;font-weight:700;color:#E53935;">تسجيل الخروج</span><span style="color:#E53935;font-size:24px;">‹</span></div>
-</div>
-</div>
-
-<div id="ownerProfileScreen" class="screen">
-<div class="top-bar"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>👨‍🏫 المالك</span></div><div style="width:42px;"></div></div>
-<div class="content" style="text-align:center;">
-<img id="ownerProfileImage" class="owner-avatar" style="width:160px;height:160px;margin:20px auto;display:block;" src="https://ui-avatars.com/api/?name=حافظ&background=2E7D32&color=fff&size=200">
-<div id="ownerProfileName" style="font-size:26px;font-weight:bold;color:var(--primary);margin-top:14px;">الأستاذ حافظ</div>
-<div id="ownerProfileBio" style="font-size:15px;color:var(--gray);margin-top:18px;line-height:2;padding:0 24px;">مؤسس منصة الأستاذ حافظ التعليمية</div>
-</div>
 </div><div id="adminScreen" class="screen">
 <div class="top-bar" style="background:linear-gradient(135deg,#B71C1C,#E53935);"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>🛡️ لوحة المالك</span></div><div style="width:42px;"></div></div>
 <div class="content">
@@ -727,32 +667,6 @@ window.addEventListener('error',e=>console.error('❌',e.error));
 window.addEventListener('unhandledrejection',e=>console.error('❌ Promise:',e.reason));
 window.addEventListener('load',()=>{setTimeout(()=>showScreen('loginScreen'),2500);loadOwnerInfo();loadAdsOnHome();loadWisdomBar();});
 if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./service-worker.js').then(reg=>console.log('✅ SW registered')).catch(err=>console.log('❌ SW error:',err));});}
-
-// --- كود إصلاح عرض الإعلانات (لتجنب الأخطاء 404) ---
-window.showHomeAd = function(i){
-    if(typeof homeAds === 'undefined' || !homeAds || homeAds.length === 0) return;
-    const ad = homeAds[i];
-    const box = document.getElementById('mainAd');
-    if(!box) return;
-    const du = (ad.duration || 10) * 1000;
-    let h = '';
-    if(ad.ad_type === 'video' && ad.video_url){
-        h = '<video autoplay muted loop style="width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;"><source src="' + ad.video_url + '" type="video/mp4"></video>';
-    } else if(ad.image_url){
-        h = '<img src="' + ad.image_url + '" style="width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;" onerror="this.style.display=\'none\';">';
-    } else {
-        h = '<div style="width:100%;height:100%;background:linear-gradient(135deg,#FF6B6B,#FF8E53);position:absolute;top:0;left:0;"></div>';
-    }
-    h += '<div class="ad-banner-content" style="position:relative;z-index:1;"><div class="ad-banner-title" style="color:#fff;text-shadow:0 2px 8px rgba(0,0,0,0.7);">' + (ad.title || '') + '</div></div>';
-    box.innerHTML = h;
-    if(window.homeAdTimer) clearTimeout(window.homeAdTimer);
-    if(homeAds.length > 1){
-        window.homeAdTimer = setTimeout(function(){
-            window.homeAdIndex = (window.homeAdIndex + 1) % homeAds.length;
-            window.showHomeAd(window.homeAdIndex);
-        }, du);
-    }
-};
-// --- نهاية كود الإصلاح ---</script>
+</script>
 </body>
 </html>
