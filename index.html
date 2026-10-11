@@ -727,6 +727,32 @@ window.addEventListener('error',e=>console.error('❌',e.error));
 window.addEventListener('unhandledrejection',e=>console.error('❌ Promise:',e.reason));
 window.addEventListener('load',()=>{setTimeout(()=>showScreen('loginScreen'),2500);loadOwnerInfo();loadAdsOnHome();loadWisdomBar();});
 if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./service-worker.js').then(reg=>console.log('✅ SW registered')).catch(err=>console.log('❌ SW error:',err));});}
-</script>
+
+// --- كود إصلاح عرض الإعلانات (لتجنب الأخطاء 404) ---
+window.showHomeAd = function(i){
+    if(typeof homeAds === 'undefined' || !homeAds || homeAds.length === 0) return;
+    const ad = homeAds[i];
+    const box = document.getElementById('mainAd');
+    if(!box) return;
+    const du = (ad.duration || 10) * 1000;
+    let h = '';
+    if(ad.ad_type === 'video' && ad.video_url){
+        h = '<video autoplay muted loop style="width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;"><source src="' + ad.video_url + '" type="video/mp4"></video>';
+    } else if(ad.image_url){
+        h = '<img src="' + ad.image_url + '" style="width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;" onerror="this.style.display=\'none\';">';
+    } else {
+        h = '<div style="width:100%;height:100%;background:linear-gradient(135deg,#FF6B6B,#FF8E53);position:absolute;top:0;left:0;"></div>';
+    }
+    h += '<div class="ad-banner-content" style="position:relative;z-index:1;"><div class="ad-banner-title" style="color:#fff;text-shadow:0 2px 8px rgba(0,0,0,0.7);">' + (ad.title || '') + '</div></div>';
+    box.innerHTML = h;
+    if(window.homeAdTimer) clearTimeout(window.homeAdTimer);
+    if(homeAds.length > 1){
+        window.homeAdTimer = setTimeout(function(){
+            window.homeAdIndex = (window.homeAdIndex + 1) % homeAds.length;
+            window.showHomeAd(window.homeAdIndex);
+        }, du);
+    }
+};
+// --- نهاية كود الإصلاح ---</script>
 </body>
 </html>
