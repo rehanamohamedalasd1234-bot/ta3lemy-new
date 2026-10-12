@@ -184,6 +184,27 @@ async function loadAllLessons(){const l=document.getElementById('allLessonsList'
 async function deleteLesson(id){if(!confirm('حذف الدرس؟'))return;try{await db.collection('lessons').doc(id).delete();loadAllLessons();showToast('🗑️ تم الحذف');}catch(e){console.error(e);}}
 function openOwnerEditor(){screenHistory.push(currentScreen);showScreen('ownerEditorScreen');}
 async function saveOwnerProfile(){const n=document.getElementById('ownerName').value.trim();const b=document.getElementById('ownerBio').value.trim();const fi=document.getElementById('ownerImageFile').files[0];let iu=null;if(fi)iu=await uploadFile(fi,'owner');try{const data={name:n,bio:b};if(iu)data.image_url=iu;const snap=await db.collection('owner').limit(1).get();if(snap.empty){await db.collection('owner').add(data);}else{await db.collection('owner').doc(snap.docs[0].id).update(data);}showToast('✅ تم الحفظ');setTimeout(()=>goBack(),1000);}catch(e){console.error(e);showToast('❌ فشل');}}
+async function backupLessons() {
+    try {
+        showToast('⏳ جاري تحضير النسخة الاحتياطية...');
+        const snap = await db.collection('lessons').get();
+        const data = [];
+        snap.forEach(doc => {
+            data.push({ id: doc.id, ...doc.data() });
+        });
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'lessons-backup-' + new Date().toISOString().slice(0,10) + '.json';
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('✅ تم تحميل النسخة الاحتياطية');
+    } catch (e) {
+        console.error(e);
+        showToast('❌ فشل النسخ الاحتياطي');
+    }
+}
 function openWisdomEditor(){loadWisdoms();screenHistory.push(currentScreen);showScreen('wisdomEditorScreen');}
 async function loadWisdoms(){const l=document.getElementById('wisdomList');if(!l)return;l.innerHTML='<div class="empty-state"><p>⏳</p></div>';try{const snap=await db.collection('wisdoms').orderBy('created_at','desc').get();if(snap.empty){l.innerHTML='<div class="empty-state"><p>لا توجد حكم</p></div>';return;}let html='';snap.forEach(doc=>{const w=doc.data();html+='<div style="background:#fff;border-radius:14px;padding:14px;display:flex;gap:10px;align-items:center;margin-bottom:10px;"><div style="flex:1;font-size:14px;">'+(w.text||'')+'</div><button onclick="deleteWisdom(\''+doc.id+'\')" style="background:#FFEBEE;border:none;width:36px;height:36px;border-radius:50%;cursor:pointer;">🗑️</button></div>';});l.innerHTML=html;}catch(e){console.error(e);}}
 async function addWisdom(){const t=document.getElementById('newWisdomText').value.trim();if(!t){showToast('⚠️ اكتب الحكمة');return;}try{await db.collection('wisdoms').add({text:t,created_at:new Date().toISOString()});document.getElementById('newWisdomText').value='';showToast('✅ تمت الإضافة');loadWisdoms();loadWisdomBar();}catch(e){console.error(e);}}
