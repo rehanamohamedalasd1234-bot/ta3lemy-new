@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ta3lemy-cache-v2';
+const CACHE_NAME = 'ta3lemy-cache-v3';
 const ASSETS = [
     './',
     './index.html',
