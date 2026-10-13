@@ -210,6 +210,7 @@ function insertEmoji() {
     const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
     const input = document.getElementById('chatInput');
     if (input) input.value += randomEmoji;
+}
 async function sendMessage() {
     const inp = document.getElementById('chatInput');
     const txt = inp.value.trim();
