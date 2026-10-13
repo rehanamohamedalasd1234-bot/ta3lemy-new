@@ -578,7 +578,6 @@ window.addEventListener('error',e=>console.error('❌',e.error));
 window.addEventListener('unhandledrejection',e=>console.error('❌ Promise:',e.reason));
 window.addEventListener('load',()=>{setTimeout(()=>showScreen('loginScreen'),2500);loadOwnerInfo();loadAdsOnHome();loadWisdomBar();});
 if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./service-worker.js').then(reg=>console.log('✅ SW registered')).catch(err=>console.log('❌ SW error:',err));});}
-<div class="top-bar"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span id="viewerTitle">المحتوى</span></div><button class="icon-btn" onclick="speakCurrentLesson()">🔊</button></div>
 </script>
 </body>
 </html>
