@@ -211,8 +211,33 @@ function insertEmoji() {
     const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
     const input = document.getElementById('chatInput');
     if (input) input.value += randomEmoji;
-}async function sendMessage(){const inp=document.getElementById('chatInput');const txt=inp.value.trim();if(!txt||!currentChatId)return;try{await db.collection('messages').doc(currentChatId).collection('msgs').add({senderId:currentUser.uid,senderName:currentUser.name,text:txt,createdAt:new Date().toISOString()});await db.collection('messages').doc(currentChatId).update({text:txt,updatedAt:new Date().toISOString()});inp.value='';}catch(e){console.error(e);showToast('❌ فشل الإرسال');}}
-async function openRewards(){screenHistory.push(currentScreen);showScreen('rewardsScreen');loadRewards();}
+async function sendMessage() {
+    const inp = document.getElementById('chatInput');
+    const txt = inp.value.trim();
+    if (!txt || !currentChatId || !currentUser) return;
+    try {
+        if (currentChatId === 'public_chat') {
+            await db.collection('public_chat').add({
+                senderId: currentUser.uid,
+                senderName: currentUser.name,
+                text: txt,
+                createdAt: new Date().toISOString()
+            });
+        } else {
+            await db.collection('messages').doc(currentChatId).collection('msgs').add({
+                senderId: currentUser.uid,
+                senderName: currentUser.name,
+                text: txt,
+                createdAt: new Date().toISOString()
+            });
+            await db.collection('messages').doc(currentChatId).update({
+                text: txt,
+                updatedAt: new Date().toISOString()
+            });
+        }
+        inp.value = '';
+    } catch(e) { console.error(e); showToast('❌ فشل الإرسال'); }
+}async function openRewards(){screenHistory.push(currentScreen);showScreen('rewardsScreen');loadRewards();}
 async function loadRewards(){const st=document.getElementById('topStudents');const tt=document.getElementById('topTeachers');st.innerHTML='<p style="text-align:center;color:#999;">⏳</p>';tt.innerHTML='<p style="text-align:center;color:#999;">⏳</p>';try{const snap=await db.collection('users').orderBy('points','desc').limit(20).get();let students='',teachers='';snap.forEach(doc=>{const u=doc.data();const badge=u.points>=2000?'🥇':u.points>=1000?'🥈':u.points>=500?'🥉':'⭐';const html='<div style="background:#fff;border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;margin-bottom:10px;"><div style="font-size:28px;">'+badge+'</div><div style="flex:1;"><div style="font-weight:bold;">'+(u.name||'مستخدم')+'<span class="user-badge '+(u.role==='teacher'?'teacher':u.role==='owner'?'owner':'')+'">'+(u.role==='teacher'?'معلم':u.role==='owner'?'مالك':'طالب')+'</span></div><div style="font-size:12px;color:#999;">⭐ '+(u.points||0)+' نقطة</div></div></div>';if(u.role==='teacher'){teachers+=html;}else if(u.role==='student'){students+=html;}});st.innerHTML=students||'<p style="text-align:center;color:#999;">لا يوجد طلاب بعد</p>';tt.innerHTML=teachers||'<p style="text-align:center;color:#999;">لا يوجد معلمون بعد</p>';}catch(e){console.error(e);}}
 function showMyPoints(){if(!currentUser)return;showToast('⭐ لديك '+(currentUser.points||0)+' نقطة');}
 async function goToProfile(){if(!currentUser){showToast('⚠️ سجل دخول');return;}document.getElementById('profileName').textContent=currentUser.name;document.getElementById('profileRole').textContent=currentRole==='student'?'طالب':currentRole==='teacher'?'معلم':'المالك';document.getElementById('profilePoints').textContent='⭐ '+(currentUser.points||0)+' نقطة';const m=document.getElementById('adminMenu');if(m)m.style.display=currentRole==='owner'?'flex':'none';screenHistory.push(currentScreen);showScreen('profileScreen');}
