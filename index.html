@@ -356,6 +356,49 @@ async function deletePublicMsg(id) {
         showToast('🗑️ تم حذف الرسالة');
     } catch(e) { console.error(e); }
 }
+async function openPublicChat() {
+    if (!currentUser) { showToast('⚠️ سجل دخول'); return; }
+    currentChatId = 'public_chat';
+    currentChatWith = { id: 'public', name: 'الدردشة الجماعية' };
+    document.getElementById('chatTitle').textContent = '👥 الدردشة الجماعية';
+    const c = document.getElementById('chatMessages');
+    c.innerHTML = '<p style="text-align:center;color:#999;">⏳ جاري التحميل...</p>';
+    screenHistory.push(currentScreen);
+    showScreen('chatScreen');
+    
+    if (chatUnsubscribe) { try { chatUnsubscribe(); } catch(e) {} }
+    chatUnsubscribe = db.collection('public_chat').orderBy('createdAt', 'asc').limit(100).onSnapshot(snap => {
+        const c2 = document.getElementById('chatMessages');
+        if (snap.empty) {
+            c2.innerHTML = '<p style="text-align:center;color:#999;padding:20px;">لا توجد رسائل — كن أول من يكتب</p>';
+            return;
+        }
+        let html = '';
+        snap.forEach(doc => {
+            const m = doc.data();
+            const mine = m.senderId === currentUser.uid;
+            const isOwner = currentRole === 'owner';
+            html += '<div class="chat-bubble ' + (mine ? 'mine' : 'other') + '" style="position:relative;">';
+            if (!mine && isOwner) {
+                html += '<button onclick="deletePublicMsg(\'' + doc.id + '\')" style="position:absolute;top:5px;left:5px;background:#E53935;color:#fff;border:none;border-radius:50%;width:22px;height:22px;font-size:12px;cursor:pointer;">✕</button>';
+            }
+            html += '<div style="font-size:11px;font-weight:bold;color:' + (mine ? '#A5D6A7' : '#2E7D32') + ';margin-bottom:4px;">' + (mine ? 'أنا' : m.senderName) + '</div>';
+            html += '<div style="font-size:14px;line-height:1.6;word-wrap:break-word;">' + m.text + '</div>';
+            html += '<span class="chat-bubble-time">' + new Date(m.createdAt).toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'}) + '</span></div>';
+        });
+        c2.innerHTML = html;
+        c2.scrollTop = c2.scrollHeight;
+    });
+}
+
+async function deletePublicMsg(id) {
+    if (currentRole !== 'owner') return;
+    if (!confirm('حذف الرسالة؟')) return;
+    try {
+        await db.collection('public_chat').doc(id).delete();
+        showToast('🗑️ تم حذف الرسالة');
+    } catch(e) { console.error(e); }
+}
 </script>
 </body>
 </html>
