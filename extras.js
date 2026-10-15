@@ -685,4 +685,61 @@ window.showFeatures = function(){
     '</div>';
   document.body.appendChild(m);
 };
+// ═══ زرار "حمّل كتطبيق" (PWA) ═══
+(function(){
+  var deferredPrompt = null;
+  
+  window.addEventListener('beforeinstallprompt', function(e){
+    e.preventDefault();
+    deferredPrompt = e;
+    console.log('✅ PWA install prompt available');
+  });
+  
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      var home = document.getElementById('homeScreen');
+      if(!home || document.getElementById('installAppBtn')) return;
+      var content = home.querySelector('.content');
+      if(!content) return;
+      
+      var btn = document.createElement('div');
+      btn.id = 'installAppBtn';
+      btn.style.cssText = 'margin:20px 16px;padding:18px;background:linear-gradient(135deg,#00897B,#00695C);color:#fff;border-radius:16px;text-align:center;cursor:pointer;box-shadow:0 4px 12px rgba(0,137,123,.3);font-weight:bold;';
+      btn.innerHTML = '<div style="font-size:28px;">📱</div><div style="margin-top:8px;font-size:15px;">حمّل المنصة كتطبيق</div><div style="font-size:12px;opacity:.9;margin-top:4px;">يعمل بدون إنترنت</div>';
+      
+      btn.onclick = async function(){
+        if(deferredPrompt){
+          deferredPrompt.prompt();
+          var result = await deferredPrompt.userChoice;
+          if(result.outcome === 'accepted'){
+            if(typeof showToast === 'function') showToast('✅ تم تثبيت التطبيق');
+          } else {
+            if(typeof showToast === 'function') showToast('❌ تم إلغاء التثبيت');
+          }
+          deferredPrompt = null;
+        } else {
+          // لو المتصفح مش بيدعم التلقائي — نعرض تعليمات
+          var ua = navigator.userAgent.toLowerCase();
+          var msg = '';
+          if(ua.indexOf('android') > -1 && ua.indexOf('chrome') > -1){
+            msg = '📱 على Chrome:\n\n1. اضغط النقاط الثلاثة (⋮)\n2. اختار "إضافة إلى الشاشة الرئيسية"\n3. اضغط "إضافة"\n\n✅ هيتثبت كتطبيق!';
+          } else if(ua.indexOf('iphone') > -1 || ua.indexOf('ipad') > -1){
+            msg = '📱 على Safari:\n\n1. اضغط زر المشاركة (⬆️)\n2. اختار "إضافة إلى الشاشة الرئيسية"\n3. اضغط "إضافة"\n\n✅ هيتثبت كتطبيق!';
+          } else {
+            msg = '📱 لتثبيت التطبيق:\n\n• Chrome: القائمة (⋮) → "تثبيت المنصة"\n• Edge: القائمة (...) → "تطبيقات" → "تثبيت هذا الموقع كتطبيق"\n\n✅ هيتثبت كتطبيق مستقل!';
+          }
+          alert(msg);
+        }
+      };
+      
+      // حط الزرار بعد زرار التحميل
+      var downloadBtn = document.getElementById('offlineBtn');
+      if(downloadBtn && downloadBtn.nextSibling){
+        content.insertBefore(btn, downloadBtn.nextSibling);
+      } else {
+        content.appendChild(btn);
+      }
+    }, 3000);
+  });
+})();
 console.log('✅ extras.js loaded');
