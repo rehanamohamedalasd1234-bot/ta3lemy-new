@@ -291,3 +291,39 @@ window.addEventListener('load', function(){
     topBar.appendChild(btn);
   }, 2000);
 });
+// ═══ إضافة زرار حذف جنب كل رسالة ═══
+(function(){
+  var timer = setInterval(function(){
+    if(typeof window.openPublicChat !== 'function' && typeof window.openChat !== 'function') return;
+    clearInterval(timer);
+    
+    // بعد كل فتح دردشة، نضيف الزراير
+    setInterval(function(){
+      if(window.currentRole !== 'owner' && window.currentRole !== 'teacher') return;
+      var container = document.getElementById('chatMessages');
+      if(!container) return;
+      
+      var bubbles = container.querySelectorAll('.chat-bubble');
+      bubbles.forEach(function(bubble){
+        if(bubble.querySelector('.delMsgBtn')) return;
+        var msgId = bubble.getAttribute('data-msgid');
+        if(!msgId) return;
+        
+        var btn = document.createElement('button');
+        btn.className = 'delMsgBtn';
+        btn.innerHTML = '✕';
+        btn.style.cssText = 'position:absolute;top:5px;left:5px;background:#E53935;color:#fff;border:none;border-radius:50%;width:22px;height:22px;font-size:12px;cursor:pointer;z-index:10;';
+        btn.onclick = function(e){
+          e.stopPropagation();
+          if(window.currentChatId === 'public_chat'){
+            if(typeof deletePublicMsg === 'function') deletePublicMsg(msgId);
+          } else {
+            if(typeof window.deletePrivateMsg === 'function') window.deletePrivateMsg(msgId);
+          }
+        };
+        bubble.style.position = 'relative';
+        bubble.appendChild(btn);
+      });
+    }, 2000);
+  }, 500);
+})();
