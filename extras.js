@@ -101,4 +101,53 @@ if ('serviceWorker' in navigator) {
     .then(function(){console.log('✅ offline-sw registered');})
     .catch(function(e){console.log('⚠️ offline-sw:',e);});
 }
+// ═══ تسجيل دخول offline ═══
+(function(){
+  const origLogin = window.login;
+  if (typeof origLogin === 'function') {
+    window.login = async function(){
+      // جرّب تسجيل الدخول العادي
+      try {
+        await origLogin.apply(this, arguments);
+        // لو نجح — احفظ بيانات المستخدم محلياً
+        if (window.currentUser) {
+          localStorage.setItem('lastUser', JSON.stringify({
+            name: window.currentUser.name,
+            uid: window.currentUser.uid,
+            role: window.currentRole,
+            points: window.currentUser.points || 0
+          }));
+        }
+      } catch(e) {
+        // لو فشل (مفيش نت) — استخدم البيانات المحفوظة
+        const saved = localStorage.getItem('lastUser');
+        if (saved) {
+          const u = JSON.parse(saved);
+          window.currentUser = {
+            name: u.name,
+            uid: u.uid,
+            points: u.points || 0
+          };
+          window.currentRole = u.role || 'student';
+          if (typeof showToast === 'function') showToast('📴 دخول offline');
+          if (typeof showScreen === 'function') showScreen('homeScreen');
+        } else {
+          if (typeof showToast === 'function') showToast('⚠️ سجل دخول أول مرة بالنت');
+        }
+      }
+    };
+  }
+  
+  // ═══ تحميل بيانات المستخدم عند بدء المنصة ═══
+  document.addEventListener('DOMContentLoaded', function(){
+    const saved = localStorage.getItem('lastUser');
+    if (saved && !window.currentUser) {
+      try {
+        const u = JSON.parse(saved);
+        window.currentUser = {name:u.name, uid:u.uid, points:u.points||0};
+        window.currentRole = u.role || 'student';
+      } catch(e){}
+    }
+  });
+})();
 console.log('✅ extras.js loaded');
