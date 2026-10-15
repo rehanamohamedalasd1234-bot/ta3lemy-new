@@ -100,14 +100,6 @@ window.trackDailyLogin = async function(){
   localStorage.setItem(key,'1');
   await window.addPoints(5,'daily');
 };
-
-// ═══ 3. تسجيل offline-sw ═══
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./offline-sw.js')
-    .then(function(){console.log('✅ offline-sw registered');})
-    .catch(function(e){console.log('⚠️ offline-sw:',e);});
-}
-
 // ═══ 4. تسجيل دخول Offline ═══
 (function(){
   const checkLogin = setInterval(function(){
