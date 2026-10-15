@@ -742,4 +742,195 @@ window.showFeatures = function(){
     }, 3000);
   });
 })();
+// ═══ قسم الأخبار والمقالات ═══
+(function(){
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      if(!document.getElementById('postsScreen')){
+        var s1 = document.createElement('div');
+        s1.id = 'postsScreen';
+        s1.className = 'screen';
+        s1.innerHTML = '<div class="top-bar"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>📰 الأخبار والمقالات</span></div><button class="icon-btn" id="addPostBtn" onclick="openAddPost()" style="display:none;">➕</button></div><div class="content"><div id="postsList"></div></div>';
+        document.body.appendChild(s1);
+      }
+      if(!document.getElementById('postDetailsScreen')){
+        var s2 = document.createElement('div');
+        s2.id = 'postDetailsScreen';
+        s2.className = 'screen';
+        s2.innerHTML = '<div class="top-bar"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span id="postTitle">المقال</span></div><div style="width:42px;"></div></div><div class="content" id="postContent" style="padding-bottom:100px;"></div><div class="chat-input-bar" style="display:flex;gap:6px;padding:8px;background:#fff;"><input type="text" id="commentInput" placeholder="اكتب تعليقك..." style="flex:1;padding:12px 16px;background:#f1f1f1;border:none;border-radius:25px;font-family:inherit;font-size:15px;outline:none;"><button onclick="sendComment()" style="background:linear-gradient(135deg,#2E7D32,#4CAF50);color:#fff;border:none;width:46px;height:46px;border-radius:50%;font-size:20px;cursor:pointer;">📤</button></div>';
+        document.body.appendChild(s2);
+      }
+      if(!document.getElementById('addPostScreen')){
+        var s3 = document.createElement('div');
+        s3.id = 'addPostScreen';
+        s3.className = 'screen';
+        s3.innerHTML = '<div class="top-bar"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>➕ نشر جديد</span></div><div style="width:42px;"></div></div><div class="content"><div class="form-group"><label class="form-label">العنوان</label><input type="text" class="form-input" id="newPostTitle"></div><div class="form-group"><label class="form-label">المحتوى</label><textarea class="form-input" id="newPostContent" rows="8"></textarea></div><div class="form-group"><label class="form-label">📷 صورة (اختياري)</label><input type="file" class="form-input" id="newPostImage" accept="image/*" style="padding:10px;"></div><div class="form-group"><label class="form-label">🎥 فيديو (اختياري)</label><input type="file" class="form-input" id="newPostVideo" accept="video/*" style="padding:10px;"></div><button class="btn-primary" id="publishPostBtn" onclick="publishPost()">📤 نشر</button></div>';
+        document.body.appendChild(s3);
+      }
+      var home = document.getElementById('homeScreen');
+      if(home && !document.getElementById('postsBtn')){
+        var content = home.querySelector('.content');
+        if(content){
+          var btn = document.createElement('div');
+          btn.id = 'postsBtn';
+          btn.style.cssText = 'margin:20px 16px;padding:18px;background:linear-gradient(135deg,#C2185B,#E91E63);color:#fff;border-radius:16px;text-align:center;cursor:pointer;box-shadow:0 4px 12px rgba(194,24,91,.3);font-weight:bold;';
+          btn.innerHTML = '<div style="font-size:28px;">📰</div><div style="margin-top:8px;font-size:15px;">الأخبار والمقالات</div><div style="font-size:12px;opacity:.9;margin-top:4px;">اقرأ وشارك</div>';
+          btn.onclick = function(){ window.openPosts(); };
+          content.insertBefore(btn, content.firstChild);
+        }
+      }
+    }, 3500);
+  });
+
+  window.openPosts = async function(){
+    if(window.screenHistory) window.screenHistory.push(window.currentScreen);
+    if(typeof showScreen === 'function') showScreen('postsScreen');
+    var addBtn = document.getElementById('addPostBtn');
+    if(addBtn) addBtn.style.display = (window.currentRole === 'owner' || window.currentRole === 'teacher') ? 'flex' : 'none';
+    var l = document.getElementById('postsList');
+    l.innerHTML = '<p style="text-align:center;color:#999;padding:20px;">⏳ جاري التحميل...</p>';
+    try {
+      var snap = await firebase.firestore().collection('posts').orderBy('created_at','desc').limit(50).get();
+      if(snap.empty){ l.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📰</div><p>لا توجد منشورات بعد</p></div>'; return; }
+      var html = '';
+      snap.forEach(function(doc){
+        var p = doc.data();
+        var preview = (p.content||'').substring(0,100) + '...';
+        html += '<div class="content-item" onclick="openPostDetails(\'' + doc.id + '\')" style="display:block;">';
+        if(p.image_url) html += '<img src="' + p.image_url + '" style="width:100%;height:150px;object-fit:cover;border-radius:10px;margin-bottom:10px;">';
+        html += '<div style="font-weight:bold;color:#C2185B;margin-bottom:6px;">' + (p.title||'بدون عنوان') + '</div>';
+        html += '<div style="font-size:13px;color:#666;line-height:1.6;">' + preview + '</div>';
+        html += '<div style="font-size:11px;color:#999;margin-top:8px;">👤 ' + (p.author_name||'المالك') + ' • 📅 ' + new Date(p.created_at).toLocaleDateString('ar-EG') + '</div>';
+        html += '</div>';
+      });
+      l.innerHTML = html;
+    } catch(e){ console.error(e); l.innerHTML = '<div class="empty-state">⚠️ فشل التحميل</div>'; }
+  };
+
+  window.openPostDetails = async function(postId){
+    window.currentPostId = postId;
+    if(window.screenHistory) window.screenHistory.push(window.currentScreen);
+    if(typeof showScreen === 'function') showScreen('postDetailsScreen');
+    var c = document.getElementById('postContent');
+    c.innerHTML = '<p style="text-align:center;color:#999;padding:20px;">⏳</p>';
+    try {
+      var doc = await firebase.firestore().collection('posts').doc(postId).get();
+      if(!doc.exists){ c.innerHTML = '<p>⚠️ المنشور مش موجود</p>'; return; }
+      var p = doc.data();
+      document.getElementById('postTitle').textContent = p.title || 'المقال';
+      var html = '<div class="lesson-body">';
+      html += '<h2 style="color:#C2185B;margin-bottom:12px;">' + (p.title||'') + '</h2>';
+      html += '<div style="font-size:12px;color:#999;margin-bottom:16px;">👤 ' + (p.author_name||'') + ' • 📅 ' + new Date(p.created_at).toLocaleDateString('ar-EG') + '</div>';
+      if(p.image_url) html += '<img src="' + p.image_url + '" style="width:100%;border-radius:12px;margin-bottom:16px;">';
+      html += '<div style="line-height:2;white-space:pre-wrap;font-size:15px;">' + (p.content||'') + '</div>';
+      if(p.video_url) html += '<video controls src="' + p.video_url + '" style="width:100%;border-radius:12px;margin-top:16px;"></video>';
+      if(window.currentRole === 'owner') html += '<button onclick="deletePost(\'' + postId + '\')" style="margin-top:16px;padding:10px 16px;background:#FFEBEE;color:#E53935;border:none;border-radius:10px;font-weight:bold;cursor:pointer;">🗑️ حذف المنشور</button>';
+      html += '</div>';
+      html += '<div style="margin-top:24px;"><div style="font-weight:bold;color:#C2185B;margin-bottom:12px;">💬 التعليقات</div><div id="commentsList"></div></div>';
+      c.innerHTML = html;
+      loadComments(postId);
+    } catch(e){ console.error(e); c.innerHTML = '<p>⚠️ فشل</p>'; }
+  };
+
+  window.loadComments = async function(postId){
+    var l = document.getElementById('commentsList');
+    if(!l) return;
+    try {
+      var snap = await firebase.firestore().collection('posts').doc(postId).collection('comments').orderBy('created_at','asc').get();
+      if(snap.empty){ l.innerHTML = '<p style="text-align:center;color:#999;padding:12px;">لا توجد تعليقات — كن أول من يعلق</p>'; return; }
+      var html = '';
+      snap.forEach(function(doc){
+        var m = doc.data();
+        var mine = m.senderId === window.currentUser.uid;
+        var canDel = window.currentRole === 'owner';
+        html += '<div style="background:#fff;border-radius:12px;padding:12px;margin-bottom:10px;box-shadow:0 2px 6px rgba(0,0,0,.05);">';
+        html += '<div style="font-weight:bold;color:#2E7D32;font-size:13px;margin-bottom:6px;">' + (mine?'أنا':m.senderName||'مستخدم');
+        if(canDel) html += ' <button onclick="deleteComment(\'' + postId + '\',\'' + doc.id + '\')" style="float:left;background:#E53935;color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:10px;cursor:pointer;">✕</button>';
+        html += '</div>';
+        html += '<div style="font-size:14px;line-height:1.6;word-wrap:break-word;">' + m.text + '</div>';
+        html += '<div style="font-size:10px;color:#999;margin-top:6px;">' + new Date(m.created_at).toLocaleString('ar-EG') + '</div>';
+        html += '</div>';
+      });
+      l.innerHTML = html;
+    } catch(e){ console.error(e); }
+  };
+
+  window.sendComment = async function(){
+    var inp = document.getElementById('commentInput');
+    if(!inp || !inp.value.trim() || !window.currentPostId || !window.currentUser) return;
+    try {
+      await firebase.firestore().collection('posts').doc(window.currentPostId).collection('comments').add({
+        senderId: window.currentUser.uid,
+        senderName: window.currentUser.name,
+        text: inp.value.trim(),
+        created_at: new Date().toISOString()
+      });
+      inp.value = '';
+      window.loadComments(window.currentPostId);
+      if(typeof showToast === 'function') showToast('✅ تم التعليق');
+    } catch(e){ console.error(e); if(typeof showToast === 'function') showToast('❌ فشل'); }
+  };
+
+  window.deleteComment = async function(postId, commentId){
+    if(window.currentRole !== 'owner') return;
+    if(!confirm('حذف التعليق؟')) return;
+    try {
+      await firebase.firestore().collection('posts').doc(postId).collection('comments').doc(commentId).delete();
+      window.loadComments(postId);
+      if(typeof showToast === 'function') showToast('🗑️ تم الحذف');
+    } catch(e){ console.error(e); }
+  };
+
+  window.openAddPost = function(){
+    if(window.currentRole !== 'owner' && window.currentRole !== 'teacher') return;
+    if(window.screenHistory) window.screenHistory.push(window.currentScreen);
+    if(typeof showScreen === 'function') showScreen('addPostScreen');
+  };
+
+  window.publishPost = async function(){
+    var t = document.getElementById('newPostTitle').value.trim();
+    var c = document.getElementById('newPostContent').value.trim();
+    var img = document.getElementById('newPostImage').files[0];
+    var vid = document.getElementById('newPostVideo').files[0];
+    var btn = document.getElementById('publishPostBtn');
+    if(!t || !c){ if(typeof showToast === 'function') showToast('⚠️ أدخل العنوان والمحتوى'); return; }
+    if(btn){ btn.disabled = true; btn.textContent = '⏳ جاري النشر...'; }
+    try {
+      var imgUrl = null, vidUrl = null;
+      if(img) imgUrl = await window.uploadFile(img, 'posts/images');
+      if(vid) vidUrl = await window.uploadFile(vid, 'posts/videos');
+      await firebase.firestore().collection('posts').add({
+        title: t, content: c,
+        image_url: imgUrl, video_url: vidUrl,
+        author_id: window.currentUser.uid,
+        author_name: window.currentUser.name,
+        created_at: new Date().toISOString()
+      });
+      if(typeof showToast === 'function') showToast('✅ تم النشر');
+      document.getElementById('newPostTitle').value = '';
+      document.getElementById('newPostContent').value = '';
+      if(btn){ btn.disabled = false; btn.textContent = '📤 نشر'; }
+      setTimeout(function(){ window.openPosts(); }, 800);
+    } catch(e){
+      console.error(e);
+      if(btn){ btn.disabled = false; btn.textContent = '📤 نشر'; }
+      if(typeof showToast === 'function') showToast('❌ فشل');
+    }
+  };
+
+  window.deletePost = async function(postId){
+    if(window.currentRole !== 'owner') return;
+    if(!confirm('حذف المنشور وكل تعليقاته؟')) return;
+    try {
+      var fs = firebase.firestore();
+      var cmt = await fs.collection('posts').doc(postId).collection('comments').get();
+      var batch = fs.batch();
+      cmt.forEach(function(d){ batch.delete(d.ref); });
+      await batch.commit();
+      await fs.collection('posts').doc(postId).delete();
+      if(typeof showToast === 'function') showToast('🗑️ تم الحذف');
+      window.openPosts();
+    } catch(e){ console.error(e); }
+  };
+})();
 console.log('✅ extras.js loaded');
