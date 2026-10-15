@@ -1,3 +1,8 @@
+// ═══════════════════════════════════════════════════════
+// extras.js — إضافات المنصة (Offline + نقاط + تحميل)
+// ═══════════════════════════════════════════════════════
+
+// ═══ 1. تفعيل Offline ═══
 (function(){
   try {
     if (typeof db !== 'undefined' && db) {
@@ -14,6 +19,7 @@
   } catch(e){console.log('Offline error:',e);}
 })();
 
+// ═══ 2. نظام النقاط والشارات ═══
 window.BADGES = [
   {id:'new',name:'مبتدئ',icon:'🌱',pts:0,desc:'انضم للمنصة'},
   {id:'reader',name:'قارئ',icon:'📖',pts:100,desc:'قرأ 10 دروس'},
@@ -36,7 +42,7 @@ window.addPoints = async function(amt,reason){
     const oldB = [...window.BADGES].reverse().find(b=>oldPts>=b.pts);
     const newB = [...window.BADGES].reverse().find(b=>newPts>=b.pts);
     if(newB && (!oldB || newB.id !== oldB.id)){
-      window.showToast(newB.icon+' مبروك! شارة "'+newB.name+'"');
+      if(typeof showToast==='function') showToast(newB.icon+' مبروك! شارة "'+newB.name+'"');
     }
     const pe = document.getElementById('profilePoints');
     if(pe) pe.textContent = '⭐ '+newPts+' نقطة';
@@ -95,21 +101,23 @@ window.trackDailyLogin = async function(){
   await window.addPoints(5,'daily');
 };
 
-// ═══ تسجيل offline-sw ═══
+// ═══ 3. تسجيل offline-sw ═══
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./offline-sw.js')
     .then(function(){console.log('✅ offline-sw registered');})
     .catch(function(e){console.log('⚠️ offline-sw:',e);});
 }
-// ═══ تسجيل دخول offline ═══
+
+// ═══ 4. تسجيل دخول Offline ═══
 (function(){
-  const origLogin = window.login;
-  if (typeof origLogin === 'function') {
+  const checkLogin = setInterval(function(){
+    if (typeof window.login !== 'function') return;
+    clearInterval(checkLogin);
+    
+    const origLogin = window.login;
     window.login = async function(){
-      // جرّب تسجيل الدخول العادي
       try {
         await origLogin.apply(this, arguments);
-        // لو نجح — احفظ بيانات المستخدم محلياً
         if (window.currentUser) {
           localStorage.setItem('lastUser', JSON.stringify({
             name: window.currentUser.name,
@@ -119,7 +127,6 @@ if ('serviceWorker' in navigator) {
           }));
         }
       } catch(e) {
-        // لو فشل (مفيش نت) — استخدم البيانات المحفوظة
         const saved = localStorage.getItem('lastUser');
         if (saved) {
           const u = JSON.parse(saved);
@@ -136,61 +143,10 @@ if ('serviceWorker' in navigator) {
         }
       }
     };
-  }
-  
-  // ═══ تحميل بيانات المستخدم عند بدء المنصة ═══
-  document.addEventListener('DOMContentLoaded', function(){
-    const saved = localStorage.getItem('lastUser');
-    if (saved && !window.currentUser) {
-      try {
-        const u = JSON.parse(saved);
-        window.currentUser = {name:u.name, uid:u.uid, points:u.points||0};
-        window.currentRole = u.role || 'student';
-      } catch(e){}
-    }
-  });
+  }, 200);
 })();
-// ═══ تحميل المنصة كاملة للعمل offline ═══
-window.downloadAllOffline = async function(){
-  if(!navigator.onLine){ showToast('⚠️ محتاج نت للتحميل'); return; }
-  
-  showToast('⏳ جاري التحميل...');
-  let progress = 0;
-  
-  try {
-    // 1. الدروس
-    const lessonsSnap = await db.collection('lessons').get();
-    const lessons = [];
-    lessonsSnap.forEach(d => lessons.push({id:d.id, ...d.data()}));
-    localStorage.setItem('offline_lessons', JSON.stringify(lessons));
-    progress++;
-    showToast('✅ الدروس: ' + lessons.length);
-    
-    // 2. محطتي الإذاعية
-    const stationSnap = await db.collection('station').orderBy('created_at','desc').get();
-    const station = [];
-    stationSnap.forEach(d => station.push({id:d.id, ...d.data()}));
-    localStorage.setItem('offline_station', JSON.stringify(station));
-    progress++;
-    showToast('✅ محطتي: ' + station.length);
-    
-    // 3. القرآن (كل السور نص)
-    if(!localStorage.getItem('offline_quran_list')){
-      const r = await fetch('https://api.alquran.cloud/v1/surah');
-      const j = await r.json();
-      localStorage.setItem('offline_quran_list', JSON.stringify(j.data));
-    }
-    progress++;
-    showToast('✅ فهرس القرآن');
-    
-    showToast('🎉 تم التحميل! (' + progress + ' مراحل)');
-  } catch(e){
-    console.error(e);
-    showToast('❌ فشل: ' + e.message);
-  }
-};
 
-// ═══ قراءة الدروس من الكاش ═══
+// ═══ 5. قراءة الدروس من الكاش ═══
 window.getOfflineLessons = function(){
   try {
     const s = localStorage.getItem('offline_lessons');
@@ -198,14 +154,103 @@ window.getOfflineLessons = function(){
   } catch(e){ return null; }
 };
 
-// ═══ قراءة محطتي من الكاش ═══
 window.getOfflineStation = function(){
   try {
     const s = localStorage.getItem('offline_station');
     return s ? JSON.parse(s) : null;
   } catch(e){ return null; }
 };
-// ═══ إضافة زرار "تحميل" في الصفحة الرئيسية ═══
+
+window.getOfflineSurah = function(num){
+  try {
+    const s = localStorage.getItem('offline_quran_full');
+    if(!s) return null;
+    const quran = JSON.parse(s);
+    return quran[num] || null;
+  } catch(e){ return null; }
+};
+
+// ═══ 6. تحميل القرآن كامل ═══
+window.downloadQuranText = async function(){
+  if(!navigator.onLine){ 
+    if(typeof showToast==='function') showToast('⚠️ محتاج نت'); 
+    return; 
+  }
+  if(localStorage.getItem('offline_quran_full')){
+    if(typeof showToast==='function') showToast('✅ القرآن محمّل من قبل');
+    return;
+  }
+  
+  if(typeof showToast==='function') showToast('⏳ جاري تحميل القرآن...');
+  try {
+    const r = await fetch('https://api.alquran.cloud/v1/quran/quran-uthmani');
+    const j = await r.json();
+    if(!j.data || !j.data.surahs){
+      if(typeof showToast==='function') showToast('❌ فشل التحميل');
+      return;
+    }
+    
+    const quran = {};
+    j.data.surahs.forEach(function(s){
+      quran[s.number] = {
+        name: s.name,
+        ayahs: s.ayahs.map(function(a){
+          return {num: a.numberInSurah, text: a.text};
+        })
+      };
+    });
+    
+    localStorage.setItem('offline_quran_full', JSON.stringify(quran));
+    if(typeof showToast==='function') showToast('✅ تم تحميل ' + j.data.surahs.length + ' سورة');
+  } catch(e){
+    console.error(e);
+    if(typeof showToast==='function') showToast('❌ فشل: ' + e.message);
+  }
+};
+
+// ═══ 7. تحميل المنصة كاملة ═══
+window.downloadAllOffline = async function(){
+  if(!navigator.onLine){ 
+    if(typeof showToast==='function') showToast('⚠️ محتاج نت للتحميل'); 
+    return; 
+  }
+  
+  if(typeof showToast==='function') showToast('⏳ جاري التحميل...');
+  
+  try {
+    // 1. الدروس
+    const lessonsSnap = await db.collection('lessons').get();
+    const lessons = [];
+    lessonsSnap.forEach(d => lessons.push({id:d.id, ...d.data()}));
+    localStorage.setItem('offline_lessons', JSON.stringify(lessons));
+    if(typeof showToast==='function') showToast('✅ الدروس: ' + lessons.length);
+    
+    // 2. محطتي الإذاعية
+    const stationSnap = await db.collection('station').orderBy('created_at','desc').get();
+    const station = [];
+    stationSnap.forEach(d => station.push({id:d.id, ...d.data()}));
+    localStorage.setItem('offline_station', JSON.stringify(station));
+    if(typeof showToast==='function') showToast('✅ محطتي: ' + station.length);
+    
+    // 3. فهرس القرآن
+    if(!localStorage.getItem('offline_quran_list')){
+      const r = await fetch('https://api.alquran.cloud/v1/surah');
+      const j = await r.json();
+      localStorage.setItem('offline_quran_list', JSON.stringify(j.data));
+    }
+    if(typeof showToast==='function') showToast('✅ فهرس القرآن');
+    
+    // 4. القرآن كامل
+    await window.downloadQuranText();
+    
+    if(typeof showToast==='function') showToast('🎉 تم التحميل الكامل!');
+  } catch(e){
+    console.error(e);
+    if(typeof showToast==='function') showToast('❌ فشل: ' + e.message);
+  }
+};
+
+// ═══ 8. إضافة زرار التحميل في الرئيسية ═══
 window.addEventListener('load', function(){
   setTimeout(function(){
     const home = document.getElementById('homeScreen');
@@ -223,12 +268,13 @@ window.addEventListener('load', function(){
   }, 2000);
 });
 
-// ═══ Override لـ openContent — يقرأ من الكاش ═══
+// ═══ 9. Override openContent — قراءة من الكاش ═══
 (function(){
   let tries = 0;
   const timer = setInterval(function(){
     tries++;
-    if(tries > 40 || typeof window.openContent !== 'function'){ clearInterval(timer); return; }
+    if(tries > 40){ clearInterval(timer); return; }
+    if(typeof window.openContent !== 'function') return;
     clearInterval(timer);
     
     const orig = window.openContent;
@@ -238,16 +284,16 @@ window.addEventListener('load', function(){
       if(offline && !navigator.onLine){
         try {
           const filtered = offline.filter(function(l){
-            return l.subject === currentSubject &&
+            return l.subject === window.currentSubject &&
                    l.term === num &&
                    l.type === type &&
-                   l.grade === currentGrade;
+                   l.grade === window.currentGrade;
           });
           
           if(filtered.length > 0){
             const titles = {lessons:'📄 الدروس', exercises:'✏️ تدريبات', exams:'📝 امتحانات', videos:'🎥 فيديوهات'};
             document.getElementById('contentTitle').textContent = titles[type] || 'المحتوى';
-            document.getElementById('contentHeaderTitle').textContent = (currentSubject||'') + ' - ' + name;
+            document.getElementById('contentHeaderTitle').textContent = (window.currentSubject||'') + ' - ' + name;
             document.getElementById('contentHeaderSub').textContent = titles[type] + ' (offline)';
             
             const l = document.getElementById('contentList');
@@ -258,8 +304,8 @@ window.addEventListener('load', function(){
             });
             l.innerHTML = html;
             
-            screenHistory.push(currentScreen);
-            showScreen('contentScreen');
+            if(window.screenHistory) window.screenHistory.push(window.currentScreen);
+            if(typeof showScreen === 'function') showScreen('contentScreen');
             return;
           }
         } catch(e){ console.error('offline openContent:', e); }
@@ -267,50 +313,9 @@ window.addEventListener('load', function(){
       
       return orig.apply(this, arguments);
     };
+    
+    console.log('✅ openContent overridden');
   }, 200);
 })();
-// ═══ تحميل نص القرآن كامل ═══
-window.downloadQuranText = async function(){
-  if(!navigator.onLine){ showToast('⚠️ محتاج نت'); return; }
-  if(localStorage.getItem('offline_quran_full')){
-    showToast('✅ القرآن محمّل من قبل');
-    return;
-  }
-  
-  showToast('⏳ جاري تحميل القرآن...');
-  try {
-    const r = await fetch('https://api.alquran.cloud/v1/quran/quran-uthmani');
-    const j = await r.json();
-    if(!j.data || !j.data.surahs){
-      showToast('❌ فشل التحميل');
-      return;
-    }
-    
-    const quran = {};
-    j.data.surahs.forEach(function(s){
-      quran[s.number] = {
-        name: s.name,
-        ayahs: s.ayahs.map(function(a){
-          return {num: a.numberInSurah, text: a.text};
-        })
-      };
-    });
-    
-    localStorage.setItem('offline_quran_full', JSON.stringify(quran));
-    showToast('✅ تم تحميل ' + j.data.surahs.length + ' سورة');
-  } catch(e){
-    console.error(e);
-    showToast('❌ فشل: ' + e.message);
-  }
-};
 
-// ═══ قراءة سورة من الكاش ═══
-window.getOfflineSurah = function(num){
-  try {
-    const s = localStorage.getItem('offline_quran_full');
-    if(!s) return null;
-    const quran = JSON.parse(s);
-    return quran[num] || null;
-  } catch(e){ return null; }
-};
 console.log('✅ extras.js loaded');
