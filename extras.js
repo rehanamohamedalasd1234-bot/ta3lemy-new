@@ -933,4 +933,154 @@ window.showFeatures = function(){
     } catch(e){ console.error(e); }
   };
 })();
+// ═══ الملف الشخصي الكامل ═══
+(function(){
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      // شاشة تعديل الملف
+      if(!document.getElementById('editProfileScreen')){
+        var s = document.createElement('div');
+        s.id = 'editProfileScreen';
+        s.className = 'screen';
+        s.innerHTML = '<div class="top-bar"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>✏️ تعديل الملف الشخصي</span></div><div style="width:42px;"></div></div><div class="content">' +
+          '<div style="text-align:center;margin-bottom:20px;position:relative;">' +
+          '<img id="editProfileImg" src="" style="width:120px;height:120px;border-radius:50%;object-fit:cover;border:4px solid #2E7D32;box-shadow:0 4px 12px rgba(0,0,0,.15);background:#fff;">' +
+          '<label for="editProfileImgInput" style="position:absolute;bottom:5px;left:50%;transform:translateX(-50%) translateX(40px);background:#2E7D32;color:#fff;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;border:3px solid #fff;">📷</label>' +
+          '<input type="file" id="editProfileImgInput" accept="image/*" style="display:none;" onchange="uploadProfilePic(this)">' +
+          '</div>' +
+          '<div class="form-group"><label class="form-label">الاسم</label><input type="text" class="form-input" id="editProfileName"></div>' +
+          '<div class="form-group"><label class="form-label">نبذة عنك</label><textarea class="form-input" id="editProfileBio" rows="3" placeholder="اكتب نبذة قصيرة عنك..."></textarea></div>' +
+          '<div class="form-group"><label class="form-label">الصف/المرحلة</label><input type="text" class="form-input" id="editProfileGrade" placeholder="مثال: الثالث الثانوي"></div>' +
+          '<div class="form-group"><label class="form-label">المادة (للمعلم)</label><input type="text" class="form-input" id="editProfileSubject" placeholder="مثال: رياضيات"></div>' +
+          '<button class="btn-primary" id="saveProfileBtn" onclick="saveProfile()">💾 حفظ التعديلات</button>' +
+          '<button class="btn-primary" onclick="previewMyProfile()" style="margin-top:10px;background:linear-gradient(135deg,#1976D2,#0D47A1);">👁️ معاينة ملفي</button>' +
+          '</div>';
+        document.body.appendChild(s);
+      }
+      
+      // شاشة معاينة الملف
+      if(!document.getElementById('myProfileScreen')){
+        var s2 = document.createElement('div');
+        s2.id = 'myProfileScreen';
+        s2.className = 'screen';
+        s2.innerHTML = '<div class="top-bar"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>👤 ملفي الشخصي</span></div><div style="width:42px;"></div></div><div class="content" id="myProfileContent"></div>';
+        document.body.appendChild(s2);
+      }
+      
+      // زرار "تعديل الملف" في شاشة الحساب
+      var profileScreen = document.getElementById('profileScreen');
+      if(profileScreen && !document.getElementById('editProfileMenuBtn')){
+        var content = profileScreen.querySelector('.content');
+        if(content){
+          var menuBtn = document.createElement('div');
+          menuBtn.id = 'editProfileMenuBtn';
+          menuBtn.className = 'menu-item';
+          menuBtn.innerHTML = '<span style="font-size:26px;">✏️</span><span style="flex:1;font-weight:700;">تعديل الملف الشخصي</span><span style="color:#999;font-size:24px;">‹</span>';
+          menuBtn.onclick = function(){ window.openEditProfile(); };
+          content.insertBefore(menuBtn, content.firstChild);
+        }
+      }
+    }, 3500);
+  });
+  
+  window.openEditProfile = async function(){
+    if(!window.currentUser) return;
+    if(window.screenHistory) window.screenHistory.push(window.currentScreen);
+    if(typeof showScreen === 'function') showScreen('editProfileScreen');
+    
+    document.getElementById('editProfileName').value = window.currentUser.name || '';
+    document.getElementById('editProfileImg').src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(window.currentUser.name || 'مستخدم') + '&background=2E7D32&color=fff&size=200';
+    
+    try {
+      var doc = await firebase.firestore().collection('users').doc(window.currentUser.uid).get();
+      if(doc.exists){
+        var u = doc.data();
+        if(u.photo_url) document.getElementById('editProfileImg').src = u.photo_url;
+        if(u.bio) document.getElementById('editProfileBio').value = u.bio;
+        if(u.grade) document.getElementById('editProfileGrade').value = u.grade;
+        if(u.subject) document.getElementById('editProfileSubject').value = u.subject;
+      }
+    } catch(e){ console.error(e); }
+  };
+  
+  window.uploadProfilePic = async function(input){
+    if(!input.files || !input.files[0] || !window.currentUser) return;
+    var file = input.files[0];
+    if(file.size > 2 * 1024 * 1024){
+      if(typeof showToast === 'function') showToast('⚠️ الصورة كبيرة (أقصى 2 MB)');
+      return;
+    }
+    if(typeof showToast === 'function') showToast('⏳ جاري الرفع...');
+    try {
+      var url = await window.uploadFile(file, 'users/avatars');
+      if(url){
+        document.getElementById('editProfileImg').src = url;
+        await firebase.firestore().collection('users').doc(window.currentUser.uid).update({photo_url: url});
+        window.currentUser.photo_url = url;
+        if(typeof showToast === 'function') showToast('✅ تم تحديث الصورة');
+      }
+    } catch(e){ console.error(e); if(typeof showToast === 'function') showToast('❌ فشل الرفع'); }
+    input.value = '';
+  };
+  
+  window.saveProfile = async function(){
+    if(!window.currentUser) return;
+    var name = document.getElementById('editProfileName').value.trim();
+    var bio = document.getElementById('editProfileBio').value.trim();
+    var grade = document.getElementById('editProfileGrade').value.trim();
+    var subject = document.getElementById('editProfileSubject').value.trim();
+    if(!name){ if(typeof showToast === 'function') showToast('⚠️ أدخل الاسم'); return; }
+    var btn = document.getElementById('saveProfileBtn');
+    if(btn){ btn.disabled = true; btn.textContent = '⏳ جاري الحفظ...'; }
+    try {
+      await firebase.firestore().collection('users').doc(window.currentUser.uid).update({
+        name: name, bio: bio, grade: grade, subject: subject,
+        updatedAt: new Date().toISOString()
+      });
+      window.currentUser.name = name;
+      var pn = document.getElementById('profileName');
+      if(pn) pn.textContent = name;
+      if(typeof showToast === 'function') showToast('✅ تم الحفظ');
+      if(btn){ btn.disabled = false; btn.textContent = '💾 حفظ التعديلات'; }
+    } catch(e){
+      console.error(e);
+      if(btn){ btn.disabled = false; btn.textContent = '💾 حفظ التعديلات'; }
+      if(typeof showToast === 'function') showToast('❌ فشل');
+    }
+  };
+  
+  window.previewMyProfile = async function(){
+    if(!window.currentUser) return;
+    if(window.screenHistory) window.screenHistory.push(window.currentScreen);
+    if(typeof showScreen === 'function') showScreen('myProfileScreen');
+    var c = document.getElementById('myProfileContent');
+    c.innerHTML = '<p style="text-align:center;color:#999;padding:20px;">⏳</p>';
+    try {
+      var doc = await firebase.firestore().collection('users').doc(window.currentUser.uid).get();
+      var u = doc.exists ? doc.data() : {};
+      var img = u.photo_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(u.name || 'مستخدم') + '&background=2E7D32&color=fff&size=200';
+      var pts = u.points || 0;
+      var badge = window.getCurrentBadge ? window.getCurrentBadge(pts) : {icon:'🌱', name:'مبتدئ'};
+      var roleName = u.role === 'owner' ? 'المالك' : u.role === 'teacher' ? 'معلم' : 'طالب';
+      
+      var h = '<div style="text-align:center;padding:20px;">';
+      h += '<img src="' + img + '" style="width:130px;height:130px;border-radius:50%;object-fit:cover;border:5px solid #2E7D32;box-shadow:0 6px 20px rgba(0,0,0,.15);">';
+      h += '<div style="font-size:24px;font-weight:bold;margin-top:16px;color:#2E7D32;">' + (u.name || 'مستخدم') + '</div>';
+      h += '<div style="display:inline-block;background:#E8F5E9;color:#2E7D32;padding:4px 14px;border-radius:14px;font-size:12px;font-weight:bold;margin-top:8px;">' + roleName + '</div>';
+      if(u.bio) h += '<div style="margin-top:16px;font-size:14px;color:#666;line-height:1.7;">' + u.bio + '</div>';
+      h += '<div style="display:flex;gap:12px;justify-content:center;margin-top:24px;">';
+      h += '<div style="background:#FFF8E1;padding:14px 20px;border-radius:14px;text-align:center;min-width:100px;"><div style="font-size:24px;">' + badge.icon + '</div><div style="font-size:12px;color:#666;margin-top:4px;">' + badge.name + '</div></div>';
+      h += '<div style="background:#E8F5E9;padding:14px 20px;border-radius:14px;text-align:center;min-width:100px;"><div style="font-size:24px;">⭐</div><div style="font-size:18px;font-weight:bold;color:#2E7D32;">' + pts + '</div><div style="font-size:12px;color:#666;margin-top:4px;">نقطة</div></div>';
+      h += '</div>';
+      if(u.grade) h += '<div style="margin-top:20px;background:#F5F5F5;padding:12px;border-radius:12px;font-size:14px;">📚 <b>الصف:</b> ' + u.grade + '</div>';
+      if(u.subject) h += '<div style="margin-top:8px;background:#F5F5F5;padding:12px;border-radius:12px;font-size:14px;">📖 <b>المادة:</b> ' + u.subject + '</div>';
+      if(u.createdAt) h += '<div style="margin-top:8px;background:#F5F5F5;padding:12px;border-radius:12px;font-size:14px;">📅 <b>تاريخ الانضمام:</b> ' + new Date(u.createdAt).toLocaleDateString('ar-EG') + '</div>';
+      h += '</div>';
+      
+      c.innerHTML = h;
+    } catch(e){ console.error(e); c.innerHTML = '<p>⚠️ فشل التحميل</p>'; }
+  };
+  
+  console.log('✅ Profile system loaded');
+})();
 console.log('✅ extras.js loaded');
