@@ -274,3 +274,20 @@ window.clearChat = async function(){
     if(typeof showToast === 'function') showToast('❌ فشل');
   }
 };
+// ═══ إضافة زرار "مسح الدردشة" في شاشة الدردشة ═══
+window.addEventListener('load', function(){
+  setInterval(function(){
+    if(window.currentRole !== 'owner' && window.currentRole !== 'teacher') return;
+    var chatScreen = document.getElementById('chatScreen');
+    if(!chatScreen) return;
+    var topBar = chatScreen.querySelector('.top-bar');
+    if(!topBar || topBar.querySelector('#clearChatBtn')) return;
+    var btn = document.createElement('button');
+    btn.id = 'clearChatBtn';
+    btn.className = 'icon-btn';
+    btn.innerHTML = '🗑️';
+    btn.title = 'مسح الدردشة';
+    btn.onclick = function(){ window.clearChat(); };
+    topBar.appendChild(btn);
+  }, 2000);
+});
