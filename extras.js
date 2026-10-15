@@ -95,4 +95,10 @@ window.trackDailyLogin = async function(){
   await window.addPoints(5,'daily');
 };
 
+// ═══ تسجيل offline-sw ═══
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./offline-sw.js')
+    .then(function(){console.log('✅ offline-sw registered');})
+    .catch(function(e){console.log('⚠️ offline-sw:',e);});
+}
 console.log('✅ extras.js loaded');
