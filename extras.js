@@ -150,4 +150,59 @@ if ('serviceWorker' in navigator) {
     }
   });
 })();
+// ═══ تحميل المنصة كاملة للعمل offline ═══
+window.downloadAllOffline = async function(){
+  if(!navigator.onLine){ showToast('⚠️ محتاج نت للتحميل'); return; }
+  
+  showToast('⏳ جاري التحميل...');
+  let progress = 0;
+  
+  try {
+    // 1. الدروس
+    const lessonsSnap = await db.collection('lessons').get();
+    const lessons = [];
+    lessonsSnap.forEach(d => lessons.push({id:d.id, ...d.data()}));
+    localStorage.setItem('offline_lessons', JSON.stringify(lessons));
+    progress++;
+    showToast('✅ الدروس: ' + lessons.length);
+    
+    // 2. محطتي الإذاعية
+    const stationSnap = await db.collection('station').orderBy('created_at','desc').get();
+    const station = [];
+    stationSnap.forEach(d => station.push({id:d.id, ...d.data()}));
+    localStorage.setItem('offline_station', JSON.stringify(station));
+    progress++;
+    showToast('✅ محطتي: ' + station.length);
+    
+    // 3. القرآن (كل السور نص)
+    if(!localStorage.getItem('offline_quran_list')){
+      const r = await fetch('https://api.alquran.cloud/v1/surah');
+      const j = await r.json();
+      localStorage.setItem('offline_quran_list', JSON.stringify(j.data));
+    }
+    progress++;
+    showToast('✅ فهرس القرآن');
+    
+    showToast('🎉 تم التحميل! (' + progress + ' مراحل)');
+  } catch(e){
+    console.error(e);
+    showToast('❌ فشل: ' + e.message);
+  }
+};
+
+// ═══ قراءة الدروس من الكاش ═══
+window.getOfflineLessons = function(){
+  try {
+    const s = localStorage.getItem('offline_lessons');
+    return s ? JSON.parse(s) : null;
+  } catch(e){ return null; }
+};
+
+// ═══ قراءة محطتي من الكاش ═══
+window.getOfflineStation = function(){
+  try {
+    const s = localStorage.getItem('offline_station');
+    return s ? JSON.parse(s) : null;
+  } catch(e){ return null; }
+};
 console.log('✅ extras.js loaded');
