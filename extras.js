@@ -205,4 +205,68 @@ window.getOfflineStation = function(){
     return s ? JSON.parse(s) : null;
   } catch(e){ return null; }
 };
+// ═══ إضافة زرار "تحميل" في الصفحة الرئيسية ═══
+window.addEventListener('load', function(){
+  setTimeout(function(){
+    const home = document.getElementById('homeScreen');
+    if(!home || document.getElementById('offlineBtn')) return;
+    const content = home.querySelector('.content');
+    if(!content) return;
+    const btn = document.createElement('div');
+    btn.id = 'offlineBtn';
+    btn.style.cssText = 'margin:20px 16px;padding:18px;background:linear-gradient(135deg,#1976D2,#0D47A1);color:#fff;border-radius:16px;text-align:center;cursor:pointer;box-shadow:0 4px 12px rgba(25,118,210,.3);font-weight:bold;';
+    btn.innerHTML = '<div style="font-size:28px;">📥</div><div style="margin-top:8px;font-size:15px;">تحميل المنصة للعمل بدون نت</div><div style="font-size:12px;opacity:.9;margin-top:4px;">(يحتاج نت — مرة واحدة بس)</div>';
+    btn.onclick = async function(){
+      await window.downloadAllOffline();
+    };
+    content.insertBefore(btn, content.firstChild);
+  }, 2000);
+});
+
+// ═══ Override لـ openContent — يقرأ من الكاش ═══
+(function(){
+  let tries = 0;
+  const timer = setInterval(function(){
+    tries++;
+    if(tries > 40 || typeof window.openContent !== 'function'){ clearInterval(timer); return; }
+    clearInterval(timer);
+    
+    const orig = window.openContent;
+    window.openContent = async function(type, num, name){
+      const offline = window.getOfflineLessons();
+      
+      if(offline && !navigator.onLine){
+        try {
+          const filtered = offline.filter(function(l){
+            return l.subject === currentSubject &&
+                   l.term === num &&
+                   l.type === type &&
+                   l.grade === currentGrade;
+          });
+          
+          if(filtered.length > 0){
+            const titles = {lessons:'📄 الدروس', exercises:'✏️ تدريبات', exams:'📝 امتحانات', videos:'🎥 فيديوهات'};
+            document.getElementById('contentTitle').textContent = titles[type] || 'المحتوى';
+            document.getElementById('contentHeaderTitle').textContent = (currentSubject||'') + ' - ' + name;
+            document.getElementById('contentHeaderSub').textContent = titles[type] + ' (offline)';
+            
+            const l = document.getElementById('contentList');
+            const sorted = filtered.sort(function(a,b){ return (a.order||99) - (b.order||99); });
+            let html = '';
+            sorted.forEach(function(it){
+              html += '<div class="content-item" onclick="viewContent(\'' + it.id + '\')"><div class="content-item-icon">📄</div><div class="content-item-info"><div class="content-item-title">' + (it.title||'بدون عنوان') + '</div><div class="content-item-sub">' + (it.content ? it.content.substring(0,50) + '...' : '') + '</div></div><div class="content-item-arrow">‹</div></div>';
+            });
+            l.innerHTML = html;
+            
+            screenHistory.push(currentScreen);
+            showScreen('contentScreen');
+            return;
+          }
+        } catch(e){ console.error('offline openContent:', e); }
+      }
+      
+      return orig.apply(this, arguments);
+    };
+  }, 200);
+})();
 console.log('✅ extras.js loaded');
