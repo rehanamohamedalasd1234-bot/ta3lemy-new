@@ -269,4 +269,48 @@ window.addEventListener('load', function(){
     };
   }, 200);
 })();
+// ═══ تحميل نص القرآن كامل ═══
+window.downloadQuranText = async function(){
+  if(!navigator.onLine){ showToast('⚠️ محتاج نت'); return; }
+  if(localStorage.getItem('offline_quran_full')){
+    showToast('✅ القرآن محمّل من قبل');
+    return;
+  }
+  
+  showToast('⏳ جاري تحميل القرآن...');
+  try {
+    const r = await fetch('https://api.alquran.cloud/v1/quran/quran-uthmani');
+    const j = await r.json();
+    if(!j.data || !j.data.surahs){
+      showToast('❌ فشل التحميل');
+      return;
+    }
+    
+    const quran = {};
+    j.data.surahs.forEach(function(s){
+      quran[s.number] = {
+        name: s.name,
+        ayahs: s.ayahs.map(function(a){
+          return {num: a.numberInSurah, text: a.text};
+        })
+      };
+    });
+    
+    localStorage.setItem('offline_quran_full', JSON.stringify(quran));
+    showToast('✅ تم تحميل ' + j.data.surahs.length + ' سورة');
+  } catch(e){
+    console.error(e);
+    showToast('❌ فشل: ' + e.message);
+  }
+};
+
+// ═══ قراءة سورة من الكاش ═══
+window.getOfflineSurah = function(num){
+  try {
+    const s = localStorage.getItem('offline_quran_full');
+    if(!s) return null;
+    const quran = JSON.parse(s);
+    return quran[num] || null;
+  } catch(e){ return null; }
+};
 console.log('✅ extras.js loaded');
