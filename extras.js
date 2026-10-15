@@ -1269,4 +1269,404 @@ window.showFeatures = function(){
   
   console.log('✅ Favorites & Notes loaded');
 })();
+// ═══ البث المباشر ═══
+(function(){
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      // شاشة البث الرئيسية
+      if(!document.getElementById('liveScreen')){
+        var s1 = document.createElement('div');
+        s1.id = 'liveScreen';
+        s1.className = 'screen';
+        s1.innerHTML = '<div class="top-bar" style="background:linear-gradient(135deg,#D32F2F,#E53935);"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>🔴 البث المباشر</span></div><button class="icon-btn" id="addLiveBtn" onclick="openAddBroadcast()" style="display:none;">➕</button></div><div class="content"><div id="liveList"></div></div>';
+        document.body.appendChild(s1);
+      }
+      
+      // شاشة إضافة بث
+      if(!document.getElementById('addLiveScreen')){
+        var s2 = document.createElement('div');
+        s2.id = 'addLiveScreen';
+        s2.className = 'screen';
+        s2.innerHTML = '<div class="top-bar" style="background:linear-gradient(135deg,#D32F2F,#E53935);"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>➕ جدولة بث</span></div><div style="width:42px;"></div></div><div class="content">' +
+          '<div class="form-group"><label class="form-label">عنوان البث</label><input type="text" class="form-input" id="liveTitle" placeholder="مثال: مراجعة الوحدة الأولى"></div>' +
+          '<div class="form-group"><label class="form-label">المادة</label><input type="text" class="form-input" id="liveSubject" placeholder="مثال: رياضيات"></div>' +
+          '<div class="form-group"><label class="form-label">التاريخ والوقت</label><input type="datetime-local" class="form-input" id="liveDateTime"></div>' +
+          '<div class="form-group"><label class="form-label">ملاحظات</label><textarea class="form-input" id="liveNotes" rows="3" placeholder="أي تفاصيل إضافية..."></textarea></div>' +
+          '<button class="btn-primary" id="saveLiveBtn" onclick="saveBroadcast()" style="background:linear-gradient(135deg,#D32F2F,#E53935);">📅 جدولة البث</button>' +
+          '</div>';
+        document.body.appendChild(s2);
+      }
+      
+      // شاشة تفاصيل البث
+      if(!document.getElementById('liveDetailsScreen')){
+        var s3 = document.createElement('div');
+        s3.id = 'liveDetailsScreen';
+        s3.className = 'screen';
+        s3.innerHTML = '<div class="top-bar" style="background:linear-gradient(135deg,#D32F2F,#E53935);"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span id="liveDetailsTitle">البث</span></div><div style="width:42px;"></div></div><div class="content" id="liveDetailsContent"></div>';
+        document.body.appendChild(s3);
+      }
+      
+      // شاشة موافقة المالك
+      if(!document.getElementById('broadcastPermScreen')){
+        var s4 = document.createElement('div');
+        s4.id = 'broadcastPermScreen';
+        s4.className = 'screen';
+        s4.innerHTML = '<div class="top-bar" style="background:linear-gradient(135deg,#B71C1C,#E53935);"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>👑 صلاحيات البث</span></div><div style="width:42px;"></div></div><div class="content"><div class="section-title">المعلمون</div><div id="broadcastPermList"></div></div>';
+        document.body.appendChild(s4);
+      }
+      
+      // زرار في الرئيسية
+      var home = document.getElementById('homeScreen');
+      if(home && !document.getElementById('liveBtn')){
+        var content = home.querySelector('.content');
+        if(content){
+          var btn = document.createElement('div');
+          btn.id = 'liveBtn';
+          btn.style.cssText = 'margin:20px 16px;padding:18px;background:linear-gradient(135deg,#D32F2F,#E53935);color:#fff;border-radius:16px;text-align:center;cursor:pointer;box-shadow:0 4px 12px rgba(211,47,47,.3);font-weight:bold;position:relative;';
+          btn.innerHTML = '<div style="font-size:28px;">🔴</div><div style="margin-top:8px;font-size:15px;">البث المباشر</div><div style="font-size:12px;opacity:.9;margin-top:4px;">حصص شرح مباشرة</div>';
+          btn.onclick = function(){ window.openLive(); };
+          content.insertBefore(btn, content.firstChild);
+        }
+      }
+      
+      // زرار في شاشة المالك
+      var admin = document.getElementById('adminScreen');
+      if(admin && !document.getElementById('permBtn')){
+        var ac = admin.querySelector('.content');
+        if(ac){
+          var pBtn = document.createElement('div');
+          pBtn.id = 'permBtn';
+          pBtn.className = 'menu-item';
+          pBtn.innerHTML = '<span style="font-size:26px;">🎥</span><span style="flex:1;font-weight:700;">صلاحيات البث للمعلمين</span><span style="color:#999;font-size:24px;">‹</span>';
+          pBtn.onclick = function(){ window.openBroadcastPerm(); };
+          ac.appendChild(pBtn);
+        }
+      }
+    }, 4500);
+  });
+  
+  // ═══ فتح شاشة البث ═══
+  window.openLive = async function(){
+    if(!window.currentUser) return;
+    if(window.screenHistory) window.screenHistory.push(window.currentScreen);
+    if(typeof showScreen === 'function') showScreen('liveScreen');
+    
+    var addBtn = document.getElementById('addLiveBtn');
+    if(addBtn) addBtn.style.display = (window.currentRole === 'owner' || window.currentRole === 'teacher') ? 'flex' : 'none';
+    
+    var l = document.getElementById('liveList');
+    l.innerHTML = '<p style="text-align:center;color:#999;padding:20px;">⏳</p>';
+    
+    try {
+      var fs = firebase.firestore();
+      var snap = await fs.collection('broadcasts').orderBy('scheduledAt','desc').limit(30).get();
+      if(snap.empty){ 
+        l.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🔴</div><p>لا توجد بثوث مجدولة</p>' + (window.currentRole === 'owner' || window.currentRole === 'teacher' ? '<p style="font-size:13px;margin-top:8px;">اضغط ➕ فوق لجدولة بث</p>' : '') + '</div>'; 
+        return; 
+      }
+      var html = '';
+      snap.forEach(function(doc){
+        var b = doc.data();
+        var dateStr = new Date(b.scheduledAt).toLocaleString('ar-EG');
+        var isLive = b.status === 'live';
+        var statusColor = isLive ? '#D32F2F' : (b.status === 'ended' ? '#999' : '#2E7D32');
+        var statusText = isLive ? '🔴 مباشر الآن' : (b.status === 'ended' ? '⚫ انتهى' : '📅 مجدول');
+        html += '<div class="content-item" onclick="openLiveDetails(\'' + doc.id + '\')" style="display:block;border-right:5px solid ' + statusColor + ';">';
+        html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">';
+        html += '<div style="font-weight:bold;color:' + statusColor + ';font-size:15px;">' + (b.title||'بث') + '</div>';
+        html += '<div style="font-size:11px;color:' + statusColor + ';font-weight:bold;">' + statusText + '</div>';
+        html += '</div>';
+        html += '<div style="font-size:13px;color:#666;">📖 ' + (b.subject||'') + ' • 👤 ' + (b.teacherName||'') + '</div>';
+        html += '<div style="font-size:12px;color:#999;margin-top:6px;">📅 ' + dateStr + '</div>';
+        html += '</div>';
+      });
+      l.innerHTML = html;
+    } catch(e){ console.error(e); l.innerHTML = '<p>⚠️ فشل</p>'; }
+  };
+  
+  // ═══ إضافة بث جديد ═══
+  window.openAddBroadcast = async function(){
+    if(window.currentRole !== 'owner' && window.currentRole !== 'teacher'){
+      if(typeof showToast === 'function') showToast('⚠️ غير مصرح');
+      return;
+    }
+    if(window.currentRole === 'teacher'){
+      var doc = await firebase.firestore().collection('users').doc(window.currentUser.uid).get();
+      if(!doc.exists || !doc.data().canBroadcast){
+        if(typeof showToast === 'function') showToast('⚠️ لم يتم الموافقة من المالك');
+        return;
+      }
+    }
+    if(window.screenHistory) window.screenHistory.push(window.currentScreen);
+    if(typeof showScreen === 'function') showScreen('addLiveScreen');
+  };
+  
+  window.saveBroadcast = async function(){
+    if(!window.currentUser) return;
+    var t = document.getElementById('liveTitle').value.trim();
+    var s = document.getElementById('liveSubject').value.trim();
+    var dt = document.getElementById('liveDateTime').value;
+    var n = document.getElementById('liveNotes').value.trim();
+    if(!t || !dt){ if(typeof showToast === 'function') showToast('⚠️ أدخل العنوان والوقت'); return; }
+    var btn = document.getElementById('saveLiveBtn');
+    if(btn){ btn.disabled = true; btn.textContent = '⏳ جاري الحفظ...'; }
+    try {
+      var roomId = 'hafez-' + Date.now() + '-' + Math.random().toString(36).substring(2,8);
+      await firebase.firestore().collection('broadcasts').add({
+        title: t,
+        subject: s,
+        notes: n,
+        scheduledAt: new Date(dt).toISOString(),
+        teacherId: window.currentUser.uid,
+        teacherName: window.currentUser.name,
+        status: 'scheduled',
+        roomId: roomId,
+        allowedStudents: [],
+        pendingRequests: [],
+        createdAt: new Date().toISOString()
+      });
+      if(typeof showToast === 'function') showToast('✅ تم الجدولة');
+      if(btn){ btn.disabled = false; btn.textContent = '📅 جدولة البث'; }
+      document.getElementById('liveTitle').value = '';
+      document.getElementById('liveSubject').value = '';
+      document.getElementById('liveNotes').value = '';
+      setTimeout(function(){ window.openLive(); }, 800);
+    } catch(e){
+      console.error(e);
+      if(btn){ btn.disabled = false; btn.textContent = '📅 جدولة البث'; }
+      if(typeof showToast === 'function') showToast('❌ فشل');
+    }
+  };
+  
+  // ═══ تفاصيل البث ═══
+  window.openLiveDetails = async function(id){
+    window.currentLiveId = id;
+    if(window.screenHistory) window.screenHistory.push(window.currentScreen);
+    if(typeof showScreen === 'function') showScreen('liveDetailsScreen');
+    var c = document.getElementById('liveDetailsContent');
+    c.innerHTML = '<p style="text-align:center;color:#999;padding:20px;">⏳</p>';
+    
+    try {
+      var fs = firebase.firestore();
+      var doc = await fs.collection('broadcasts').doc(id).get();
+      if(!doc.exists){ c.innerHTML = '<p>⚠️ البث مش موجود</p>'; return; }
+      var b = doc.data();
+      document.getElementById('liveDetailsTitle').textContent = b.title || 'بث';
+      
+      var isOwner = window.currentRole === 'owner';
+      var isTeacher = b.teacherId === window.currentUser.uid;
+      var canManage = isOwner || isTeacher;
+      var isAllowed = (b.allowedStudents || []).indexOf(window.currentUser.uid) > -1;
+      var isPending = (b.pendingRequests || []).indexOf(window.currentUser.uid) > -1;
+      
+      var html = '<div style="background:linear-gradient(135deg,#D32F2F,#E53935);color:#fff;padding:20px;border-radius:16px;margin-bottom:16px;">';
+      html += '<div style="font-size:22px;font-weight:bold;margin-bottom:8px;">' + (b.title||'') + '</div>';
+      html += '<div style="font-size:13px;opacity:.9;">📖 ' + (b.subject||'') + ' • 👤 ' + (b.teacherName||'') + '</div>';
+      html += '</div>';
+      
+      html += '<div style="background:#fff;border-radius:14px;padding:16px;margin-bottom:12px;">';
+      html += '<div style="margin-bottom:8px;"><b>📅 الوقت:</b> ' + new Date(b.scheduledAt).toLocaleString('ar-EG') + '</div>';
+      html += '<div style="margin-bottom:8px;"><b>📊 الحالة:</b> ' + (b.status === 'live' ? '🔴 مباشر' : b.status === 'ended' ? '⚫ انتهى' : '📅 مجدول') + '</div>';
+      if(b.notes) html += '<div style="margin-bottom:8px;"><b>📝 ملاحظات:</b> ' + b.notes + '</div>';
+      html += '</div>';
+      
+      // إجراءات الطالب
+      if(!canManage){
+        if(isAllowed){
+          html += '<button class="btn-primary" onclick="joinBroadcast(\'' + b.roomId + '\')" style="background:linear-gradient(135deg,#D32F2F,#E53935);">🎥 دخول البث</button>';
+        } else if(isPending){
+          html += '<div style="background:#FFF8E1;padding:16px;border-radius:12px;text-align:center;color:#F9A825;font-weight:bold;">⏳ في انتظار موافقة المعلم</div>';
+        } else {
+          html += '<button class="btn-primary" onclick="requestJoin(\'' + id + '\')">📩 طلب الانضمام</button>';
+        }
+      }
+      
+      // إجراءات المعلم/المالك
+      if(canManage){
+        var liveBtn = b.status === 'scheduled' ? '🔴 ابدأ البث الآن' : (b.status === 'live' ? '🎥 دخول البث' : '⚫ البث انتهى');
+        var liveBg = b.status === 'scheduled' ? '#D32F2F' : (b.status === 'live' ? '#2E7D32' : '#999');
+        
+        if(b.status !== 'ended'){
+          html += '<button class="btn-primary" onclick="startOrJoin(\'' + id + '\',\'' + b.roomId + '\')" style="background:' + liveBg + ';">' + liveBtn + '</button>';
+        }
+        
+        if(b.status === 'live'){
+          html += '<button class="btn-primary" onclick="endBroadcast(\'' + id + '\')" style="background:#666;margin-top:10px;">⏹️ إنهاء البث</button>';
+        }
+        
+        // قائمة الطلبات
+        if(b.pendingRequests && b.pendingRequests.length > 0){
+          html += '<div style="margin-top:24px;"><div class="section-title">📩 طلبات الانضمام (' + b.pendingRequests.length + ')</div><div id="requestsList"></div></div>';
+        }
+        
+        // الطلاب المسموح لهم
+        if(b.allowedStudents && b.allowedStudents.length > 0){
+          html += '<div style="margin-top:24px;"><div class="section-title">✅ الطلاب المسموح لهم (' + b.allowedStudents.length + ')</div><div id="allowedList"></div></div>';
+        }
+      }
+      
+      c.innerHTML = html;
+      
+      // تحميل الطلبات
+      if(canManage && b.pendingRequests && b.pendingRequests.length > 0){
+        loadRequests(id, b.pendingRequests);
+      }
+      if(canManage && b.allowedStudents && b.allowedStudents.length > 0){
+        loadAllowed(id, b.allowedStudents);
+      }
+    } catch(e){ console.error(e); c.innerHTML = '<p>⚠️ فشل</p>'; }
+  };
+  
+  window.loadRequests = async function(bid, uids){
+    var l = document.getElementById('requestsList');
+    if(!l) return;
+    var html = '';
+    for(var i = 0; i < uids.length; i++){
+      try {
+        var doc = await firebase.firestore().collection('users').doc(uids[i]).get();
+        var u = doc.exists ? doc.data() : {name: 'مستخدم'};
+        html += '<div style="background:#FFF8E1;padding:12px;border-radius:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">';
+        html += '<div>👤 ' + u.name + '</div>';
+        html += '<div style="display:flex;gap:6px;"><button onclick="approveJoin(\'' + bid + '\',\'' + uids[i] + '\')" style="background:#2E7D32;color:#fff;border:none;padding:8px 12px;border-radius:8px;font-weight:bold;cursor:pointer;">✅ موافقة</button>';
+        html += '<button onclick="rejectJoin(\'' + bid + '\',\'' + uids[i] + '\')" style="background:#E53935;color:#fff;border:none;padding:8px 12px;border-radius:8px;font-weight:bold;cursor:pointer;">❌ رفض</button></div>';
+        html += '</div>';
+      } catch(e){}
+    }
+    l.innerHTML = html;
+  };
+  
+  window.loadAllowed = async function(bid, uids){
+    var l = document.getElementById('allowedList');
+    if(!l) return;
+    var html = '';
+    for(var i = 0; i < uids.length; i++){
+      try {
+        var doc = await firebase.firestore().collection('users').doc(uids[i]).get();
+        var u = doc.exists ? doc.data() : {name: 'مستخدم'};
+        html += '<div style="background:#E8F5E9;padding:12px;border-radius:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">';
+        html += '<div>👤 ' + u.name + '</div>';
+        html += '<button onclick="removeAllowed(\'' + bid + '\',\'' + uids[i] + '\')" style="background:#E53935;color:#fff;border:none;padding:6px 10px;border-radius:8px;font-size:12px;cursor:pointer;">✕</button>';
+        html += '</div>';
+      } catch(e){}
+    }
+    l.innerHTML = html;
+  };
+  
+  window.requestJoin = async function(bid){
+    if(!window.currentUser) return;
+    try {
+      var fs = firebase.firestore();
+      var ref = fs.collection('broadcasts').doc(bid);
+      var doc = await ref.get();
+      var b = doc.data();
+      var pending = b.pendingRequests || [];
+      if(pending.indexOf(window.currentUser.uid) === -1){
+        pending.push(window.currentUser.uid);
+        await ref.update({pendingRequests: pending});
+      }
+      if(typeof showToast === 'function') showToast('📩 تم إرسال الطلب');
+      window.openLiveDetails(bid);
+    } catch(e){ console.error(e); if(typeof showToast === 'function') showToast('❌ فشل'); }
+  };
+  
+  window.approveJoin = async function(bid, uid){
+    try {
+      var fs = firebase.firestore();
+      var ref = fs.collection('broadcasts').doc(bid);
+      var doc = await ref.get();
+      var b = doc.data();
+      var pending = (b.pendingRequests || []).filter(function(x){ return x !== uid; });
+      var allowed = b.allowedStudents || [];
+      if(allowed.indexOf(uid) === -1) allowed.push(uid);
+      await ref.update({pendingRequests: pending, allowedStudents: allowed});
+      if(typeof showToast === 'function') showToast('✅ تمت الموافقة');
+      window.openLiveDetails(bid);
+    } catch(e){ console.error(e); }
+  };
+  
+  window.rejectJoin = async function(bid, uid){
+    try {
+      var fs = firebase.firestore();
+      var ref = fs.collection('broadcasts').doc(bid);
+      var doc = await ref.get();
+      var b = doc.data();
+      var pending = (b.pendingRequests || []).filter(function(x){ return x !== uid; });
+      await ref.update({pendingRequests: pending});
+      if(typeof showToast === 'function') showToast('❌ تم الرفض');
+      window.openLiveDetails(bid);
+    } catch(e){ console.error(e); }
+  };
+  
+  window.removeAllowed = async function(bid, uid){
+    if(!confirm('إزالة الطالب؟')) return;
+    try {
+      var fs = firebase.firestore();
+      var ref = fs.collection('broadcasts').doc(bid);
+      var doc = await ref.get();
+      var b = doc.data();
+      var allowed = (b.allowedStudents || []).filter(function(x){ return x !== uid; });
+      await ref.update({allowedStudents: allowed});
+      window.openLiveDetails(bid);
+    } catch(e){ console.error(e); }
+  };
+  
+  window.startOrJoin = async function(bid, roomId){
+    try {
+      await firebase.firestore().collection('broadcasts').doc(bid).update({status: 'live'});
+      window.openJitsi(roomId);
+    } catch(e){ console.error(e); }
+  };
+  
+  window.joinBroadcast = function(roomId){
+    window.openJitsi(roomId);
+  };
+  
+  window.openJitsi = function(roomId){
+    var url = 'https://meet.jit.si/' + roomId;
+    window.open(url, '_blank');
+    if(typeof showToast === 'function') showToast('🎥 جاري فتح البث...');
+  };
+  
+  window.endBroadcast = async function(bid){
+    if(!confirm('إنهاء البث للجميع؟')) return;
+    try {
+      await firebase.firestore().collection('broadcasts').doc(bid).update({status: 'ended'});
+      if(typeof showToast === 'function') showToast('⏹️ تم إنهاء البث');
+      window.openLiveDetails(bid);
+    } catch(e){ console.error(e); }
+  };
+  
+  // ═══ صلاحيات البث (للمالك) ═══
+  window.openBroadcastPerm = async function(){
+    if(window.currentRole !== 'owner') return;
+    if(window.screenHistory) window.screenHistory.push(window.currentScreen);
+    if(typeof showScreen === 'function') showScreen('broadcastPermScreen');
+    var l = document.getElementById('broadcastPermList');
+    l.innerHTML = '<p style="text-align:center;color:#999;padding:20px;">⏳</p>';
+    try {
+      var snap = await firebase.firestore().collection('users').where('role','==','teacher').get();
+      if(snap.empty){ l.innerHTML = '<p style="text-align:center;color:#999;padding:20px;">لا يوجد معلمون</p>'; return; }
+      var html = '';
+      snap.forEach(function(doc){
+        var u = doc.data();
+        var can = u.canBroadcast === true;
+        html += '<div style="background:#fff;border-radius:14px;padding:14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">';
+        html += '<div><div style="font-weight:bold;">👤 ' + (u.name||'معلم') + '</div><div style="font-size:12px;color:' + (can?'#2E7D32':'#999') + ';">' + (can?'✅ مصرح له':'❌ غير مصرح') + '</div></div>';
+        html += '<button onclick="toggleBroadcastPerm(\'' + doc.id + '\',' + (can?'false':'true') + ')" style="background:' + (can?'#E53935':'#2E7D32') + ';color:#fff;border:none;padding:10px 16px;border-radius:10px;font-weight:bold;cursor:pointer;">' + (can?'إلغاء':'موافقة') + '</button>';
+        html += '</div>';
+      });
+      l.innerHTML = html;
+    } catch(e){ console.error(e); l.innerHTML = '<p>⚠️ فشل</p>'; }
+  };
+  
+  window.toggleBroadcastPerm = async function(uid, val){
+    try {
+      await firebase.firestore().collection('users').doc(uid).update({canBroadcast: val});
+      if(typeof showToast === 'function') showToast('✅ تم التحديث');
+      window.openBroadcastPerm();
+    } catch(e){ console.error(e); }
+  };
+  
+  console.log('✅ Live Broadcast system loaded');
+})();
 console.log('✅ extras.js loaded');
