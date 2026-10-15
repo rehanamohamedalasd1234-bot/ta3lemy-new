@@ -1083,4 +1083,190 @@ window.showFeatures = function(){
   
   console.log('✅ Profile system loaded');
 })();
+// ═══ المفضلة والملاحظات ═══
+(function(){
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      // شاشة المفضلة
+      if(!document.getElementById('favoritesScreen')){
+        var s1 = document.createElement('div');
+        s1.id = 'favoritesScreen';
+        s1.className = 'screen';
+        s1.innerHTML = '<div class="top-bar"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>⭐ المفضلة</span></div><div style="width:42px;"></div></div><div class="content"><div id="favoritesList"></div></div>';
+        document.body.appendChild(s1);
+      }
+      // شاشة الملاحظات
+      if(!document.getElementById('notesScreen')){
+        var s2 = document.createElement('div');
+        s2.id = 'notesScreen';
+        s2.className = 'screen';
+        s2.innerHTML = '<div class="top-bar"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>📝 ملاحظاتي</span></div><div style="width:42px;"></div></div><div class="content"><div class="form-group"><textarea class="form-input" id="newNoteText" rows="3" placeholder="اكتب ملاحظة جديدة..."></textarea></div><button class="btn-primary" onclick="addNote()" style="margin-bottom:16px;">➕ إضافة ملاحظة</button><div id="notesList"></div></div>';
+        document.body.appendChild(s2);
+      }
+      
+      // إضافة زرارين في شاشة الحساب
+      var profileScreen = document.getElementById('profileScreen');
+      if(profileScreen && !document.getElementById('favMenuBtn')){
+        var content = profileScreen.querySelector('.content');
+        if(content){
+          var favBtn = document.createElement('div');
+          favBtn.id = 'favMenuBtn';
+          favBtn.className = 'menu-item';
+          favBtn.innerHTML = '<span style="font-size:26px;">⭐</span><span style="flex:1;font-weight:700;">المفضلة</span><span style="color:#999;font-size:24px;">‹</span>';
+          favBtn.onclick = function(){ window.openFavorites(); };
+          content.insertBefore(favBtn, content.firstChild);
+          
+          var noteBtn = document.createElement('div');
+          noteBtn.id = 'notesMenuBtn';
+          noteBtn.className = 'menu-item';
+          noteBtn.innerHTML = '<span style="font-size:26px;">📝</span><span style="flex:1;font-weight:700;">ملاحظاتي</span><span style="color:#999;font-size:24px;">‹</span>';
+          noteBtn.onclick = function(){ window.openNotes(); };
+          content.insertBefore(noteBtn, favBtn.nextSibling);
+        }
+      }
+      
+      // إضافة زرار "أضف للمفضلة" في شاشة عرض الدرس
+      var viewerScreen = document.getElementById('viewerScreen');
+      if(viewerScreen && !document.getElementById('viewerFavBtn')){
+        var topBar = viewerScreen.querySelector('.top-bar');
+        if(topBar){
+          var favIcon = document.createElement('button');
+          favIcon.id = 'viewerFavBtn';
+          favIcon.className = 'icon-btn';
+          favIcon.innerHTML = '⭐';
+          favIcon.title = 'أضف للمفضلة';
+          favIcon.onclick = function(){ window.toggleFavorite(); };
+          topBar.appendChild(favIcon);
+        }
+      }
+      
+      // إضافة زرار "أضف ملاحظة" في شاشة عرض الدرس
+      var viewerBody = document.getElementById('viewerBody');
+      if(viewerBody && !document.getElementById('addNoteForLessonBtn')){
+        var noteBtn2 = document.createElement('button');
+        noteBtn2.id = 'addNoteForLessonBtn';
+        noteBtn2.style.cssText = 'margin-top:20px;padding:12px 20px;background:linear-gradient(135deg,#F9A825,#FBC02D);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:14px;font-weight:bold;cursor:pointer;width:100%;';
+        noteBtn2.innerHTML = '📝 أضف ملاحظة على هذا الدرس';
+        noteBtn2.onclick = window.openNotes;
+        viewerBody.appendChild(noteBtn2);
+      }
+    }, 4000);
+  });
+  
+  // ═══ المفضلة ═══
+  window.currentLessonId = null;
+  
+  window.toggleFavorite = async function(){
+    if(!window.currentUser) return;
+    var lessonId = window.currentLessonId;
+    if(!lessonId){
+      // نجيب ID الدرس من عنوان الشاشة
+      var title = document.getElementById('viewerTitle');
+      if(title) lessonId = title.textContent;
+    }
+    if(!lessonId){ if(typeof showToast === 'function') showToast('⚠️ افتح درس أولاً'); return; }
+    try {
+      var fs = firebase.firestore();
+      var ref = fs.collection('users').doc(window.currentUser.uid).collection('favorites').doc(encodeURIComponent(lessonId));
+      var doc = await ref.get();
+      if(doc.exists){
+        await ref.delete();
+        if(typeof showToast === 'function') showToast('⭐ تم الإزالة من المفضلة');
+      } else {
+        await ref.set({
+          lessonId: lessonId,
+          lessonTitle: document.getElementById('viewerTitle') ? document.getElementById('viewerTitle').textContent : '',
+          addedAt: new Date().toISOString()
+        });
+        if(typeof showToast === 'function') showToast('⭐ تم الإضافة للمفضلة');
+      }
+    } catch(e){ console.error(e); if(typeof showToast === 'function') showToast('❌ فشل'); }
+  };
+  
+  window.openFavorites = async function(){
+    if(!window.currentUser) return;
+    if(window.screenHistory) window.screenHistory.push(window.currentScreen);
+    if(typeof showScreen === 'function') showScreen('favoritesScreen');
+    var l = document.getElementById('favoritesList');
+    l.innerHTML = '<p style="text-align:center;color:#999;padding:20px;">⏳</p>';
+    try {
+      var snap = await firebase.firestore().collection('users').doc(window.currentUser.uid).collection('favorites').orderBy('addedAt','desc').get();
+      if(snap.empty){ l.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⭐</div><p>لا توجد عناصر في المفضلة</p><p style="font-size:13px;margin-top:8px;">افتح أي درس واضغط ⭐ في الأعلى</p></div>'; return; }
+      var html = '';
+      snap.forEach(function(doc){
+        var f = doc.data();
+        html += '<div class="content-item" style="display:flex;justify-content:space-between;align-items:center;">';
+        html += '<div style="flex:1;"><div class="content-item-title">' + (f.lessonTitle || f.lessonId) + '</div><div class="content-item-sub">📅 ' + new Date(f.addedAt).toLocaleDateString('ar-EG') + '</div></div>';
+        html += '<button onclick="removeFavorite(\'' + doc.id + '\')" style="background:#FFEBEE;color:#E53935;border:none;width:36px;height:36px;border-radius:50%;cursor:pointer;">🗑️</button>';
+        html += '</div>';
+      });
+      l.innerHTML = html;
+    } catch(e){ console.error(e); l.innerHTML = '<p>⚠️ فشل</p>'; }
+  };
+  
+  window.removeFavorite = async function(docId){
+    if(!window.currentUser) return;
+    if(!confirm('إزالة من المفضلة؟')) return;
+    try {
+      await firebase.firestore().collection('users').doc(window.currentUser.uid).collection('favorites').doc(docId).delete();
+      window.openFavorites();
+      if(typeof showToast === 'function') showToast('🗑️ تم');
+    } catch(e){ console.error(e); }
+  };
+  
+  // ═══ الملاحظات ═══
+  window.openNotes = async function(){
+    if(!window.currentUser) return;
+    if(window.screenHistory) window.screenHistory.push(window.currentScreen);
+    if(typeof showScreen === 'function') showScreen('notesScreen');
+    window.loadNotes();
+  };
+  
+  window.loadNotes = async function(){
+    var l = document.getElementById('notesList');
+    if(!l) return;
+    l.innerHTML = '<p style="text-align:center;color:#999;padding:20px;">⏳</p>';
+    try {
+      var snap = await firebase.firestore().collection('users').doc(window.currentUser.uid).collection('notes').orderBy('createdAt','desc').get();
+      if(snap.empty){ l.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📝</div><p>لا توجد ملاحظات</p></div>'; return; }
+      var html = '';
+      snap.forEach(function(doc){
+        var n = doc.data();
+        html += '<div style="background:#FFF8E1;border-radius:12px;padding:14px;margin-bottom:10px;position:relative;">';
+        html += '<div style="font-size:14px;line-height:1.7;white-space:pre-wrap;padding-left:30px;">' + n.text + '</div>';
+        html += '<div style="font-size:11px;color:#999;margin-top:8px;">📅 ' + new Date(n.createdAt).toLocaleString('ar-EG') + '</div>';
+        html += '<button onclick="deleteNote(\'' + doc.id + '\')" style="position:absolute;top:8px;left:8px;background:#E53935;color:#fff;border:none;border-radius:50%;width:24px;height:24px;font-size:12px;cursor:pointer;">✕</button>';
+        html += '</div>';
+      });
+      l.innerHTML = html;
+    } catch(e){ console.error(e); l.innerHTML = '<p>⚠️ فشل</p>'; }
+  };
+  
+  window.addNote = async function(){
+    if(!window.currentUser) return;
+    var t = document.getElementById('newNoteText').value.trim();
+    if(!t){ if(typeof showToast === 'function') showToast('⚠️ اكتب ملاحظة'); return; }
+    try {
+      await firebase.firestore().collection('users').doc(window.currentUser.uid).collection('notes').add({
+        text: t,
+        createdAt: new Date().toISOString()
+      });
+      document.getElementById('newNoteText').value = '';
+      if(typeof showToast === 'function') showToast('✅ تم الحفظ');
+      window.loadNotes();
+    } catch(e){ console.error(e); }
+  };
+  
+  window.deleteNote = async function(docId){
+    if(!window.currentUser) return;
+    if(!confirm('حذف الملاحظة؟')) return;
+    try {
+      await firebase.firestore().collection('users').doc(window.currentUser.uid).collection('notes').doc(docId).delete();
+      window.loadNotes();
+      if(typeof showToast === 'function') showToast('🗑️ تم');
+    } catch(e){ console.error(e); }
+  };
+  
+  console.log('✅ Favorites & Notes loaded');
+})();
 console.log('✅ extras.js loaded');
