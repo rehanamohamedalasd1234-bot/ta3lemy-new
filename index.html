@@ -199,7 +199,7 @@ async function openPublicChat() {
             const m = doc.data();
             const mine = m.senderId === currentUser.uid;
             const isOwner = currentRole === 'owner';
-            html += '<div class="chat-bubble ' + (mine ? 'mine' : 'other') + '" style="position:relative;">';
+            html += '<div class="chat-bubble ' + (mine ? 'mine' : 'other') + '" data-msgid="' + doc.id + '" style="position:relative;">';
             if (!mine && isOwner) {
                 html += '<button onclick="deletePublicMsg(\'' + doc.id + '\')" style="position:absolute;top:5px;left:5px;background:#E53935;color:#fff;border:none;border-radius:50%;width:22px;height:22px;font-size:12px;cursor:pointer;">✕</button>';
             }
@@ -353,7 +353,7 @@ async function openPublicChat() {
             const m = doc.data();
             const mine = m.senderId === currentUser.uid;
             const isOwner = currentRole === 'owner';
-            html += '<div class="chat-bubble ' + (mine ? 'mine' : 'other') + '" style="position:relative;">';
+            html += '<div class="chat-bubble ' + (mine ? 'mine' : 'other') + '" data-msgid="' + doc.id + '" style="position:relative;">';
             if (!mine && isOwner) {
                 html += '<button onclick="deletePublicMsg(\'' + doc.id + '\')" style="position:absolute;top:5px;left:5px;background:#E53935;color:#fff;border:none;border-radius:50%;width:22px;height:22px;font-size:12px;cursor:pointer;">✕</button>';
             }
@@ -396,7 +396,7 @@ async function openPublicChat() {
             const m = doc.data();
             const mine = m.senderId === currentUser.uid;
             const isOwner = currentRole === 'owner';
-            html += '<div class="chat-bubble ' + (mine ? 'mine' : 'other') + '" style="position:relative;">';
+            html += '<div class="chat-bubble ' + (mine ? 'mine' : 'other') + '" data-msgid="' + doc.id + '" style="position:relative;">';
             if (!mine && isOwner) {
                 html += '<button onclick="deletePublicMsg(\'' + doc.id + '\')" style="position:absolute;top:5px;left:5px;background:#E53935;color:#fff;border:none;border-radius:50%;width:22px;height:22px;font-size:12px;cursor:pointer;">✕</button>';
             }
@@ -502,7 +502,7 @@ async function openPublicChat() {
             const m = doc.data();
             const mine = m.senderId === currentUser.uid;
             const isOwner = currentRole === 'owner';
-            html += '<div class="chat-bubble ' + (mine ? 'mine' : 'other') + '" style="position:relative;">';
+            html += '<div class="chat-bubble ' + (mine ? 'mine' : 'other') + '" data-msgid="' + doc.id + '" style="position:relative;">';
             if (!mine && isOwner) {
                 html += '<button onclick="deletePublicMsg(\'' + doc.id + '\')" style="position:absolute;top:5px;left:5px;background:#E53935;color:#fff;border:none;border-radius:50%;width:22px;height:22px;font-size:12px;cursor:pointer;">✕</button>';
             }
