@@ -581,5 +581,6 @@ window.addEventListener('unhandledrejection',e=>console.error('❌ Promise:',e.r
 window.addEventListener('load',()=>{setTimeout(()=>showScreen('loginScreen'),2500);loadOwnerInfo();loadAdsOnHome();loadWisdomBar();});
 if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./service-worker.js').then(reg=>console.log('✅ SW registered')).catch(err=>console.log('❌ SW error:',err));});}
 </script>
+<script src="./extras.js"></script>
 </body>
 </html>
