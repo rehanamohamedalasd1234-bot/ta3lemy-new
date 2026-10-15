@@ -622,5 +622,67 @@ window.addEventListener('load', function(){
     inputBar.insertBefore(bar, inputBar.firstChild);
   }, 2000);
 });
+// ═══ صفحة مميزات المنصة ═══
+window.addEventListener('load', function(){
+  setTimeout(function(){
+    var home = document.getElementById('homeScreen');
+    if(!home || document.getElementById('featuresBtn')) return;
+    var content = home.querySelector('.content');
+    if(!content) return;
+    var btn = document.createElement('div');
+    btn.id = 'featuresBtn';
+    btn.style.cssText = 'margin:20px 16px;padding:18px;background:linear-gradient(135deg,#7B1FA2,#9C27B0);color:#fff;border-radius:16px;text-align:center;cursor:pointer;box-shadow:0 4px 12px rgba(123,31,162,.3);font-weight:bold;';
+    btn.innerHTML = '<div style="font-size:28px;">🌟</div><div style="margin-top:8px;font-size:15px;">كل مميزات المنصة</div><div style="font-size:12px;opacity:.9;margin-top:4px;">اضغط للاستكشاف</div>';
+    btn.onclick = window.showFeatures;
+    content.insertBefore(btn, content.firstChild.nextSibling);
+  }, 2500);
+});
 
+window.showFeatures = function(){
+  var features = [
+    {icon:'📚', title:'المناهج الشاملة', desc:'تعليم عام (ابتدائي - إعدادي - ثانوي) + الأزهر الشريف + البكالوريا الجديدة'},
+    {icon:'🎓', title:'نظام البكالوريا', desc:'4 مسارات (طب، هندسة، أعمال، آداب) + 600 درجة + مواد متقدمة'},
+    {icon:'📖', title:'القرآن الكريم', desc:'114 سورة كاملة + 6 شيوخ (العفاسي، عبد الباسط، الحصري، المنشاوي، السديس، المعيقلي) + تفسير ميسر'},
+    {icon:'🎯', title:'دروس ومحتوى', desc:'شرح مبسط + شرح متقدم + أمثلة محلولة خطوة بخطوة'},
+    {icon:'✏️', title:'تدريبات وامتحانات', desc:'أسئلة متنوعة + امتحانات بنماذج إجابة + تصحيح'},
+    {icon:'💬', title:'الدردشة الذكية', desc:'دردشة جماعية + فردية + إرسال صور + رسائل صوتية + فيديوهات'},
+    {icon:'🏆', title:'نظام النقاط والشارات', desc:'نقاط لكل درس + 7 شارات (مبتدئ → أسطورة) + لوحة شرف'},
+    {icon:'📥', title:'العمل بدون إنترنت', desc:'حمّل المنصة كاملة مرة واحدة + اشتغل offline + مزامنة تلقائية لما النت يرجع'},
+    {icon:'🎨', title:'أدوات الرسم', desc:'لوحة رسم كاملة + ألوان + أحجام + حفظ + مشاركة'},
+    {icon:'🧮', title:'آلة حاسبة علمية', desc:'حاسبة متقدمة (sin, cos, tan, log, ln, √, x², !, π)'},
+    {icon:'📻', title:'الراديو الإسلامي', desc:'5 إذاعات مباشرة + محطتك الخاصة'},
+    {icon:'🌙', title:'وضع ليلي', desc:'تصميم مريح للعين + تبديل سريع بين الوضعين'},
+    {icon:'👨‍🏫', title:'لوحة المالك', desc:'إدارة كاملة للمنصة + إضافة دروس + إعلانات + نسخ احتياطي'},
+    {icon:'🌐', title:'متعدد الأجهزة', desc:'يشتغل على الموبايل + التابلت + الكمبيوتر + PWA + APK'}
+  ];
+  
+  var h = '<div style="padding:20px;">';
+  h += '<div style="text-align:center;margin-bottom:24px;">';
+  h += '<div style="font-size:64px;">🌟</div>';
+  h += '<div style="font-size:22px;font-weight:bold;color:#7B1FA2;margin-top:8px;">مميزات منصة الأستاذ حافظ</div>';
+  h += '<div style="font-size:13px;color:#999;margin-top:6px;">كل اللي تحتاجه في مكان واحد</div>';
+  h += '</div>';
+  
+  features.forEach(function(f){
+    h += '<div style="background:#fff;border-radius:14px;padding:14px;margin-bottom:10px;display:flex;gap:12px;align-items:flex-start;box-shadow:0 2px 8px rgba(0,0,0,.06);">';
+    h += '<div style="font-size:32px;flex-shrink:0;">' + f.icon + '</div>';
+    h += '<div style="flex:1;">';
+    h += '<div style="font-weight:bold;color:#2E7D32;margin-bottom:4px;font-size:15px;">' + f.title + '</div>';
+    h += '<div style="font-size:13px;color:#666;line-height:1.6;">' + f.desc + '</div>';
+    h += '</div></div>';
+  });
+  
+  h += '<div style="text-align:center;margin-top:24px;padding:16px;background:linear-gradient(135deg,#2E7D32,#4CAF50);color:#fff;border-radius:14px;">';
+  h += '<div style="font-size:16px;font-weight:bold;">منصة الأستاذ حافظ التعليمية</div>';
+  h += '<div style="font-size:12px;opacity:.9;margin-top:6px;">للتعليم العام • الأزهر • البكالوريا</div>';
+  h += '</div></div>';
+  
+  var m = document.createElement('div');
+  m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;display:flex;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto;';
+  m.innerHTML = '<div style="background:#FFFEF7;border-radius:22px;max-width:520px;width:100%;max-height:92vh;overflow-y:auto;position:relative;">' +
+    '<button onclick="this.parentElement.parentElement.remove()" style="position:sticky;top:12px;float:left;margin:12px;background:#E53935;color:#fff;border:none;border-radius:50%;width:38px;height:38px;font-size:20px;cursor:pointer;z-index:10;">✕</button>' +
+    h +
+    '</div>';
+  document.body.appendChild(m);
+};
 console.log('✅ extras.js loaded');
