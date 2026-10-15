@@ -226,3 +226,51 @@ window.addEventListener('load', function(){
 })();
 
 console.log('✅ extras.js loaded');
+// ═══ حذف رسالة في الدردشة الفردية ═══
+window.deletePrivateMsg = async function(msgId){
+  if(!window.currentUser || !window.currentChatId) return;
+  if(window.currentChatId === 'public_chat') return;
+  if(!confirm('حذف الرسالة؟')) return;
+  try {
+    await firebase.firestore()
+      .collection('messages')
+      .doc(window.currentChatId)
+      .collection('msgs')
+      .doc(msgId)
+      .delete();
+    if(typeof showToast === 'function') showToast('🗑️ تم الحذف');
+  } catch(e){
+    console.error(e);
+    if(typeof showToast === 'function') showToast('❌ فشل');
+  }
+};
+
+// ═══ حذف كل الرسايل في دردشة (للمالك) ═══
+window.clearChat = async function(){
+  if(!window.currentUser) return;
+  if(window.currentRole !== 'owner' && window.currentRole !== 'teacher') {
+    if(typeof showToast === 'function') showToast('⚠️ مسموح للمالك أو المعلم');
+    return;
+  }
+  if(!window.currentChatId) return;
+  if(!confirm('مسح كل الرسايل في هذه الدردشة؟')) return;
+  
+  try {
+    var fs = firebase.firestore();
+    if(window.currentChatId === 'public_chat'){
+      var snap = await fs.collection('public_chat').get();
+      var batch = fs.batch();
+      snap.forEach(function(d){ batch.delete(d.ref); });
+      await batch.commit();
+    } else {
+      var snap2 = await fs.collection('messages').doc(window.currentChatId).collection('msgs').get();
+      var batch2 = fs.batch();
+      snap2.forEach(function(d){ batch2.delete(d.ref); });
+      await batch2.commit();
+    }
+    if(typeof showToast === 'function') showToast('🗑️ تم مسح الدردشة');
+  } catch(e){
+    console.error(e);
+    if(typeof showToast === 'function') showToast('❌ فشل');
+  }
+};
