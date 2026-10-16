@@ -753,6 +753,30 @@ window.addEventListener('load', function(){
   }, 3000);
 });
 console.log('✅ Quick Menu loaded');
+// ═══ Quick Menu ═══
+window.addEventListener('load', function(){
+  setTimeout(function(){
+    var home = document.getElementById('homeScreen');
+    if(!home || document.getElementById('quickMenu')) return;
+    var content = home.querySelector('.content');
+    if(!content) return;
+    var btn = document.createElement('div');
+    btn.id = 'quickMenu';
+    btn.style.cssText = 'margin:20px 16px;padding:18px;background:linear-gradient(135deg,#F9A825,#FBC02D);color:#fff;border-radius:16px;text-align:center;cursor:pointer;font-weight:bold;';
+    btn.innerHTML = '<div style="font-size:28px;">⚡</div><div style="margin-top:8px;font-size:15px;">قائمة سريعة</div>';
+    btn.onclick = function(){
+      var choice = prompt('⚡ اختر:\n\n1. مؤقت الدراسة\n2. الأخبار والمقالات\n3. نقاطي\n4. المفضلة\n5. ملاحظاتي\n6. تسجيل الخروج');
+      if(choice === '1') window.openPomodoro();
+      else if(choice === '2') window.openNews();
+      else if(choice === '3') window.showMyPoints();
+      else if(choice === '4') window.openFavorites();
+      else if(choice === '5') window.openNotes();
+      else if(choice === '6' && typeof logout === 'function') logout();
+    };
+    content.insertBefore(btn, content.firstChild);
+  }, 3000);
+});
+console.log('✅ Quick Menu loaded');
 console.log('✅ extras.js loaded');
   
 })();
