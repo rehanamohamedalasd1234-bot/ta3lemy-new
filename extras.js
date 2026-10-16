@@ -1610,6 +1610,108 @@ window.addEventListener('load', function(){
 });
 
 console.log('✅ Exercises UI loaded');
+// ═══════════════════════════════════════════════════════
+// 📚 عربي الصف الأول الابتدائي — محتوى تفاعلي
+// ═══════════════════════════════════════════════════════
+
+(function(){
+  if(!window.speakText){
+    window.speakText = function(text){
+      if(!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = 'ar-EG';
+      u.rate = 0.8;
+      u.pitch = 1.2;
+      window.speechSynthesis.speak(u);
+    };
+  }
+  
+  // ═══ شاشة عرض الحرف ═══
+  window.showArabicLetter = function(letter, word, emoji){
+    var m = document.createElement('div');
+    m.id = 'letterModal';
+    m.style.cssText = 'position:fixed;inset:0;background:linear-gradient(135deg,#FFF9C4,#FFE082);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
+    m.innerHTML = 
+      '<div style="background:#fff;border-radius:30px;padding:32px 24px;text-align:center;max-width:400px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3);">' +
+      '<div style="font-size:120px;line-height:1.2;color:#E65100;font-weight:bold;margin-bottom:12px;" onclick="speakText(\'' + letter + '\')">' + letter + '</div>' +
+      '<div style="font-size:80px;margin:20px 0;" onclick="speakText(\'' + word + '\')">' + emoji + '</div>' +
+      '<div style="font-size:36px;color:#2E7D32;font-weight:bold;margin-bottom:24px;" onclick="speakText(\'' + word + '\')">' + word + '</div>' +
+      '<div style="display:flex;gap:10px;justify-content:center;">' +
+      '<button onclick="speakText(\'' + letter + '\')" style="padding:14px 24px;background:linear-gradient(135deg,#FF6B6B,#FF8E53);color:#fff;border:none;border-radius:50px;font-family:inherit;font-size:16px;font-weight:bold;cursor:pointer;">🔊 اسمع الحرف</button>' +
+      '<button onclick="speakText(\'' + word + '\')" style="padding:14px 24px;background:linear-gradient(135deg,#4ECDC4,#26A69A);color:#fff;border:none;border-radius:50px;font-family:inherit;font-size:16px;font-weight:bold;cursor:pointer;">🔊 اسمع الكلمة</button>' +
+      '</div>' +
+      '<button onclick="this.parentElement.parentElement.remove()" style="width:100%;margin-top:20px;padding:14px;background:#757575;color:#fff;border:none;border-radius:14px;font-family:inherit;font-size:16px;font-weight:bold;cursor:pointer;">✕ إغلاق</button>' +
+      '</div>';
+    document.body.appendChild(m);
+    window.speakText(letter);
+  };
+  
+  // ═══ محتوى الحروف ═══
+  window.ARABIC_LETTERS = [
+    {letter:'أ', word:'أسد', emoji:'🦁'},
+    {letter:'ب', word:'بطة', emoji:'🦆'},
+    {letter:'ت', word:'تفاح', emoji:'🍎'},
+    {letter:'ث', word:'ثعلب', emoji:'🦊'},
+    {letter:'ج', word:'جمل', emoji:'🐪'},
+    {letter:'ح', word:'حصان', emoji:'🐴'},
+    {letter:'خ', word:'خروف', emoji:'🐑'},
+    {letter:'د', word:'دجاجة', emoji:'🐔'},
+    {letter:'ذ', word:'ذئب', emoji:'🐺'},
+    {letter:'ر', word:'رمان', emoji:'🍎'},
+    {letter:'ز', word:'زرافة', emoji:'🦒'},
+    {letter:'س', word:'سمكة', emoji:'🐟'},
+    {letter:'ش', word:'شمس', emoji:'☀️'},
+    {letter:'ص', word:'صقر', emoji:'🦅'},
+    {letter:'ض', word:'ضفدع', emoji:'🐸'},
+    {letter:'ط', word:'طائرة', emoji:'✈️'},
+    {letter:'ظ', word:'ظرف', emoji:'📩'},
+    {letter:'ع', word:'عصفور', emoji:'🐦'},
+    {letter:'غ', word:'غزال', emoji:'🦌'},
+    {letter:'ف', word:'فيل', emoji:'🐘'},
+    {letter:'ق', word:'قطة', emoji:'🐱'},
+    {letter:'ك', word:'كتاب', emoji:'📖'},
+    {letter:'ل', word:'ليمون', emoji:'🍋'},
+    {letter:'م', word:'موز', emoji:'🍌'},
+    {letter:'ن', word:'نجمة', emoji:'⭐'},
+    {letter:'ه', word:'هدهد', emoji:'🐦'},
+    {letter:'و', word:'وردة', emoji:'🌹'},
+    {letter:'ي', word:'يد', emoji:'✋'}
+  ];
+  
+  // ═══ الأرقام ═══
+  window.ARABIC_NUMBERS = [
+    {num:'١', word:'واحد', emoji:'1️⃣'},
+    {num:'٢', word:'اثنان', emoji:'2️⃣'},
+    {num:'٣', word:'ثلاثة', emoji:'3️⃣'},
+    {num:'٤', word:'أربعة', emoji:'4️⃣'},
+    {num:'٥', word:'خمسة', emoji:'5️⃣'},
+    {num:'٦', word:'ستة', emoji:'6️⃣'},
+    {num:'٧', word:'سبعة', emoji:'7️⃣'},
+    {num:'٨', word:'ثمانية', emoji:'8️⃣'},
+    {num:'٩', word:'تسعة', emoji:'9️⃣'},
+    {num:'١٠', word:'عشرة', emoji:'🔟'}
+  ];
+  
+  // ═══ شاشة عرض الرقم ═══
+  window.showArabicNumber = function(num, word, emoji){
+    var m = document.createElement('div');
+    m.id = 'numberModal';
+    m.style.cssText = 'position:fixed;inset:0;background:linear-gradient(135deg,#B3E5FC,#81D4FA);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
+    m.innerHTML = 
+      '<div style="background:#fff;border-radius:30px;padding:32px 24px;text-align:center;max-width:400px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3);">' +
+      '<div style="font-size:120px;line-height:1.2;color:#0D47A1;font-weight:bold;margin-bottom:12px;" onclick="speakText(\'' + word + '\')">' + num + '</div>' +
+      '<div style="font-size:80px;margin:20px 0;" onclick="speakText(\'' + word + '\')">' + emoji + '</div>' +
+      '<div style="font-size:36px;color:#0D47A1;font-weight:bold;margin-bottom:24px;">' + word + '</div>' +
+      '<button onclick="speakText(\'' + word + '\')" style="width:100%;padding:14px;background:linear-gradient(135deg,#1976D2,#0D47A1);color:#fff;border:none;border-radius:50px;font-family:inherit;font-size:16px;font-weight:bold;cursor:pointer;">🔊 اسمع الرقم</button>' +
+      '<button onclick="this.parentElement.parentElement.remove()" style="width:100%;margin-top:12px;padding:14px;background:#757575;color:#fff;border:none;border-radius:14px;font-family:inherit;font-size:16px;font-weight:bold;cursor:pointer;">✕ إغلاق</button>' +
+      '</div>';
+    document.body.appendChild(m);
+    window.speakText(word);
+  };
+  
+  console.log('✅ Arabic content loaded');
+})();
 console.log('✅ extras.js loaded');
   
 })();
