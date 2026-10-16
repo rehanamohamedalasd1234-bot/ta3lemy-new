@@ -1386,6 +1386,230 @@ window.checkOrder = function(correct){
 };
 
 console.log('✅ Exercise engine loaded');
+// ═══════════════════════════════════════════════════════
+// قسم التدريبات التفاعلية
+// ═══════════════════════════════════════════════════════
+
+// ═══ شاشة التدريبات ═══
+window.openExercises = async function(){
+  if(!window.currentUser) return;
+  if(window.screenHistory) window.screenHistory.push(window.currentScreen);
+  
+  // شاشة جديدة إن لم تكن موجودة
+  if(!document.getElementById('exercisesScreen')){
+    var s = document.createElement('div');
+    s.id = 'exercisesScreen';
+    s.className = 'screen';
+    s.innerHTML = '<div class="top-bar" style="background:linear-gradient(135deg,#00897B,#26A69A);"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>🎯 التدريبات التفاعلية</span></div><button class="icon-btn" id="addExerciseBtn" onclick="openAddExercise()" style="display:none;">➕</button></div><div class="content"><div id="exercisesList"></div></div>';
+    document.body.appendChild(s);
+  }
+  
+  if(typeof showScreen === 'function') showScreen('exercisesScreen');
+  
+  var addBtn = document.getElementById('addExerciseBtn');
+  if(addBtn) addBtn.style.display = (window.currentRole === 'owner' || window.currentRole === 'teacher') ? 'flex' : 'none';
+  
+  var l = document.getElementById('exercisesList');
+  l.innerHTML = '<p style="text-align:center;color:#999;padding:20px;">⏳ جاري التحميل...</p>';
+  
+  try {
+    var fs = firebase.firestore();
+    var snap = await fs.collection('exercises').orderBy('created_at','desc').limit(50).get();
+    if(snap.empty){
+      l.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🎯</div><p>لا توجد تدريبات بعد</p>' + (window.currentRole === 'owner' || window.currentRole === 'teacher' ? '<p style="font-size:13px;margin-top:8px;">اضغط ➕ فوق لإضافة تدريب</p>' : '') + '</div>';
+      return;
+    }
+    var html = '';
+    snap.forEach(function(doc){
+      var ex = doc.data();
+      var typeLabel = {mcq:'اختيار متعدد', tf:'صح/خطأ', short:'إجابة قصيرة', match:'مطابقة', order:'ترتيب'}[ex.exercise_type] || 'سؤال';
+      var typeColor = {mcq:'#1976D2', tf:'#F9A825', short:'#2E7D32', match:'#7B1FA2', order:'#E53935'}[ex.exercise_type] || '#666';
+      html += '<div style="background:#fff;border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.06);border-right:5px solid ' + typeColor + ';">';
+      html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">';
+      html += '<div style="flex:1;font-weight:bold;font-size:15px;">' + (ex.title||'سؤال') + '</div>';
+      html += '<div style="font-size:11px;font-weight:bold;color:' + typeColor + ';background:' + typeColor + '15;padding:4px 10px;border-radius:10px;margin-right:8px;">' + typeLabel + '</div>';
+      html += '</div>';
+      html += '<div style="font-size:12px;color:#999;margin-bottom:10px;">📚 ' + (ex.subject||'عام') + '</div>';
+      html += '<button onclick="viewExercise(\'' + doc.id + '\')" style="background:linear-gradient(135deg,#00897B,#26A69A);color:#fff;border:none;padding:10px 16px;border-radius:10px;font-family:inherit;font-weight:bold;cursor:pointer;">✏️ حل التمرين</button>';
+      if(window.currentRole === 'owner'){
+        html += ' <button onclick="deleteExercise(\'' + doc.id + '\')" style="background:#FFEBEE;color:#E53935;border:none;padding:10px 12px;border-radius:10px;font-weight:bold;cursor:pointer;margin-right:6px;">🗑️</button>';
+      }
+      html += '</div>';
+    });
+    l.innerHTML = html;
+  } catch(e){ console.error(e); l.innerHTML = '<p style="text-align:center;color:#E53935;">⚠️ فشل التحميل</p>'; }
+};
+
+// ═══ عرض تمرين واحد ═══
+window.viewExercise = async function(id){
+  try {
+    var doc = await firebase.firestore().collection('exercises').doc(id).get();
+    if(!doc.exists) return;
+    var ex = doc.data();
+    ex.id = id;
+    
+    var m = document.createElement('div');
+    m.id = 'exerciseViewModal';
+    m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;overflow-y:auto;padding:20px;';
+    m.innerHTML = '<div style="max-width:600px;margin:20px auto;">';
+    m.innerHTML += '<div id="exerciseContainer"></div>';
+    m.innerHTML += '<button onclick="this.parentElement.parentElement.remove()" style="width:100%;margin-top:16px;padding:14px;background:#424242;color:#fff;border:none;border-radius:14px;font-family:inherit;font-size:16px;font-weight:bold;cursor:pointer;">✕ إغلاق</button>';
+    m.innerHTML += '</div>';
+    document.body.appendChild(m);
+    
+    window.renderExercise(ex, document.getElementById('exerciseContainer'));
+  } catch(e){ console.error(e); }
+};
+
+// ═══ إضافة تمرين جديد ═══
+window.openAddExercise = function(){
+  if(window.currentRole !== 'owner' && window.currentRole !== 'teacher') return;
+  
+  var m = document.createElement('div');
+  m.id = 'addExerciseModal';
+  m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;overflow-y:auto;padding:20px;';
+  m.innerHTML = 
+    '<div style="max-width:600px;margin:20px auto;background:#fff;border-radius:20px;padding:24px;font-family:inherit;">' +
+    '<div style="font-size:20px;font-weight:bold;color:#00897B;margin-bottom:16px;">➕ إضافة تمرين</div>' +
+    
+    '<label style="display:block;font-weight:bold;margin-bottom:6px;">نوع التمرين:</label>' +
+    '<select id="exType" style="width:100%;padding:12px;border:2px solid #E0E0E0;border-radius:12px;font-family:inherit;font-size:14px;margin-bottom:12px;" onchange="toggleExerciseFields()">' +
+    '<option value="mcq">اختيار من متعدد</option>' +
+    '<option value="tf">صح / خطأ</option>' +
+    '<option value="short">إجابة قصيرة</option>' +
+    '<option value="match">مطابقة</option>' +
+    '<option value="order">ترتيب</option>' +
+    '</select>' +
+    
+    '<label style="display:block;font-weight:bold;margin-bottom:6px;">السؤال:</label>' +
+    '<textarea id="exTitle" style="width:100%;padding:12px;border:2px solid #E0E0E0;border-radius:12px;font-family:inherit;font-size:14px;margin-bottom:12px;min-height:60px;"></textarea>' +
+    
+    '<label style="display:block;font-weight:bold;margin-bottom:6px;">المادة:</label>' +
+    '<input id="exSubject" placeholder="مثال: رياضيات" style="width:100%;padding:12px;border:2px solid #E0E0E0;border-radius:12px;font-family:inherit;font-size:14px;margin-bottom:12px;">' +
+    
+    '<div id="mcqFields">' +
+    '<label style="display:block;font-weight:bold;margin-bottom:6px;">الاختيارات (كل واحد في سطر، الأول هو الصحيح):</label>' +
+    '<textarea id="exOptions" placeholder="اختيار 1&#10;اختيار 2&#10;اختيار 3&#10;اختيار 4" style="width:100%;padding:12px;border:2px solid #E0E0E0;border-radius:12px;font-family:inherit;font-size:14px;margin-bottom:12px;min-height:100px;"></textarea>' +
+    '</div>' +
+    
+    '<div id="tfFields" style="display:none;">' +
+    '<label style="display:block;font-weight:bold;margin-bottom:6px;">الإجابة الصحيحة:</label>' +
+    '<select id="exTF" style="width:100%;padding:12px;border:2px solid #E0E0E0;border-radius:12px;font-family:inherit;font-size:14px;margin-bottom:12px;">' +
+    '<option value="true">✅ صح</option><option value="false">❌ خطأ</option>' +
+    '</select></div>' +
+    
+    '<div id="shortFields" style="display:none;">' +
+    '<label style="display:block;font-weight:bold;margin-bottom:6px;">الإجابة الصحيحة:</label>' +
+    '<input id="exShort" style="width:100%;padding:12px;border:2px solid #E0E0E0;border-radius:12px;font-family:inherit;font-size:14px;margin-bottom:12px;">' +
+    '</div>' +
+    
+    '<div id="matchFields" style="display:none;">' +
+    '<label style="display:block;font-weight:bold;margin-bottom:6px;">الأزواج (سطر لكل زوج، بصيغة: يسار = يمين):</label>' +
+    '<textarea id="exPairs" placeholder="مصر = القاهرة&#10;السعودية = الرياض&#10;الكويت = الكويت" style="width:100%;padding:12px;border:2px solid #E0E0E0;border-radius:12px;font-family:inherit;font-size:14px;margin-bottom:12px;min-height:100px;"></textarea>' +
+    '</div>' +
+    
+    '<div id="orderFields" style="display:none;">' +
+    '<label style="display:block;font-weight:bold;margin-bottom:6px;">العناصر بالترتيب الصحيح (كل واحد في سطر):</label>' +
+    '<textarea id="exOrder" placeholder="العنصر الأول&#10;العنصر الثاني&#10;العنصر الثالث" style="width:100%;padding:12px;border:2px solid #E0E0E0;border-radius:12px;font-family:inherit;font-size:14px;margin-bottom:12px;min-height:100px;"></textarea>' +
+    '</div>' +
+    
+    '<button onclick="saveExercise()" style="width:100%;padding:14px;background:linear-gradient(135deg,#00897B,#26A69A);color:#fff;border:none;border-radius:14px;font-family:inherit;font-size:16px;font-weight:bold;cursor:pointer;margin-top:8px;">💾 حفظ التمرين</button>' +
+    '<button onclick="this.parentElement.parentElement.remove()" style="width:100%;padding:14px;background:#F5F5F5;color:#424242;border:none;border-radius:14px;font-family:inherit;font-size:16px;font-weight:bold;cursor:pointer;margin-top:8px;">✕ إلغاء</button>' +
+    '</div>';
+  document.body.appendChild(m);
+};
+
+window.toggleExerciseFields = function(){
+  var type = document.getElementById('exType').value;
+  ['mcqFields','tfFields','shortFields','matchFields','orderFields'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(el) el.style.display = 'none';
+  });
+  var target = type + 'Fields';
+  var t = document.getElementById(target);
+  if(t) t.style.display = 'block';
+};
+
+window.saveExercise = async function(){
+  if(window.currentRole !== 'owner' && window.currentRole !== 'teacher') return;
+  var type = document.getElementById('exType').value;
+  var title = document.getElementById('exTitle').value.trim();
+  var subject = document.getElementById('exSubject').value.trim();
+  
+  if(!title){ if(typeof showToast === 'function') showToast('⚠️ أدخل السؤال'); return; }
+  
+  var data = {
+    title: title,
+    subject: subject,
+    exercise_type: type,
+    created_at: new Date().toISOString(),
+    created_by: window.currentUser.uid
+  };
+  
+  if(type === 'mcq'){
+    var opts = document.getElementById('exOptions').value.split('\n').map(function(x){return x.trim();}).filter(Boolean);
+    if(opts.length < 2){ if(typeof showToast === 'function') showToast('⚠️ أدخل اختيارين على الأقل'); return; }
+    data.options = opts;
+    data.correct = 0;
+  } else if(type === 'tf'){
+    data.correct = document.getElementById('exTF').value === 'true';
+  } else if(type === 'short'){
+    var ans = document.getElementById('exShort').value.trim();
+    if(!ans){ if(typeof showToast === 'function') showToast('⚠️ أدخل الإجابة'); return; }
+    data.correct = ans;
+  } else if(type === 'match'){
+    var lines = document.getElementById('exPairs').value.split('\n').filter(Boolean);
+    var pairs = lines.map(function(l){
+      var parts = l.split('=');
+      return {left: (parts[0]||'').trim(), right: (parts[1]||'').trim()};
+    });
+    if(pairs.length < 2){ if(typeof showToast === 'function') showToast('⚠️ أدخل زوجين على الأقل'); return; }
+    data.pairs = pairs;
+  } else if(type === 'order'){
+    var items = document.getElementById('exOrder').value.split('\n').map(function(x){return x.trim();}).filter(Boolean);
+    if(items.length < 2){ if(typeof showToast === 'function') showToast('⚠️ أدخل عنصرين على الأقل'); return; }
+    data.items = items;
+    data.correct_order = items;
+  }
+  
+  try {
+    await firebase.firestore().collection('exercises').add(data);
+    if(typeof showToast === 'function') showToast('✅ تم حفظ التمرين');
+    document.getElementById('addExerciseModal').remove();
+    window.openExercises();
+  } catch(e){
+    console.error(e);
+    if(typeof showToast === 'function') showToast('❌ فشل');
+  }
+};
+
+window.deleteExercise = async function(id){
+  if(window.currentRole !== 'owner') return;
+  if(!confirm('حذف التمرين؟')) return;
+  try {
+    await firebase.firestore().collection('exercises').doc(id).delete();
+    if(typeof showToast === 'function') showToast('🗑️ تم الحذف');
+    window.openExercises();
+  } catch(e){ console.error(e); }
+};
+
+// ═══ زر في الرئيسية ═══
+window.addEventListener('load', function(){
+  setTimeout(function(){
+    var home = document.getElementById('homeScreen');
+    if(!home || document.getElementById('exerciseBtn')) return;
+    var content = home.querySelector('.content');
+    if(!content) return;
+    var btn = document.createElement('div');
+    btn.id = 'exerciseBtn';
+    btn.style.cssText = 'margin:20px 16px;padding:18px;background:linear-gradient(135deg,#00897B,#26A69A);color:#fff;border-radius:16px;text-align:center;cursor:pointer;font-weight:bold;';
+    btn.innerHTML = '<div style="font-size:28px;">🎯</div><div style="margin-top:8px;font-size:15px;">التدريبات التفاعلية</div><div style="font-size:12px;opacity:.9;margin-top:4px;">اختيار + صح/خطأ + كتابة + ترتيب</div>';
+    btn.onclick = function(){ window.openExercises(); };
+    content.insertBefore(btn, content.firstChild);
+  }, 5000);
+});
+
+console.log('✅ Exercises UI loaded');
 console.log('✅ extras.js loaded');
   
 })();
