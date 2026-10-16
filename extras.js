@@ -1004,6 +1004,49 @@ window.addEventListener('load', function(){
     console.log('✅ Chat bar fixed');
   }, 3000);
 });
+// ═══ زر التحميل للعمل بدون نت ═══
+window.downloadAllOffline = async function(){
+  if(!navigator.onLine){ if(typeof showToast === 'function') showToast('⚠️ محتاج نت'); return; }
+  if(typeof showToast === 'function') showToast('⏳ جاري التحميل...');
+  try {
+    var fs = firebase.firestore();
+    var ls = await fs.collection('lessons').get();
+    var lessons = [];
+    ls.forEach(function(d){ lessons.push(Object.assign({id: d.id}, d.data())); });
+    localStorage.setItem('offline_lessons', JSON.stringify(lessons));
+    if(typeof showToast === 'function') showToast('✅ الدروس: ' + lessons.length);
+    
+    var r = await fetch('https://api.alquran.cloud/v1/quran/quran-uthmani');
+    var j = await r.json();
+    var quran = {};
+    j.data.surahs.forEach(function(s){
+      quran[s.number] = {name: s.name, ayahs: s.ayahs.map(function(a){return {num: a.numberInSurah, text: a.text};})};
+    });
+    localStorage.setItem('offline_quran_full', JSON.stringify(quran));
+    if(typeof showToast === 'function') showToast('✅ القرآن: ' + j.data.surahs.length + ' سورة');
+    
+    if(typeof showToast === 'function') showToast('🎉 تم التحميل الكامل!');
+  } catch(e){
+    console.error(e);
+    if(typeof showToast === 'function') showToast('❌ فشل');
+  }
+};
+
+window.addEventListener('load', function(){
+  setTimeout(function(){
+    var home = document.getElementById('homeScreen');
+    if(!home || document.getElementById('offlineBtn')) return;
+    var content = home.querySelector('.content');
+    if(!content) return;
+    var btn = document.createElement('div');
+    btn.id = 'offlineBtn';
+    btn.style.cssText = 'margin:20px 16px;padding:18px;background:linear-gradient(135deg,#1976D2,#0D47A1);color:#fff;border-radius:16px;text-align:center;cursor:pointer;font-weight:bold;';
+    btn.innerHTML = '<div style="font-size:28px;">📥</div><div style="margin-top:8px;font-size:15px;">تحميل المنصة بدون نت</div><div style="font-size:12px;opacity:.9;margin-top:4px;">(يحتاج نت — مرة واحدة)</div>';
+    btn.onclick = function(){ window.downloadAllOffline(); };
+    content.insertBefore(btn, content.firstChild);
+  }, 3000);
+});
+console.log('✅ Offline Button loaded');
 console.log('✅ extras.js loaded');
   
 })();
