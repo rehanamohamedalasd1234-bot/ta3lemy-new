@@ -1815,4 +1815,274 @@ window.showFeatures = function(){
 
   console.log('✅ Live Monitor system loaded');
 })();
+// ═══════════════════════════════════════════════════════
+// 🛡️ نظام الأمان المتقدم
+// ═══════════════════════════════════════════════════════
+(function(){
+  
+  // ═══ 1. تشفير كلمة المرور ═══
+  window.hashPassword = async function(pwd, salt){
+    try {
+      if (window.crypto && window.crypto.subtle) {
+        var enc = new TextEncoder();
+        var data = enc.encode(salt + '|' + pwd + '|hafez_secure_2026');
+        var buf = await crypto.subtle.digest('SHA-256', data);
+        var arr = Array.from(new Uint8Array(buf));
+        return arr.map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
+      }
+    } catch(e){}
+    // fallback للمتصفحات القديمة
+    var s = salt + '|' + pwd + '|hafez_secure_2026';
+    var h1 = 5381, h2 = 52711;
+    for (var i = 0; i < s.length; i++) {
+      h1 = ((h1 * 33) ^ s.charCodeAt(i)) >>> 0;
+      h2 = ((h2 * 31) ^ s.charCodeAt(i)) >>> 0;
+    }
+    return 'f_' + h1.toString(16) + h2.toString(16);
+  };
+  
+  // ═══ 2. Device Fingerprint ═══
+  window.getDeviceId = function(){
+    var did = localStorage.getItem('hafez_device_id');
+    if (!did) {
+      var ua = navigator.userAgent;
+      var screen_ = (screen.width || 0) + 'x' + (screen.height || 0);
+      var lang = navigator.language || '';
+      var rand = Math.random().toString(36).substring(2, 8);
+      did = 'dev_' + btoa(ua.substring(0,50) + screen_ + lang).substring(0,20) + '_' + rand;
+      localStorage.setItem('hafez_device_id', did);
+    }
+    return did;
+  };
+  
+  // ═══ 3. Salt عشوائي ═══
+  window.generateSalt = function(){
+    return Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
+  };
+  
+  // ═══ 4. كود استعادة (6 أرقام) ═══
+  window.generateRecoveryCode = function(){
+    return Math.floor(100000 + Math.random() * 900000).toString();
+  };
+  
+  // ═══ 5. سجل دخول ═══
+  window.logLogin = async function(username, role, success, reason){
+    try {
+      await firebase.firestore().collection('login_logs').add({
+        username: username,
+        role: role,
+        success: success,
+        reason: reason || '',
+        device: window.getDeviceId(),
+        userAgent: navigator.userAgent.substring(0, 100),
+        timestamp: new Date().toISOString()
+      });
+    } catch(e){}
+  };
+  
+  // ═══ 6. عرض كود الاستعادة ═══
+  window.showRecoveryCode = function(code, username){
+    var m = document.createElement('div');
+    m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;';
+    m.innerHTML = '<div style="background:#fff;border-radius:22px;max-width:400px;width:100%;padding:28px;text-align:center;">' +
+      '<div style="font-size:60px;margin-bottom:12px;">🔐</div>' +
+      '<div style="font-size:20px;font-weight:bold;color:#2E7D32;margin-bottom:8px;">كود الاستعادة</div>' +
+      '<div style="font-size:13px;color:#666;margin-bottom:20px;">احفظ الكود ده في مكان آمن<br>هتحتاجه لو نسيت كلمة المرور</div>' +
+      '<div style="background:#FFF8E1;padding:20px;border-radius:14px;margin-bottom:16px;">' +
+      '<div style="font-size:36px;font-weight:bold;letter-spacing:8px;color:#F9A825;">' + code + '</div>' +
+      '</div>' +
+      '<div style="font-size:13px;color:#666;margin-bottom:20px;">الحساب: <b>' + username + '</b></div>' +
+      '<button onclick="window.copyRecoveryCode(\'' + code + '\'); this.parentElement.parentElement.remove();" style="width:100%;padding:14px;background:linear-gradient(135deg,#2E7D32,#4CAF50);color:#fff;border:none;border-radius:14px;font-family:inherit;font-size:16px;font-weight:bold;cursor:pointer;">📋 نسخ الكود والمتابعة</button>' +
+      '</div>';
+    document.body.appendChild(m);
+  };
+  
+  window.copyRecoveryCode = function(code){
+    try {
+      var ta = document.createElement('textarea');
+      ta.value = code;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      if(typeof showToast === 'function') showToast('📋 تم نسخ الكود');
+    } catch(e){
+      if(typeof showToast === 'function') showToast('⚠️ احفظ الكود يدوياً');
+    }
+  };
+  
+  // ═══ 7. Override دالة login ═══
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      if(typeof window.login !== 'function') return;
+      var origLogin = window.login;
+      
+      window.login = async function(){
+        var unameEl = document.getElementById('usernameInput');
+        var pwdEl = document.getElementById('passwordInput');
+        var ownerCodeEl = document.getElementById('ownerCodeInput');
+        
+        var uname = unameEl ? unameEl.value.trim() : '';
+        var pwd = pwdEl ? pwdEl.value : '';
+        var ownerCode = ownerCodeEl ? ownerCodeEl.value : '';
+        
+        // ─── التحقق الأساسي ───
+        if (!uname || uname.length < 3) {
+          if(typeof showToast === 'function') showToast('⚠️ اسم المستخدم 3 أحرف على الأقل');
+          return;
+        }
+        if (pwd.length < 4) {
+          if(typeof showToast === 'function') showToast('⚠️ كلمة المرور 4 أحرف على الأقل');
+          return;
+        }
+        
+        // ─── لو مفيش نت ───
+        if (!navigator.onLine) {
+          var saved = localStorage.getItem('lastUser');
+          if (saved) {
+            try {
+              var su = JSON.parse(saved);
+              window.currentUser = {name: uname, uid: su.uid, points: su.points || 0};
+              window.currentRole = su.role || 'student';
+              if(typeof showToast === 'function') showToast('📴 دخول offline');
+              if(typeof showScreen === 'function') setTimeout(function(){ showScreen('homeScreen'); }, 400);
+              return;
+            } catch(e){}
+          }
+          if(typeof showToast === 'function') showToast('⚠️ محتاج نت أول مرة');
+          return;
+        }
+        
+        // ─── المالك ───
+        if (window.currentRole === 'owner') {
+          if (ownerCode !== '135790') {
+            await window.logLogin(uname, 'owner', false, 'owner code wrong');
+            if(typeof showToast === 'function') showToast('🔐 كود المالك خطأ');
+            return;
+          }
+          // تشغيل دالة المالك الأصلية
+          try {
+            await origLogin.apply(this, arguments);
+            await window.logLogin(uname, 'owner', true, '');
+          } catch(e){ console.error(e); }
+          return;
+        }
+        
+        // ─── البحث عن المستخدم ───
+        try {
+          var fs = firebase.firestore();
+          var snap = await fs.collection('users').where('name', '==', uname).limit(1).get();
+          
+          // ═══ حالة 1: المستخدم مش موجود → إنشاء حساب ═══
+          if (snap.empty) {
+            var newSalt = window.generateSalt();
+            var newHash = await window.hashPassword(pwd, newSalt);
+            var recCode = window.generateRecoveryCode();
+            var dev = window.getDeviceId();
+            var uid = 'u_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 8);
+            
+            await fs.collection('users').doc(uid).set({
+              name: uname,
+              role: window.currentRole,
+              salt: newSalt,
+              passHash: newHash,
+              recoveryCode: recCode,
+              trustedDevices: [dev],
+              points: 0,
+              createdAt: new Date().toISOString(),
+              lastLogin: new Date().toISOString()
+            });
+            
+            window.currentUser = {name: uname, uid: uid, points: 0};
+            localStorage.setItem('lastUser', JSON.stringify({
+              name: uname, uid: uid, role: window.currentRole, points: 0
+            }));
+            
+            await window.logLogin(uname, window.currentRole, true, 'new account');
+            window.showRecoveryCode(recCode, uname);
+            
+            setTimeout(function(){
+              if(typeof showToast === 'function') showToast('✅ تم إنشاء الحساب');
+              if(typeof showScreen === 'function') showScreen('homeScreen');
+            }, 2000);
+            return;
+          }
+          
+          // ═══ حالة 2: المستخدم موجود → تحقق من كلمة المرور ═══
+          var userDoc = snap.docs[0];
+          var user = userDoc.data();
+          var uid2 = userDoc.id;
+          var computed = await window.hashPassword(pwd, user.salt || '');
+          
+          if (computed !== user.passHash) {
+            await window.logLogin(uname, window.currentRole, false, 'wrong password');
+            if(typeof showToast === 'function') showToast('❌ كلمة المرور خطأ');
+            return;
+          }
+          
+          // تحقق من الجهاز
+          var dev2 = window.getDeviceId();
+          var trusted = user.trustedDevices || [];
+          
+          if (trusted.indexOf(dev2) === -1) {
+            // جهاز جديد — يطلب كود الاستعادة
+            var code = prompt('🔐 جهاز جديد!\n\nأدخل كود الاستعادة (6 أرقام):');
+            if (code !== user.recoveryCode) {
+              await window.logLogin(uname, window.currentRole, false, 'device not trusted');
+              if(typeof showToast === 'function') showToast('❌ كود الاستعادة خطأ');
+              return;
+            }
+            trusted.push(dev2);
+            await fs.collection('users').doc(uid2).update({trustedDevices: trusted});
+            if(typeof showToast === 'function') showToast('✅ تم تسجيل الجهاز');
+          }
+          
+          // نجح الدخول
+          window.currentUser = {name: uname, uid: uid2, points: user.points || 0};
+          localStorage.setItem('lastUser', JSON.stringify({
+            name: uname, uid: uid2, role: user.role || window.currentRole, points: user.points || 0
+          }));
+          
+          await fs.collection('users').doc(uid2).update({lastLogin: new Date().toISOString()});
+          await window.logLogin(uname, window.currentRole, true, '');
+          
+          if(typeof showToast === 'function') showToast('✅ تم تسجيل الدخول');
+          if(typeof showScreen === 'function') setTimeout(function(){ showScreen('homeScreen'); }, 600);
+          
+        } catch(e){
+          console.error('login:', e);
+          if(typeof showToast === 'function') showToast('❌ خطأ في الاتصال');
+        }
+      };
+      
+      console.log('✅ Secure login loaded');
+    }, 2500);
+  });
+  
+  // ═══ 8. عرض سجل الدخول للمالك ═══
+  window.viewLoginLogs = async function(){
+    if (window.currentRole !== 'owner') return;
+    var logs = await firebase.firestore().collection('login_logs').orderBy('timestamp','desc').limit(50).get();
+    var h = '<div style="padding:16px;">';
+    h += '<h2 style="color:#2E7D32;margin-bottom:12px;">📜 آخر 50 محاولة دخول</h2>';
+    logs.forEach(function(doc){
+      var l = doc.data();
+      var color = l.success ? '#2E7D32' : '#E53935';
+      var icon = l.success ? '✅' : '❌';
+      h += '<div style="background:#fff;border-radius:10px;padding:10px;margin-bottom:8px;border-right:4px solid ' + color + ';">';
+      h += '<div>' + icon + ' <b>' + l.username + '</b> (' + l.role + ')</div>';
+      h += '<div style="font-size:11px;color:#666;">' + new Date(l.timestamp).toLocaleString('ar-EG') + '</div>';
+      if(l.reason) h += '<div style="font-size:11px;color:#E53935;">سبب: ' + l.reason + '</div>';
+      h += '</div>';
+    });
+    h += '</div>';
+    var m = document.createElement('div');
+    m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:99999;overflow-y:auto;';
+    m.innerHTML = '<div style="background:#FFFEF7;border-radius:22px;max-width:520px;margin:40px auto;padding:20px;position:relative;">' +
+      '<button onclick="this.parentElement.parentElement.remove()" style="position:sticky;top:10px;float:left;background:#E53935;color:#fff;border:none;border-radius:50%;width:36px;height:36px;font-size:18px;cursor:pointer;z-index:10;">✕</button>' + h + '</div>';
+    document.body.appendChild(m);
+  };
+  
+  console.log('✅ Security system loaded');
+})();
 console.log('✅ extras.js loaded');
