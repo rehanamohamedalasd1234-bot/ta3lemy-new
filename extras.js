@@ -2287,4 +2287,9 @@ window.showFeatures = function(){
   
   console.log('✅ Pomodoro loaded');
 })();
+{
+  "version": "1.0.0",
+  "updated": "2026-10-16T00:00:00Z",
+  "notes": "النسخة الأولى"
+}
 console.log('✅ extras.js loaded');
