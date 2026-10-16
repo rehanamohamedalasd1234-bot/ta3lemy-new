@@ -1047,6 +1047,56 @@ window.addEventListener('load', function(){
   }, 3000);
 });
 console.log('✅ Offline Button loaded');
+// ═══ حذف ملف من محطتي الإذاعية ═══
+window.deleteMyStationAudio = async function(id){
+  if(!window.currentUser) return;
+  if(window.currentRole !== 'owner' && window.currentRole !== 'teacher'){
+    if(typeof showToast === 'function') showToast('⚠️ مسموح للمالك فقط');
+    return;
+  }
+  if(!confirm('حذف الملف من محطتك؟')) return;
+  try {
+    await firebase.firestore().collection('station').doc(id).delete();
+    if(typeof showToast === 'function') showToast('🗑️ تم الحذف');
+    if(typeof openRadio === 'function') openRadio();
+  } catch(e){
+    console.error(e);
+    if(typeof showToast === 'function') showToast('❌ فشل الحذف');
+  }
+};
+
+// ═══ إضافة زر الحذف في قائمة محطتي ═══
+window.addEventListener('load', function(){
+  setInterval(function(){
+    var radioScreen = document.getElementById('radioScreen');
+    if(!radioScreen || !radioScreen.classList.contains('active')) return;
+    if(window.currentRole !== 'owner' && window.currentRole !== 'teacher') return;
+    
+    var myList = document.getElementById('myStationList');
+    if(!myList) return;
+    
+    var items = myList.querySelectorAll('.content-item');
+    items.forEach(function(item){
+      if(item.querySelector('.deleteStationBtn')) return;
+      var onclickAttr = item.getAttribute('onclick') || '';
+      var match = onclickAttr.match(/'([^']+)'/);
+      if(!match) return;
+      var docId = match[1];
+      
+      var btn = document.createElement('button');
+      btn.className = 'deleteStationBtn';
+      btn.innerHTML = '🗑️';
+      btn.style.cssText = 'background:#E53935;color:#fff;border:none;border-radius:50%;width:32px;height:32px;font-size:14px;cursor:pointer;margin-left:8px;flex-shrink:0;';
+      btn.onclick = function(e){
+        e.stopPropagation();
+        window.deleteMyStationAudio(docId);
+      };
+      item.appendChild(btn);
+    });
+  }, 2000);
+});
+
+console.log('✅ Station delete loaded');
 console.log('✅ extras.js loaded');
   
 })();
