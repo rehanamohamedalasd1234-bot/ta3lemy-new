@@ -298,6 +298,229 @@
     await window.addPoints(10);
   };
   
+ // ═══════════════════════════════════════════════════════
+// الجزء 2: الدردشة + الصور + الصوت + الفيديو + الحذف
+// ═══════════════════════════════════════════════════════
+
+// ═══ إرسال صورة ═══
+window.sendImageMessage = async function(input){
+  if(!input || !input.files || !input.files[0]) return;
+  if(!window.currentUser || !window.currentChatId) return;
+  var file = input.files[0];
+  if(file.size > 5 * 1024 * 1024){
+    if(typeof showToast === 'function') showToast('⚠️ الصورة كبيرة (أقصى 5 MB)');
+    input.value = '';
+    return;
+  }
+  if(typeof showToast === 'function') showToast('⏳ جاري الرفع...');
+  try {
+    var url = await window.uploadFile(file, 'chat/images');
+    if(!url){ input.value = ''; return; }
+    var fs = firebase.firestore();
+    var msg = {
+      senderId: window.currentUser.uid,
+      senderName: window.currentUser.name,
+      text: '',
+      type: 'image',
+      mediaUrl: url,
+      createdAt: new Date().toISOString()
+    };
+    if(window.currentChatId === 'public_chat'){
+      await fs.collection('public_chat').add(msg);
+    } else {
+      await fs.collection('messages').doc(window.currentChatId).collection('msgs').add(msg);
+      await fs.collection('messages').doc(window.currentChatId).update({
+        text: '🖼️ صورة',
+        updatedAt: new Date().toISOString()
+      });
+    }
+    if(typeof showToast === 'function') showToast('✅ تم الإرسال');
+  } catch(e){
+    console.error(e);
+    if(typeof showToast === 'function') showToast('❌ فشل');
+  }
+  input.value = '';
+};
+
+// ═══ إرسال صوت ═══
+window.sendVoiceMessage = async function(input){
+  if(!input || !input.files || !input.files[0]) return;
+  if(!window.currentUser || !window.currentChatId) return;
+  var file = input.files[0];
+  if(file.size > 5 * 1024 * 1024){
+    if(typeof showToast === 'function') showToast('⚠️ التسجيل كبير');
+    input.value = '';
+    return;
+  }
+  if(typeof showToast === 'function') showToast('⏳ جاري الرفع...');
+  try {
+    var url = await window.uploadFile(file, 'chat/voices');
+    if(!url){ input.value = ''; return; }
+    var fs = firebase.firestore();
+    var msg = {
+      senderId: window.currentUser.uid,
+      senderName: window.currentUser.name,
+      text: '',
+      type: 'voice',
+      mediaUrl: url,
+      createdAt: new Date().toISOString()
+    };
+    if(window.currentChatId === 'public_chat'){
+      await fs.collection('public_chat').add(msg);
+    } else {
+      await fs.collection('messages').doc(window.currentChatId).collection('msgs').add(msg);
+      await fs.collection('messages').doc(window.currentChatId).update({
+        text: '🎤 رسالة صوتية',
+        updatedAt: new Date().toISOString()
+      });
+    }
+    if(typeof showToast === 'function') showToast('✅ تم الإرسال');
+  } catch(e){
+    console.error(e);
+    if(typeof showToast === 'function') showToast('❌ فشل');
+  }
+  input.value = '';
+};
+
+// ═══ إرسال فيديو ═══
+window.sendVideoMessage = async function(input){
+  if(!input || !input.files || !input.files[0]) return;
+  if(!window.currentUser || !window.currentChatId) return;
+  var file = input.files[0];
+  if(file.size > 20 * 1024 * 1024){
+    if(typeof showToast === 'function') showToast('⚠️ الفيديو كبير (أقصى 20 MB)');
+    input.value = '';
+    return;
+  }
+  if(typeof showToast === 'function') showToast('⏳ جاري الرفع...');
+  try {
+    var url = await window.uploadFile(file, 'chat/videos');
+    if(!url){ input.value = ''; return; }
+    var fs = firebase.firestore();
+    var msg = {
+      senderId: window.currentUser.uid,
+      senderName: window.currentUser.name,
+      text: '',
+      type: 'video',
+      mediaUrl: url,
+      createdAt: new Date().toISOString()
+    };
+    if(window.currentChatId === 'public_chat'){
+      await fs.collection('public_chat').add(msg);
+    } else {
+      await fs.collection('messages').doc(window.currentChatId).collection('msgs').add(msg);
+      await fs.collection('messages').doc(window.currentChatId).update({
+        text: '🎥 فيديو',
+        updatedAt: new Date().toISOString()
+      });
+    }
+    if(typeof showToast === 'function') showToast('✅ تم الإرسال');
+  } catch(e){
+    console.error(e);
+    if(typeof showToast === 'function') showToast('❌ فشل');
+  }
+  input.value = '';
+};
+
+// ═══ حذف رسالة في الجماعية ═══
+window.deletePublicMsgById = async function(msgId){
+  if(window.currentRole !== 'owner' && window.currentRole !== 'teacher') return;
+  if(!confirm('حذف الرسالة؟')) return;
+  try {
+    await firebase.firestore().collection('public_chat').doc(msgId).delete();
+    if(typeof showToast === 'function') showToast('🗑️ تم الحذف');
+    if(typeof window.openPublicChat === 'function') window.openPublicChat();
+  } catch(e){ console.error(e); }
+};
+
+// ═══ حذف رسالة في الفردية ═══
+window.deletePrivateMsgById = async function(msgId){
+  if(!window.currentChatId || window.currentChatId === 'public_chat') return;
+  if(!confirm('حذف الرسالة؟')) return;
+  try {
+    await firebase.firestore().collection('messages').doc(window.currentChatId).collection('msgs').doc(msgId).delete();
+    if(typeof showToast === 'function') showToast('🗑️ تم الحذف');
+    if(typeof window.openChat === 'function') window.openChat(window.currentChatId, window.currentChatWith.id, window.currentChatWith.name);
+  } catch(e){ console.error(e); }
+};
+
+// ═══ Override openPublicChat (مع الوسائط + الحذف) ═══
+window.addEventListener('load', function(){
+  setTimeout(function(){
+    if(typeof window.openPublicChat !== 'function') return;
+    
+    window.openPublicChat = function(){
+      if(!window.currentUser){ if(typeof showToast === 'function') showToast('⚠️ سجل دخول'); return; }
+      window.currentChatId = 'public_chat';
+      window.currentChatWith = {id: 'public', name: 'الدردشة الجماعية'};
+      var title = document.getElementById('chatTitle');
+      if(title) title.textContent = '👥 الدردشة الجماعية';
+      var c = document.getElementById('chatMessages');
+      if(c) c.innerHTML = '<p style="text-align:center;color:#999;padding:20px;">⏳ جاري التحميل...</p>';
+      if(window.screenHistory) window.screenHistory.push(window.currentScreen);
+      if(typeof showScreen === 'function') showScreen('chatScreen');
+      
+      if(window.chatUnsubscribe){ try{ window.chatUnsubscribe(); }catch(e){} }
+      window.chatUnsubscribe = firebase.firestore()
+        .collection('public_chat').orderBy('createdAt','asc').limit(100)
+        .onSnapshot(function(snap){
+          var c2 = document.getElementById('chatMessages');
+          if(!c2) return;
+          if(snap.empty){
+            c2.innerHTML = '<p style="text-align:center;color:#999;padding:20px;">لا توجد رسائل — كن أول من يكتب</p>';
+            return;
+          }
+          var html = '';
+          snap.forEach(function(doc){
+            var m = doc.data();
+            var mine = m.senderId === window.currentUser.uid;
+            var canDel = !mine && (window.currentRole === 'owner' || window.currentRole === 'teacher');
+            html += '<div class="chat-bubble ' + (mine ? 'mine' : 'other') + '" style="position:relative;">';
+            if(canDel){
+              html += '<button onclick="deletePublicMsgById(\'' + doc.id + '\')" style="position:absolute;top:5px;left:5px;background:#E53935;color:#fff;border:none;border-radius:50%;width:22px;height:22px;font-size:12px;cursor:pointer;z-index:10;">✕</button>';
+            }
+            html += '<div style="font-size:11px;font-weight:bold;color:' + (mine ? '#A5D6A7' : '#2E7D32') + ';margin-bottom:4px;">' + (mine ? 'أنا' : (m.senderName||'مستخدم')) + '</div>';
+            if(m.type === 'image'){
+              html += '<img src="' + m.mediaUrl + '" style="max-width:220px;border-radius:10px;cursor:pointer;" onclick="window.open(this.src)">';
+            } else if(m.type === 'voice'){
+              html += '<audio controls src="' + m.mediaUrl + '" style="max-width:240px;"></audio>';
+            } else if(m.type === 'video'){
+              html += '<video controls src="' + m.mediaUrl + '" style="max-width:240px;border-radius:10px;"></video>';
+            } else {
+              html += '<div style="font-size:14px;line-height:1.6;word-wrap:break-word;">' + m.text + '</div>';
+            }
+            html += '<span class="chat-bubble-time">' + new Date(m.createdAt).toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'}) + '</span></div>';
+          });
+          c2.innerHTML = html;
+          c2.scrollTop = c2.scrollHeight;
+        });
+    };
+    
+    console.log('✅ Chat override loaded');
+  }, 2500);
+});
+
+// ═══ إضافة أزرار الوسائط في شريط الدردشة ═══
+window.addEventListener('load', function(){
+  setInterval(function(){
+    var chatScreen = document.getElementById('chatScreen');
+    if(!chatScreen || !chatScreen.classList.contains('active')) return;
+    var inputBar = chatScreen.querySelector('.chat-input-bar');
+    if(!inputBar || inputBar.querySelector('#mediaBar')) return;
+    
+    var bar = document.createElement('div');
+    bar.id = 'mediaBar';
+    bar.style.cssText = 'display:flex;gap:4px;margin-right:8px;';
+    bar.innerHTML = 
+      '<label style="cursor:pointer;font-size:20px;padding:6px;background:#F0F0F0;border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;"><span>🖼️</span><input type="file" accept="image/*" style="display:none;" onchange="window.sendImageMessage(this)"></label>' +
+      '<label style="cursor:pointer;font-size:20px;padding:6px;background:#F0F0F0;border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;"><span>🎤</span><input type="file" accept="audio/*" style="display:none;" onchange="window.sendVoiceMessage(this)"></label>' +
+      '<label style="cursor:pointer;font-size:20px;padding:6px;background:#F0F0F0;border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;"><span>🎥</span><input type="file" accept="video/*" style="display:none;" onchange="window.sendVideoMessage(this)"></label>';
+    
+    inputBar.insertBefore(bar, inputBar.firstChild);
+  }, 2000);
+});
+
+console.log('✅ Part 2 loaded (Chat + Media)');
   console.log('✅ extras.js loaded');
   
 })();
