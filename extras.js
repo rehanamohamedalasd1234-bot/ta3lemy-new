@@ -820,6 +820,170 @@ window.addEventListener('load', function(){
   }, 3000);
 });
 console.log('✅ Offline Button loaded');
+// ═══ الأخبار والمقالات ═══
+window.openNews = async function(){
+  if(!window.currentUser) return;
+  try {
+    var snap = await firebase.firestore().collection('posts').orderBy('created_at','desc').limit(20).get();
+    var list = '';
+    if(snap.empty){
+      list = 'لا توجد منشورات بعد.';
+    } else {
+      snap.forEach(function(doc){
+        var p = doc.data();
+        list += '📰 ' + (p.title||'') + '\n' + (p.content||'').substring(0,80) + '...\n\n';
+      });
+    }
+    var action = confirm('📰 الأخبار والمقالات:\n\n' + list + '\n\nهل تريد إضافة مقال جديد؟');
+    if(action){
+      var t = prompt('عنوان المقال:');
+      var c = prompt('محتوى المقال:');
+      if(t && c){
+        await firebase.firestore().collection('posts').add({
+          title: t, content: c,
+          author_id: window.currentUser.uid,
+          author_name: window.currentUser.name,
+          created_at: new Date().toISOString()
+        });
+        if(typeof showToast === 'function') showToast('✅ تم النشر');
+      }
+    }
+  } catch(e){
+    console.error(e);
+    if(typeof showToast === 'function') showToast('❌ فشل');
+  }
+};
+
+// ═══ Pomodoro ═══
+window.openPomodoro = function(){
+  var m = document.createElement('div');
+  m.id = 'pomoModal';
+  m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;';
+  var timeLeft = 25 * 60;
+  var running = false;
+  var interval;
+  m.innerHTML = '<div style="background:#fff;border-radius:22px;max-width:400px;width:100%;padding:24px;text-align:center;font-family:inherit;">' +
+    '<div style="font-size:22px;font-weight:bold;color:#1976D2;margin-bottom:16px;">⏱️ مؤقت الدراسة</div>' +
+    '<div id="pomoDisplay" style="font-size:64px;font-weight:bold;color:#1976D2;font-family:monospace;direction:ltr;margin:20px 0;">25:00</div>' +
+    '<div style="display:flex;gap:10px;justify-content:center;">' +
+    '<button id="pomoStart" style="padding:14px 30px;background:linear-gradient(135deg,#2E7D32,#4CAF50);color:#fff;border:none;border-radius:50px;font-family:inherit;font-size:16px;font-weight:bold;cursor:pointer;">▶️ ابدأ</button>' +
+    '<button id="pomoClose" style="padding:14px 20px;background:#F5F5F5;color:#424242;border:none;border-radius:50px;font-family:inherit;font-size:16px;font-weight:bold;cursor:pointer;">✕</button>' +
+    '</div></div>';
+  document.body.appendChild(m);
+  document.getElementById('pomoClose').onclick = function(){
+    if(interval) clearInterval(interval);
+    m.remove();
+  };
+  document.getElementById('pomoStart').onclick = function(){
+    var btn = document.getElementById('pomoStart');
+    if(running){
+      clearInterval(interval);
+      running = false;
+      btn.textContent = '▶️ متابعة';
+    } else {
+      running = true;
+      btn.textContent = '⏸️ إيقاف';
+      interval = setInterval(function(){
+        timeLeft--;
+        var mm = Math.floor(timeLeft / 60);
+        var ss = timeLeft % 60;
+        document.getElementById('pomoDisplay').textContent = (mm<10?'0':'')+mm+':'+(ss<10?'0':'')+ss;
+        if(timeLeft <= 0){
+          clearInterval(interval);
+          if(typeof window.addPoints === 'function') window.addPoints(15);
+          if(typeof showToast === 'function') showToast('🎉 خلّصت! +15 نقطة');
+          m.remove();
+        }
+      }, 1000);
+    }
+  };
+};
+
+// ═══ البث المباشر (مبسط) ═══
+window.openBroadcast = async function(){
+  if(!window.currentUser) return;
+  var isTeacher = window.currentRole === 'teacher';
+  var isOwner = window.currentRole === 'owner';
+  
+  if(isTeacher || isOwner){
+    var action = prompt('🔴 البث المباشر:\n\n1. بدء بث جديد\n2. عرض البثوث المتاحة');
+    if(action === '1'){
+      var title = prompt('عنوان البث:');
+      if(!title) return;
+      var roomId = 'hafez-' + Date.now().toString(36);
+      try {
+        await firebase.firestore().collection('broadcasts').add({
+          title: title,
+          teacherId: window.currentUser.uid,
+          teacherName: window.currentUser.name,
+          roomId: roomId,
+          status: 'live',
+          createdAt: new Date().toISOString()
+        });
+        var url = 'https://meet.jit.si/' + roomId;
+        window.open(url, '_blank');
+        if(typeof showToast === 'function') showToast('🔴 بدأ البث');
+      } catch(e){ console.error(e); }
+    }
+  } else {
+    try {
+      var snap = await firebase.firestore().collection('broadcasts').where('status','==','live').get();
+      if(snap.empty){ if(typeof showToast === 'function') showToast('لا يوجد بث حالياً'); return; }
+      var list = '';
+      var rooms = [];
+      snap.forEach(function(doc){
+        var b = doc.data();
+        list += '📺 ' + b.title + ' — ' + b.teacherName + '\n';
+        rooms.push(b.roomId);
+      });
+      if(confirm('🔴 البثوث المتاحة:\n\n' + list + '\n\nهل تريد الانضمام؟')){
+        window.open('https://meet.jit.si/' + rooms[0], '_blank');
+      }
+    } catch(e){ console.error(e); }
+  }
+};
+
+// ═══ إضافة الأزرار في الرئيسية ═══
+window.addEventListener('load', function(){
+  setTimeout(function(){
+    var home = document.getElementById('homeScreen');
+    if(!home) return;
+    var content = home.querySelector('.content');
+    if(!content) return;
+    
+    // زر الأخبار
+    if(!document.getElementById('newsBtn')){
+      var btn1 = document.createElement('div');
+      btn1.id = 'newsBtn';
+      btn1.style.cssText = 'margin:20px 16px;padding:18px;background:linear-gradient(135deg,#C2185B,#E91E63);color:#fff;border-radius:16px;text-align:center;cursor:pointer;font-weight:bold;';
+      btn1.innerHTML = '<div style="font-size:28px;">📰</div><div style="margin-top:8px;font-size:15px;">الأخبار والمقالات</div>';
+      btn1.onclick = function(){ window.openNews(); };
+      content.insertBefore(btn1, content.firstChild);
+    }
+    
+    // زر Pomodoro
+    if(!document.getElementById('pomoBtn')){
+      var btn2 = document.createElement('div');
+      btn2.id = 'pomoBtn';
+      btn2.style.cssText = 'margin:20px 16px;padding:18px;background:linear-gradient(135deg,#1976D2,#0D47A1);color:#fff;border-radius:16px;text-align:center;cursor:pointer;font-weight:bold;';
+      btn2.innerHTML = '<div style="font-size:28px;">⏱️</div><div style="margin-top:8px;font-size:15px;">مؤقت الدراسة</div>';
+      btn2.onclick = function(){ window.openPomodoro(); };
+      content.insertBefore(btn2, content.firstChild);
+    }
+    
+    // زر البث
+    if(!document.getElementById('broadcastBtn')){
+      var btn3 = document.createElement('div');
+      btn3.id = 'broadcastBtn';
+      btn3.style.cssText = 'margin:20px 16px;padding:18px;background:linear-gradient(135deg,#D32F2F,#E53935);color:#fff;border-radius:16px;text-align:center;cursor:pointer;font-weight:bold;';
+      btn3.innerHTML = '<div style="font-size:28px;">🔴</div><div style="margin-top:8px;font-size:15px;">البث المباشر</div>';
+      btn3.onclick = function(){ window.openBroadcast(); };
+      content.insertBefore(btn3, content.firstChild);
+    }
+  }, 4000);
+});
+
+console.log('✅ News + Pomodoro + Broadcast + Buttons loaded');
 console.log('✅ extras.js loaded');
   
 })();
