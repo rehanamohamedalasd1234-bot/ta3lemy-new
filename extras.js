@@ -521,6 +521,135 @@ window.addEventListener('load', function(){
 });
 
 console.log('✅ Part 2 loaded (Chat + Media)');
+ // ═══════════════════════════════════════════════════════
+// الجزء 3: الملف الشخصي + المفضلة + الملاحظات
+// ═══════════════════════════════════════════════════════
+
+// ═══ الملف الشخصي ═══
+window.openEditProfile = async function(){
+  if(!window.currentUser) return;
+  if(typeof showScreen === 'function') showScreen('profileScreen');
+  var name = prompt('الاسم الجديد:', window.currentUser.name);
+  if(!name || name.trim().length < 3) return;
+  try {
+    await firebase.firestore().collection('users').doc(window.currentUser.uid).update({
+      name: name.trim(),
+      updatedAt: new Date().toISOString()
+    });
+    window.currentUser.name = name.trim();
+    var pn = document.getElementById('profileName');
+    if(pn) pn.textContent = name.trim();
+    if(typeof showToast === 'function') showToast('✅ تم الحفظ');
+  } catch(e){
+    console.error(e);
+    if(typeof showToast === 'function') showToast('❌ فشل');
+  }
+};
+
+window.uploadProfilePic = async function(input){
+  if(!input.files || !input.files[0] || !window.currentUser) return;
+  var file = input.files[0];
+  if(file.size > 2 * 1024 * 1024){
+    if(typeof showToast === 'function') showToast('⚠️ الصورة كبيرة');
+    return;
+  }
+  if(typeof showToast === 'function') showToast('⏳ جاري الرفع...');
+  try {
+    var url = await window.uploadFile(file, 'users/avatars');
+    if(url){
+      await firebase.firestore().collection('users').doc(window.currentUser.uid).update({photo_url: url});
+      window.currentUser.photo_url = url;
+      if(typeof showToast === 'function') showToast('✅ تم تحديث الصورة');
+    }
+  } catch(e){
+    console.error(e);
+    if(typeof showToast === 'function') showToast('❌ فشل');
+  }
+  input.value = '';
+};
+
+// ═══ المفضلة ═══
+window.toggleFavorite = async function(){
+  if(!window.currentUser) return;
+  var lessonId = window.currentLessonId;
+  if(!lessonId){
+    var t = document.getElementById('viewerTitle');
+    if(t) lessonId = t.textContent;
+  }
+  if(!lessonId){ if(typeof showToast === 'function') showToast('⚠️ افتح درس أولاً'); return; }
+  try {
+    var fs = firebase.firestore();
+    var ref = fs.collection('users').doc(window.currentUser.uid).collection('favorites').doc(encodeURIComponent(lessonId));
+    var doc = await ref.get();
+    if(doc.exists){
+      await ref.delete();
+      if(typeof showToast === 'function') showToast('⭐ تم الإزالة من المفضلة');
+    } else {
+      await ref.set({
+        lessonId: lessonId,
+        lessonTitle: document.getElementById('viewerTitle') ? document.getElementById('viewerTitle').textContent : '',
+        addedAt: new Date().toISOString()
+      });
+      if(typeof showToast === 'function') showToast('⭐ تم الإضافة للمفضلة');
+    }
+  } catch(e){
+    console.error(e);
+    if(typeof showToast === 'function') showToast('❌ فشل');
+  }
+};
+
+window.openFavorites = async function(){
+  if(!window.currentUser) return;
+  try {
+    var snap = await firebase.firestore().collection('users').doc(window.currentUser.uid).collection('favorites').orderBy('addedAt','desc').get();
+    if(snap.empty){ 
+      if(typeof showToast === 'function') showToast('⭐ لا توجد عناصر في المفضلة');
+      return; 
+    }
+    var list = '';
+    snap.forEach(function(doc){
+      var f = doc.data();
+      list += '• ' + (f.lessonTitle || f.lessonId) + '\n';
+    });
+    alert('⭐ المفضلة:\n\n' + list);
+  } catch(e){ console.error(e); }
+};
+
+// ═══ الملاحظات ═══
+window.openNotes = async function(){
+  if(!window.currentUser) return;
+  try {
+    var snap = await firebase.firestore().collection('users').doc(window.currentUser.uid).collection('notes').orderBy('createdAt','desc').get();
+    if(snap.empty){ 
+      var txt = prompt('📝 لا توجد ملاحظات. اكتب ملاحظة جديدة:');
+      if(txt && txt.trim()){
+        await firebase.firestore().collection('users').doc(window.currentUser.uid).collection('notes').add({
+          text: txt.trim(),
+          createdAt: new Date().toISOString()
+        });
+        if(typeof showToast === 'function') showToast('✅ تم الحفظ');
+      }
+      return;
+    }
+    var list = '';
+    var ids = [];
+    snap.forEach(function(doc){
+      var n = doc.data();
+      list += '• ' + n.text + '\n';
+      ids.push(doc.id);
+    });
+    var txt2 = prompt('📝 ملاحظاتك:\n\n' + list + '\n\nأضف ملاحظة جديدة (أو اتركه فاضي):');
+    if(txt2 && txt2.trim()){
+      await firebase.firestore().collection('users').doc(window.currentUser.uid).collection('notes').add({
+        text: txt2.trim(),
+        createdAt: new Date().toISOString()
+      });
+      if(typeof showToast === 'function') showToast('✅ تم الحفظ');
+    }
+  } catch(e){ console.error(e); }
+};
+
+console.log('✅ Part 3 loaded (Profile + Favorites + Notes)'); 
   console.log('✅ extras.js loaded');
   
 })();
