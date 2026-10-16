@@ -695,6 +695,40 @@ window.openPomodoro = function(){
   };
 };
 console.log('✅ Pomodoro loaded');
+// ═══ News (بسيط) ═══
+window.openNews = async function(){
+  if(!window.currentUser) return;
+  try {
+    var snap = await firebase.firestore().collection('posts').orderBy('created_at','desc').limit(20).get();
+    var list = '';
+    if(snap.empty){
+      list = 'لا توجد منشورات بعد.';
+    } else {
+      snap.forEach(function(doc){
+        var p = doc.data();
+        list += '📰 ' + (p.title||'') + '\n' + (p.content||'').substring(0,80) + '...\n\n';
+      });
+    }
+    var action = confirm('📰 الأخبار والمقالات:\n\n' + list + '\n\nهل تريد إضافة مقال جديد؟');
+    if(action){
+      var t = prompt('عنوان المقال:');
+      var c = prompt('محتوى المقال:');
+      if(t && c){
+        await firebase.firestore().collection('posts').add({
+          title: t, content: c,
+          author_id: window.currentUser.uid,
+          author_name: window.currentUser.name,
+          created_at: new Date().toISOString()
+        });
+        if(typeof showToast === 'function') showToast('✅ تم النشر');
+      }
+    }
+  } catch(e){
+    console.error(e);
+    if(typeof showToast === 'function') showToast('❌ فشل');
+  }
+};
+console.log('✅ News loaded');  
   console.log('✅ extras.js loaded');
   
 })();
