@@ -1179,6 +1179,213 @@ window.addEventListener('load', function(){
 });
 
 console.log('✅ Multiplication Table loaded');
+// ═══════════════════════════════════════════════════════
+// 🎯 محرك التدريبات التفاعلية الذكي
+// يدعم: اختيار متعدد، صح/خطأ، إجابة قصيرة، مطابقة، ترتيب
+// ═══════════════════════════════════════════════════════
+
+window.renderExercise = function(exercise, container){
+  if(!exercise || !container) return;
+  
+  var type = exercise.exercise_type || 'short';
+  var title = exercise.title || '';
+  var explanation = exercise.explanation || '';
+  
+  var h = '<div style="background:#fff;border-radius:18px;padding:20px;margin-bottom:16px;box-shadow:0 4px 16px rgba(0,0,0,.08);">';
+  h += '<div style="font-size:16px;font-weight:bold;color:#2E7D32;margin-bottom:16px;line-height:1.7;">📝 ' + title + '</div>';
+  
+  // اختيار من متعدد
+  if(type === 'mcq'){
+    var options = exercise.options || [];
+    h += '<div id="mcqOptions" style="display:grid;gap:10px;">';
+    options.forEach(function(opt, idx){
+      h += '<button onclick="checkMCQ(this,' + idx + ',' + (exercise.correct||0) + ')" data-idx="' + idx + '" style="padding:14px 16px;background:#F5F5F5;color:#212121;border:2px solid #E0E0E0;border-radius:14px;font-family:inherit;font-size:15px;font-weight:bold;text-align:right;cursor:pointer;transition:all .2s;">' + String.fromCharCode(1571 + idx) + '. ' + opt + '</button>';
+    });
+    h += '</div>';
+  }
+  // صح / خطأ
+  else if(type === 'tf'){
+    h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">';
+    h += '<button onclick="checkTF(this,true,' + (exercise.correct?true:false) + ')" style="padding:20px;background:#E8F5E9;color:#2E7D32;border:2px solid #A5D6A7;border-radius:14px;font-family:inherit;font-size:18px;font-weight:bold;cursor:pointer;">✅ صح</button>';
+    h += '<button onclick="checkTF(this,false,' + (exercise.correct?true:false) + ')" style="padding:20px;background:#FFEBEE;color:#E53935;border:2px solid #FFCDD2;border-radius:14px;font-family:inherit;font-size:18px;font-weight:bold;cursor:pointer;">❌ خطأ</button>';
+    h += '</div>';
+  }
+  // إجابة قصيرة
+  else if(type === 'short'){
+    h += '<div style="display:flex;gap:8px;flex-direction:column;">';
+    h += '<input type="text" id="shortAnswer" placeholder="اكتب إجابتك هنا..." style="padding:14px 16px;background:#F5F5F5;border:2px solid #E0E0E0;border-radius:14px;font-family:inherit;font-size:15px;outline:none;">';
+    h += '<button onclick="checkShort(' + JSON.stringify(JSON.stringify(exercise.correct||'')) + ')" style="padding:14px;background:linear-gradient(135deg,#2E7D32,#4CAF50);color:#fff;border:none;border-radius:14px;font-family:inherit;font-size:15px;font-weight:bold;cursor:pointer;">✓ تحقق من الإجابة</button>';
+    h += '</div>';
+  }
+  // مطابقة
+  else if(type === 'match'){
+    var pairs = exercise.pairs || [];
+    h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">';
+    h += '<div>';
+    pairs.forEach(function(p, i){
+      h += '<div onclick="selectMatch(this,\'left\',' + i + ')" data-side="left" data-idx="' + i + '" style="padding:12px;background:#E3F2FD;border:2px solid #90CAF9;border-radius:12px;margin-bottom:8px;font-weight:bold;text-align:center;cursor:pointer;">' + p.left + '</div>';
+    });
+    h += '</div>';
+    h += '<div>';
+    var shuffled = pairs.map(function(p, i){ return {text: p.right, idx: i}; });
+    shuffled.sort(function(){ return Math.random() - 0.5; });
+    shuffled.forEach(function(s){
+      h += '<div onclick="selectMatch(this,\'right\',' + s.idx + ')" data-side="right" data-idx="' + s.idx + '" style="padding:12px;background:#FFF3E0;border:2px solid #FFB74D;border-radius:12px;margin-bottom:8px;font-weight:bold;text-align:center;cursor:pointer;">' + s.text + '</div>';
+    });
+    h += '</div>';
+    h += '</div>';
+    h += '<div id="matchResult" style="text-align:center;margin-top:12px;font-weight:bold;"></div>';
+  }
+  // ترتيب
+  else if(type === 'order'){
+    var items = (exercise.items || []).slice();
+    var correct = (exercise.correct_order || []).slice();
+    items.sort(function(){ return Math.random() - 0.5; });
+    h += '<div id="orderList" style="display:flex;flex-direction:column;gap:8px;">';
+    items.forEach(function(item){
+      h += '<div draggable="true" onclick="moveOrder(this)" style="padding:14px;background:#F3E5F5;border:2px solid #CE93D8;border-radius:12px;font-weight:bold;text-align:center;cursor:pointer;">' + item + '</div>';
+    });
+    h += '</div>';
+    h += '<button onclick="checkOrder(' + JSON.stringify(JSON.stringify(correct)) + ')" style="width:100%;margin-top:12px;padding:14px;background:linear-gradient(135deg,#7B1FA2,#9C27B0);color:#fff;border:none;border-radius:14px;font-family:inherit;font-size:15px;font-weight:bold;cursor:pointer;">✓ تحقق من الترتيب</button>';
+    h += '<div id="orderResult" style="text-align:center;margin-top:12px;font-weight:bold;"></div>';
+  }
+  
+  h += '<div id="exerciseFeedback" style="margin-top:16px;"></div>';
+  h += '</div>';
+  
+  container.innerHTML += h;
+};
+
+// ═══ التحقق من MCQ ═══
+window.checkMCQ = function(btn, selected, correct){
+  var parent = btn.parentElement;
+  var buttons = parent.querySelectorAll('button');
+  buttons.forEach(function(b){ b.style.pointerEvents = 'none'; });
+  
+  if(selected === correct){
+    btn.style.background = '#E8F5E9';
+    btn.style.borderColor = '#2E7D32';
+    btn.style.color = '#2E7D32';
+    if(typeof showToast === 'function') showToast('✅ إجابة صحيحة!');
+    if(typeof window.addPoints === 'function') window.addPoints(5);
+  } else {
+    btn.style.background = '#FFEBEE';
+    btn.style.borderColor = '#E53935';
+    btn.style.color = '#E53935';
+    buttons[correct].style.background = '#E8F5E9';
+    buttons[correct].style.borderColor = '#2E7D32';
+    buttons[correct].style.color = '#2E7D32';
+    if(typeof showToast === 'function') showToast('❌ حاول مرة أخرى');
+  }
+};
+
+// ═══ التحقق من صح/خطأ ═══
+window.checkTF = function(btn, answer, correct){
+  var parent = btn.parentElement;
+  var buttons = parent.querySelectorAll('button');
+  buttons.forEach(function(b){ b.style.pointerEvents = 'none'; });
+  
+  if(answer === correct){
+    btn.style.background = '#C8E6C9';
+    if(typeof showToast === 'function') showToast('✅ إجابة صحيحة!');
+    if(typeof window.addPoints === 'function') window.addPoints(5);
+  } else {
+    btn.style.background = '#FFCDD2';
+    buttons[correct ? 0 : 1].style.background = '#C8E6C9';
+    if(typeof showToast === 'function') showToast('❌ إجابة خاطئة');
+  }
+};
+
+// ═══ التحقق من إجابة قصيرة ═══
+window.checkShort = function(correct){
+  var inp = document.getElementById('shortAnswer');
+  if(!inp) return;
+  var answer = inp.value.trim().toLowerCase();
+  var expected = correct.toLowerCase().trim();
+  
+  var feedback = document.getElementById('exerciseFeedback');
+  if(answer === expected){
+    inp.style.borderColor = '#2E7D32';
+    inp.style.background = '#E8F5E9';
+    feedback.innerHTML = '<div style="text-align:center;color:#2E7D32;font-weight:bold;font-size:16px;">✅ إجابة صحيحة!</div>';
+    if(typeof showToast === 'function') showToast('✅ أحسنت!');
+    if(typeof window.addPoints === 'function') window.addPoints(5);
+  } else {
+    inp.style.borderColor = '#E53935';
+    inp.style.background = '#FFEBEE';
+    feedback.innerHTML = '<div style="text-align:center;color:#E53935;font-weight:bold;font-size:16px;">❌ الإجابة الصحيحة: ' + correct + '</div>';
+    if(typeof showToast === 'function') showToast('❌ حاول مرة أخرى');
+  }
+};
+
+// ═══ المطابقة ═══
+window._matchSelected = {left: null, right: null};
+window._matchPairs = {};
+window.selectMatch = function(el, side, idx){
+  if(el.style.background === 'rgb(200, 230, 201)') return;
+  
+  var all = document.querySelectorAll('[data-side="' + side + '"]');
+  all.forEach(function(x){ x.style.transform = 'scale(1)'; x.style.boxShadow = 'none'; });
+  el.style.transform = 'scale(1.05)';
+  el.style.boxShadow = '0 4px 12px rgba(0,0,0,.2)';
+  
+  window._matchSelected[side] = {el: el, idx: idx};
+  
+  if(window._matchSelected.left && window._matchSelected.right){
+    var left = window._matchSelected.left;
+    var right = window._matchSelected.right;
+    
+    if(left.idx === right.idx){
+      left.el.style.background = '#C8E6C9';
+      right.el.style.background = '#C8E6C9';
+      left.el.style.transform = 'scale(1)';
+      right.el.style.transform = 'scale(1)';
+      if(typeof showToast === 'function') showToast('✅ مطابقة صحيحة');
+      if(typeof window.addPoints === 'function') window.addPoints(3);
+    } else {
+      left.el.style.background = '#FFCDD2';
+      right.el.style.background = '#FFCDD2';
+      setTimeout(function(){
+        left.el.style.background = '#E3F2FD';
+        right.el.style.background = '#FFF3E0';
+        left.el.style.transform = 'scale(1)';
+        right.el.style.transform = 'scale(1)';
+      }, 700);
+      if(typeof showToast === 'function') showToast('❌ حاول مرة أخرى');
+    }
+    
+    window._matchSelected = {left: null, right: null};
+  }
+};
+
+// ═══ الترتيب ═══
+window.moveOrder = function(el){
+  var parent = el.parentElement;
+  var next = el.nextElementSibling;
+  if(next) parent.insertBefore(next, el);
+  else {
+    var first = parent.firstElementChild;
+    parent.insertBefore(el, first);
+  }
+};
+
+window.checkOrder = function(correct){
+  var list = document.getElementById('orderList');
+  if(!list) return;
+  var items = Array.from(list.children).map(function(x){ return x.textContent; });
+  var isCorrect = JSON.stringify(items) === JSON.stringify(correct);
+  
+  var result = document.getElementById('orderResult');
+  if(isCorrect){
+    result.innerHTML = '<span style="color:#2E7D32;font-size:16px;">✅ ترتيب صحيح!</span>';
+    if(typeof showToast === 'function') showToast('🎉 ممتاز!');
+    if(typeof window.addPoints === 'function') window.addPoints(10);
+  } else {
+    result.innerHTML = '<span style="color:#E53935;font-size:16px;">❌ ترتيب خاطئ، حاول مرة أخرى</span>';
+  }
+};
+
+console.log('✅ Exercise engine loaded');
 console.log('✅ extras.js loaded');
   
 })();
