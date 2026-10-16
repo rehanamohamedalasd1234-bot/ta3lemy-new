@@ -650,6 +650,51 @@ window.openNotes = async function(){
 };
 
 console.log('✅ Part 3 loaded (Profile + Favorites + Notes)'); 
+ // ═══ Pomodoro ═══
+window.openPomodoro = function(){
+  var m = document.createElement('div');
+  m.id = 'pomoModal';
+  m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;';
+  var timeLeft = 25 * 60;
+  var running = false;
+  var interval;
+  m.innerHTML = '<div style="background:#fff;border-radius:22px;max-width:400px;width:100%;padding:24px;text-align:center;font-family:inherit;">' +
+    '<div style="font-size:22px;font-weight:bold;color:#1976D2;margin-bottom:16px;">⏱️ مؤقت الدراسة</div>' +
+    '<div id="pomoDisplay" style="font-size:64px;font-weight:bold;color:#1976D2;font-family:monospace;direction:ltr;margin:20px 0;">25:00</div>' +
+    '<div style="display:flex;gap:10px;justify-content:center;">' +
+    '<button id="pomoStart" style="padding:14px 30px;background:linear-gradient(135deg,#2E7D32,#4CAF50);color:#fff;border:none;border-radius:50px;font-family:inherit;font-size:16px;font-weight:bold;cursor:pointer;">▶️ ابدأ</button>' +
+    '<button id="pomoClose" style="padding:14px 20px;background:#F5F5F5;color:#424242;border:none;border-radius:50px;font-family:inherit;font-size:16px;font-weight:bold;cursor:pointer;">✕</button>' +
+    '</div></div>';
+  document.body.appendChild(m);
+  document.getElementById('pomoClose').onclick = function(){
+    if(interval) clearInterval(interval);
+    m.remove();
+  };
+  document.getElementById('pomoStart').onclick = function(){
+    var btn = document.getElementById('pomoStart');
+    if(running){
+      clearInterval(interval);
+      running = false;
+      btn.textContent = '▶️ متابعة';
+    } else {
+      running = true;
+      btn.textContent = '⏸️ إيقاف';
+      interval = setInterval(function(){
+        timeLeft--;
+        var mm = Math.floor(timeLeft / 60);
+        var ss = timeLeft % 60;
+        document.getElementById('pomoDisplay').textContent = (mm<10?'0':'')+mm+':'+(ss<10?'0':'')+ss;
+        if(timeLeft <= 0){
+          clearInterval(interval);
+          if(typeof window.addPoints === 'function') window.addPoints(15);
+          if(typeof showToast === 'function') showToast('🎉 خلّصت! +15 نقطة');
+          m.remove();
+        }
+      }, 1000);
+    }
+  };
+};
+console.log('✅ Pomodoro loaded');
   console.log('✅ extras.js loaded');
   
 })();
