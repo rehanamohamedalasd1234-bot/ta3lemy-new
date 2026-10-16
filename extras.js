@@ -2085,4 +2085,206 @@ window.showFeatures = function(){
   
   console.log('✅ Security system loaded');
 })();
+// ═══ مؤقت الدراسة (Pomodoro) ═══
+(function(){
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      // شاشة المؤقت
+      if(!document.getElementById('pomodoroScreen')){
+        var s = document.createElement('div');
+        s.id = 'pomodoroScreen';
+        s.className = 'screen';
+        s.innerHTML = '<div class="top-bar" style="background:linear-gradient(135deg,#1976D2,#0D47A1);"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>⏱️ مؤقت الدراسة</span></div><div style="width:42px;"></div></div>' +
+          '<div class="content" style="text-align:center;">' +
+          '<div id="pomoMode" style="font-size:20px;font-weight:bold;color:#1976D2;margin-bottom:16px;">📚 وقت المذاكرة</div>' +
+          '<div id="pomoCircle" style="width:240px;height:240px;border-radius:50%;margin:20px auto;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1976D2,#0D47A1);box-shadow:0 8px 30px rgba(25,118,210,.35);position:relative;">' +
+          '<div id="pomoTime" style="font-size:56px;font-weight:bold;color:#fff;font-family:monospace;direction:ltr;">25:00</div>' +
+          '</div>' +
+          '<div style="display:flex;gap:10px;justify-content:center;margin-top:24px;flex-wrap:wrap;">' +
+          '<button id="pomoStartBtn" onclick="pomoToggle()" style="padding:16px 32px;background:linear-gradient(135deg,#2E7D32,#4CAF50);color:#fff;border:none;border-radius:50px;font-family:inherit;font-size:16px;font-weight:bold;cursor:pointer;">▶️ ابدأ</button>' +
+          '<button onclick="pomoReset()" style="padding:16px 24px;background:#F5F5F5;color:#424242;border:none;border-radius:50px;font-family:inherit;font-size:16px;font-weight:bold;cursor:pointer;">🔄 إعادة</button>' +
+          '</div>' +
+          '<div style="margin-top:32px;background:#fff;border-radius:16px;padding:20px;">' +
+          '<div style="font-weight:bold;color:#2E7D32;margin-bottom:12px;">📊 إحصائياتك</div>' +
+          '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">' +
+          '<div><div id="pomoToday" style="font-size:22px;font-weight:bold;color:#1976D2;">0</div><div style="font-size:11px;color:#999;">دقيقة النهاردة</div></div>' +
+          '<div><div id="pomoWeek" style="font-size:22px;font-weight:bold;color:#F9A825;">0</div><div style="font-size:11px;color:#999;">جلسة الأسبوع</div></div>' +
+          '<div><div id="pomoTotal" style="font-size:22px;font-weight:bold;color:#2E7D32;">0</div><div style="font-size:11px;color:#999;">نقطة الأسبوع</div></div>' +
+          '</div>' +
+          '</div>' +
+          '<div style="margin-top:20px;font-size:13px;color:#666;line-height:1.8;text-align:right;padding:16px;background:#FFF8E1;border-radius:12px;">' +
+          '<b>💡 إزاي تستخدمه:</b><br>' +
+          '• ذاكر 25 دقيقة بتركيز كامل.<br>' +
+          '• خد 5 دقايق راحة.<br>' +
+          '• كل جلسة كاملة = 15 نقطة.<br>' +
+          '• بعد 4 جلسات، خد راحة 15 دقيقة.' +
+          '</div>' +
+          '</div>';
+        document.body.appendChild(s);
+      }
+      
+      // زرار في الرئيسية
+      var home = document.getElementById('homeScreen');
+      if(home && !document.getElementById('pomoBtn')){
+        var content = home.querySelector('.content');
+        if(content){
+          var btn = document.createElement('div');
+          btn.id = 'pomoBtn';
+          btn.style.cssText = 'margin:20px 16px;padding:18px;background:linear-gradient(135deg,#1976D2,#0D47A1);color:#fff;border-radius:16px;text-align:center;cursor:pointer;box-shadow:0 4px 12px rgba(25,118,210,.3);font-weight:bold;';
+          btn.innerHTML = '<div style="font-size:28px;">⏱️</div><div style="margin-top:8px;font-size:15px;">مؤقت الدراسة</div><div style="font-size:12px;opacity:.9;margin-top:4px;">ذاكر بتركيز واجمع نقاط</div>';
+          btn.onclick = function(){ window.openPomodoro(); };
+          content.insertBefore(btn, content.firstChild);
+        }
+      }
+    }, 6000);
+  });
+  
+  var pomoState = {
+    running: false,
+    mode: 'work', // 'work' | 'break'
+    secondsLeft: 25 * 60,
+    interval: null,
+    sessionsToday: 0
+  };
+  
+  window.openPomodoro = function(){
+    if(window.screenHistory) window.screenHistory.push(window.currentScreen);
+    if(typeof showScreen === 'function') showScreen('pomodoroScreen');
+    window.updatePomoDisplay();
+    window.loadPomoStats();
+  };
+  
+  window.pomoToggle = function(){
+    if(pomoState.running){
+      // إيقاف مؤقت
+      clearInterval(pomoState.interval);
+      pomoState.running = false;
+      document.getElementById('pomoStartBtn').textContent = '▶️ متابعة';
+      document.getElementById('pomoStartBtn').style.background = 'linear-gradient(135deg,#2E7D32,#4CAF50)';
+    } else {
+      // بدء
+      pomoState.running = true;
+      document.getElementById('pomoStartBtn').textContent = '⏸️ إيقاف مؤقت';
+      document.getElementById('pomoStartBtn').style.background = 'linear-gradient(135deg,#F57C00,#F9A825)';
+      pomoState.interval = setInterval(window.pomoTick, 1000);
+    }
+  };
+  
+  window.pomoTick = function(){
+    pomoState.secondsLeft--;
+    window.updatePomoDisplay();
+    
+    if(pomoState.secondsLeft <= 0){
+      clearInterval(pomoState.interval);
+      pomoState.running = false;
+      
+      if(pomoState.mode === 'work'){
+        // انتهت جلسة المذاكرة → نجمع نقاط
+        window.completePomoSession();
+        // راحة 5 دقايق
+        pomoState.mode = 'break';
+        pomoState.secondsLeft = 5 * 60;
+        document.getElementById('pomoMode').textContent = '☕ وقت الراحة';
+        document.getElementById('pomoMode').style.color = '#F9A825';
+        document.getElementById('pomoCircle').style.background = 'linear-gradient(135deg,#F57C00,#F9A825)';
+        if(typeof showToast === 'function') showToast('🎉 خلّصت جلسة! خد راحة 5 دقايق');
+      } else {
+        // انتهت الراحة → يبدأ مذاكرة
+        pomoState.mode = 'work';
+        pomoState.secondsLeft = 25 * 60;
+        document.getElementById('pomoMode').textContent = '📚 وقت المذاكرة';
+        document.getElementById('pomoMode').style.color = '#1976D2';
+        document.getElementById('pomoCircle').style.background = 'linear-gradient(135deg,#1976D2,#0D47A1)';
+        if(typeof showToast === 'function') showToast('📚 جاهز لجلسة جديدة؟');
+      }
+      
+      document.getElementById('pomoStartBtn').textContent = '▶️ ابدأ';
+      document.getElementById('pomoStartBtn').style.background = 'linear-gradient(135deg,#2E7D32,#4CAF50)';
+      window.updatePomoDisplay();
+    }
+  };
+  
+  window.updatePomoDisplay = function(){
+    var m = Math.floor(pomoState.secondsLeft / 60);
+    var s = pomoState.secondsLeft % 60;
+    var display = (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+    var el = document.getElementById('pomoTime');
+    if(el) el.textContent = display;
+  };
+  
+  window.pomoReset = function(){
+    if(pomoState.interval) clearInterval(pomoState.interval);
+    pomoState.running = false;
+    pomoState.mode = 'work';
+    pomoState.secondsLeft = 25 * 60;
+    document.getElementById('pomoMode').textContent = '📚 وقت المذاكرة';
+    document.getElementById('pomoMode').style.color = '#1976D2';
+    document.getElementById('pomoCircle').style.background = 'linear-gradient(135deg,#1976D2,#0D47A1)';
+    document.getElementById('pomoStartBtn').textContent = '▶️ ابدأ';
+    document.getElementById('pomoStartBtn').style.background = 'linear-gradient(135deg,#2E7D32,#4CAF50)';
+    window.updatePomoDisplay();
+  };
+  
+  window.completePomoSession = async function(){
+    if(!window.currentUser) return;
+    
+    var today = new Date().toISOString().split('T')[0];
+    var weekKey = 'pomo_week_' + window.currentUser.uid;
+    var todayKey = 'pomo_today_' + window.currentUser.uid + '_' + today;
+    
+    // تحديث محلي
+    var todayMin = parseInt(localStorage.getItem(todayKey) || '0') + 25;
+    localStorage.setItem(todayKey, todayMin);
+    
+    var weekData = JSON.parse(localStorage.getItem(weekKey) || '{"sessions":0,"points":0}');
+    weekData.sessions++;
+    weekData.points += 15;
+    localStorage.setItem(weekKey, JSON.stringify(weekData));
+    
+    // إضافة نقاط
+    if(typeof window.addPoints === 'function'){
+      await window.addPoints(15, 'pomodoro');
+    }
+    
+    // تسجيل في Firestore
+    try {
+      await firebase.firestore().collection('pomodoro_sessions').add({
+        userId: window.currentUser.uid,
+        userName: window.currentUser.name,
+        minutes: 25,
+        points: 15,
+        completedAt: new Date().toISOString()
+      });
+    } catch(e){ console.error(e); }
+    
+    window.loadPomoStats();
+  };
+  
+  window.loadPomoStats = function(){
+    if(!window.currentUser) return;
+    var today = new Date().toISOString().split('T')[0];
+    var todayKey = 'pomo_today_' + window.currentUser.uid + '_' + today;
+    var weekKey = 'pomo_week_' + window.currentUser.uid;
+    
+    var todayMin = parseInt(localStorage.getItem(todayKey) || '0');
+    var weekData = JSON.parse(localStorage.getItem(weekKey) || '{"sessions":0,"points":0}');
+    
+    var t = document.getElementById('pomoToday');
+    var w = document.getElementById('pomoWeek');
+    var p = document.getElementById('pomoTotal');
+    
+    if(t) t.textContent = todayMin;
+    if(w) w.textContent = weekData.sessions;
+    if(p) p.textContent = weekData.points;
+  };
+  
+  // إعادة تعيين أسبوعياً (كل يوم أحد)
+  window.resetWeeklyPomo = function(){
+    if(!window.currentUser) return;
+    var weekKey = 'pomo_week_' + window.currentUser.uid;
+    localStorage.setItem(weekKey, JSON.stringify({sessions:0, points:0}));
+  };
+  
+  console.log('✅ Pomodoro loaded');
+})();
 console.log('✅ extras.js loaded');
