@@ -1713,19 +1713,29 @@ console.log('✅ Exercises UI loaded');
   console.log('✅ Arabic content loaded');
 })();
 // ═══════════════════════════════════════════════════════
-// 🎨 واجهة الحروف والأرقام التفاعلية
+// 🎨 واجهة الدروس التفاعلية - الصف الأول
 // ═══════════════════════════════════════════════════════
 
 (function(){
   
-  // ═══ تجاوز openContent للصف الأول (عربي) ═══
+  if(!window.speakText){
+    window.speakText = function(text){
+      if(!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = 'ar-EG';
+      u.rate = 0.8;
+      u.pitch = 1.2;
+      window.speechSynthesis.speak(u);
+    };
+  }
+  
   window.addEventListener('load', function(){
     setTimeout(function(){
       if(typeof window.openContent !== 'function') return;
       var origOpenContent = window.openContent;
       
       window.openContent = async function(type, num, name){
-        // لو الصف الأول + اللغة العربية + دروس
         if(window.currentSubject === 'اللغة العربية' && 
            window.currentGrade === 'الأول' && 
            type === 'lessons'){
@@ -1734,11 +1744,11 @@ console.log('✅ Exercises UI loaded');
           if(typeof showScreen === 'function') showScreen('contentScreen');
           
           var title = document.getElementById('contentTitle');
-          if(title) title.textContent = '🔤 الحروف والأرقام';
-          var headerTitle = document.getElementById('contentHeaderTitle');
-          if(headerTitle) headerTitle.textContent = 'اللغة العربية - الصف الأول';
-          var headerSub = document.getElementById('contentHeaderSub');
-          if(headerSub) headerSub.textContent = 'اضغط على أي بطاقة لسماعها';
+          if(title) title.textContent = '📚 دروس اللغة العربية';
+          var ht = document.getElementById('contentHeaderTitle');
+          if(ht) ht.textContent = 'الصف الأول الابتدائي';
+          var hs = document.getElementById('contentHeaderSub');
+          if(hs) hs.textContent = 'اضغط على أي درس للتفاعل';
           
           var l = document.getElementById('contentList');
           l.innerHTML = '<p style="text-align:center;color:#999;padding:20px;">⏳ جاري التحميل...</p>';
@@ -1753,66 +1763,126 @@ console.log('✅ Exercises UI loaded');
               .orderBy('order','asc')
               .get();
             
-            var letters = [];
-            var numbers = [];
+            var html = '';
             snap.forEach(function(doc){
               var d = doc.data();
-              if(d.interactive_type === 'letter') letters.push(d);
-              else if(d.interactive_type === 'number') numbers.push(d);
+              var icon = d.interactive_type === 'family' ? '👨‍👩‍👧‍👦' : 
+                         d.interactive_type === 'letters' ? '🔤' : 
+                         d.interactive_type === 'numbers' ? '🔢' : '📄';
+              var color = d.interactive_type === 'family' ? '#FF6B6B' : 
+                          d.interactive_type === 'letters' ? '#4ECDC4' : 
+                          d.interactive_type === 'numbers' ? '#45B7D1' : '#999';
+              html += '<div onclick="openInteractiveLesson(\'' + doc.id + '\')" style="background:#fff;border-radius:16px;padding:18px;margin-bottom:12px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.08);border-right:6px solid ' + color + ';display:flex;align-items:center;gap:14px;">';
+              html += '<div style="width:56px;height:56px;border-radius:16px;background:' + color + '20;display:flex;align-items:center;justify-content:center;font-size:32px;">' + icon + '</div>';
+              html += '<div style="flex:1;"><div style="font-weight:bold;font-size:16px;color:#212121;">' + d.title + '</div>';
+              html += '<div style="font-size:12px;color:#999;margin-top:4px;">' + (d.content||'') + '</div></div>';
+              html += '<div style="font-size:24px;color:#999;">‹</div>';
+              html += '</div>';
             });
-            
-            var html = '';
-            
-            // قسم الحروف
-            if(letters.length > 0){
-              html += '<div style="margin-bottom:24px;">';
-              html += '<div style="font-size:22px;font-weight:bold;color:#E65100;margin-bottom:16px;text-align:center;">🔤 الحروف العربية</div>';
-              html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">';
-              var colors = ['#FF6B6B','#4ECDC4','#45B7D1','#FFA07A','#98D8C8','#F7DC6F','#BB8FCE','#85C1E2'];
-              letters.forEach(function(lt, i){
-                var color = colors[i % colors.length];
-                html += '<div onclick="showArabicLetter(\'' + lt.letter + '\',\'' + lt.word + '\',\'' + lt.emoji + '\')" style="background:' + color + ';color:#fff;border-radius:20px;padding:20px 8px;text-align:center;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.15);transition:transform .2s;">';
-                html += '<div style="font-size:48px;font-weight:bold;">' + lt.letter + '</div>';
-                html += '<div style="font-size:28px;margin-top:4px;">' + lt.emoji + '</div>';
-                html += '<div style="font-size:14px;font-weight:bold;margin-top:4px;">' + lt.word + '</div>';
-                html += '</div>';
-              });
-              html += '</div></div>';
-            }
-            
-            // قسم الأرقام
-            if(numbers.length > 0){
-              html += '<div style="margin-top:32px;">';
-              html += '<div style="font-size:22px;font-weight:bold;color:#0D47A1;margin-bottom:16px;text-align:center;">🔢 الأرقام</div>';
-              html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">';
-              var numColors = ['#1976D2','#00897B','#F57C00','#C2185B','#7B1FA2'];
-              numbers.forEach(function(nm, i){
-                var color = numColors[i % numColors.length];
-                html += '<div onclick="showArabicNumber(\'' + nm.letter + '\',\'' + nm.word + '\',\'' + nm.emoji + '\')" style="background:' + color + ';color:#fff;border-radius:20px;padding:20px 8px;text-align:center;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.15);transition:transform .2s;">';
-                html += '<div style="font-size:48px;font-weight:bold;">' + nm.letter + '</div>';
-                html += '<div style="font-size:28px;margin-top:4px;">' + nm.emoji + '</div>';
-                html += '<div style="font-size:14px;font-weight:bold;margin-top:4px;">' + nm.word + '</div>';
-                html += '</div>';
-              });
-              html += '</div></div>';
-            }
-            
-            l.innerHTML = html;
+            l.innerHTML = html || '<p style="text-align:center;color:#999;">لا توجد دروس</p>';
             return;
           } catch(e){
-            console.error('interactive letters:', e);
-            // في حالة فشل، نرجع للواجهة العادية
+            console.error(e);
             return origOpenContent.apply(this, arguments);
           }
         }
-        
         return origOpenContent.apply(this, arguments);
       };
       
-      console.log('✅ Interactive letters UI loaded');
+      console.log('✅ Lesson list override loaded');
     }, 3000);
   });
   
+  window.openInteractiveLesson = async function(id){
+    try {
+      var doc = await firebase.firestore().collection('lessons').doc(id).get();
+      if(!doc.exists) return;
+      var d = doc.data();
+      
+      if(d.interactive_type === 'family') renderFamily(d);
+      else if(d.interactive_type === 'letters') renderLetters(d);
+      else if(d.interactive_type === 'numbers') renderNumbers(d);
+    } catch(e){ console.error(e); }
+  };
+  
+  window.renderFamily = function(d){
+    var m = document.createElement('div');
+    m.id = 'familyModal';
+    m.style.cssText = 'position:fixed;inset:0;background:linear-gradient(135deg,#FFF9C4,#FFE082);z-index:9999;overflow-y:auto;padding:20px;font-family:inherit;';
+    var h = '<div style="max-width:500px;margin:0 auto;">';
+    h += '<div style="text-align:center;margin-bottom:20px;">';
+    h += '<div style="font-size:50px;">👨‍👩‍👧‍👦</div>';
+    h += '<div style="font-size:24px;font-weight:bold;color:#E65100;margin-top:8px;">' + d.title + '</div>';
+    h += '<div style="font-size:14px;color:#BF360C;margin-top:4px;">اضغط على أي فرد لسماعه</div>';
+    h += '</div>';
+    h += '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;">';
+    var colors = ['#FF6B6B','#4ECDC4','#45B7D1','#FFA07A','#98D8C8','#BB8FCE'];
+    d.family.forEach(function(f, i){
+      h += '<div onclick="speakText(\'' + f.word + '\')" style="background:' + colors[i % colors.length] + ';color:#fff;border-radius:20px;padding:24px 12px;text-align:center;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.15);">';
+      h += '<div style="font-size:60px;">' + f.emoji + '</div>';
+      h += '<div style="font-size:22px;font-weight:bold;margin-top:8px;">' + f.word + '</div>';
+      h += '</div>';
+    });
+    h += '</div>';
+    h += '<button onclick="this.parentElement.parentElement.remove()" style="width:100%;margin-top:24px;padding:14px;background:#E65100;color:#fff;border:none;border-radius:14px;font-family:inherit;font-size:16px;font-weight:bold;cursor:pointer;">✕ إغلاق</button>';
+    h += '</div>';
+    m.innerHTML = h;
+    document.body.appendChild(m);
+  };
+  
+  window.renderLetters = function(d){
+    var m = document.createElement('div');
+    m.id = 'lettersModal';
+    m.style.cssText = 'position:fixed;inset:0;background:linear-gradient(135deg,#E1F5FE,#B3E5FC);z-index:9999;overflow-y:auto;padding:16px;font-family:inherit;';
+    var h = '<div style="max-width:600px;margin:0 auto;">';
+    h += '<div style="text-align:center;margin-bottom:20px;">';
+    h += '<div style="font-size:50px;">🔤</div>';
+    h += '<div style="font-size:24px;font-weight:bold;color:#0D47A1;margin-top:8px;">الحروف العربية</div>';
+    h += '<div style="font-size:14px;color:#1565C0;margin-top:4px;">اضغط على الحرف لسماعه، وعلى الصورة لسماع الكلمة</div>';
+    h += '</div>';
+    h += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">';
+    var colors = ['#FF6B6B','#4ECDC4','#45B7D1','#FFA07A','#98D8C8','#F7DC6F','#BB8FCE','#85C1E2'];
+    d.letters.forEach(function(lt, i){
+      h += '<div style="background:#fff;border-radius:16px;padding:10px 4px;text-align:center;box-shadow:0 3px 8px rgba(0,0,0,.1);border:2px solid ' + colors[i % colors.length] + ';">';
+      h += '<div onclick="speakText(\'' + lt.letter + '\')" style="font-size:38px;font-weight:bold;color:#E65100;cursor:pointer;line-height:1.1;">' + lt.letter + '</div>';
+      h += '<div onclick="speakText(\'' + lt.word + '\')" style="font-size:28px;cursor:pointer;margin:4px 0;">' + lt.emoji + '</div>';
+      h += '<div onclick="speakText(\'' + lt.word + '\')" style="font-size:11px;font-weight:bold;color:#2E7D32;cursor:pointer;">' + lt.word + '</div>';
+      h += '</div>';
+    });
+    h += '</div>';
+    h += '<button onclick="this.parentElement.parentElement.remove()" style="width:100%;margin-top:24px;padding:14px;background:#0D47A1;color:#fff;border:none;border-radius:14px;font-family:inherit;font-size:16px;font-weight:bold;cursor:pointer;">✕ إغلاق</button>';
+    h += '</div>';
+    m.innerHTML = h;
+    document.body.appendChild(m);
+  };
+  
+  window.renderNumbers = function(d){
+    var m = document.createElement('div');
+    m.id = 'numbersModal';
+    m.style.cssText = 'position:fixed;inset:0;background:linear-gradient(135deg,#C8E6C9,#A5D6A7);z-index:9999;overflow-y:auto;padding:20px;font-family:inherit;';
+    var h = '<div style="max-width:500px;margin:0 auto;">';
+    h += '<div style="text-align:center;margin-bottom:20px;">';
+    h += '<div style="font-size:50px;">🔢</div>';
+    h += '<div style="font-size:24px;font-weight:bold;color:#1B5E20;margin-top:8px;">الأرقام</div>';
+    h += '<div style="font-size:14px;color:#2E7D32;margin-top:4px;">اضغط على أي رقم لسماعه</div>';
+    h += '</div>';
+    h += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">';
+    var colors = ['#1976D2','#00897B','#F57C00','#C2185B','#7B1FA2','#D32F2F','#388E3C','#0097A7','#5D4037','#455A64'];
+    d.numbers.forEach(function(nm, i){
+      h += '<div onclick="speakText(\'' + nm.word + '\')" style="background:' + colors[i % colors.length] + ';color:#fff;border-radius:20px;padding:20px 8px;text-align:center;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.15);">';
+      h += '<div style="font-size:48px;font-weight:bold;">' + nm.num + '</div>';
+      h += '<div style="font-size:24px;margin-top:4px;">' + nm.emoji + '</div>';
+      h += '<div style="font-size:14px;font-weight:bold;margin-top:4px;">' + nm.word + '</div>';
+      h += '</div>';
+    });
+    h += '</div>';
+    h += '<button onclick="this.parentElement.parentElement.remove()" style="width:100%;margin-top:24px;padding:14px;background:#1B5E20;color:#fff;border:none;border-radius:14px;font-family:inherit;font-size:16px;font-weight:bold;cursor:pointer;">✕ إغلاق</button>';
+    h += '</div>';
+    m.innerHTML = h;
+    document.body.appendChild(m);
+  };
+  
+  console.log('✅ Interactive lessons UI loaded');
 })();
 console.log('✅ extras.js loaded');
   
