@@ -1097,6 +1097,88 @@ window.addEventListener('load', function(){
 });
 
 console.log('✅ Station delete loaded');
+// ═══ جدول الضرب التفاعلي للأطفال ═══
+window.openMultiplication = function(){
+  var m = document.createElement('div');
+  m.id = 'multModal';
+  m.style.cssText = 'position:fixed;inset:0;background:linear-gradient(135deg,#FFE0B2,#FFCC80);z-index:9999;overflow-y:auto;padding:16px;font-family:inherit;';
+  
+  var html = '<div style="max-width:500px;margin:0 auto;">';
+  html += '<div style="text-align:center;margin-bottom:20px;">';
+  html += '<div style="font-size:50px;">🔢</div>';
+  html += '<div style="font-size:24px;font-weight:bold;color:#E65100;margin-top:8px;">جدول الضرب</div>';
+  html += '<div style="font-size:14px;color:#BF360C;margin-top:4px;">اضغط على أي رقم لتسمعه</div>';
+  html += '</div>';
+  
+  html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;">';
+  var colors = ['#FF6B6B','#4ECDC4','#45B7D1','#FFA07A','#98D8C8','#F7DC6F','#BB8FCE','#85C1E2','#F8B195','#C06C84'];
+  for(var i = 1; i <= 10; i++){
+    html += '<button onclick="showTable(' + i + ')" style="padding:24px 8px;background:' + colors[i-1] + ';color:#fff;border:none;border-radius:20px;font-family:inherit;font-size:28px;font-weight:bold;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.15);">×' + i + '</button>';
+  }
+  html += '</div>';
+  
+  html += '<div id="multResult" style="background:#fff;border-radius:20px;padding:20px;min-height:100px;box-shadow:0 4px 12px rgba(0,0,0,.1);"></div>';
+  
+  html += '<button onclick="document.getElementById(\'multModal\').remove()" style="width:100%;margin-top:20px;padding:14px;background:#E65100;color:#fff;border:none;border-radius:14px;font-family:inherit;font-size:16px;font-weight:bold;cursor:pointer;">✕ إغلاق</button>';
+  html += '</div>';
+  m.innerHTML = html;
+  document.body.appendChild(m);
+};
+
+window.showTable = function(num){
+  var c = document.getElementById('multResult');
+  if(!c) return;
+  var html = '<div style="text-align:center;font-size:22px;font-weight:bold;color:#E65100;margin-bottom:16px;">جدول الـ ' + num + '</div>';
+  html += '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;">';
+  for(var i = 1; i <= 10; i++){
+    var result = num * i;
+    html += '<div onclick="speakText(\'' + num + ' في ' + i + ' يساوي ' + result + '\')" style="background:linear-gradient(135deg,#FFF3E0,#FFE0B2);padding:14px;border-radius:14px;text-align:center;cursor:pointer;border:2px solid #FFB74D;">';
+    html += '<div style="font-size:18px;font-weight:bold;color:#E65100;">' + num + ' × ' + i + '</div>';
+    html += '<div style="font-size:24px;font-weight:bold;color:#BF360C;margin-top:4px;">= ' + result + '</div>';
+    html += '</div>';
+  }
+  html += '</div>';
+  c.innerHTML = html;
+  
+  // نطق أول نتيجة
+  if('speechSynthesis' in window){
+    var utterance = new SpeechSynthesisUtterance('جدول الـ ' + num);
+    utterance.lang = 'ar-EG';
+    utterance.rate = 0.9;
+    window.speechSynthesis.speak(utterance);
+  }
+};
+
+window.speakText = function(text){
+  if(!('speechSynthesis' in window)){
+    if(typeof showToast === 'function') showToast('⚠️ الصوت غير مدعوم');
+    return;
+  }
+  window.speechSynthesis.cancel();
+  var utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = 'ar-EG';
+  utterance.rate = 0.8;
+  utterance.pitch = 1.2;
+  window.speechSynthesis.speak(utterance);
+};
+
+// ═══ زرار في الرئيسية ═══
+window.addEventListener('load', function(){
+  setTimeout(function(){
+    var home = document.getElementById('homeScreen');
+    if(!home || document.getElementById('multBtn')) return;
+    var content = home.querySelector('.content');
+    if(!content) return;
+    var btn = document.createElement('div');
+    btn.id = 'multBtn';
+    btn.style.cssText = 'margin:20px 16px;padding:18px;background:linear-gradient(135deg,#FF6B6B,#FF8E53);color:#fff;border-radius:16px;text-align:center;cursor:pointer;font-weight:bold;';
+    btn.innerHTML = '<div style="font-size:28px;">🔢</div><div style="margin-top:8px;font-size:15px;">جدول الضرب للأطفال</div><div style="font-size:12px;opacity:.9;margin-top:4px;">تفاعلي + ألوان + صوت</div>';
+    btn.onclick = function(){ window.openMultiplication(); };
+    content.insertBefore(btn, content.firstChild);
+  }, 4500);
+});
+
+console.log('✅ Multiplication Table loaded');
 console.log('✅ extras.js loaded');
   
 })();
