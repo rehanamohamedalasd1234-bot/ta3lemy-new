@@ -1712,6 +1712,108 @@ console.log('✅ Exercises UI loaded');
   
   console.log('✅ Arabic content loaded');
 })();
+// ═══════════════════════════════════════════════════════
+// 🎨 واجهة الحروف والأرقام التفاعلية
+// ═══════════════════════════════════════════════════════
+
+(function(){
+  
+  // ═══ تجاوز openContent للصف الأول (عربي) ═══
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      if(typeof window.openContent !== 'function') return;
+      var origOpenContent = window.openContent;
+      
+      window.openContent = async function(type, num, name){
+        // لو الصف الأول + اللغة العربية + دروس
+        if(window.currentSubject === 'اللغة العربية' && 
+           window.currentGrade === 'الأول' && 
+           type === 'lessons'){
+          
+          if(window.screenHistory) window.screenHistory.push(window.currentScreen);
+          if(typeof showScreen === 'function') showScreen('contentScreen');
+          
+          var title = document.getElementById('contentTitle');
+          if(title) title.textContent = '🔤 الحروف والأرقام';
+          var headerTitle = document.getElementById('contentHeaderTitle');
+          if(headerTitle) headerTitle.textContent = 'اللغة العربية - الصف الأول';
+          var headerSub = document.getElementById('contentHeaderSub');
+          if(headerSub) headerSub.textContent = 'اضغط على أي بطاقة لسماعها';
+          
+          var l = document.getElementById('contentList');
+          l.innerHTML = '<p style="text-align:center;color:#999;padding:20px;">⏳ جاري التحميل...</p>';
+          
+          try {
+            var fs = firebase.firestore();
+            var snap = await fs.collection('lessons')
+              .where('subject','==','اللغة العربية')
+              .where('stage','==','primary')
+              .where('grade','==','الأول')
+              .where('type','==','lessons')
+              .orderBy('order','asc')
+              .get();
+            
+            var letters = [];
+            var numbers = [];
+            snap.forEach(function(doc){
+              var d = doc.data();
+              if(d.interactive_type === 'letter') letters.push(d);
+              else if(d.interactive_type === 'number') numbers.push(d);
+            });
+            
+            var html = '';
+            
+            // قسم الحروف
+            if(letters.length > 0){
+              html += '<div style="margin-bottom:24px;">';
+              html += '<div style="font-size:22px;font-weight:bold;color:#E65100;margin-bottom:16px;text-align:center;">🔤 الحروف العربية</div>';
+              html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">';
+              var colors = ['#FF6B6B','#4ECDC4','#45B7D1','#FFA07A','#98D8C8','#F7DC6F','#BB8FCE','#85C1E2'];
+              letters.forEach(function(lt, i){
+                var color = colors[i % colors.length];
+                html += '<div onclick="showArabicLetter(\'' + lt.letter + '\',\'' + lt.word + '\',\'' + lt.emoji + '\')" style="background:' + color + ';color:#fff;border-radius:20px;padding:20px 8px;text-align:center;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.15);transition:transform .2s;">';
+                html += '<div style="font-size:48px;font-weight:bold;">' + lt.letter + '</div>';
+                html += '<div style="font-size:28px;margin-top:4px;">' + lt.emoji + '</div>';
+                html += '<div style="font-size:14px;font-weight:bold;margin-top:4px;">' + lt.word + '</div>';
+                html += '</div>';
+              });
+              html += '</div></div>';
+            }
+            
+            // قسم الأرقام
+            if(numbers.length > 0){
+              html += '<div style="margin-top:32px;">';
+              html += '<div style="font-size:22px;font-weight:bold;color:#0D47A1;margin-bottom:16px;text-align:center;">🔢 الأرقام</div>';
+              html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">';
+              var numColors = ['#1976D2','#00897B','#F57C00','#C2185B','#7B1FA2'];
+              numbers.forEach(function(nm, i){
+                var color = numColors[i % numColors.length];
+                html += '<div onclick="showArabicNumber(\'' + nm.letter + '\',\'' + nm.word + '\',\'' + nm.emoji + '\')" style="background:' + color + ';color:#fff;border-radius:20px;padding:20px 8px;text-align:center;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.15);transition:transform .2s;">';
+                html += '<div style="font-size:48px;font-weight:bold;">' + nm.letter + '</div>';
+                html += '<div style="font-size:28px;margin-top:4px;">' + nm.emoji + '</div>';
+                html += '<div style="font-size:14px;font-weight:bold;margin-top:4px;">' + nm.word + '</div>';
+                html += '</div>';
+              });
+              html += '</div></div>';
+            }
+            
+            l.innerHTML = html;
+            return;
+          } catch(e){
+            console.error('interactive letters:', e);
+            // في حالة فشل، نرجع للواجهة العادية
+            return origOpenContent.apply(this, arguments);
+          }
+        }
+        
+        return origOpenContent.apply(this, arguments);
+      };
+      
+      console.log('✅ Interactive letters UI loaded');
+    }, 3000);
+  });
+  
+})();
 console.log('✅ extras.js loaded');
   
 })();
