@@ -984,6 +984,26 @@ window.addEventListener('load', function(){
 });
 
 console.log('✅ News + Pomodoro + Broadcast + Buttons loaded');
+// ═══ إصلاح شريط الدردشة على الموبايل ═══
+window.addEventListener('load', function(){
+  setTimeout(function(){
+    // إصلاح شريط الإدخال
+    var style = document.createElement('style');
+    style.textContent = 
+      '.chat-input-bar { display:flex !important; align-items:center !important; gap:4px !important; padding:6px !important; flex-wrap:nowrap !important; overflow-x:auto !important; }' +
+      '.chat-input-bar > * { flex-shrink:0 !important; }' +
+      '.chat-input-bar input[type="text"] { min-width:80px !important; flex:1 1 auto !important; }' +
+      '@media (max-width:480px) {' +
+      '  .chat-input-bar label { width:32px !important; height:32px !important; font-size:16px !important; padding:2px !important; }' +
+      '  .chat-input-bar button { width:34px !important; height:34px !important; font-size:16px !important; padding:2px !important; }' +
+      '  .chat-input-bar input[type="text"] { padding:8px 12px !important; font-size:13px !important; }' +
+      '  #mediaBar { gap:2px !important; margin-right:2px !important; }' +
+      '  #mediaBar label { width:30px !important; height:30px !important; font-size:14px !important; }' +
+      '}';
+    document.head.appendChild(style);
+    console.log('✅ Chat bar fixed');
+  }, 3000);
+});
 console.log('✅ extras.js loaded');
   
 })();
