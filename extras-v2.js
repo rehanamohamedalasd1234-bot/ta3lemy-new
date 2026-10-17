@@ -18,16 +18,13 @@
       var canvas = document.getElementById('fullDrawingCanvas');
       if(!canvas) return;
       
-      // تكبير اللوحة
       var container = canvas.parentElement;
-      container.style.height = 'calc(100vh - 140px)'; // مساحة أكبر
+      container.style.height = 'calc(100vh - 140px)'; 
       
-      // إعادة تهيئة الأبعاد
       var r = canvas.getBoundingClientRect();
       canvas.width = r.width;
       canvas.height = r.height;
       
-      // إضافة زرار "إرسال للمالك" لو مش موجود
       var toolbar = canvas.parentElement.previousElementSibling;
       if(toolbar && !document.getElementById('sendToOwnerBtn')){
         var sendBtn = document.createElement('button');
@@ -42,7 +39,6 @@
     }, 500);
   };
 
-  // إرسال الرسمة للمالك
   window.sendDrawingToOwner = async function(canvas){
     if(!window.currentUser){
       if(typeof showToast === 'function') showToast('⚠️ سجل دخول الأول');
@@ -52,22 +48,18 @@
     if(typeof showToast === 'function') showToast('⏳ جاري إرسال إبداعك...');
     
     try {
-      // تحويل الرسمة لصورة
       var dataUrl = canvas.toDataURL('image/png');
-      
-      // رفع الصورة على Cloudinary
       var blob = await (await fetch(dataUrl)).blob();
       var file = new File([blob], 'drawing.png', {type: 'image/png'});
       
       var url = await window.uploadFile(file, 'drawings');
       if(!url) throw new Error('فشل الرفع');
       
-      // حفظ الطلب في Firestore
       await firebase.firestore().collection('drawing_requests').add({
         studentId: window.currentUser.uid,
         studentName: window.currentUser.name,
         imageUrl: url,
-        status: 'pending', // pending, approved, rejected
+        status: 'pending', 
         createdAt: new Date().toISOString()
       });
       
@@ -79,7 +71,6 @@
     }
   };
 
-  // شاشة المالك لمراجعة الرسومات
   window.openDrawingReviews = async function(){
     if(window.currentRole !== 'owner'){
       if(typeof showToast === 'function') showToast('⚠️ مسموح للمالك فقط');
@@ -133,7 +124,6 @@
   window.approveDrawing = async function(id, imageUrl){
     try {
       await firebase.firestore().collection('drawing_requests').doc(id).update({status: 'approved'});
-      // نشر الرسمة كمنشور في الأخبار
       await firebase.firestore().collection('posts').add({
         title: '🎨 إبداع طالب',
         content: 'تم تكريم إبداع جديد من طلابنا المتميزين!',
@@ -155,11 +145,28 @@
     } catch(e){ console.error(e); }
   };
 
+  // إضافة زرار مراجعة الإبداعات في لوحة المالك
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      var admin = document.getElementById('adminScreen');
+      if(admin && !document.getElementById('adminDrawingsBtn')){
+        var ac = admin.querySelector('.content');
+        if(ac){
+          var mBtn = document.createElement('div');
+          mBtn.id = 'adminDrawingsBtn';
+          mBtn.className = 'menu-item';
+          mBtn.innerHTML = '<span style="font-size:26px;">🎨</span><span style="flex:1;font-weight:700;color:#F9A825;">مراجعة إبداعات الطلاب</span><span style="color:#999;font-size:24px;">‹</span>';
+          mBtn.onclick = function(){ window.openDrawingReviews(); };
+          ac.insertBefore(mBtn, ac.firstChild);
+        }
+      }
+    }, 5000);
+  });
+
   // ═══════════════════════════════════════════════════════
   // 2. 📚 نظام المعلمين (تسجيل + رفع تدريبات)
   // ═══════════════════════════════════════════════════════
 
-  // شاشة رفع المحتوى للمعلم
   window.openTeacherUpload = function(){
     if(window.currentRole !== 'teacher' && window.currentRole !== 'owner'){
       if(typeof showToast === 'function') showToast('⚠️ مسموح للمعلمين فقط');
@@ -240,5 +247,20 @@
       if(typeof showToast === 'function') showToast('❌ فشل الرفع');
     }
   };
+
+  // إضافة زرار رفع المحتوى للمعلمين في الرئيسية
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      var toolsGrid = document.querySelector('#homeScreen .tools-grid');
+      if(toolsGrid && !document.getElementById('teacherUploadBtn') && (window.currentRole === 'teacher' || window.currentRole === 'owner')){
+        var btn = document.createElement('div');
+        btn.id = 'teacherUploadBtn';
+        btn.className = 'tool-btn';
+        btn.innerHTML = '<div class="tool-icon" style="background:#00897B15;color:#00897B;font-size:22px;">📤</div><div class="tool-label">رفع محتوى</div>';
+        btn.onclick = function(){ window.openTeacherUpload(); };
+        toolsGrid.appendChild(btn);
+      }
+    }, 6000);
+  });
 
 })();
