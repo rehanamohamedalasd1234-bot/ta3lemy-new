@@ -1978,6 +1978,38 @@ console.log('✅ Exercises UI loaded');
     setTimeout(function(){ location.reload(true); }, 500);
   }
 })();
+// ═══════════════════════════════════════════════════════
+// 🧹 تنظيف وإصلاح الواجهة
+// ═══════════════════════════════════════════════════════
+
+(function(){
+  // 1. ستايل لإخفاء الحاجات الغلط
+  var style = document.createElement('style');
+  style.textContent = 
+    // إخفاء النسخ الاحتياطي من كل مكان
+    '.menu-item[onclick*="backupLessons"], [onclick*="backupLessons"] { display: none !important; }' +
+    // إخفاء القائمة السريعة
+    '#quickMenu { display: none !important; }' +
+    // إخفاء زر التدريبات التفاعلية من الرئيسية (هنخليه في مكانه المناسب بعدين)
+    '#exerciseBtn { display: none !important; }' +
+    // إخفاء الأزرار القديمة اللي عملناها عشان منكررهاش
+    '#newsBtn, #pomoBtn, #multBtn, #broadcastBtn { display: none !important; }';
+  document.head.appendChild(style);
+
+  // 2. التأكد من مسح زر القائمة السريعة لو موجود
+  var qm = document.getElementById('quickMenu');
+  if(qm) qm.remove();
+
+  // 3. تعديل القائمة السريعة القديمة في الـ DOM
+  var quickMenuDiv = document.getElementById('quickMenu');
+  if (quickMenuDiv) quickMenuDiv.style.display = 'none';
+
+  // 4. إخفاء النسخ الاحتياطي باستخدام JavaScript كمان
+  var backupBtns = document.querySelectorAll('[onclick*="backupLessons"]');
+  backupBtns.forEach(function(btn){ btn.style.display = 'none'; });
+
+  console.log('✅ UI Cleanup loaded');
+})();
 console.log('✅ extras.js loaded');
   
 })();
