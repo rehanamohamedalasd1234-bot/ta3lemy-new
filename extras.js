@@ -2224,6 +2224,53 @@ console.log('✅ Exercises UI loaded');
 
   console.log('✅ Full News System loaded');
 })();
+// ═══════════════════════════════════════════════════════
+// 📥 إرجاع زرار التحميل بدون نت
+// ═══════════════════════════════════════════════════════
+
+(function(){
+  window.downloadAllOffline = async function(){
+    if(!navigator.onLine){ if(typeof showToast === 'function') showToast('⚠️ محتاج نت'); return; }
+    if(typeof showToast === 'function') showToast('⏳ جاري التحميل...');
+    try {
+      var fs = firebase.firestore();
+      var ls = await fs.collection('lessons').get();
+      var lessons = [];
+      ls.forEach(function(d){ lessons.push(Object.assign({id: d.id}, d.data())); });
+      localStorage.setItem('offline_lessons', JSON.stringify(lessons));
+      if(typeof showToast === 'function') showToast('✅ الدروس: ' + lessons.length);
+      
+      var r = await fetch('https://api.alquran.cloud/v1/quran/quran-uthmani');
+      var j = await r.json();
+      var quran = {};
+      j.data.surahs.forEach(function(s){
+        quran[s.number] = {name: s.name, ayahs: s.ayahs.map(function(a){return {num: a.numberInSurah, text: a.text};})};
+      });
+      localStorage.setItem('offline_quran_full', JSON.stringify(quran));
+      if(typeof showToast === 'function') showToast('✅ القرآن: ' + j.data.surahs.length + ' سورة');
+      if(typeof showToast === 'function') showToast('🎉 تم التحميل الكامل!');
+    } catch(e){
+      console.error(e);
+      if(typeof showToast === 'function') showToast('❌ فشل');
+    }
+  };
+
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      var toolsGrid = document.querySelector('#homeScreen .tools-grid');
+      if(!toolsGrid || document.getElementById('offlineBtnInGrid')) return;
+      
+      var btn = document.createElement('div');
+      btn.id = 'offlineBtnInGrid';
+      btn.className = 'tool-btn';
+      btn.innerHTML = '<div class="tool-icon" style="background:#1976D215;color:#1976D2;font-size:22px;">📥</div><div class="tool-label">تحميل</div>';
+      btn.onclick = function(){ window.downloadAllOffline(); };
+      toolsGrid.appendChild(btn);
+    }, 4500);
+  });
+
+  console.log('✅ Offline Button Restored');
+})();
 console.log('✅ extras.js loaded');
   
 })();
