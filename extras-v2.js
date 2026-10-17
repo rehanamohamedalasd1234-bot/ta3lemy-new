@@ -262,5 +262,37 @@
       }
     }, 6000);
   });
-
+// ═══════════════════════════════════════════════════════
+// 3. 🔄 التحديث التلقائي للتطبيق (APK / PWA)
+// ═══════════════════════════════════════════════════════
+window.addEventListener('load', function(){
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./service-worker.js').then(function(reg){
+      // فحص التحديثات كل دقيقة
+      setInterval(function(){ reg.update(); }, 60000);
+      
+      // لو فيه تحديث جديد جاهز، فعّله فوراً
+      reg.addEventListener('updatefound', function(){
+        var newWorker = reg.installing;
+        if(newWorker){
+          newWorker.addEventListener('statechange', function(){
+            if(newWorker.state === 'installed' && navigator.serviceWorker.controller){
+              newWorker.postMessage({ type: 'SKIP_WAITING' });
+              // إعادة تحميل الصفحة تلقائياً بعد ثانية عشان تظهر النسخة الجديدة
+              setTimeout(function(){ location.reload(); }, 1000);
+            }
+          });
+        }
+      });
+    }).catch(function(err){ console.log('SW error:', err); });
+    
+    // لما الـ SW الجديد يشتغل ويسيطر، اعمل تحديث للصفحة مرة واحدة
+    var refreshing;
+    navigator.serviceWorker.addEventListener('controllerchange', function(){
+      if(refreshing) return;
+      refreshing = true;
+      location.reload();
+    });
+  }
+});
 })();
