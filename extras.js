@@ -2010,6 +2010,220 @@ console.log('✅ Exercises UI loaded');
 
   console.log('✅ UI Cleanup loaded');
 })();
+// ═══════════════════════════════════════════════════════
+// 📰 صفحة الأخبار والمقالات المتكاملة + 🔴 البث المباشر
+// ═══════════════════════════════════════════════════════
+
+(function(){
+  // ═══ إنشاء شاشة الأخبار ═══
+  if(!document.getElementById('newsScreen')){
+    var ns = document.createElement('div');
+    ns.id = 'newsScreen';
+    ns.className = 'screen';
+    ns.innerHTML = '<div class="top-bar" style="background:linear-gradient(135deg,#C2185B,#E91E63);"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>📰 الأخبار والمقالات</span></div><button class="icon-btn" id="addNewsBtn" onclick="openAddNews()" style="display:none;">➕</button></div><div class="content" id="newsContent"></div>';
+    document.body.appendChild(ns);
+  }
+
+  // ═══ إنشاء شاشة إضافة منشور ═══
+  if(!document.getElementById('addNewsScreen')){
+    var ans = document.createElement('div');
+    ans.id = 'addNewsScreen';
+    ans.className = 'screen';
+    ans.innerHTML = '<div class="top-bar" style="background:linear-gradient(135deg,#C2185B,#E91E63);"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>➕ منشور جديد</span></div><div style="width:42px;"></div></div><div class="content"><div class="form-group"><label class="form-label">العنوان</label><input type="text" class="form-input" id="newsTitle"></div><div class="form-group"><label class="form-label">المحتوى</label><textarea class="form-input" id="newsText" rows="6"></textarea></div><div class="form-group"><label class="form-label">📷 صورة (اختياري)</label><input type="file" class="form-input" id="newsImage" accept="image/*" style="padding:10px;"></div><div class="form-group"><label class="form-label">🎥 فيديو (اختياري)</label><input type="file" class="form-input" id="newsVideo" accept="video/*" style="padding:10px;"></div><button class="btn-primary" id="publishNewsBtn" onclick="publishNews()" style="background:linear-gradient(135deg,#C2185B,#E91E63);">📤 نشر</button></div>';
+    document.body.appendChild(ans);
+  }
+
+  // ═══ فتح صفحة الأخبار ═══
+  window.openNews = async function(){
+    if(!window.currentUser) return;
+    if(window.screenHistory) window.screenHistory.push(window.currentScreen);
+    if(typeof showScreen === 'function') showScreen('newsScreen');
+    
+    var addBtn = document.getElementById('addNewsBtn');
+    if(addBtn) addBtn.style.display = (window.currentRole === 'owner' || window.currentRole === 'teacher') ? 'flex' : 'none';
+    
+    var c = document.getElementById('newsContent');
+    c.innerHTML = '<p style="text-align:center;color:#999;padding:20px;">⏳ جاري التحميل...</p>';
+    
+    try {
+      var fs = firebase.firestore();
+      var snap = await fs.collection('posts').orderBy('created_at','desc').limit(30).get();
+      if(snap.empty){ c.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📰</div><p>لا توجد منشورات بعد</p></div>'; return; }
+      
+      var html = '';
+      snap.forEach(function(doc){
+        var p = doc.data();
+        var isOwner = window.currentRole === 'owner';
+        html += '<div style="background:#fff;border-radius:16px;padding:16px;margin-bottom:16px;box-shadow:0 2px 10px rgba(0,0,0,.06);">';
+        
+        // رأس المنشور
+        html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">';
+        html += '<div style="font-weight:bold;color:#C2185B;">👤 ' + (p.author_name || 'المالك') + '</div>';
+        if(isOwner){
+          html += '<button onclick="deleteNews(\'' + doc.id + '\')" style="background:#FFEBEE;color:#E53935;border:none;padding:6px 10px;border-radius:8px;cursor:pointer;font-size:12px;">🗑️ حذف</button>';
+        }
+        html += '</div>';
+        
+        // المحتوى
+        html += '<h3 style="margin-bottom:10px;color:#212121;">' + (p.title || '') + '</h3>';
+        html += '<div style="line-height:1.7;color:#424242;white-space:pre-wrap;margin-bottom:12px;">' + (p.content || '') + '</div>';
+        
+        // الوسائط
+        if(p.image_url) html += '<img src="' + p.image_url + '" style="width:100%;border-radius:12px;margin-bottom:12px;">';
+        if(p.video_url) html += '<video controls src="' + p.video_url + '" style="width:100%;border-radius:12px;margin-bottom:12px;"></video>';
+        
+        // التاريخ
+        html += '<div style="font-size:11px;color:#999;margin-bottom:12px;">📅 ' + new Date(p.created_at).toLocaleString('ar-EG') + '</div>';
+        
+        // التعليقات
+        html += '<div style="border-top:1px solid #eee;padding-top:12px;" id="comments-' + doc.id + '">';
+        html += '<div style="font-weight:bold;font-size:13px;color:#666;margin-bottom:8px;">💬 التعليقات</div>';
+        html += '<div id="commentsList-' + doc.id + '"></div>';
+        html += '<div style="display:flex;gap:6px;margin-top:8px;">';
+        html += '<input type="text" id="commentInput-' + doc.id + '" placeholder="اكتب تعليق..." style="flex:1;padding:10px;border:2px solid #eee;border-radius:10px;font-family:inherit;font-size:13px;outline:none;">';
+        html += '<button onclick="addComment(\'' + doc.id + '\')" style="background:#1976D2;color:#fff;border:none;padding:10px 16px;border-radius:10px;font-weight:bold;cursor:pointer;">📤</button>';
+        html += '</div></div>';
+        
+        html += '</div>';
+        
+        // تحميل التعليقات بعد ما الصفحة تترسم
+        setTimeout(function(){ loadComments(doc.id); }, 100);
+      });
+      c.innerHTML = html;
+    } catch(e){ console.error(e); c.innerHTML = '<p style="text-align:center;color:#E53935;">⚠️ فشل التحميل</p>'; }
+  };
+
+  // ═══ تحميل التعليقات ═══
+  window.loadComments = async function(postId){
+    try {
+      var fs = firebase.firestore();
+      var snap = await fs.collection('posts').doc(postId).collection('comments').orderBy('created_at','asc').get();
+      var l = document.getElementById('commentsList-' + postId);
+      if(!l) return;
+      if(snap.empty){ l.innerHTML = '<p style="font-size:12px;color:#999;">لا توجد تعليقات</p>'; return; }
+      
+      var html = '';
+      snap.forEach(function(doc){
+        var cm = doc.data();
+        html += '<div style="background:#F5F5F5;border-radius:10px;padding:8px 12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:flex-start;">';
+        html += '<div><b style="color:#2E7D32;font-size:12px;">' + (cm.author_name || 'مستخدم') + ':</b> <span style="font-size:13px;">' + cm.text + '</span></div>';
+        if(window.currentRole === 'owner'){
+          html += '<button onclick="deleteComment(\'' + postId + '\',\'' + doc.id + '\')" style="background:none;border:none;color:#E53935;cursor:pointer;font-size:14px;">✕</button>';
+        }
+        html += '</div>';
+      });
+      l.innerHTML = html;
+    } catch(e){ console.error(e); }
+  };
+
+  // ═══ إضافة تعليق ═══
+  window.addComment = async function(postId){
+    var inp = document.getElementById('commentInput-' + postId);
+    if(!inp || !inp.value.trim() || !window.currentUser) return;
+    try {
+      await firebase.firestore().collection('posts').doc(postId).collection('comments').add({
+        text: inp.value.trim(),
+        author_id: window.currentUser.uid,
+        author_name: window.currentUser.name,
+        created_at: new Date().toISOString()
+      });
+      inp.value = '';
+      window.loadComments(postId);
+      if(typeof showToast === 'function') showToast('✅ تم التعليق');
+    } catch(e){ console.error(e); }
+  };
+
+  // ═══ حذف تعليق ═══
+  window.deleteComment = async function(postId, commentId){
+    if(window.currentRole !== 'owner') return;
+    if(!confirm('حذف التعليق؟')) return;
+    try {
+      await firebase.firestore().collection('posts').doc(postId).collection('comments').doc(commentId).delete();
+      window.loadComments(postId);
+    } catch(e){ console.error(e); }
+  };
+
+  // ═══ حذف منشور ═══
+  window.deleteNews = async function(postId){
+    if(window.currentRole !== 'owner') return;
+    if(!confirm('حذف المنشور وكل التعليقات؟')) return;
+    try {
+      var fs = firebase.firestore();
+      var cmts = await fs.collection('posts').doc(postId).collection('comments').get();
+      var batch = fs.batch();
+      cmts.forEach(function(d){ batch.delete(d.ref); });
+      await batch.commit();
+      await fs.collection('posts').doc(postId).delete();
+      window.openNews();
+      if(typeof showToast === 'function') showToast('🗑️ تم الحذف');
+    } catch(e){ console.error(e); }
+  };
+
+  // ═══ فتح إضافة منشور ═══
+  window.openAddNews = function(){
+    if(window.currentRole !== 'owner' && window.currentRole !== 'teacher') return;
+    if(window.screenHistory) window.screenHistory.push(window.currentScreen);
+    if(typeof showScreen === 'function') showScreen('addNewsScreen');
+  };
+
+  // ═══ نشر منشور ═══
+  window.publishNews = async function(){
+    var t = document.getElementById('newsTitle').value.trim();
+    var c = document.getElementById('newsText').value.trim();
+    var img = document.getElementById('newsImage').files[0];
+    var vid = document.getElementById('newsVideo').files[0];
+    var btn = document.getElementById('publishNewsBtn');
+    
+    if(!t || !c){ if(typeof showToast === 'function') showToast('⚠️ أدخل العنوان والمحتوى'); return; }
+    if(btn){ btn.disabled = true; btn.textContent = '⏳ جاري النشر...'; }
+    
+    try {
+      var imgUrl = null, vidUrl = null;
+      if(img) imgUrl = await window.uploadFile(img, 'posts/images');
+      if(vid) vidUrl = await window.uploadFile(vid, 'posts/videos');
+      
+      await firebase.firestore().collection('posts').add({
+        title: t, content: c,
+        image_url: imgUrl, video_url: vidUrl,
+        author_id: window.currentUser.uid,
+        author_name: window.currentUser.name,
+        created_at: new Date().toISOString()
+      });
+      
+      if(typeof showToast === 'function') showToast('✅ تم النشر');
+      document.getElementById('newsTitle').value = '';
+      document.getElementById('newsText').value = '';
+      if(btn){ btn.disabled = false; btn.textContent = '📤 نشر'; }
+      window.openNews();
+    } catch(e){
+      console.error(e);
+      if(btn){ btn.disabled = false; btn.textContent = '📤 نشر'; }
+      if(typeof showToast === 'function') showToast('❌ فشل النشر');
+    }
+  };
+
+  // ═══ إضافة الأزرار للصفحة الرئيسية ═══
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      var home = document.getElementById('homeScreen');
+      if(!home) return;
+      var content = home.querySelector('.content');
+      if(!content) return;
+      
+      // زرار الأخبار
+      if(!document.getElementById('newsBtn')){
+        var nb = document.createElement('div');
+        nb.id = 'newsBtn';
+        nb.style.cssText = 'margin:20px 16px;padding:18px;background:linear-gradient(135deg,#C2185B,#E91E63);color:#fff;border-radius:16px;text-align:center;cursor:pointer;font-weight:bold;';
+        nb.innerHTML = '<div style="font-size:28px;">📰</div><div style="margin-top:8px;font-size:15px;">الأخبار والمقالات</div>';
+        nb.onclick = function(){ window.openNews(); };
+        content.insertBefore(nb, content.firstChild);
+      }
+    }, 5000);
+  });
+
+  console.log('✅ Full News System loaded');
+})();
 console.log('✅ extras.js loaded');
   
 })();
