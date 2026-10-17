@@ -1884,6 +1884,81 @@ console.log('✅ Exercises UI loaded');
   
   console.log('✅ Interactive lessons UI loaded');
 })();
+// ═══════════════════════════════════════════════════════
+// 🎨 تنسيق الصفحة الرئيسية (شبكة أدوات موحدة واحترافية)
+// ═══════════════════════════════════════════════════════
+
+(function(){
+  // 1. إضافة التنسيقات (CSS)
+  var style = document.createElement('style');
+  style.textContent = 
+    // ترتيب الصفحة
+    '#homeScreen .content { display: flex; flex-direction: column; gap: 16px; padding: 16px; padding-bottom: 100px; }' +
+    
+    // الإعلانات والبحث في الأول
+    '#mainAd { order: -2; margin: 0 !important; border-radius: 16px; }' +
+    '#homeScreen .search-box { order: -1; margin: 0 !important; }' +
+    
+    // إخفاء الأزرار القديمة الكبيرة (اللي كنا ضفناها قبل كده)
+    '#newsBtn, #pomoBtn, #multBtn, #broadcastBtn, #exerciseBtn, #installAppBtn, #offlineBtn, #quickMenu { display: none !important; }' +
+    
+    // تصميم شبكة الأدوات السريعة (الأزرار هتبقى صغيرة ومربعة)
+    '.tools-grid { display: grid !important; grid-template-columns: repeat(4, 1fr) !important; gap: 10px !important; margin-top: 10px; margin-bottom: 10px; }' +
+    
+    // تصميم الزرار الواحد
+    '.tool-btn { padding: 12px 4px !important; border-radius: 14px !important; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.06); border: 2px solid transparent; transition: all 0.2s; }' +
+    '.tool-btn:active { transform: scale(0.95); border-color: #2E7D32; }' +
+    
+    // الأيقونة
+    '.tool-icon { width: 42px !important; height: 42px !important; font-size: 22px !important; margin-bottom: 6px !important; border-radius: 12px; display: flex; align-items: center; justify-content: center; }' +
+    
+    // النص تحت الأيقونة
+    '.tool-label { font-size: 11px !important; font-weight: bold; color: #424242; }';
+  document.head.appendChild(style);
+
+  // 2. دمج الأزرار الجديدة جوه "الأدوات السريعة"
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      var toolsGrid = document.querySelector('#homeScreen .tools-grid');
+      if(!toolsGrid || document.getElementById('extraToolsAdded')) return;
+      
+      // الأزرار اللي عايزين ننقلها
+      var extraButtons = [
+        {id: 'newsBtn', icon: '📰', label: 'الأخبار', bg: '#C2185B', action: function(){ window.openNews(); }},
+        {id: 'pomoBtn', icon: '⏱️', label: 'المؤقت', bg: '#1976D2', action: function(){ window.openPomodoro(); }},
+        {id: 'multBtn', icon: '🔢', label: 'الضرب', bg: '#FF6B6B', action: function(){ window.openMultiplication(); }},
+        {id: 'broadcastBtn', icon: '🔴', label: 'البث', bg: '#D32F2F', action: function(){ window.openBroadcast(); }},
+        {id: 'exerciseBtn', icon: '🎯', label: 'التدريبات', bg: '#00897B', action: function(){ window.openExercises(); }},
+        {id: 'quickMenu', icon: '⚡', label: 'قائمة', bg: '#F9A825', action: function(){ 
+            var choice = prompt('⚡ اختر:\n\n1. مؤقت الدراسة\n2. الأخبار والمقالات\n3. نقاطي\n4. المفضلة\n5. ملاحظاتي\n6. تسجيل الخروج');
+            if(choice === '1') window.openPomodoro();
+            else if(choice === '2') window.openNews();
+            else if(choice === '3') window.showMyPoints();
+            else if(choice === '4') window.openFavorites();
+            else if(choice === '5') window.openNotes();
+            else if(choice === '6' && typeof logout === 'function') logout();
+        }}
+      ];
+
+      // إضافة الأزرار للشبكة
+      extraButtons.forEach(function(btnInfo){
+        var newBtn = document.createElement('div');
+        newBtn.className = 'tool-btn';
+        newBtn.innerHTML = '<div class="tool-icon" style="background:' + btnInfo.bg + '15;color:' + btnInfo.bg + ';">' + btnInfo.icon + '</div><div class="tool-label">' + btnInfo.label + '</div>';
+        newBtn.onclick = btnInfo.action;
+        toolsGrid.appendChild(newBtn);
+      });
+      
+      // علامة إننا ضفنا الأزرار
+      var marker = document.createElement('div');
+      marker.id = 'extraToolsAdded';
+      marker.style.display = 'none';
+      document.body.appendChild(marker);
+      
+      console.log('✅ Homepage unified grid loaded');
+    }, 4000);
+  });
+})();
 console.log('✅ extras.js loaded');
   
 })();
