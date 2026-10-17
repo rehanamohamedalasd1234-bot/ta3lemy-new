@@ -360,4 +360,54 @@ window.addEventListener('load', function(){
     window.addEventListener('resize', resizeCanvas);
   });
 });  
+// ═══════════════════════════════════════════════════════
+// 5. 🎨 توسيع مساحة اللوحة لتاخد الشاشة كلها
+// ═══════════════════════════════════════════════════════
+window.addEventListener('load', function(){
+  var style = document.createElement('style');
+  style.textContent = 
+    '#drawingScreen .content {' +
+    '  height: calc(100vh - 60px) !important;' +
+    '  display: flex !important;' +
+    '  flex-direction: column !important;' +
+    '  padding: 0 !important;' +
+    '  overflow: hidden !important;' +
+    '}' +
+    // الشريط اللي فيه الألوان والتراجع
+    '#drawingScreen .content > div:nth-child(1),' +
+    '#drawingScreen .content > div:nth-child(2) {' +
+    '  flex-shrink: 0 !important;' +
+    '  border-radius: 0 !important;' +
+    '}' +
+    // صندوق الرسم نفسه
+    '#drawingScreen .content > div:last-child {' +
+    '  flex: 1 !important;' +
+    '  height: 100% !important;' +
+    '  min-height: 400px !important;' +
+    '  border: none !important;' +
+    '  margin: 0 !important;' +
+    '}' +
+    '#fullDrawingCanvas {' +
+    '  width: 100% !important;' +
+    '  height: 100% !important;' +
+    '  display: block !important;' +
+    '}';
+  document.head.appendChild(style);
+
+  // إعادة ضبط أبعاد الكانفاس عشان يتمدد
+  window.addEventListener('resize', function() {
+    var c = document.getElementById('fullDrawingCanvas');
+    if(c) {
+      var r = c.getBoundingClientRect();
+      // الحفاظ على الرسمة الحالية لو فيه
+      var data = c.toDataURL();
+      c.width = r.width;
+      c.height = r.height;
+      var ctx = c.getContext('2d');
+      var img = new Image();
+      img.onload = function() { ctx.drawImage(img, 0, 0, r.width, r.height); };
+      img.src = data;
+    }
+  });
+});
 })();
