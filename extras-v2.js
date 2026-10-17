@@ -295,4 +295,69 @@ window.addEventListener('load', function(){
     });
   }
 });
+// ═══════════════════════════════════════════════════════
+// 4. 🎨 إصلاح مساحة الرسم والألوان على الموبايل
+// ═══════════════════════════════════════════════════════
+window.addEventListener('load', function(){
+  // نضيف ستايل خاص بشاشة الرسم
+  var style = document.createElement('style');
+  style.textContent = 
+    // تثبيت الأدوات فوق
+    '#drawingScreen .content > div:nth-child(1), #drawingScreen .content > div:nth-child(2) {' +
+    '  flex-shrink: 0;' +
+    '}' +
+    // تصغير شريط الأدوات العلوي (التراجع، الحفظ، إلخ)
+    '#drawingScreen .content > div:nth-child(1) {' +
+    '  padding: 4px 8px !important;' +
+    '}' +
+    // تصغير شريط الألوان والفرش
+    '#drawingScreen .content > div:nth-child(2) {' +
+    '  padding: 6px 8px !important;' +
+    '  gap: 4px !important;' +
+    '}' +
+    // تصغير زراير الألوان عشان تبان كلها
+    '#drawingScreen .content > div:nth-child(2) button {' +
+    '  width: 30px !important;' +
+    '  height: 30px !important;' +
+    '}' +
+    // إخفاء زرار المشاركة القديم لو لسه موجود
+    '#drawingScreen button[onclick*="drawingShare"] {' +
+    '  display: none !important;' +
+    '}' +
+    // تصغير زرار "إرسال للمالك" عشان ميبقاش كبير
+    '#sendToOwnerBtn {' +
+    '  padding: 6px 10px !important;' +
+    '  font-size: 12px !important;' +
+    '}' +
+    // توسيع مساحة الرسم
+    '#fullDrawingCanvas {' +
+    '  touch-action: none !important;' +
+    '}';
+  document.head.appendChild(style);
+
+  // إصلاح مشكلة الفرشة مش بترسم على الموبايل
+  window.addEventListener('DOMContentLoaded', function(){
+    var canvas = document.getElementById('fullDrawingCanvas');
+    if(!canvas) return;
+    
+    // دالة لضبط أبعاد الكانفاس عشان تتناسب مع الشاشة
+    function resizeCanvas() {
+      if(!canvas) return;
+      var rect = canvas.getBoundingClientRect();
+      // تخزين الصورة الحالية عشان منمسحهاش
+      var imgData = canvas.toDataURL();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+      var ctx = canvas.getContext('2d');
+      var img = new Image();
+      img.onload = function() {
+        ctx.drawImage(img, 0, 0, rect.width, rect.height);
+      };
+      img.src = imgData;
+    }
+
+    // في حالة تغيير حجم الشاشة أو تدوير الموبايل
+    window.addEventListener('resize', resizeCanvas);
+  });
+});  
 })();
