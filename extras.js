@@ -2271,6 +2271,84 @@ console.log('✅ Exercises UI loaded');
 
   console.log('✅ Offline Button Restored');
 })();
+// ═══════════════════════════════════════════════════════
+// 😊 الإيموشن والإعجابات (للتعليقات والدردشة)
+// ═══════════════════════════════════════════════════════
+
+(function(){
+  
+  // دالة لإظهار قائمة الإيموشن
+  window.showEmojiPicker = function(inputId){
+    var emojis = ['😊','😂','❤️','👍','🔥','✨','🎉','😍','🙏','😎','😢','😡','👏','💯','🌟','🥰'];
+    var picker = document.getElementById('emojiPicker');
+    if(picker) picker.remove();
+    
+    picker = document.createElement('div');
+    picker.id = 'emojiPicker';
+    picker.style.cssText = 'position:absolute;background:#fff;border-radius:14px;padding:8px;box-shadow:0 4px 20px rgba(0,0,0,.2);display:grid;grid-template-columns:repeat(4,1fr);gap:6px;z-index:9999;';
+    
+    var inp = document.getElementById(inputId);
+    if(!inp) return;
+    var rect = inp.getBoundingClientRect();
+    picker.style.top = (rect.top - 180) + 'px';
+    picker.style.left = rect.left + 'px';
+    
+    emojis.forEach(function(emo){
+      var b = document.createElement('button');
+      b.textContent = emo;
+      b.style.cssText = 'font-size:22px;background:none;border:none;cursor:pointer;padding:4px;border-radius:8px;';
+      b.onmouseover = function(){ b.style.background = '#f0f0f0'; };
+      b.onmouseout = function(){ b.style.background = 'none'; };
+      b.onclick = function(){
+        inp.value += emo;
+        picker.remove();
+      };
+      picker.appendChild(b);
+    });
+    
+    document.body.appendChild(picker);
+    
+    // إغلاق عند الضغط في أي مكان تاني
+    setTimeout(function(){
+      document.addEventListener('click', function closePicker(e){
+        if(!picker.contains(e.target) && e.target !== inp){
+          picker.remove();
+          document.removeEventListener('click', closePicker);
+        }
+      });
+    }, 100);
+  };
+
+  // إضافة زرار الإيموشن لصفحة الأخبار
+  window.addEventListener('load', function(){
+    setInterval(function(){
+      // 1. في الأخبار (التعليقات)
+      var newsInputs = document.querySelectorAll('[id^="commentInput-"]');
+      newsInputs.forEach(function(inp){
+        if(inp.parentElement.querySelector('.emoji-btn')) return;
+        var btn = document.createElement('button');
+        btn.className = 'emoji-btn';
+        btn.innerHTML = '😊';
+        btn.style.cssText = 'background:#F0F0F0;border:none;width:40px;height:40px;border-radius:50%;font-size:20px;cursor:pointer;flex-shrink:0;';
+        btn.onclick = function(e){ e.stopPropagation(); window.showEmojiPicker(inp.id); };
+        inp.parentElement.insertBefore(btn, inp.nextSibling);
+      });
+
+      // 2. في الدردشة (زرار الإيموشن القديم)
+      var chatInput = document.getElementById('chatInput');
+      if(chatInput && !document.getElementById('newChatEmojiBtn')){
+        var cBtn = document.createElement('button');
+        cBtn.id = 'newChatEmojiBtn';
+        cBtn.innerHTML = '😊';
+        cBtn.style.cssText = 'background:#F0F0F0;border:none;width:40px;height:40px;border-radius:50%;font-size:20px;cursor:pointer;flex-shrink:0;margin-left:4px;';
+        cBtn.onclick = function(e){ e.stopPropagation(); window.showEmojiPicker('chatInput'); };
+        chatInput.parentElement.insertBefore(cBtn, chatInput.nextSibling);
+      }
+    }, 2000);
+  });
+
+  console.log('✅ Emoji & Reactions System loaded');
+})();
 console.log('✅ extras.js loaded');
   
 })();
