@@ -1959,6 +1959,25 @@ console.log('✅ Exercises UI loaded');
     }, 4000);
   });
 })();
+// ═══ تحديث إجباري للتطبيق عشان يقرأ الكود الجديد ═══
+(function(){
+  var currentVersion = '1.0.2'; // غير الرقم ده كل مرة تعدل
+  var savedVersion = localStorage.getItem('app_version');
+  if(savedVersion !== currentVersion){
+    localStorage.setItem('app_version', currentVersion);
+    if('caches' in window){
+      caches.keys().then(function(names){
+        for(var i = 0; i < names.length; i++){ caches.delete(names[i]); }
+      });
+    }
+    if('serviceWorker' in navigator){
+      navigator.serviceWorker.getRegistrations().then(function(regs){
+        for(var i = 0; i < regs.length; i++){ regs[i].unregister(); }
+      });
+    }
+    setTimeout(function(){ location.reload(true); }, 500);
+  }
+})();
 console.log('✅ extras.js loaded');
   
 })();
