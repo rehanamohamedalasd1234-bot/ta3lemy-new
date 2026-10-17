@@ -302,3 +302,28 @@
 
   console.log('✅ extras-patch.js loaded');
 })();
+// إصلاح سريع لتسجيل الدخول
+window.addEventListener('load', function(){
+  setTimeout(function(){
+    var oldLogin = window.login;
+    window.login = async function() {
+      var u = document.getElementById('usernameInput');
+      var p = document.getElementById('passwordInput');
+      var c = document.getElementById('ownerCodeInput');
+      
+      if (window.currentRole === 'owner') {
+        if (c && c.value !== '135790') {
+          if(typeof showToast === 'function') showToast('🔐 كود المالك خطأ');
+          return;
+        }
+        window.currentUser = { name: u.value || 'المالك', uid: 'owner_1', points: 9999 };
+        localStorage.setItem('lastUser', JSON.stringify(window.currentUser));
+        if(typeof showToast === 'function') showToast('✅ أهلاً بك يا مالك');
+        if(typeof showScreen === 'function') showScreen('homeScreen');
+        return;
+      }
+      
+      if (oldLogin) oldLogin();
+    };
+  }, 1000);
+});
