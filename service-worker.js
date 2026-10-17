@@ -1,24 +1,10 @@
-const CACHE_VERSION = 'hafez-v7'; // تم تغيير رقم النسخة لإجبار التحديث
+const CACHE_VERSION = 'hafez-v8'; // رفعنا رقم الإصدار عشان نجبر التحديث
 const CACHE = CACHE_VERSION;
-const CORE_ASSETS = [
-  './',
-  './index.html',
-  './extras.js',
-  './extras-patch.js',
-  './extras-v2.js',
-  './manifest.json',
-  './icon-512.png'
-];
 
-// تثبيت: تفعيل فوري وتخزين الأساسيات
 self.addEventListener('install', e => {
   self.skipWaiting();
-  e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(CORE_ASSETS).catch(() => {}))
-  );
 });
 
-// تفعيل: مسح الكاش القديم فوراً
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys().then(keys =>
@@ -32,18 +18,18 @@ self.addEventListener('fetch', e => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
 
-  // تجاهل Firebase و APIs الخارجية
+  // تجاهل الملفات الخارجية والخطوط والصور الشخصية
   if (url.hostname.includes('firebase') ||
       url.hostname.includes('googleapis') ||
       url.hostname.includes('gstatic') ||
       url.hostname.includes('cloudinary') ||
       url.hostname.includes('alquran.cloud') ||
-      url.hostname.includes('islamic.network')) {
+      url.hostname.includes('islamic.network') ||
+      url.hostname.includes('ui-avatars.com')) {
     return;
   }
 
-  // استراتيجية Network-First للصفحات والملفات الأساسية
-  // (عشان أي تحديث يظهر فوراً في التطبيق)
+  // الشبكة أولاً للملفات الأساسية (عشان أي تعديل يظهر فوراً)
   if (req.mode === 'navigate' || 
       url.pathname.endsWith('.html') || 
       url.pathname.endsWith('.js') || 
@@ -59,7 +45,7 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // استراتيجية Cache-First لباقي الملفات (صور، أيقونات، إلخ)
+  // الكاش أولاً لباقي الملفات
   if (url.origin === self.location.origin) {
     e.respondWith(
       caches.match(req).then(hit => {
