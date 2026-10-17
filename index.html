@@ -596,5 +596,6 @@ window.addEventListener('load',()=>{setTimeout(()=>showScreen('loginScreen'),250
 if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./service-worker.js').then(reg=>console.log('✅ SW registered')).catch(err=>console.log('❌ SW error:',err));});}
 </script>
 <script src="./extras.js"></script>
+<script src="./extras-patch.js"></script>
 </body>
 </html>
