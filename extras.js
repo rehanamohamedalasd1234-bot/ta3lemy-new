@@ -2572,6 +2572,106 @@ console.log('✅ Exercises UI loaded');
 
   console.log('✅ Live Broadcast System loaded');
 })();
+// ═══════════════════════════════════════════════════════
+// 🎛️ لوحة تحكم المالك للبث + إضافة الأزرار
+// ═══════════════════════════════════════════════════════
+
+(function(){
+  
+  // 1. شاشة مراقبة البث للمالك
+  if(!document.getElementById('adminLiveMonitorScreen')){
+    var m = document.createElement('div');
+    m.id = 'adminLiveMonitorScreen';
+    m.className = 'screen';
+    m.innerHTML = '<div class="top-bar" style="background:linear-gradient(135deg,#B71C1C,#E53935);"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>👁️ مراقبة البث</span></div><button class="icon-btn" onclick="loadAdminMonitor()">🔄</button></div><div class="content" id="adminMonitorContent"></div>';
+    document.body.appendChild(m);
+  }
+
+  // 2. فتح شاشة المراقبة
+  window.openAdminLiveMonitor = async function(){
+    if(window.currentRole !== 'owner') return;
+    if(window.screenHistory) window.screenHistory.push(window.currentScreen);
+    if(typeof showScreen === 'function') showScreen('adminLiveMonitorScreen');
+    window.loadAdminMonitor();
+  };
+
+  // 3. تحميل بيانات المراقبة
+  window.loadAdminMonitor = async function(){
+    var c = document.getElementById('adminMonitorContent');
+    if(!c) return;
+    c.innerHTML = '<p style="text-align:center;color:#999;padding:20px;">⏳ جاري التحديث...</p>';
+    
+    try {
+      var fs = firebase.firestore();
+      var snap = await fs.collection('broadcasts').where('status','==','live').get();
+      
+      if(snap.empty){
+        c.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div><p>لا يوجد بث نشط الآن</p></div>';
+        return;
+      }
+      
+      var html = '';
+      snap.forEach(function(doc){
+        var b = doc.data();
+        html += '<div style="background:#fff;border-radius:14px;padding:16px;margin-bottom:12px;border-right:5px solid #D32F2F;">';
+        html += '<div style="display:flex;justify-content:space-between;margin-bottom:10px;">';
+        html += '<b style="font-size:16px;color:#D32F2F;">🔴 ' + b.title + '</b>';
+        html += '</div>';
+        html += '<div style="font-size:13px;color:#666;margin-bottom:8px;">👤 المعلم: ' + b.teacherName + ' • 📖 ' + b.subject + '</div>';
+        html += '<div style="font-size:13px;color:#666;margin-bottom:16px;">👥 الطلاب المسموح لهم: ' + (b.allowedStudents ? b.allowedStudents.length : 0) + '</div>';
+        
+        html += '<div style="display:flex;gap:8px;">';
+        html += '<button onclick="window.open(\'https://meet.jit.si/' + b.roomId + '\', \'_blank\')" style="flex:1;background:linear-gradient(135deg,#1976D2,#0D47A1);color:#fff;border:none;padding:10px;border-radius:10px;font-weight:bold;cursor:pointer;">👁️ مراقبة</button>';
+        html += '<button onclick="forceStopLive(\'' + doc.id + '\')" style="flex:1;background:#E53935;color:#fff;border:none;padding:10px;border-radius:10px;font-weight:bold;cursor:pointer;">🛑 إيقاف فوري</button>';
+        html += '</div>';
+        html += '</div>';
+      });
+      c.innerHTML = html;
+    } catch(e){ console.error(e); }
+  };
+
+  // 4. إيقاف البث فوراً (للمالك)
+  window.forceStopLive = async function(id){
+    if(window.currentRole !== 'owner') return;
+    if(!confirm('إيقاف البث فوراً؟ (سيتم طرد الجميع)')) return;
+    try {
+      await firebase.firestore().collection('broadcasts').doc(id).update({status: 'ended'});
+      if(typeof showToast === 'function') showToast('🛑 تم الإيقاف');
+      window.loadAdminMonitor();
+    } catch(e){ console.error(e); }
+  };
+
+  // 5. إضافة زرار البث في الأدوات السريعة + زرار المراقبة في لوحة المالك
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      var toolsGrid = document.querySelector('#homeScreen .tools-grid');
+      if(toolsGrid && !document.getElementById('liveBtnGrid')){
+        var btn = document.createElement('div');
+        btn.id = 'liveBtnGrid';
+        btn.className = 'tool-btn';
+        btn.innerHTML = '<div class="tool-icon" style="background:#D32F2F15;color:#D32F2F;font-size:22px;">🔴</div><div class="tool-label">البث</div>';
+        btn.onclick = function(){ window.openLiveSystem(); };
+        toolsGrid.appendChild(btn);
+      }
+      
+      // إضافة زرار المراقبة في شاشة المالك
+      var admin = document.getElementById('adminScreen');
+      if(admin && !document.getElementById('adminMonitorBtn')){
+        var ac = admin.querySelector('.content');
+        if(ac){
+          var mBtn = document.createElement('div');
+          mBtn.id = 'adminMonitorBtn';
+          mBtn.className = 'menu-item';
+          mBtn.innerHTML = '<span style="font-size:26px;">👁️</span><span style="flex:1;font-weight:700;color:#E53935;">مراقبة البث المباشر</span><span style="color:#999;font-size:24px;">‹</span>';
+          mBtn.onclick = function(){ window.openAdminLiveMonitor(); };
+          ac.insertBefore(mBtn, ac.firstChild);
+        }
+      }
+    }, 5000);
+  });
+
+  console.log('✅ Admin Live Monitor loaded');
+})();
 console.log('✅ extras.js loaded');
   
 })();
