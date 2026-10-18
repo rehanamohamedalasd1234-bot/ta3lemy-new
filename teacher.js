@@ -310,3 +310,25 @@
 
   console.log('✅ Teacher Dashboard Loaded');
 })();
+// إضافة زرار لوحة المعلم في الشاشة الرئيسية
+window.addEventListener('load', function(){
+  setInterval(function(){
+    if(window.currentRole === 'teacher' || window.currentRole === 'owner'){
+      var toolsGrid = document.querySelector('#homeScreen .tools-grid');
+      if(toolsGrid && !document.getElementById('teacherDashBtn')){
+        var btn = document.createElement('div');
+        btn.id = 'teacherDashBtn';
+        btn.className = 'tool-btn';
+        btn.innerHTML = '<div class="tool-icon" style="background:#00695C15;color:#00695C;font-size:22px;">🎛️</div><div class="tool-label">لوحة المعلم</div>';
+        btn.onclick = function(){ 
+            if (typeof window.openTeacherDashboard === 'function') {
+                window.openTeacherDashboard(); 
+            } else {
+                if(typeof showToast === 'function') showToast('⚠️ ملف teacher.js مش متحمل');
+            }
+        };
+        toolsGrid.insertBefore(btn, toolsGrid.firstChild);
+      }
+    }
+  }, 3000);
+});
