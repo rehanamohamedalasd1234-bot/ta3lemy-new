@@ -407,6 +407,19 @@ document.body.appendChild(aqeedaScript);
 var seeraScript = document.createElement('script');
 seeraScript.src = './azhar-seera-content.js';
 document.body.appendChild(seeraScript);
-var nahwScript = document.createElement('script');
-nahwScript.src = './azhar-nahw-content.js';
-document.body.appendChild(nahwScript);
+// تشغيل كل ملفات المحتوى
+var contentFiles = [
+  './azhar-fiqh-content.js',
+  './azhar-fiqh-lessons.js',
+  './azhar-hadith-content.js',
+  './azhar-aqeeda-content.js',
+  './azhar-seera-content.js',
+  './azhar-nahw-content.js',
+  './azhar-quran-content.js'
+];
+
+contentFiles.forEach(function(file) {
+  var s = document.createElement('script');
+  s.src = file;
+  document.body.appendChild(s);
+});
