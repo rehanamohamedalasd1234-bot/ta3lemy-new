@@ -2510,6 +2510,156 @@ console.log('✅ Exercises UI loaded');
 
   console.log('✅ Admin Approvals UI loaded');
 })();
+// ═══════════════════════════════════════════════════════
+// 🎛️ الجزء الثالث: شاشة تحكم المعلم (بعد الموافقة)
+// ═══════════════════════════════════════════════════════
+
+(function(){
+  // 1. إنشاء شاشة التحكم للمعلم
+  if(!document.getElementById('teacherControlScreen')){
+    var s = document.createElement('div');
+    s.id = 'teacherControlScreen';
+    s.className = 'screen';
+    s.innerHTML = '<div class="top-bar" style="background:linear-gradient(135deg,#00695C,#00897B);"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>🎛️ لوحة تحكم المعلم</span></div><div style="width:42px;"></div></div><div class="content" id="teacherControlContent"></div>';
+    document.body.appendChild(s);
+  }
+
+  // 2. فتح شاشة التحكم
+  window.openTeacherControl = async function(){
+    if(window.currentRole !== 'teacher') return;
+    if(window.screenHistory) window.screenHistory.push(window.currentScreen);
+    if(typeof showScreen === 'function') showScreen('teacherControlScreen');
+    window.loadTeacherControl();
+  };
+
+  // 3. تحميل حالة الطلبات (هل المالك وافق؟)
+  window.loadTeacherControl = async function(){
+    var c = document.getElementById('teacherControlContent');
+    if(!c) return;
+    c.innerHTML = '<p style="text-align:center;color:#999;padding:20px;">⏳ جاري التحميل...</p>';
+    
+    try {
+      var fs = firebase.firestore();
+      var snap = await fs.collection('teacher_requests')
+        .where('teacherId', '==', window.currentUser.uid)
+        .orderBy('createdAt', 'desc')
+        .get();
+      
+      if(snap.empty){
+        c.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📋</div><p>لم تقم بتقديم أي طلبات بعد</p><p style="font-size:13px;margin-top:8px;">استخدم زرار "تقديم طلب" أولاً</p></div>';
+        return;
+      }
+      
+      var approved = [];
+      var pending = [];
+      var rejected = [];
+      
+      snap.forEach(function(doc){
+        var r = doc.data();
+        if(r.status === 'approved') approved.push(r);
+        else if(r.status === 'pending') pending.push(r);
+        else rejected.push(r);
+      });
+      
+      var html = '';
+      
+      // قسم الموافقات (اللي فيها صلاحيات شغالة)
+      if(approved.length > 0){
+        html += '<div style="margin-bottom:24px;"><div style="font-size:18px;font-weight:bold;color:#2E7D32;margin-bottom:12px;">✅ الطلبات الموافق عليها:</div>';
+        approved.forEach(function(r){
+          var typeLabel = r.type === 'live' ? '🔴 فتح بث' : '📤 رفع محتوى';
+          html += '<div style="background:#E8F5E9;border-radius:12px;padding:14px;margin-bottom:10px;border-right:4px solid #2E7D32;">';
+          html += '<div style="font-weight:bold;color:#2E7D32;margin-bottom:6px;">' + typeLabel + '</div>';
+          html += '<div style="font-size:13px;color:#555;margin-bottom:10px;">' + r.details + '</div>';
+          
+          if(r.type === 'live'){
+            html += '<button onclick="startApprovedLive(\'' + r.details + '\')" style="background:linear-gradient(135deg,#D32F2F,#E53935);color:#fff;border:none;padding:10px 16px;border-radius:8px;font-weight:bold;cursor:pointer;">🎥 بدء البث الآن</button>';
+          } else {
+            html += '<button onclick="openTeacherUpload(\'' + r.details + '\')" style="background:linear-gradient(135deg,#1976D2,#0D47A1);color:#fff;border:none;padding:10px 16px;border-radius:8px;font-weight:bold;cursor:pointer;">📤 رفع المحتوى</button>';
+          }
+          
+          html += '</div>';
+        });
+        html += '</div>';
+      }
+      
+      // قسم الطلبات المعلقة
+      if(pending.length > 0){
+        html += '<div style="margin-bottom:24px;"><div style="font-size:18px;font-weight:bold;color:#F9A825;margin-bottom:12px;">⏳ في انتظار الموافقة:</div>';
+        pending.forEach(function(r){
+          var typeLabel = r.type === 'live' ? '🔴 فتح بث' : '📤 رفع محتوى';
+          html += '<div style="background:#FFF8E1;border-radius:12px;padding:14px;margin-bottom:10px;border-right:4px solid #F9A825;">';
+          html += '<div style="font-weight:bold;color:#F9A825;margin-bottom:6px;">' + typeLabel + '</div>';
+          html += '<div style="font-size:13px;color:#555;">' + r.details + '</div>';
+          html += '<div style="font-size:11px;color:#999;margin-top:8px;">⏰ ' + new Date(r.createdAt).toLocaleString('ar-EG') + '</div>';
+          html += '</div>';
+        });
+        html += '</div>';
+      }
+      
+      // قسم المرفوضات
+      if(rejected.length > 0){
+        html += '<div><div style="font-size:18px;font-weight:bold;color:#E53935;margin-bottom:12px;">❌ الطلبات المرفوضة:</div>';
+        rejected.forEach(function(r){
+          var typeLabel = r.type === 'live' ? '🔴 فتح بث' : '📤 رفع محتوى';
+          html += '<div style="background:#FFEBEE;border-radius:12px;padding:14px;margin-bottom:10px;border-right:4px solid #E53935;">';
+          html += '<div style="font-weight:bold;color:#E53935;margin-bottom:6px;">' + typeLabel + '</div>';
+          html += '<div style="font-size:13px;color:#555;">' + r.details + '</div>';
+          html += '</div>';
+        });
+        html += '</div>';
+      }
+      
+      c.innerHTML = html;
+    } catch(e){ console.error(e); c.innerHTML = '<p style="text-align:center;color:#E53935;">⚠️ فشل التحميل</p>'; }
+  };
+
+  // 4. بدء البث بعد الموافقة
+  window.startApprovedLive = function(details){
+    if(!details){ if(typeof showToast === 'function') showToast('⚠️ لا توجد تفاصيل'); return; }
+    // نفتح غرفة Jitsi
+    var roomId = 'hafez-' + Date.now().toString(36);
+    firebase.firestore().collection('broadcasts').add({
+      title: 'بث مباشر - ' + window.currentUser.name,
+      teacherId: window.currentUser.uid,
+      teacherName: window.currentUser.name,
+      roomId: roomId,
+      status: 'live',
+      details: details,
+      createdAt: new Date().toISOString()
+    }).then(function(){
+      window.open('https://meet.jit.si/' + roomId, '_blank');
+      if(typeof showToast === 'function') showToast('🎥 تم فتح الغرفة');
+      if(typeof goBack === 'function') goBack();
+    }).catch(function(e){ console.error(e); });
+  };
+
+  // 5. فتح شاشة رفع المحتوى (بعد الموافقة)
+  window.openTeacherUpload = function(details){
+    // نضيف شاشة بسيطة للرفع (مبدئياً)
+    if(typeof showToast === 'function') showToast('📤 جاري فتح شاشة الرفع...');
+    // ممكن هنا نعمل شاشة رفع كاملة (زي رفع الدروس العادي)
+    alert('صلاحية الرفع مفعلة: ' + details + '\n\n(هيتم إضافة شاشة الرفع الكاملة في التحديث القادم)');
+  };
+
+  // 6. إضافة زرار "لوحة التحكم" في الأدوات السريعة للمعلم
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      if(window.currentRole !== 'teacher') return;
+      var toolsGrid = document.querySelector('#homeScreen .tools-grid');
+      if(toolsGrid && !document.getElementById('teacherControlBtn')){
+        var btn = document.createElement('div');
+        btn.id = 'teacherControlBtn';
+        btn.className = 'tool-btn';
+        btn.innerHTML = '<div class="tool-icon" style="background:#00695C15;color:#00695C;font-size:22px;">🎛️</div><div class="tool-label">لوحة التحكم</div>';
+        btn.onclick = function(){ window.openTeacherControl(); };
+        toolsGrid.appendChild(btn);
+      }
+    }, 7000);
+  });
+
+  console.log('✅ Teacher Control Panel loaded');
+})();
 console.log('✅ extras.js loaded');
   
 })();
