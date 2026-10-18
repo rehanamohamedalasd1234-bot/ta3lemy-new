@@ -401,3 +401,6 @@ window.addEventListener('load', function() {
     }
   }, 3000);
 });
+var aqeedaScript = document.createElement('script');
+aqeedaScript.src = './azhar-aqeeda-content.js';
+document.body.appendChild(aqeedaScript);
