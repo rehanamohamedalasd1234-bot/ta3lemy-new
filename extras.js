@@ -2416,6 +2416,100 @@ console.log('✅ Exercises UI loaded');
 
   console.log('✅ Teacher Request UI loaded');
 })();
+// ═══════════════════════════════════════════════════════
+// 👑 الجزء الثاني: شاشة موافقات المالك (للطلبات)
+// ═══════════════════════════════════════════════════════
+
+(function(){
+  // 1. إنشاء شاشة الموافقات
+  if(!document.getElementById('adminApprovalsScreen')){
+    var s = document.createElement('div');
+    s.id = 'adminApprovalsScreen';
+    s.className = 'screen';
+    s.innerHTML = '<div class="top-bar" style="background:linear-gradient(135deg,#B71C1C,#E53935);"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>👑 موافقات المعلمين</span></div><button class="icon-btn" onclick="loadAdminApprovals()">🔄</button></div><div class="content" id="approvalsListContent"></div>';
+    document.body.appendChild(s);
+  }
+
+  // 2. فتح الشاشة (للمالك فقط)
+  window.openAdminApprovals = function(){
+    if(window.currentRole !== 'owner') { if(typeof showToast === 'function') showToast('⚠️ للمالك فقط'); return; }
+    if(window.screenHistory) window.screenHistory.push(window.currentScreen);
+    if(typeof showScreen === 'function') showScreen('adminApprovalsScreen');
+    window.loadAdminApprovals();
+  };
+
+  // 3. تحميل الطلبات من Firebase
+  window.loadAdminApprovals = async function(){
+    var c = document.getElementById('approvalsListContent');
+    if(!c) return;
+    c.innerHTML = '<p style="text-align:center;color:#999;padding:20px;">⏳ جاري التحميل...</p>';
+    
+    try {
+      var snap = await firebase.firestore().collection('teacher_requests').where('status','==','pending').orderBy('createdAt','desc').get();
+      if(snap.empty){ c.innerHTML = '<div class="empty-state"><div class="empty-state-icon">✅</div><p>لا توجد طلبات معلقة</p></div>'; return; }
+      
+      var html = '';
+      snap.forEach(function(doc){
+        var r = doc.data();
+        var typeLabel = r.type === 'live' ? '🔴 فتح بث' : '📤 رفع محتوى';
+        html += '<div style="background:#fff;border-radius:14px;padding:16px;margin-bottom:12px;box-shadow:0 2px 10px rgba(0,0,0,.06);">';
+        html += '<div style="display:flex;justify-content:space-between;margin-bottom:8px;">';
+        html += '<b style="color:#1976D2;">' + typeLabel + '</b>';
+        html += '<span style="font-size:12px;color:#999;">' + new Date(r.createdAt).toLocaleString('ar-EG') + '</span>';
+        html += '</div>';
+        html += '<div style="font-size:14px;color:#424242;margin-bottom:8px;">👤 المعلم: <b>' + r.teacherName + '</b></div>';
+        html += '<div style="background:#F5F5F5;padding:10px;border-radius:8px;font-size:13px;margin-bottom:12px;">' + r.details + '</div>';
+        html += '<div style="display:flex;gap:8px;">';
+        html += '<button onclick="approveRequest(\'' + doc.id + '\')" style="flex:1;background:#2E7D32;color:#fff;border:none;padding:10px;border-radius:8px;font-weight:bold;cursor:pointer;">✅ موافقة</button>';
+        html += '<button onclick="rejectRequest(\'' + doc.id + '\')" style="flex:1;background:#E53935;color:#fff;border:none;padding:10px;border-radius:8px;font-weight:bold;cursor:pointer;">❌ رفض</button>';
+        html += '</div></div>';
+      });
+      c.innerHTML = html;
+    } catch(e){ console.error(e); c.innerHTML = '<p style="text-align:center;color:#E53935;">⚠️ فشل التحميل</p>'; }
+  };
+
+  // 4. الموافقة على الطلب
+  window.approveRequest = async function(id){
+    if(window.currentRole !== 'owner') return;
+    try {
+      await firebase.firestore().collection('teacher_requests').doc(id).update({ status: 'approved', approvedAt: new Date().toISOString() });
+      if(typeof showToast === 'function') showToast('✅ تمت الموافقة');
+      window.loadAdminApprovals();
+    } catch(e){ console.error(e); }
+  };
+
+  // 5. رفض الطلب
+  window.rejectRequest = async function(id){
+    if(window.currentRole !== 'owner') return;
+    if(!confirm('رفض الطلب؟')) return;
+    try {
+      await firebase.firestore().collection('teacher_requests').doc(id).update({ status: 'rejected' });
+      if(typeof showToast === 'function') showToast('❌ تم الرفض');
+      window.loadAdminApprovals();
+    } catch(e){ console.error(e); }
+  };
+
+  // 6. إضافة زرار "موافقات المعلمين" في شاشة المالك
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      if(window.currentRole !== 'owner') return;
+      var admin = document.getElementById('adminScreen');
+      if(admin && !document.getElementById('adminApprovalsBtn')){
+        var ac = admin.querySelector('.content');
+        if(ac){
+          var btn = document.createElement('div');
+          btn.id = 'adminApprovalsBtn';
+          btn.className = 'menu-item';
+          btn.innerHTML = '<span style="font-size:26px;">📋</span><span style="flex:1;font-weight:700;color:#1976D2;">موافقات المعلمين (طلبات)</span><span style="color:#999;font-size:24px;">‹</span>';
+          btn.onclick = function(){ window.openAdminApprovals(); };
+          ac.insertBefore(btn, ac.firstChild);
+        }
+      }
+    }, 6000);
+  });
+
+  console.log('✅ Admin Approvals UI loaded');
+})();
 console.log('✅ extras.js loaded');
   
 })();
