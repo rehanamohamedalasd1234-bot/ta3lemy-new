@@ -2723,6 +2723,91 @@ console.log('✅ Exercises UI loaded');
 
   console.log('✅ Quick Menu Removed');
 })();
+// ═══════════════════════════════════════════════════════
+// 📤 نظام رفع المحتوى للمعلم (دروس، تدريبات، امتحانات)
+// ═══════════════════════════════════════════════════════
+
+(function(){
+  // 1. إنشاء شاشة رفع المحتوى
+  if(!document.getElementById('teacherUploadScreen')){
+    var s = document.createElement('div');
+    s.id = 'teacherUploadScreen';
+    s.className = 'screen';
+    s.innerHTML = '<div class="top-bar" style="background:linear-gradient(135deg,#1976D2,#0D47A1);"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>📤 رفع محتوى</span></div><div style="width:42px;"></div></div><div class="content"><div class="form-group"><label class="form-label">نوع المحتوى</label><select class="form-input" id="upType"><option value="lesson">درس</option><option value="exercise">تدريب</option><option value="exam">امتحان</option><option value="video">فيديو</option></select></div><div class="form-group"><label class="form-label">المرحلة</label><select class="form-input" id="upStage"><option value="primary">ابتدائي</option><option value="prep">إعدادي</option><option value="sec">ثانوي</option><option value="bakkalorya">بكالوريا</option></select></div><div class="form-group"><label class="form-label">الصف</label><input type="text" class="form-input" id="upGrade" placeholder="مثال: الأول"></div><div class="form-group"><label class="form-label">المادة</label><input type="text" class="form-input" id="upSubject" placeholder="مثال: رياضيات"></div><div class="form-group"><label class="form-label">العنوان</label><input type="text" class="form-input" id="upTitle" placeholder="عنوان المحتوى"></div><div class="form-group"><label class="form-label">المحتوى (نص)</label><textarea class="form-input" id="upContent" rows="5"></textarea></div><div class="form-group"><label class="form-label">📷 صورة (اختياري)</label><input type="file" class="form-input" id="upImage" accept="image/*" style="padding:10px;"></div><div class="form-group"><label class="form-label">🎥 فيديو (اختياري)</label><input type="file" class="form-input" id="upVideo" accept="video/*" style="padding:10px;"></div><button class="btn-primary" id="upSubmitBtn" onclick="submitTeacherUpload()" style="background:linear-gradient(135deg,#1976D2,#0D47A1);">📤 رفع المحتوى</button></div>';
+    document.body.appendChild(s);
+  }
+
+  // 2. فتح الشاشة
+  window.openTeacherUpload = function(){
+    if(window.currentRole !== 'teacher') { if(typeof showToast === 'function') showToast('⚠️ للمعلمين فقط'); return; }
+    if(window.screenHistory) window.screenHistory.push(window.currentScreen);
+    if(typeof showScreen === 'function') showScreen('teacherUploadScreen');
+  };
+
+  // 3. إرسال المحتوى
+  window.submitTeacherUpload = async function(){
+    var type = document.getElementById('upType').value;
+    var stage = document.getElementById('upStage').value;
+    var grade = document.getElementById('upGrade').value.trim();
+    var subject = document.getElementById('upSubject').value.trim();
+    var title = document.getElementById('upTitle').value.trim();
+    var content = document.getElementById('upContent').value.trim();
+    var img = document.getElementById('upImage').files[0];
+    var vid = document.getElementById('upVideo').files[0];
+    var btn = document.getElementById('upSubmitBtn');
+    
+    if(!title || !content){ if(typeof showToast === 'function') showToast('⚠️ أدخل العنوان والمحتوى'); return; }
+    if(btn){ btn.disabled = true; btn.textContent = '⏳ جاري الرفع...'; }
+    
+    try {
+      var imgUrl = null, vidUrl = null;
+      if(img) imgUrl = await window.uploadFile(img, 'teacher_content');
+      if(vid) vidUrl = await window.uploadFile(vid, 'teacher_content');
+      
+      await firebase.firestore().collection('teacher_uploads').add({
+        teacherId: window.currentUser.uid,
+        teacherName: window.currentUser.name, // اسم المعلم يظهر
+        type: type,
+        stage: stage,
+        grade: grade,
+        subject: subject,
+        title: title,
+        content: content,
+        image_url: imgUrl,
+        video_url: vidUrl,
+        createdAt: new Date().toISOString()
+      });
+      
+      if(typeof showToast === 'function') showToast('✅ تم رفع المحتوى');
+      document.getElementById('upTitle').value = '';
+      document.getElementById('upContent').value = '';
+      if(btn){ btn.disabled = false; btn.textContent = '📤 رفع المحتوى'; }
+      if(typeof goBack === 'function') goBack();
+    } catch(e){
+      console.error(e);
+      if(typeof showToast === 'function') showToast('❌ فشل الرفع');
+      if(btn){ btn.disabled = false; btn.textContent = '📤 رفع المحتوى'; }
+    }
+  };
+
+  // 4. إضافة زرار "رفع محتوى" للمعلم في الأدوات السريعة
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      if(window.currentRole !== 'teacher') return;
+      var toolsGrid = document.querySelector('#homeScreen .tools-grid');
+      if(toolsGrid && !document.getElementById('uploadBtn')){
+        var btn = document.createElement('div');
+        btn.id = 'uploadBtn';
+        btn.className = 'tool-btn';
+        btn.innerHTML = '<div class="tool-icon" style="background:#1976D215;color:#1976D2;font-size:22px;">📤</div><div class="tool-label">رفع محتوى</div>';
+        btn.onclick = function(){ window.openTeacherUpload(); };
+        toolsGrid.appendChild(btn);
+      }
+    }, 6000);
+  });
+
+  console.log('✅ Teacher Upload System loaded');
+})();
 console.log('✅ extras.js loaded');
   
 })();
