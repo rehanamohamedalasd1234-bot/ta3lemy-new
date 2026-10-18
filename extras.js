@@ -2808,6 +2808,89 @@ console.log('✅ Exercises UI loaded');
 
   console.log('✅ Teacher Upload System loaded');
 })();
+// ═══════════════════════════════════════════════════════
+// 👑 إدارة محتوى المعلمين (للمالك فقط)
+// ═══════════════════════════════════════════════════════
+
+(function(){
+  // 1. إنشاء شاشة إدارة المحتوى
+  if(!document.getElementById('adminContentScreen')){
+    var s = document.createElement('div');
+    s.id = 'adminContentScreen';
+    s.className = 'screen';
+    s.innerHTML = '<div class="top-bar" style="background:linear-gradient(135deg,#B71C1C,#E53935);"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>👑 إدارة محتوى المعلمين</span></div><button class="icon-btn" onclick="loadAdminContent()">🔄</button></div><div class="content" id="adminContentList"></div>';
+    document.body.appendChild(s);
+  }
+
+  // 2. فتح الشاشة (للمالك فقط)
+  window.openAdminContent = function(){
+    if(window.currentRole !== 'owner') { if(typeof showToast === 'function') showToast('⚠️ للمالك فقط'); return; }
+    if(window.screenHistory) window.screenHistory.push(window.currentScreen);
+    if(typeof showScreen === 'function') showScreen('adminContentScreen');
+    window.loadAdminContent();
+  };
+
+  // 3. تحميل المحتوى
+  window.loadAdminContent = async function(){
+    var c = document.getElementById('adminContentList');
+    if(!c) return;
+    c.innerHTML = '<p style="text-align:center;color:#999;padding:20px;">⏳ جاري التحميل...</p>';
+    
+    try {
+      var snap = await firebase.firestore().collection('teacher_uploads').orderBy('createdAt','desc').get();
+      if(snap.empty){ c.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📂</div><p>لا يوجد محتوى مرفوع بعد</p></div>'; return; }
+      
+      var html = '';
+      snap.forEach(function(doc){
+        var d = doc.data();
+        var typeLabel = d.type === 'lesson' ? '📄 درس' : d.type === 'exercise' ? '✏️ تدريب' : d.type === 'exam' ? '📝 امتحان' : '🎥 فيديو';
+        html += '<div style="background:#fff;border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.06);">';
+        html += '<div style="display:flex;justify-content:space-between;margin-bottom:6px;">';
+        html += '<b style="color:#1976D2;">' + typeLabel + '</b>';
+        html += '<span style="font-size:12px;color:#999;">' + new Date(d.createdAt).toLocaleString('ar-EG') + '</span>';
+        html += '</div>';
+        html += '<div style="font-size:14px;font-weight:bold;margin-bottom:4px;">' + d.title + '</div>';
+        html += '<div style="font-size:12px;color:#666;margin-bottom:8px;">👤 المعلم: ' + d.teacherName + '</div>';
+        html += '<div style="font-size:11px;color:#888;margin-bottom:8px;">📚 ' + d.subject + ' - ' + d.grade + '</div>';
+        html += '<button onclick="deleteAdminContent(\'' + doc.id + '\')" style="background:#E53935;color:#fff;border:none;padding:8px 14px;border-radius:8px;font-weight:bold;cursor:pointer;">🗑️ حذف المحتوى</button>';
+        html += '</div>';
+      });
+      c.innerHTML = html;
+    } catch(e){ console.error(e); c.innerHTML = '<p style="text-align:center;color:#E53935;">⚠️ فشل التحميل</p>'; }
+  };
+
+  // 4. حذف المحتوى
+  window.deleteAdminContent = async function(id){
+    if(window.currentRole !== 'owner') return;
+    if(!confirm('حذف هذا المحتوى نهائياً؟')) return;
+    try {
+      await firebase.firestore().collection('teacher_uploads').doc(id).delete();
+      if(typeof showToast === 'function') showToast('🗑️ تم الحذف');
+      window.loadAdminContent();
+    } catch(e){ console.error(e); }
+  };
+
+  // 5. إضافة زرار "إدارة محتوى المعلمين" في لوحة المالك
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      if(window.currentRole !== 'owner') return;
+      var admin = document.getElementById('adminScreen');
+      if(admin && !document.getElementById('adminContentBtn')){
+        var ac = admin.querySelector('.content');
+        if(ac){
+          var btn = document.createElement('div');
+          btn.id = 'adminContentBtn';
+          btn.className = 'menu-item';
+          btn.innerHTML = '<span style="font-size:26px;">📂</span><span style="flex:1;font-weight:700;color:#1976D2;">إدارة محتوى المعلمين</span><span style="color:#999;font-size:24px;">‹</span>';
+          btn.onclick = function(){ window.openAdminContent(); };
+          ac.insertBefore(btn, ac.firstChild);
+        }
+      }
+    }, 7000);
+  });
+
+  console.log('✅ Admin Content Control loaded');
+})();
 console.log('✅ extras.js loaded');
   
 })();
