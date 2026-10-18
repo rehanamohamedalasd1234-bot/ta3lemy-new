@@ -261,3 +261,81 @@
   });
 
 })();
+// ═══════════════════════════════════════════════════════
+// 🛠️ إصلاح الفرشاة (اللمس والمساحة) للوحة الرسم القديمة
+// ═══════════════════════════════════════════════════════
+
+(function(){
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      var canvas = document.getElementById('fullDrawingCanvas');
+      if(!canvas) return;
+
+      // 1. إصلاح المساحة عشان تاخد حجم الشاشة كامل (ومش بتتحرك)
+      var container = canvas.parentElement;
+      canvas.width = container.clientWidth;
+      canvas.height = container.clientHeight;
+      
+      var ctx = canvas.getContext('2d');
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      
+      var isDrawing = false;
+      var lastX = 0, lastY = 0;
+
+      // 2. دالة دقيقة عشان تجيب مكان الصباع أو الماوس
+      function getCoordinates(e) {
+        var rect = canvas.getBoundingClientRect();
+        var clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        var clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return {
+          x: clientX - rect.left,
+          y: clientY - rect.top
+        };
+      }
+
+      // 3. بدء الرسم
+      function startDraw(e) {
+        e.preventDefault();
+        isDrawing = true;
+        var pos = getCoordinates(e);
+        lastX = pos.x;
+        lastY = pos.y;
+      }
+
+      // 4. الرسم الفعلي
+      function draw(e) {
+        e.preventDefault();
+        if (!isDrawing) return;
+        var pos = getCoordinates(e);
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+        lastX = pos.x;
+        lastY = pos.y;
+      }
+
+      // 5. إيقاف الرسم
+      function stopDraw(e) {
+        if(isDrawing) {
+          isDrawing = false;
+          if(typeof window.saveHistoryState === 'function') window.saveHistoryState();
+        }
+      }
+
+      // 6. ربط الأحداث (اللمس والماوس)
+      // عشان نلغي أي أحداث قديمة متعارضة، بنستخدم "on" بدل addEventListener
+      canvas.onmousedown = startDraw;
+      canvas.onmousemove = draw;
+      canvas.onmouseup = stopDraw;
+      canvas.onmouseout = stopDraw;
+
+      canvas.ontouchstart = startDraw;
+      canvas.ontouchmove = draw;
+      canvas.ontouchend = stopDraw;
+
+      console.log('✅ Brush Fixed with Touch Support');
+    }, 1500);
+  });
+})();
