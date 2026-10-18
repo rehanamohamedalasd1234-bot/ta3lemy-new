@@ -2706,6 +2706,23 @@ console.log('✅ Exercises UI loaded');
 
   console.log('✅ Phone Protection loaded');
 })();
+// ═══════════════════════════════════════════════════════
+// 🧹 إزالة القائمة السريعة
+// ═══════════════════════════════════════════════════════
+
+(function(){
+  // إخفاء القائمة السريعة من كل مكان
+  var qm = document.getElementById('quickMenu');
+  if(qm) qm.remove();
+  
+  // إخفاء أي عنصر بيعملها (في حالة كانت بتتنشأ تاني)
+  setInterval(function(){
+    var q = document.getElementById('quickMenu');
+    if(q) q.remove();
+  }, 3000);
+
+  console.log('✅ Quick Menu Removed');
+})();
 console.log('✅ extras.js loaded');
   
 })();
