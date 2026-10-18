@@ -495,3 +495,69 @@ window.addEventListener('load', function(){
     console.log('✅ Emoji Fixed');
   });
 })();
+// ═══════════════════════════════════════════════════════
+// 🎨 إصلاح ألوان الرسم + 🔊 نطق جدول الضرب بالعربي
+// ═══════════════════════════════════════════════════════
+
+(function(){
+  // 1. إصلاح الرسم والألوان
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      var canvas = document.getElementById('fullDrawingCanvas');
+      if(canvas){
+        var ctx = canvas.getContext('2d');
+        
+        // لما الطالب يختار لون، بنغيره في الـ context
+        var colorInputs = document.querySelectorAll('input[type="color"], [onclick*="#"], [onclick*="drawingSetColor"]');
+        colorInputs.forEach(function(input){
+          input.addEventListener('click', function(e){
+            var color = this.value || this.getAttribute('data-color');
+            if(color) ctx.strokeStyle = color;
+          });
+          input.addEventListener('change', function(e){
+            if(this.value) ctx.strokeStyle = this.value;
+          });
+        });
+
+        // إصلاح زراير الألوان لو كانت أزرار عادية
+        var colorBtns = document.querySelectorAll('button[onclick*="drawingSetColor"], button[style*="background"]');
+        colorBtns.forEach(function(btn){
+          btn.addEventListener('click', function(){
+            var bg = this.style.backgroundColor;
+            if(bg) {
+              // تحويل rgb إلى hex
+              var match = bg.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+              if(match){
+                var hex = "#" + ((1 << 24) + (parseInt(match[1]) << 16) + (parseInt(match[2]) << 8) + parseInt(match[3])).toString(16).slice(1);
+                ctx.strokeStyle = hex;
+              }
+            }
+          });
+        });
+      }
+    }, 2000);
+  });
+
+  // 2. إجبار النطق بالعربي في جدول الضرب
+  var origSpeak = window.speakText;
+  window.speakText = function(text){
+    if(!('speechSynthesis' in window)) return;
+    
+    window.speechSynthesis.cancel();
+    var utterance = new SpeechSynthesisUtterance(text);
+    
+    // نجبر الصوت يكون عربي
+    utterance.lang = 'ar-SA'; // أو ar-EG
+    utterance.rate = 0.8;
+    utterance.pitch = 1.2;
+    
+    // نجيب صوت عربي لو موجود
+    var voices = window.speechSynthesis.getVoices();
+    var arabicVoice = voices.find(function(v){ return v.lang.includes('ar'); });
+    if(arabicVoice) utterance.voice = arabicVoice;
+    
+    window.speechSynthesis.speak(utterance);
+  };
+  
+  console.log('✅ Drawing Colors & Arabic Audio Fixed');
+})();
