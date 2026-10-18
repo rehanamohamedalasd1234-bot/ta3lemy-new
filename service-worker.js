@@ -1,18 +1,40 @@
-const CACHE = 'hafez-v5-clean';
-self.addEventListener('install', e => { self.skipWaiting(); });
-self.addEventListener('activate', e => { e.waitUntil(self.clients.claim()); });
-self.addEventListener('fetch', e => {
-  const url = new URL(e.request.url);
-  if (url.hostname.includes('firebase') || url.hostname.includes('googleapis')) return;
-  if (url.origin === self.location.origin) {
-    e.respondWith(
-      caches.match(e.request).then(hit => {
-        if (hit) return hit;
-        return fetch(e.request).then(res => {
-          if (res.ok && res.status === 200) caches.open(CACHE).then(c => c.put(e.request, res.clone()));
-          return res;
-        }).catch(() => { if (e.request.mode === 'navigate') return caches.match('./index.html'); });
-      })
-    );
-  }
-});
+// ═══════════════════════════════════════════════════════
+// extras-patch.js — النسخة النظيفة (إصلاحات فقط)
+// ═══════════════════════════════════════════════════════
+
+(function(){
+  console.log('🔧 Loading extras-patch...');
+
+  window.addEventListener('load', function(){
+    
+    // 1. إصلاح ألوان الرسم
+    setInterval(function(){
+      var canvas = document.getElementById('fullDrawingCanvas') || document.getElementById('drwCanvas');
+      if(!canvas) return;
+      var ctx = canvas.getContext('2d');
+      
+      // ربط أزرار الألوان
+      var colorBtns = document.querySelectorAll('button[onclick*="drawingSetColor"], button[style*="background-color"], input[type="color"]');
+      colorBtns.forEach(function(btn){
+        btn.onclick = function(){
+          if(this.value) ctx.strokeStyle = this.value;
+          else if(this.style.backgroundColor) ctx.strokeStyle = this.style.backgroundColor;
+        };
+      });
+    }, 2000);
+
+    // 2. إصلاح الإيموشن في الأخبار
+    var style = document.createElement('style');
+    style.textContent = 
+      '#emojiPicker { position: fixed !important; bottom: 120px !important; left: 50% !important; transform: translateX(-50%) !important; z-index: 99999 !important; }';
+    document.head.appendChild(style);
+
+    // 3. إخفاء القائمة السريعة
+    setInterval(function(){
+      var q = document.getElementById('quickMenu');
+      if(q) q.remove();
+    }, 3000);
+
+    console.log('✅ extras-patch.js loaded successfully');
+  });
+})();
