@@ -407,3 +407,6 @@ document.body.appendChild(aqeedaScript);
 var seeraScript = document.createElement('script');
 seeraScript.src = './azhar-seera-content.js';
 document.body.appendChild(seeraScript);
+var nahwScript = document.createElement('script');
+nahwScript.src = './azhar-nahw-content.js';
+document.body.appendChild(nahwScript);
