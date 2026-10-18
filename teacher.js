@@ -333,3 +333,7 @@ window.addEventListener('load', function(){
   }, 3000);
 });
 <script src="./owner-approvals.js"></script>
+// تحميل ملف تصحيح مواد الأزهر
+var fixAzharScript = document.createElement('script');
+fixAzharScript.src = './fix-azhar-subjects.js';
+document.body.appendChild(fixAzharScript);
