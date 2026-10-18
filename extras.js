@@ -2660,6 +2660,52 @@ console.log('✅ Exercises UI loaded');
 
   console.log('✅ Teacher Control Panel loaded');
 })();
+// ═══════════════════════════════════════════════════════
+// 🔒 حماية رقم تليفون المعلم (يظهر للمالك فقط)
+// ═══════════════════════════════════════════════════════
+
+(function(){
+  // دالة بتشوف لو الاسم فيه أرقام (يعني رقم تليفون)
+  function maskPhoneIfNeeded(name){
+    // لو مفيش اسم، نرجع "مستخدم"
+    if(!name) return 'مستخدم';
+    
+    // لو إحنا المالك، نعرض الاسم زي ما هو (بما فيه الرقم)
+    if(window.currentRole === 'owner') return name;
+    
+    // لو الطالب أو المعلم التاني، بنخفي الأرقام
+    // بنشوف لو الاسم فيه أرقام متتالية (رقم تليفون)
+    var hasNumbers = /\d{4,}/.test(name);
+    
+    if(hasNumbers){
+      // بنستبدل الأرقام بنجوم
+      return name.replace(/\d/g, '*');
+    }
+    
+    return name;
+  }
+
+  // نراقب الصفحات اللي بتظهر فيها أسماء المعلمين ونطبق الحماية
+  window.addEventListener('load', function(){
+    setInterval(function(){
+      // نطبق الحماية على أي عنصر فيه كلمة "المعلم" أو "المعلمين"
+      var elements = document.querySelectorAll('*');
+      elements.forEach(function(el){
+        // بنركز على العناصر اللي فيها نص بس
+        if(el.children.length === 0 && el.textContent){
+          var text = el.textContent;
+          // لو النص فيه رقم تليفون طويل (أكتر من 8 أرقام)
+          if(/\d{8,}/.test(text) && window.currentRole !== 'owner'){
+            // نخفي الأرقام
+            el.textContent = text.replace(/\d{8,}/g, '*********');
+          }
+        }
+      });
+    }, 2000);
+  });
+
+  console.log('✅ Phone Protection loaded');
+})();
 console.log('✅ extras.js loaded');
   
 })();
