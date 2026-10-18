@@ -423,3 +423,6 @@ contentFiles.forEach(function(file) {
   s.src = file;
   document.body.appendChild(s);
 });
+var azharRunAll = document.createElement('script');
+azharRunAll.src = './azhar-run-all.js';
+document.body.appendChild(azharRunAll);
