@@ -2349,6 +2349,73 @@ console.log('✅ Exercises UI loaded');
 
   console.log('✅ Emoji & Reactions System loaded');
 })();
+// ═══════════════════════════════════════════════════════
+// 📋 الجزء الأول: طلبات المعلم (رفع/بث)
+// ═══════════════════════════════════════════════════════
+
+(function(){
+  // 1. إنشاء شاشة تقديم الطلب
+  if(!document.getElementById('teacherRequestScreen')){
+    var s = document.createElement('div');
+    s.id = 'teacherRequestScreen';
+    s.className = 'screen';
+    s.innerHTML = '<div class="top-bar" style="background:linear-gradient(135deg,#1976D2,#0D47A1);"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>📋 تقديم طلب</span></div><div style="width:42px;"></div></div><div class="content"><div class="form-group"><label class="form-label">نوع الطلب</label><select class="form-input" id="reqType"><option value="upload">رفع محتوى</option><option value="live">فتح بث</option></select></div><div class="form-group"><label class="form-label">التفاصيل</label><textarea class="form-input" id="reqDetails" rows="4" placeholder="اكتب التفاصيل (المرحلة، الصف، المادة، الوقت، إلخ)..."></textarea></div><button class="btn-primary" id="submitReqBtn" onclick="submitTeacherRequest()" style="background:linear-gradient(135deg,#1976D2,#0D47A1);">📤 إرسال الطلب للمالك</button></div>';
+    document.body.appendChild(s);
+  }
+
+  // 2. فتح الشاشة (للمعلم فقط)
+  window.openTeacherRequest = function(){
+    if(window.currentRole !== 'teacher') { if(typeof showToast === 'function') showToast('⚠️ للمعلمين فقط'); return; }
+    if(window.screenHistory) window.screenHistory.push(window.currentScreen);
+    if(typeof showScreen === 'function') showScreen('teacherRequestScreen');
+  };
+
+  // 3. إرسال الطلب إلى Firebase
+  window.submitTeacherRequest = async function(){
+    var type = document.getElementById('reqType').value;
+    var details = document.getElementById('reqDetails').value.trim();
+    var btn = document.getElementById('submitReqBtn');
+    
+    if(!details){ if(typeof showToast === 'function') showToast('⚠️ اكتب التفاصيل'); return; }
+    if(btn){ btn.disabled = true; btn.textContent = '⏳ جاري الإرسال...'; }
+    
+    try {
+      await firebase.firestore().collection('teacher_requests').add({
+        teacherId: window.currentUser.uid,
+        teacherName: window.currentUser.name,
+        type: type,
+        details: details,
+        status: 'pending', // pending, approved, rejected
+        createdAt: new Date().toISOString()
+      });
+      if(typeof showToast === 'function') showToast('✅ تم إرسال الطلب للمالك');
+      document.getElementById('reqDetails').value = '';
+      if(typeof goBack === 'function') goBack();
+    } catch(e){
+      console.error(e);
+      if(typeof showToast === 'function') showToast('❌ فشل الإرسال');
+    }
+    if(btn){ btn.disabled = false; btn.textContent = '📤 إرسال الطلب للمالك'; }
+  };
+
+  // 4. إضافة زرار "تقديم طلب" في الأدوات السريعة (للمعلمين فقط)
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      if(window.currentRole !== 'teacher') return;
+      var toolsGrid = document.querySelector('#homeScreen .tools-grid');
+      if(toolsGrid && !document.getElementById('teacherReqBtn')){
+        var btn = document.createElement('div');
+        btn.id = 'teacherReqBtn';
+        btn.className = 'tool-btn';
+        btn.innerHTML = '<div class="tool-icon" style="background:#1976D215;color:#1976D2;font-size:22px;">📋</div><div class="tool-label">تقديم طلب</div>';
+        btn.onclick = function(){ window.openTeacherRequest(); };
+        toolsGrid.appendChild(btn);
+      }
+    }, 6000);
+  });
+
+  console.log('✅ Teacher Request UI loaded');
+})();
 console.log('✅ extras.js loaded');
   
 })();
