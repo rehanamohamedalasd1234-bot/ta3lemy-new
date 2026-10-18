@@ -737,7 +737,6 @@ window.addEventListener('load', function(){
     var content = home.querySelector('.content');
     if(!content) return;
     var btn = document.createElement('div');
-    btn.id = 'quickMenu';
     btn.style.cssText = 'margin:20px 16px;padding:18px;background:linear-gradient(135deg,#F9A825,#FBC02D);color:#fff;border-radius:16px;text-align:center;cursor:pointer;font-weight:bold;';
     btn.innerHTML = '<div style="font-size:28px;">⚡</div><div style="margin-top:8px;font-size:15px;">قائمة سريعة</div>';
     btn.onclick = function(){
