@@ -561,3 +561,34 @@ window.addEventListener('load', function(){
   
   console.log('✅ Drawing Colors & Arabic Audio Fixed');
 })();
+// ═══════════════════════════════════════════════════════
+// 🧹 التنظيف الشامل للصفحة (مسح أي تكرار)
+// ═══════════════════════════════════════════════════════
+
+(function(){
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      // 1. مسح القائمة السريعة نهائياً
+      var q = document.getElementById('quickMenu');
+      if(q) q.remove();
+      
+      // 2. مسح أي تكرار في شبكة الأدوات
+      var idsToClean = ['uploadBtn', 'teacherReqBtn', 'teacherControlBtn', 'adminApprovalsBtn', 'adminContentBtn', 'liveBtnGrid', 'proDrawBtn', 'offlineBtn', 'exerciseBtn'];
+      
+      idsToClean.forEach(function(id){
+        var elements = document.querySelectorAll('#' + id);
+        if(elements.length > 1){
+          for(var i = 1; i < elements.length; i++){
+            elements[i].remove();
+          }
+        }
+      });
+      
+      // 3. إزالة أي كلاسات قديمة متعارضة في الدردشة
+      var oldMediaBar = document.getElementById('mediaBar');
+      if(oldMediaBar) oldMediaBar.remove();
+      
+      console.log('✅ DOM Cleaned Successfully');
+    }, 4000);
+  });
+})();
