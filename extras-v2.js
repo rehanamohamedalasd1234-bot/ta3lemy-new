@@ -1,15 +1,11 @@
 // ═══════════════════════════════════════════════════════
-// extras-v2.js — التطويرات الكبيرة (لوحة إبداع + المعلمين)
+// extras-v2.js — النسخة النهائية الموحدة
 // ═══════════════════════════════════════════════════════
 
 (function(){
   'use strict';
-  console.log('🚀 Loading extras-v2...');
 
-  // ═══════════════════════════════════════════════════════
-  // 1. 🎨 لوحة الرسم "إبداع" الموسعة + إرسال للمالك
-  // ═══════════════════════════════════════════════════════
-  
+  // 1. لوحة إبداع (تشتغل على أي جهاز)
   window.openDrawing = function(){
     if(window.screenHistory) window.screenHistory.push(window.currentScreen);
     if(typeof showScreen === 'function') showScreen('drawingScreen');
@@ -18,10 +14,73 @@
       var canvas = document.getElementById('fullDrawingCanvas');
       if(!canvas) return;
       
-      var r = canvas.getBoundingClientRect();
-      canvas.width = r.width;
-      canvas.height = r.height;
+      // ضبط المساحة
+      var container = canvas.parentElement;
+      canvas.width = container.clientWidth;
+      canvas.height = container.clientHeight;
       
+      var ctx = canvas.getContext('2d');
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.strokeStyle = '#000000'; // اللون الافتراضي
+      ctx.lineWidth = 5;
+      
+      // متغيرات الرسم
+      var isDrawing = false;
+      var lastX = 0, lastY = 0;
+      
+      // دالة تحديد الإحداثيات بدقة
+      function getCoords(e) {
+        var rect = canvas.getBoundingClientRect();
+        var clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        var clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return {
+          x: clientX - rect.left,
+          y: clientY - rect.top
+        };
+      }
+      
+      // بدء الرسم
+      function startDraw(e) {
+        e.preventDefault();
+        isDrawing = true;
+        var pos = getCoords(e);
+        lastX = pos.x;
+        lastY = pos.y;
+      }
+      
+      // الرسم
+      function draw(e) {
+        e.preventDefault();
+        if (!isDrawing) return;
+        var pos = getCoords(e);
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+        lastX = pos.x;
+        lastY = pos.y;
+      }
+      
+      // إيقاف الرسم
+      function stopDraw(e) {
+        if(isDrawing) {
+          isDrawing = false;
+          if(typeof window.saveHistoryState === 'function') window.saveHistoryState();
+        }
+      }
+      
+      // ربط الأحداث
+      canvas.onmousedown = startDraw;
+      canvas.onmousemove = draw;
+      canvas.onmouseup = stopDraw;
+      canvas.onmouseout = stopDraw;
+      
+      canvas.ontouchstart = startDraw;
+      canvas.ontouchmove = draw;
+      canvas.ontouchend = stopDraw;
+      
+      // إضافة زرار الإرسال
       var toolbar = canvas.parentElement.previousElementSibling;
       if(toolbar && !document.getElementById('sendToOwnerBtn')){
         var sendBtn = document.createElement('button');
@@ -36,6 +95,7 @@
     }, 500);
   };
 
+  // 2. إرسال الرسمة للمالك
   window.sendDrawingToOwner = async function(canvas){
     if(!window.currentUser){
       if(typeof showToast === 'function') showToast('⚠️ سجل دخول الأول');
@@ -68,6 +128,7 @@
     }
   };
 
+  // 3. مراجعة الإبداعات للمالك
   window.openDrawingReviews = async function(){
     if(window.currentRole !== 'owner'){
       if(typeof showToast === 'function') showToast('⚠️ مسموح للمالك فقط');
@@ -160,182 +221,5 @@
     }, 5000);
   });
 
-  // ═══════════════════════════════════════════════════════
-  // 2. 📚 نظام المعلمين (تسجيل + رفع تدريبات)
-  // ═══════════════════════════════════════════════════════
-
-  window.openTeacherUpload = function(){
-    if(window.currentRole !== 'teacher' && window.currentRole !== 'owner'){
-      if(typeof showToast === 'function') showToast('⚠️ مسموح للمعلمين فقط');
-      return;
-    }
-    
-    if(window.screenHistory) window.screenHistory.push(window.currentScreen);
-    
-    var screen = document.getElementById('teacherUploadScreen');
-    if(!screen){
-      screen = document.createElement('div');
-      screen.id = 'teacherUploadScreen';
-      screen.className = 'screen';
-      screen.innerHTML = '<div class="top-bar" style="background:linear-gradient(135deg,#00897B,#26A69A);"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>📤 رفع محتوى</span></div><div style="width:42px;"></div></div><div class="content">' +
-        '<div class="form-group"><label class="form-label">عنوان المحتوى</label><input type="text" class="form-input" id="tTitle"></div>' +
-        '<div class="form-group"><label class="form-label">المرحلة</label><select class="form-input" id="tStage"><option value="primary">ابتدائي</option><option value="prep">إعدادي</option><option value="sec">ثانوي</option></select></div>' +
-        '<div class="form-group"><label class="form-label">الصف</label><select class="form-input" id="tGrade"><option value="الأول">الأول</option><option value="الثاني">الثاني</option><option value="الثالث">الثالث</option></select></div>' +
-        '<div class="form-group"><label class="form-label">المادة</label><input type="text" class="form-input" id="tSubject" placeholder="مثال: رياضيات"></div>' +
-        '<div class="form-group"><label class="form-label">الترم</label><select class="form-input" id="tTerm"><option value="1">الترم الأول</option><option value="2">الترم الثاني</option></select></div>' +
-        '<div class="form-group"><label class="form-label">نوع المحتوى</label><select class="form-input" id="tType"><option value="exercises">تدريبات</option><option value="exams">امتحانات</option><option value="lessons">شرح</option></select></div>' +
-        '<div class="form-group"><label class="form-label">📝 المحتوى (نص)</label><textarea class="form-input" id="tContent" rows="4"></textarea></div>' +
-        '<div class="form-group"><label class="form-label">📷 صورة/فيديو (اختياري)</label><input type="file" class="form-input" id="tFile" accept="image/*,video/*" style="padding:10px;"></div>' +
-        '<button class="btn-primary" id="tSubmitBtn" onclick="submitTeacherContent()" style="background:linear-gradient(135deg,#00897B,#26A69A);">📤 إرسال للمراجعة</button>' +
-        '</div>';
-      document.body.appendChild(screen);
-    }
-    
-    if(typeof showScreen === 'function') showScreen('teacherUploadScreen');
-  };
-
-  window.submitTeacherContent = async function(){
-    var title = document.getElementById('tTitle').value.trim();
-    var stage = document.getElementById('tStage').value;
-    var grade = document.getElementById('tGrade').value;
-    var subject = document.getElementById('tSubject').value.trim();
-    var term = document.getElementById('tTerm').value;
-    var type = document.getElementById('tType').value;
-    var content = document.getElementById('tContent').value.trim();
-    var file = document.getElementById('tFile').files[0];
-    var btn = document.getElementById('tSubmitBtn');
-    
-    if(!title || !subject){
-      if(typeof showToast === 'function') showToast('⚠️ أكمل البيانات');
-      return;
-    }
-    
-    if(btn){ btn.disabled = true; btn.textContent = '⏳ جاري الرفع...'; }
-    
-    try {
-      var fileUrl = null;
-      if(file) fileUrl = await window.uploadFile(file, 'teacher_content');
-      
-      await firebase.firestore().collection('teacher_content').add({
-        title: title,
-        stage: stage,
-        grade: grade,
-        subject: subject,
-        term: parseInt(term),
-        type: type,
-        content: content,
-        fileUrl: fileUrl,
-        teacherId: window.currentUser.uid,
-        teacherName: window.currentUser.name,
-        status: 'pending',
-        createdAt: new Date().toISOString()
-      });
-      
-      if(typeof showToast === 'function') showToast('✅ تم الإرسال! في انتظار موافقة الإدارة');
-      
-      if(btn){ btn.disabled = false; btn.textContent = '📤 إرسال للمراجعة'; }
-      document.getElementById('tTitle').value = '';
-      document.getElementById('tContent').value = '';
-      if(document.getElementById('tFile')) document.getElementById('tFile').value = '';
-      
-    } catch(e){
-      console.error(e);
-      if(btn){ btn.disabled = false; btn.textContent = '📤 إرسال للمراجعة'; }
-      if(typeof showToast === 'function') showToast('❌ فشل الرفع');
-    }
-  };
-
-  // إضافة زرار رفع المحتوى للمعلمين في الرئيسية
-  window.addEventListener('load', function(){
-    setTimeout(function(){
-      var toolsGrid = document.querySelector('#homeScreen .tools-grid');
-      if(toolsGrid && !document.getElementById('teacherUploadBtn') && (window.currentRole === 'teacher' || window.currentRole === 'owner')){
-        var btn = document.createElement('div');
-        btn.id = 'teacherUploadBtn';
-        btn.className = 'tool-btn';
-        btn.innerHTML = '<div class="tool-icon" style="background:#00897B15;color:#00897B;font-size:22px;">📤</div><div class="tool-label">رفع محتوى</div>';
-        btn.onclick = function(){ window.openTeacherUpload(); };
-        toolsGrid.appendChild(btn);
-      }
-    }, 6000);
-  });
-
-})();
-// ═══════════════════════════════════════════════════════
-// 🛠️ إصلاح الفرشاة (اللمس والمساحة) للوحة الرسم القديمة
-// ═══════════════════════════════════════════════════════
-
-(function(){
-  window.addEventListener('load', function(){
-    setTimeout(function(){
-      var canvas = document.getElementById('fullDrawingCanvas');
-      if(!canvas) return;
-
-      // 1. إصلاح المساحة عشان تاخد حجم الشاشة كامل (ومش بتتحرك)
-      var container = canvas.parentElement;
-      canvas.width = container.clientWidth;
-      canvas.height = container.clientHeight;
-      
-      var ctx = canvas.getContext('2d');
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      
-      var isDrawing = false;
-      var lastX = 0, lastY = 0;
-
-      // 2. دالة دقيقة عشان تجيب مكان الصباع أو الماوس
-      function getCoordinates(e) {
-        var rect = canvas.getBoundingClientRect();
-        var clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        var clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        return {
-          x: clientX - rect.left,
-          y: clientY - rect.top
-        };
-      }
-
-      // 3. بدء الرسم
-      function startDraw(e) {
-        e.preventDefault();
-        isDrawing = true;
-        var pos = getCoordinates(e);
-        lastX = pos.x;
-        lastY = pos.y;
-      }
-
-      // 4. الرسم الفعلي
-      function draw(e) {
-        e.preventDefault();
-        if (!isDrawing) return;
-        var pos = getCoordinates(e);
-        ctx.beginPath();
-        ctx.moveTo(lastX, lastY);
-        ctx.lineTo(pos.x, pos.y);
-        ctx.stroke();
-        lastX = pos.x;
-        lastY = pos.y;
-      }
-
-      // 5. إيقاف الرسم
-      function stopDraw(e) {
-        if(isDrawing) {
-          isDrawing = false;
-          if(typeof window.saveHistoryState === 'function') window.saveHistoryState();
-        }
-      }
-
-      // 6. ربط الأحداث (اللمس والماوس)
-      // عشان نلغي أي أحداث قديمة متعارضة، بنستخدم "on" بدل addEventListener
-      canvas.onmousedown = startDraw;
-      canvas.onmousemove = draw;
-      canvas.onmouseup = stopDraw;
-      canvas.onmouseout = stopDraw;
-
-      canvas.ontouchstart = startDraw;
-      canvas.ontouchmove = draw;
-      canvas.ontouchend = stopDraw;
-
-      console.log('✅ Brush Fixed with Touch Support');
-    }, 1500);
-  });
+  console.log('✅ extras-v2 (Final) loaded');
 })();
