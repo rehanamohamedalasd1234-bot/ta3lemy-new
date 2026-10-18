@@ -2891,6 +2891,54 @@ console.log('✅ Exercises UI loaded');
 
   console.log('✅ Admin Content Control loaded');
 })();
+// ═══════════════════════════════════════════════════════
+// 🧹 التصفية النهائية (إزالة التكرار + مسح القائمة السريعة)
+// ═══════════════════════════════════════════════════════
+
+(function(){
+  // 1. دالة لإزالة أي عنصر مكرر في شبكة الأدوات
+  function removeDuplicates(selector) {
+    var elements = document.querySelectorAll(selector);
+    if (elements.length > 1) {
+      for (var i = 1; i < elements.length; i++) {
+        elements[i].remove();
+      }
+    }
+  }
+
+  window.addEventListener('load', function(){
+    // نفضل نراقب الصفحة كل شوية عشان نضمن إن مفيش تكرار
+    setInterval(function(){
+      
+      // --- أولاً: إخفاء وحذف القائمة السريعة نهائياً ---
+      var quickMenu = document.getElementById('quickMenu');
+      if (quickMenu) quickMenu.remove();
+      
+      var quickMenuBtn = document.querySelector('[onclick*="quickMenu"]');
+      if (quickMenuBtn) quickMenuBtn.remove();
+
+      // --- ثانياً: تصفية أزرار المعلم ---
+      if (window.currentRole === 'teacher') {
+        // إزالة التكرار في زر رفع المحتوى
+        removeDuplicates('#uploadBtn');
+        // إزالة التكرار في زر تقديم الطلب
+        removeDuplicates('#teacherReqBtn');
+        // إزالة التكرار في زر لوحة التحكم (لو ظهر أكتر من مرة)
+        removeDuplicates('#teacherControlBtn');
+      }
+
+      // --- ثالثاً: تصفية أزرار المالك (في حال كانت ظاهرة) ---
+      if (window.currentRole === 'owner') {
+        // إزالة أي تكرار لأزرار الإدارة
+        removeDuplicates('#adminApprovalsBtn');
+        removeDuplicates('#adminContentBtn');
+      }
+
+    }, 2000); // بيتأكد كل ثانيتين
+  });
+
+  console.log('✅ Final Cleanup Loaded');
+})();
 console.log('✅ extras.js loaded');
   
 })();
