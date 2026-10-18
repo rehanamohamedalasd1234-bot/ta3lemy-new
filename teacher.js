@@ -404,3 +404,6 @@ window.addEventListener('load', function() {
 var aqeedaScript = document.createElement('script');
 aqeedaScript.src = './azhar-aqeeda-content.js';
 document.body.appendChild(aqeedaScript);
+var seeraScript = document.createElement('script');
+seeraScript.src = './azhar-seera-content.js';
+document.body.appendChild(seeraScript);
