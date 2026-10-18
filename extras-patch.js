@@ -453,3 +453,45 @@ window.addEventListener('load', function(){
     };
   }, 1000);
 });
+// ═══════════════════════════════════════════════════════
+// 🔒 إصلاح تسجيل دخول المالك + الإيموشن
+// ═══════════════════════════════════════════════════════
+
+(function(){
+  // 1. قفل دخول المالك
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      if(typeof window.login !== 'function') return;
+      var origLogin = window.login;
+      
+      window.login = async function(){
+        var ownerCodeEl = document.getElementById('ownerCodeInput');
+        var ownerCode = ownerCodeEl ? ownerCodeEl.value : '';
+        
+        // لو إحنا في وضع المالك
+        if(window.currentRole === 'owner') {
+          // كود المالك ثابت ومحمي
+          if(ownerCode !== '135790') {
+            if(typeof showToast === 'function') showToast('🔐 كود المالك خطأ!');
+            return;
+          }
+        }
+        
+        // نكمل الدالة الأصلية
+        return origLogin.apply(this, arguments);
+      };
+      console.log('✅ Admin Login Secured');
+    }, 2000);
+  });
+
+  // 2. إصلاح مكان الإيموشن في الأخبار
+  window.addEventListener('load', function(){
+    // تغيير ستايل قائمة الإيموشن عشان تظهر جوه الصفحة مش فوق
+    var style = document.createElement('style');
+    style.textContent = 
+      '#emojiPicker { position: fixed !important; top: auto !important; bottom: 120px !important; left: 50% !important; transform: translateX(-50%) !important; z-index: 99999 !important; }' +
+      '#emojiPicker::before { content: ""; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 10px solid #fff; }';
+    document.head.appendChild(style);
+    console.log('✅ Emoji Fixed');
+  });
+})();
