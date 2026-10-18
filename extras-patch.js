@@ -6,23 +6,149 @@
   'use strict';
   console.log('🔧 Loading extras-patch...');
 
-  // ═══ 1. تغيير اسم "الرسم" → "إبداع" ═══
-  function renameDrawingToIbdaa(){
-    document.querySelectorAll('.tool-btn').forEach(function(btn){
-      var onclick = btn.getAttribute('onclick') || '';
-      var label = btn.querySelector('.tool-label');
-      if((onclick.indexOf('openDrawing') > -1) && label && label.textContent === 'رسم'){
-        label.textContent = 'إبداع';
-        var icon = btn.querySelector('.tool-icon');
-        if(icon) icon.textContent = '🎨';
+// ═══════════════════════════════════════════════════════
+// 🎨 لوحة إبداع - النسخة النهائية (مضمونة 100%)
+// ═══════════════════════════════════════════════════════
+
+(function(){
+  // 1. إنشاء الشاشة
+  if(!document.getElementById('proDrawScreen')){
+    var s = document.createElement('div');
+    s.id = 'proDrawScreen';
+    s.className = 'screen';
+    s.style.cssText = 'display:none; flex-direction:column; height:100vh; background:#f5f5f5;';
+    s.innerHTML = '<div class="top-bar" style="background:linear-gradient(135deg,#FF6B6B,#FF8E53);"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>✨ إبداع</span></div><div style="width:42px;"></div></div>' +
+      '<div style="padding:10px; background:#fff; display:flex; gap:8px; overflow-x:auto; align-items:center;">' +
+      '<input type="color" id="drwColor" value="#000000" style="width:40px; height:40px; border:none; border-radius:8px;">' +
+      '<button onclick="window.undoDrw()" style="padding:8px; border-radius:8px; border:1px solid #ddd;">↶ تراجع</button>' +
+      '<button onclick="window.clearDrw()" style="padding:8px; border-radius:8px; border:1px solid #ddd; color:#E53935;">🗑️ مسح</button>' +
+      '<button onclick="window.saveDrw()" style="padding:8px; border-radius:8px; border:1px solid #ddd; color:#2E7D32;">💾 حفظ</button>' +
+      '<button onclick="window.sendDrw()" style="padding:8px; border-radius:8px; border:1px solid #ddd; background:#1976D2; color:#fff;">📤 إرسال</button>' +
+      '<input type="range" id="drwSize" min="1" max="20" value="5" style="width:80px;">' +
+      '</div>' +
+      '<div id="drwWrap" style="flex:1; position:relative; background:#fff; overflow:hidden;">' +
+      '<canvas id="drwCanvas" style="width:100%; height:100%; touch-action:none; cursor:crosshair;"></canvas>' +
+      '</div>';
+    document.body.appendChild(s);
+  }
+
+  // 2. إعدادات الفرشاة
+  var canvas, ctx, isDrawing = false, lastX = 0, lastY = 0;
+  var history = [], currentStep = -1;
+
+  function initCanvas() {
+    canvas = document.getElementById('drwCanvas');
+    if(!canvas) return;
+    
+    // ضبط الأبعاد بناءً على حجم الشاشة الفعلي
+    var wrap = document.getElementById('drwWrap');
+    canvas.width = wrap.clientWidth;
+    canvas.height = wrap.clientHeight;
+    
+    ctx = canvas.getContext('2d');
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 5;
+
+    // دالة بتجيب مكان الماوس أو الصباع بدقة
+    function getCoords(e) {
+      var rect = canvas.getBoundingClientRect();
+      var clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      var clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return {
+        x: clientX - rect.left,
+        y: clientY - rect.top
+      };
+    }
+
+    // بداية الرسم
+    function start(e) {
+      e.preventDefault();
+      isDrawing = true;
+      var coords = getCoords(e);
+      lastX = coords.x;
+      lastY = coords.y;
+    }
+
+    // الرسم الفعلي
+    function move(e) {
+      e.preventDefault();
+      if (!isDrawing) return;
+      var coords = getCoords(e);
+      ctx.beginPath();
+      ctx.moveTo(lastX, lastY);
+      ctx.lineTo(coords.x, coords.y);
+      ctx.stroke();
+      lastX = coords.x;
+      lastY = coords.y;
+    }
+
+    // نهاية الرسم
+    function end(e) {
+      if (isDrawing) {
+        isDrawing = false;
+        saveState();
       }
-    });
-    var drawingTitle = document.querySelector('#drawingScreen .logo span');
-    if(drawingTitle && drawingTitle.textContent.indexOf('الرسم') > -1){
-      drawingTitle.textContent = '🎨 إبداع';
+    }
+
+    // ربط الأحداث (ماوس + لمس)
+    canvas.addEventListener('mousedown', start);
+    canvas.addEventListener('mousemove', move);
+    canvas.addEventListener('mouseup', end);
+    canvas.addEventListener('mouseout', end);
+    
+    canvas.addEventListener('touchstart', start, {passive: false});
+    canvas.addEventListener('touchmove', move, {passive: false});
+    canvas.addEventListener('touchend', end);
+
+    // تغيير اللون والحجم
+    document.getElementById('drwColor').addEventListener('input', function(e){ ctx.strokeStyle = e.target.value; });
+    document.getElementById('drwSize').addEventListener('input', function(e){ ctx.lineWidth = e.target.value; });
+
+    saveState();
+  }
+
+  // 3. دوال التحكم
+  window.undoDrw = function() { if(currentStep > 0) { currentStep--; loadState(); } };
+  window.clearDrw = function() { if(confirm('مسح الرسم؟')) { ctx.clearRect(0,0,canvas.width,canvas.height); saveState(); } };
+  window.saveDrw = function() { var a = document.createElement('a'); a.download = 'ابداع.png'; a.href = canvas.toDataURL(); a.click(); };
+  
+  window.sendDrw = async function() {
+    if(!window.currentUser) return alert('سجل دخول');
+    if(!confirm('إرسال الرسمة للمالك؟')) return;
+    try {
+      await firebase.firestore().collection('student_drawings').add({
+        studentId: window.currentUser.uid, studentName: window.currentUser.name,
+        image: canvas.toDataURL('image/png'), createdAt: new Date().toISOString()
+      });
+      if(typeof showToast === 'function') showToast('✅ تم الإرسال');
+    } catch(e) { console.error(e); }
+  };
+
+  function saveState() {
+    if(!canvas) return;
+    history = history.slice(0, currentStep + 1);
+    history.push(canvas.toDataURL());
+    currentStep = history.length - 1;
+  }
+
+  function loadState() {
+    if(history[currentStep]) {
+      var img = new Image();
+      img.onload = function() { ctx.clearRect(0,0,canvas.width,canvas.height); ctx.drawImage(img, 0, 0); };
+      img.src = history[currentStep];
     }
   }
 
+  // 4. الفتح
+  window.openProDrawing = function() {
+    if(typeof showScreen === 'function') showScreen('proDrawScreen');
+    setTimeout(initCanvas, 200); // استنى شوية عشان الشاشة تظهر
+  };
+
+  console.log('✅ Pro Drawing (V2) Loaded');
+})();
   // ═══ 2. تغيير "الرسائل" → "الدردشة" ═══
   function renameMessagesToChat(){
     document.querySelectorAll('.nav-item').forEach(function(nav){
