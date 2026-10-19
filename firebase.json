@@ -1,0 +1,13 @@
+{
+  "functions": {
+    "source": "functions",
+    "codebase": "creativity",
+    "ignore": [
+      "node_modules",
+      ".git",
+      ".firebase",
+      "*.log",
+      ".env*"
+    ]
+  }
+}

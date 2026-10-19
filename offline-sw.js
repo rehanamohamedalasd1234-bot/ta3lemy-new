@@ -1,75 +1,91 @@
-// offline-sw.js — Service Worker للعمل بدون إنترنت
+// Service Worker للمنصة: تحديث الشبكة أولًا، ثم الرجوع إلى النسخة المحفوظة دون إنترنت.
+// لا نحذف الكاش القديم حتى لا تُفقد الدروس التي نزّلها الطلاب.
 const CACHE = 'hafez-offline-v1';
+const SHELL_FILES = [
+  './',
+  './index.html',
+  './manifest.json',
+  './extras.js',
+  './extras-patch.js',
+  './teacher.js',
+  './chat.js',
+  './creativity-config.js',
+  './creativity.js',
+  './fix-canvas.css'
+];
 
-// ═══ Install ═══
-self.addEventListener('install', e => {
-  self.skipWaiting();
+self.addEventListener('install', (event) => {
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE);
+    await Promise.all(SHELL_FILES.map(async (file) => {
+      try {
+        const request = new Request(new URL(file, self.location.href), { cache: 'reload' });
+        const response = await fetch(request);
+        if (response && response.ok) await cache.put(request, response.clone());
+      } catch (_) {
+        // تثبيت العامل لا يفشل بالكامل إن تعذر تنزيل ملف مفرد.
+      }
+    }));
+    await self.skipWaiting();
+  })());
 });
 
-// ═══ Activate ═══
-self.addEventListener('activate', e => {
-  e.waitUntil(self.clients.claim());
+self.addEventListener('activate', (event) => {
+  event.waitUntil(self.clients.claim());
 });
 
-// ═══ Fetch — Cache First للملفات الأساسية ═══
-self.addEventListener('fetch', e => {
-  const req = e.request;
-  
-  // تجاهل الطلبات غير GET
-  if (req.method !== 'GET') return;
-  
-  const url = new URL(req.url);
-  
-  // تجاهل Firebase (لأنه بيتعامل معاه offline persistence)
-  if (url.hostname.includes('firestore') || 
-      url.hostname.includes('firebase') ||
-      url.hostname.includes('googleapis')) {
-    return;
+async function networkFirst(request) {
+  const cache = await caches.open(CACHE);
+  try {
+    const response = await fetch(request);
+    if (response && response.status === 200) cache.put(request, response.clone());
+    return response;
+  } catch (_) {
+    const cached = await cache.match(request, { ignoreSearch: true });
+    if (cached) return cached;
+    if (request.mode === 'navigate') {
+      const shell = await cache.match(new URL('./index.html', self.location.href));
+      if (shell) return shell;
+    }
+    return new Response('', { status: 503, statusText: 'Offline and not cached' });
   }
-  
-  // الملفات الأساسية: Cache First
+}
+
+async function cacheFirst(request) {
+  const cache = await caches.open(CACHE);
+  const cached = await cache.match(request, { ignoreSearch: true });
+  if (cached) return cached;
+  try {
+    const response = await fetch(request);
+    if (response && response.ok) cache.put(request, response.clone());
+    return response;
+  } catch (_) {
+    return new Response('', { status: 503, statusText: 'Offline and not cached' });
+  }
+}
+
+self.addEventListener('fetch', (event) => {
+  const request = event.request;
+  if (request.method !== 'GET') return;
+  const url = new URL(request.url);
+
+  // لا نخزن طلبات قاعدة البيانات أو المصادقة أو واجهات Google API.
+  if (url.hostname.includes('firebase') || url.hostname.includes('googleapis.com')) return;
+
   if (url.origin === self.location.origin) {
-    e.respondWith(
-      caches.open(CACHE).then(cache =>
-        cache.match(req).then(hit => {
-          if (hit) return hit;
-          return fetch(req).then(res => {
-            if (res && res.ok && res.status === 200) {
-              cache.put(req, res.clone());
-            }
-            return res;
-          }).catch(() => {
-            // لو مفيش نت ومفيش كاش
-            if (req.mode === 'navigate') {
-              return cache.match('./index.html');
-            }
-            return new Response('', {status: 503});
-          });
-        })
-      )
-    );
+    // Network-first يسمح بظهور تحديثات الواجهة تلقائيًا، مع كاش احتياطي للدروس والملفات.
+    event.respondWith(networkFirst(request));
     return;
   }
-  
-  // Fonts + UI Avatars: Cache First
-  if (url.hostname === 'fonts.googleapis.com' || 
-      url.hostname === 'fonts.gstatic.com' ||
-      url.hostname === 'ui-avatars.com') {
-    e.respondWith(
-      caches.open(CACHE).then(cache =>
-        cache.match(req).then(hit => {
-          if (hit) return hit;
-          return fetch(req).then(res => {
-            if (res && res.ok) cache.put(req, res.clone());
-            return res;
-          }).catch(() => new Response('', {status: 503}));
-        })
-      )
-    );
-    return;
-  }
-  
-  // الباقي: من النت عادي
-});
 
-console.log('✅ offline-sw.js loaded');
+  // ملفات Firebase SDK الثابتة اللازمة لفتح الواجهة المحفوظة دون اتصال.
+  if (url.hostname === 'www.gstatic.com' && url.pathname.startsWith('/firebasejs/')) {
+    event.respondWith(cacheFirst(request));
+    return;
+  }
+
+  // الخطوط والصور الرمزية الثابتة.
+  if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com' || url.hostname === 'ui-avatars.com') {
+    event.respondWith(cacheFirst(request));
+  }
+});

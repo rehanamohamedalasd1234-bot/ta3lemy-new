@@ -1,0 +1,12 @@
+// مقتطف للمراجعة والدمج اليدوي فقط — لا تستبدل به ملف Firestore Rules الحالي.
+// يجب إزالة/تعديل أي قاعدة أوسع تسمح بالقراءة أو الكتابة على هذه المجموعات؛
+// قواعد Firestore تسمح بالطلب إذا سمحت أي قاعدة مطابقة، لذا لا يكفي إضافة deny بجانب allow أوسع.
+match /creativity_requests/{requestId} {
+  allow read, write: if false;
+}
+match /creativity_gallery/{artworkId} {
+  allow read, write: if false;
+}
+match /creativity_usage/{usageId} {
+  allow read, write: if false;
+}
