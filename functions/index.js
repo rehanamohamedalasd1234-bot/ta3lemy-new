@@ -290,3 +290,6 @@ exports.creativityReview = callable({
   });
   return { ok: true, action };
 });
+
+// بوابة المعلم: تسجيل الطلبات، إدارة المحتوى والدرجات عبر تحقق خادمي.
+Object.assign(exports, require('./teacher-portal'));

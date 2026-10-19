@@ -115,6 +115,15 @@
         var uname = unameEl ? unameEl.value.trim() : '';
         var pwd = pwdEl ? pwdEl.value : '';
         var ownerCode = ownerCodeEl ? ownerCodeEl.value : '';
+
+        // لا تمنح اختيار الدور من الواجهة صلاحية معلم أو مالك.
+        if (window.currentRole === 'teacher' || window.currentRole === 'owner') {
+          if (typeof window.securePortalLogin !== 'function') {
+            if (typeof showToast === 'function') showToast('تعذر تحميل تسجيل الدخول الآمن. حدّث الصفحة.');
+            return;
+          }
+          return window.securePortalLogin(window.currentRole, uname, pwd);
+        }
         
         if (!uname || uname.length < 3) {
           if(typeof showToast === 'function') showToast('⚠️ اسم المستخدم 3 أحرف على الأقل');
@@ -132,35 +141,13 @@
             try {
               var su = JSON.parse(saved);
               window.currentUser = {name: uname, uid: su.uid, points: su.points || 0};
-              window.currentRole = su.role || 'student';
+              window.currentRole = 'student';
               if(typeof showToast === 'function') showToast('📴 دخول offline');
               if(typeof showScreen === 'function') setTimeout(function(){ showScreen('homeScreen'); }, 400);
               return;
             } catch(e){}
           }
           if(typeof showToast === 'function') showToast('⚠️ محتاج نت أول مرة');
-          return;
-        }
-        
-        // Owner
-        if (window.currentRole === 'owner') {
-          if (ownerCode !== '135790') {
-            await window.logLogin(uname, 'owner', false, 'owner code wrong');
-            if(typeof showToast === 'function') showToast('🔐 كود المالك خطأ');
-            return;
-          }
-          try {
-            await origLogin.apply(this, arguments);
-            await window.logLogin(uname, 'owner', true, '');
-            if(window.currentUser) {
-              localStorage.setItem('lastUser', JSON.stringify({
-                name: window.currentUser.name,
-                uid: window.currentUser.uid,
-                role: 'owner',
-                points: window.currentUser.points || 0
-              }));
-            }
-          } catch(e){ console.error(e); }
           return;
         }
         
@@ -678,47 +665,8 @@ window.openPomodoro = function(){
 };
 
 // ═══ البث المباشر (مبسط) ═══
-window.openBroadcast = async function(){
-  if(!window.currentUser) return;
-  var isTeacher = window.currentRole === 'teacher';
-  var isOwner = window.currentRole === 'owner';
-  
-  if(isTeacher || isOwner){
-    var action = prompt('🔴 البث المباشر:\n\n1. بدء بث جديد\n2. عرض البثوث المتاحة');
-    if(action === '1'){
-      var title = prompt('عنوان البث:');
-      if(!title) return;
-      var roomId = 'hafez-' + Date.now().toString(36);
-      try {
-        await firebase.firestore().collection('broadcasts').add({
-          title: title,
-          teacherId: window.currentUser.uid,
-          teacherName: window.currentUser.name,
-          roomId: roomId,
-          status: 'live',
-          createdAt: new Date().toISOString()
-        });
-        var url = 'https://meet.jit.si/' + roomId;
-        window.open(url, '_blank');
-        if(typeof showToast === 'function') showToast('🔴 بدأ البث');
-      } catch(e){ console.error(e); }
-    }
-  } else {
-    try {
-      var snap = await firebase.firestore().collection('broadcasts').where('status','==','live').get();
-      if(snap.empty){ if(typeof showToast === 'function') showToast('لا يوجد بث حالياً'); return; }
-      var list = '';
-      var rooms = [];
-      snap.forEach(function(doc){
-        var b = doc.data();
-        list += '📺 ' + b.title + ' — ' + b.teacherName + '\n';
-        rooms.push(b.roomId);
-      });
-      if(confirm('🔴 البثوث المتاحة:\n\n' + list + '\n\nهل تريد الانضمام؟')){
-        window.open('https://meet.jit.si/' + rooms[0], '_blank');
-      }
-    } catch(e){ console.error(e); }
-  }
+window.openBroadcast = function(){
+  if(typeof showToast === 'function') showToast('البث المباشر مؤجل مؤقتًا إلى أن نجهز صلاحيات وموافقة المالك.');
 };
 
 // ═══ إضافة الأزرار في الرئيسية ═══
@@ -748,20 +696,10 @@ window.addEventListener('load', function(){
       btn2.onclick = function(){ window.openPomodoro(); };
       content.insertBefore(btn2, content.firstChild);
     }
-    
-    // زر البث
-    if(!document.getElementById('broadcastBtn')){
-      var btn3 = document.createElement('div');
-      btn3.id = 'broadcastBtn';
-      btn3.style.cssText = 'margin:20px 16px;padding:18px;background:linear-gradient(135deg,#D32F2F,#E53935);color:#fff;border-radius:16px;text-align:center;cursor:pointer;font-weight:bold;';
-      btn3.innerHTML = '<div style="font-size:28px;">🔴</div><div style="margin-top:8px;font-size:15px;">البث المباشر</div>';
-      btn3.onclick = function(){ window.openBroadcast(); };
-      content.insertBefore(btn3, content.firstChild);
-    }
   }, 4000);
 });
 
-console.log('✅ News + Pomodoro + Broadcast + Buttons loaded');
+console.log('✅ News + Pomodoro + deferred broadcast button loaded');
 // ═══ إصلاح شريط الدردشة على الموبايل ═══
 window.addEventListener('load', function(){
   setTimeout(function(){
@@ -1705,7 +1643,6 @@ console.log('✅ Exercises UI loaded');
         {id: 'newsBtn', icon: '📰', label: 'الأخبار', bg: '#C2185B', action: function(){ window.openNews(); }},
         {id: 'pomoBtn', icon: '⏱️', label: 'المؤقت', bg: '#1976D2', action: function(){ window.openPomodoro(); }},
         {id: 'multBtn', icon: '🔢', label: 'الضرب', bg: '#FF6B6B', action: function(){ window.openMultiplication(); }},
-        {id: 'broadcastBtn', icon: '🔴', label: 'البث', bg: '#D32F2F', action: function(){ window.openBroadcast(); }},
         {id: 'exerciseBtn', icon: '🎯', label: 'التدريبات', bg: '#00897B', action: function(){ window.openExercises(); }},
         {id: 'quickMenu', icon: '⚡', label: 'قائمة', bg: '#F9A825', action: function(){ 
             var choice = prompt('⚡ اختر:\n\n1. مؤقت الدراسة\n2. الأخبار والمقالات\n3. نقاطي\n4. المفضلة\n5. ملاحظاتي\n6. تسجيل الخروج');
@@ -2392,24 +2329,9 @@ console.log('✅ Exercises UI loaded');
     } catch(e){ console.error(e); c.innerHTML = '<p style="text-align:center;color:#E53935;">⚠️ فشل التحميل</p>'; }
   };
 
-  // 4. بدء البث بعد الموافقة
-  window.startApprovedLive = function(details){
-    if(!details){ if(typeof showToast === 'function') showToast('⚠️ لا توجد تفاصيل'); return; }
-    // نفتح غرفة Jitsi
-    var roomId = 'hafez-' + Date.now().toString(36);
-    firebase.firestore().collection('broadcasts').add({
-      title: 'بث مباشر - ' + window.currentUser.name,
-      teacherId: window.currentUser.uid,
-      teacherName: window.currentUser.name,
-      roomId: roomId,
-      status: 'live',
-      details: details,
-      createdAt: new Date().toISOString()
-    }).then(function(){
-      window.open('https://meet.jit.si/' + roomId, '_blank');
-      if(typeof showToast === 'function') showToast('🎥 تم فتح الغرفة');
-      if(typeof goBack === 'function') goBack();
-    }).catch(function(e){ console.error(e); });
+  // 4. بدء البث مؤجل؛ لا تنشئ سجلات أو غرف Jitsi في هذه المرحلة.
+  window.startApprovedLive = function(){
+    if(typeof showToast === 'function') showToast('قسم البث مؤجل مؤقتًا إلى أن تكتمل صلاحيات المالك والتحكم الخادمي.');
   };
 
   // 5. فتح شاشة رفع المحتوى (بعد الموافقة)

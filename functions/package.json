@@ -6,7 +6,7 @@
     "node": "20"
   },
   "scripts": {
-    "lint": "node --check index.js"
+    "lint": "node --check index.js && node --check teacher-portal.js"
   },
   "dependencies": {
     "firebase-admin": "^13.0.0",

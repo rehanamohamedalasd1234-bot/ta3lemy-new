@@ -1,0 +1,13 @@
+// مقتطف للمراجعة والدمج داخل قواعد Firestore الحالية فقط.
+// لا تستبدل به ملف القواعد الحالي، ولا تضف قاعدة deny بجانب allow أوسع؛
+// قواعد Firestore تسمح بالطلب إذا سمحت أي قاعدة مطابقة.
+// واجهة الطالب والمعلم تتعامل مع هذه المجموعات عبر Cloud Functions فقط.
+match /teacher_applications/{applicationId} {
+  allow read, write: if false;
+}
+match /teacher_uploads/{uploadId} {
+  allow read, write: if false;
+}
+match /teacher_grades/{gradeId} {
+  allow read, write: if false;
+}
