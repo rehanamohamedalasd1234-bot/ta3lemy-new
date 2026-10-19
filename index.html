@@ -594,11 +594,9 @@ window.addEventListener('load',()=>{setTimeout(()=>showScreen('loginScreen'),250
 if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./service-worker.js').then(reg=>console.log('✅ SW registered')).catch(err=>console.log('❌ SW error:',err));});}
 </script>
 <script src="./extras.js"></script>
-<script src="./extras-patch.js"></script>
-<script src="./extras-v2.js"></script> 
-<script src="./fix-drawing.js"></script>
-<link rel="stylesheet" href="./fix-canvas.css">
 <script src="./teacher.js"></script>
+<link rel="stylesheet" href="./fix-canvas.css">
+<script src="./creativity-config.js"></script>
+<script src="./creativity.js"></script>
 </body>
-<script src="./chat.js"></script>
 </html>
