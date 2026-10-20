@@ -1,4 +1,4 @@
-/* منصة الدردشة: دليل أصدقاء بطلب قبول، صورة شخصية، دردشة جماعية/خاصة، مرفقات ومكالمات 1:1، الإصدار 1.0.8.
+/* منصة الدردشة: دليل أصدقاء بطلب قبول، صورة شخصية، دردشة جماعية/خاصة، مرفقات ومكالمات 1:1، الإصدار 1.0.10.
  * ملاحظة أمنية: لابد من قواعد Firestore/Storage تعتمد Firebase Auth؛ فحواجز الواجهة وحدها لا تحمي البيانات.
  */
 (function () {
@@ -113,7 +113,7 @@
     if (window.screenHistory && window.currentScreen) window.screenHistory.push(window.currentScreen);
     if (window.showScreen) window.showScreen('messagesScreen');
     await ensureMyPublicProfile();
-    var securityNote = document.getElementById('chatSecurityNote'); if (securityNote) { securityNote.textContent = !hasAuthIdentity() ? 'الخاص وطلبات الصداقة والمكالمات تحتاج ربط الحساب بمصادقة Firebase الآمنة. الدردشة الجماعية متاحة الآن.' : 'تم توثيق الحساب؛ يظل الخاص متوقفًا حتى نشر ومراجعة قواعد Firestore وStorage.'; securityNote.style.display = hasSecureIdentity() ? 'none' : 'block'; }
+    var securityNote = document.getElementById('chatSecurityNote'); if (securityNote) { securityNote.textContent = !hasAuthIdentity() ? 'الخاص وطلبات الصداقة والمكالمات تحتاج ربط الحساب بمصادقة Firebase الآمنة. يمكن فتح المجموعة، لكن إرسال الرسائل والمرفقات يتطلب تسجيل Firebase.' : 'تم توثيق الحساب؛ يظل الخاص متوقفًا حتى نشر ومراجعة قواعد Firestore وStorage.'; securityNote.style.display = hasSecureIdentity() ? 'none' : 'block'; }
     if (!state.homeTab) state.homeTab = 'chats';
     renderHomeTab(state.homeTab);
     listenForIncomingCalls();
@@ -323,6 +323,7 @@
   window.sendMessage = async function () {
     var input = document.getElementById('chatInput'); var text = input && input.value.trim(); if (!text || !state.chatId || !me()) return;
     if (!isGroup() && !requireSecureIdentity()) return;
+    if (isGroup() && !hasAuthIdentity()) return toast('إرسال رسائل المجموعة يتطلب ربط الحساب بمصادقة Firebase أولًا.');
     try {
       var message = { senderId: myId(), senderName: me().name || 'عضو', senderAvatar: me().avatarURL || '', text: text, kind: 'text', createdAt: timestamp() };
       await chatMessagesRef().add(message);
@@ -332,6 +333,7 @@
   };
   async function sendChatMedia(file) {
     if (!file || !state.chatId) return;
+    if (isGroup() && !hasAuthIdentity()) return toast('إرسال مرفقات المجموعة يتطلب ربط الحساب بمصادقة Firebase أولًا.');
     if (file.size > MAX_MEDIA_BYTES) return toast('الحد الأقصى للمرفق 25 ميجابايت');
     var kind = file.type.indexOf('image/') === 0 ? 'image' : file.type.indexOf('video/') === 0 ? 'video' : file.type.indexOf('audio/') === 0 ? 'audio' : '';
     if (!kind) return toast('الأنواع المتاحة: صورة أو فيديو أو ملف صوتي');

@@ -102,7 +102,10 @@
       list.innerHTML = docs.map(function (doc) {
         var item = doc.data();
         var teacher = item.teacherName ? ' • 👨‍🏫 ' + esc(item.teacherName) : '';
-        var summary = item.content ? esc(item.content.substring(0, 70)) + (item.content.length > 70 ? '…' : '') : (item.video_url ? '🎥 فيديو' : item.image_url ? '🖼️ صورة' : '');
+        var kinds = { lesson: 'درس / شرح', explanation: 'شرح', exercise: 'تدريب', exam: 'امتحان', review: 'مراجعة', image: 'صورة تعليمية', video: 'فيديو' };
+        var workKind = type === 'teacher_explanation' && item.teacherContentType ? kinds[item.teacherContentType] || 'عمل تعليمي' : '';
+        var contentSummary = item.content ? esc(item.content.substring(0, 70)) + (item.content.length > 70 ? '…' : '') : (item.video_url ? '🎥 فيديو' : item.image_url ? '🖼️ صورة' : '');
+        var summary = (workKind ? '📌 ' + workKind + (contentSummary ? ' • ' : '') : '') + contentSummary;
         return '<div class="content-item" onclick="viewContent(\'' + attr(doc.id) + '\')"><div class="content-item-icon">' + (type === 'teacher_explanation' ? '👨‍🏫' : '📄') + '</div><div class="content-item-info"><div class="content-item-title">' + esc(item.title || 'بدون عنوان') + '</div><div class="content-item-sub">' + summary + teacher + '</div></div><div class="content-item-arrow">‹</div></div>';
       }).join('');
     } catch (error) {

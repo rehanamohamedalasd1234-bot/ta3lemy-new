@@ -1800,7 +1800,7 @@ console.log('✅ Exercises UI loaded');
 })();
 // ═══ تحديث إجباري للتطبيق عشان يقرأ الكود الجديد ═══
 (function(){
-  var currentVersion = '1.0.9'; // غيّر الرقم ده مع كل تحديث منشور
+  var currentVersion = '1.0.10'; // غيّر الرقم ده مع كل تحديث منشور
   var savedVersion = localStorage.getItem('app_version');
   if(savedVersion !== currentVersion){
     localStorage.setItem('app_version', currentVersion);

@@ -862,16 +862,12 @@
     enterScreen('creativeMyScreen');
     var body = document.getElementById('creativeMyScreenContent');
     body.innerHTML = '<div class="creative-empty">⏳ جاري تحميل أعمالك...</div>';
-    if (getUid() === 'guest') {
-      body.innerHTML = '<div class="creative-empty">سجّل الدخول حتى تحفظ أعمالك في حسابك وتراها على أجهزتك.</div>';
-      return;
-    }
     var items = await loadMyArtworks();
     while (body.firstChild) body.removeChild(body.firstChild);
     if (!items.length) {
       var empty = document.createElement('div');
       empty.className = 'creative-empty';
-      empty.textContent = 'لم تحفظ لوحات بعد. ارسم لوحتك واضغط «حفظ» لتظهر هنا.';
+      empty.textContent = getUid() === 'guest' ? 'لم تحفظ لوحات على هذا الجهاز بعد. احفظ لوحة لتظهر هنا.' : 'لم تحفظ لوحات بعد. ارسم لوحتك واضغط «حفظ» لتظهر هنا.';
       body.appendChild(empty);
       return;
     }
@@ -911,9 +907,8 @@
 
   async function loadCreativeWork(id) {
     var uid = getUid();
-    if (uid === 'guest') return toast('سجّل الدخول لفتح أعمال حسابك');
     var item = await localGet(uid, id);
-    var fs = getFirestore();
+    var fs = uid === 'guest' ? null : getFirestore();
     if (fs) {
       try {
         var doc = await fs.collection('users').doc(uid).collection('creativeWorks').doc(id).get();
