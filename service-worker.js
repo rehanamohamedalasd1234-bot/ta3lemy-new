@@ -2,7 +2,7 @@
 // Network-first keeps published GitHub Pages updates visible in the APK/WebView;
 // cached responses are only a fallback when the device is offline.
 const CACHE_PREFIX = 'ta3lemy-shell-';
-const CACHE_NAME = CACHE_PREFIX + '1.0.6';
+const CACHE_NAME = CACHE_PREFIX + '1.0.7';
 const APP_SHELL_FALLBACK = new URL('./index.html', self.registration.scope).href;
 
 self.addEventListener('install', (event) => {
