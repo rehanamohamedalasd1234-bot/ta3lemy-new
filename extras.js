@@ -101,6 +101,59 @@
     };
   };
   
+  // ═══ تسجيل الطالب عبر Firebase Custom Token مع الحفاظ على UID القديم ═══
+  window.loginStudentWithBackend = async function(username, password){
+    if (!window.firebase || !firebase.functions || !firebase.auth) return false;
+    var callable;
+    try { callable = firebase.app().functions('us-central1').httpsCallable('loginLegacyStudent'); }
+    catch (e) { return false; }
+    var deviceId = window.getDeviceId();
+    var reply;
+    async function invoke(recoveryCode){
+      var result = await callable({username: username, password: password, deviceId: deviceId, recoveryCode: recoveryCode || ''});
+      return result && result.data || {};
+    }
+    try {
+      reply = await invoke('');
+      if (reply.needsRecovery) {
+        var recoveryCode = window.prompt('🔐 جهاز جديد! أدخل كود الاستعادة المحفوظ للحساب:');
+        if (recoveryCode === null) return true;
+        reply = await invoke(recoveryCode.trim());
+      }
+    } catch (error) {
+      var code = String(error && error.code || '');
+      if (code === 'functions/not-found' || code === 'functions/unavailable' || code === 'functions/deadline-exceeded') {
+        if (typeof showToast === 'function') showToast('تسجيل الدخول الآمن غير متاح الآن؛ سنستخدم الدخول الحالي مؤقتًا، والخاص يظل مغلقًا.');
+        return false;
+      }
+      if (typeof showToast === 'function') showToast(error && error.message || 'تعذر التحقق من الحساب. حاول مرة أخرى.');
+      return true;
+    }
+    if (!reply || !reply.customToken || !reply.uid) {
+      if (typeof showToast === 'function') showToast('استجابة تسجيل الدخول الآمن غير مكتملة.');
+      return true;
+    }
+    try {
+      var credential = await firebase.auth().signInWithCustomToken(reply.customToken);
+      if (!credential.user || credential.user.uid !== String(reply.uid)) {
+        await firebase.auth().signOut();
+        throw new Error('معرّف الحساب لم يتطابق مع الجلسة الآمنة.');
+      }
+      window.currentUser = {name: reply.name || username, uid: String(reply.uid), points: Number(reply.points || 0)};
+      window.currentRole = 'student';
+      try { localStorage.setItem('lastUser', JSON.stringify({name: window.currentUser.name, uid: window.currentUser.uid, role: 'student', points: window.currentUser.points})); } catch (e) {}
+      if (typeof window.logLogin === 'function') await window.logLogin(username, 'student', true, 'custom auth');
+      if (reply.isNew && reply.recoveryCode && typeof window.showRecoveryCode === 'function') window.showRecoveryCode(reply.recoveryCode, window.currentUser.name);
+      if (typeof showToast === 'function') showToast(reply.isNew ? 'تم إنشاء الحساب وربطه بتسجيل Firebase الآمن.' : 'تم تسجيل الدخول الآمن.');
+      if (typeof showScreen === 'function') setTimeout(function(){ showScreen('homeScreen'); }, reply.isNew ? 1800 : 600);
+      return true;
+    } catch (error) {
+      console.error('Firebase custom-token sign-in failed', error);
+      if (typeof showToast === 'function') showToast('تم التحقق من كلمة المرور لكن تعذر فتح جلسة Firebase. أعد المحاولة لاحقًا.');
+      return true;
+    }
+  };
+
   // ═══ 7. Login Override ═══
   window.addEventListener('load', function(){
     setTimeout(function(){
@@ -176,6 +229,12 @@
           return;
         }
         
+        // Student: prefer the server-issued Firebase token; fall back only if the endpoint is not deployed.
+        if (window.currentRole !== 'owner' && typeof window.loginStudentWithBackend === 'function') {
+          var backendHandled = await window.loginStudentWithBackend(uname, pwd);
+          if (backendHandled) return;
+        }
+
         // Student/Teacher
         try {
           var fs = firebase.firestore();
@@ -1741,7 +1800,7 @@ console.log('✅ Exercises UI loaded');
 })();
 // ═══ تحديث إجباري للتطبيق عشان يقرأ الكود الجديد ═══
 (function(){
-  var currentVersion = '1.0.7'; // غيّر الرقم ده مع كل تحديث منشور
+  var currentVersion = '1.0.8'; // غيّر الرقم ده مع كل تحديث منشور
   var savedVersion = localStorage.getItem('app_version');
   if(savedVersion !== currentVersion){
     localStorage.setItem('app_version', currentVersion);

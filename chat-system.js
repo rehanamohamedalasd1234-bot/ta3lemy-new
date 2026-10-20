@@ -1,22 +1,49 @@
-/* منصة الدردشة: دليل أصدقاء بطلب قبول، صورة شخصية، دردشة جماعية/خاصة، مرفقات ومكالمات 1:1.
+/* منصة الدردشة: دليل أصدقاء بطلب قبول، صورة شخصية، دردشة جماعية/خاصة، مرفقات ومكالمات 1:1، الإصدار 1.0.8.
  * ملاحظة أمنية: لابد من قواعد Firestore/Storage تعتمد Firebase Auth؛ فحواجز الواجهة وحدها لا تحمي البيانات.
  */
 (function () {
   'use strict';
   var db = firebase.firestore();
-  var state = { mode: 'group', chatId: '', friend: null, messageUnsub: null, inboxUnsub: null, call: null, peer: null, localStream: null, remoteStream: null, callUnsub: null, candidateUnsub: null, profileAvatarLoadedFor: '', seenCalls: {}, candidateSeen: {}, candidateQueue: [], missedTimer: null, incomingCallId: '', mediaUrls: [] };
+  var state = { mode: 'group', chatId: '', friend: null, messageUnsub: null, inboxUnsub: null, call: null, peer: null, localStream: null, remoteStream: null, callUnsub: null, candidateUnsub: null, profileAvatarLoadedFor: '', ownerClaimUid: '', ownerClaimValid: false, ownerClaimLoading: false, seenCalls: {}, candidateSeen: {}, candidateQueue: [], missedTimer: null, incomingCallId: '', mediaUrls: [] };
   var MAX_MEDIA_BYTES = 25 * 1024 * 1024;
   function me() { return window.currentUser || null; }
   function myId() { var user = me(); return user && user.uid ? String(user.uid) : ''; }
-  function hasSecureIdentity() { try { var authUser = firebase.auth && firebase.auth().currentUser; return !!(authUser && authUser.uid === myId()); } catch (_) { return false; } }
-  function requireSecureIdentity() { if (hasSecureIdentity()) return true; toast('المراسلة الخاصة تحتاج ربط حساب الطالب بـ Firebase Authentication وقواعد الأمان أولًا.'); return false; }
+  function hasAuthIdentity() { try { var authUser = firebase.auth && firebase.auth().currentUser; return !!(authUser && authUser.uid === myId()); } catch (_) { return false; } }
+  function hasSecureIdentity() { return window.CHAT_PRIVATE_ENABLED === true && hasAuthIdentity(); }
+  async function hasOwnerAuth() {
+    try {
+      var authUser = firebase.auth && firebase.auth().currentUser;
+      if (window.currentRole !== 'owner' || !authUser || authUser.uid !== myId()) return false;
+      if (state.ownerClaimUid === authUser.uid) return state.ownerClaimValid;
+      if (state.ownerClaimLoading) return false;
+      state.ownerClaimLoading = true; state.ownerClaimUid = authUser.uid;
+      var token = await authUser.getIdTokenResult();
+      state.ownerClaimValid = !!(token && token.claims && (token.claims.role === 'owner' || token.claims.owner === true));
+      return state.ownerClaimValid;
+    } catch (_) { state.ownerClaimValid = false; return false; }
+    finally { state.ownerClaimLoading = false; }
+  }
+  function requireSecureIdentity() { if (!hasAuthIdentity()) { toast('الخاص يتطلب ربط الحساب بمصادقة Firebase أولًا.'); return false; } if (window.CHAT_PRIVATE_ENABLED !== true) { toast('الخاص متوقف مؤقتًا حتى تُنشر وتُراجع قواعد Firestore وStorage.'); return false; } return true; }
   function toast(text) { if (window.showToast) window.showToast(text); else console.log(text); }
   function esc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); }
   function safeUrl(v) { return /^https:\/\//i.test(String(v || '')) ? String(v) : ''; }
   function roleLabel(role) { return role === 'teacher' ? 'معلم' : role === 'owner' ? 'المالك' : 'طالب'; }
   function timestamp() { return new Date().toISOString(); }
   function sortIds(a, b) { return [String(a), String(b)].sort(); }
-  function friendshipId(a, b) { return sortIds(a, b).map(encodeURIComponent).join('__'); }
+  // The original app used sorted UIDs joined by '_'; keep it canonical so old message documents stay attached.
+  function friendshipId(a, b) { return sortIds(a, b).map(encodeURIComponent).join('_'); }
+  function alternatePairId(a, b) { return sortIds(a, b).map(encodeURIComponent).join('__'); }
+  async function findPairDocument(collectionName, a, b) {
+    var ids = [friendshipId(a, b), alternatePairId(a, b)];
+    for (var i = 0; i < ids.length; i++) {
+      var ref = db.collection(collectionName).doc(ids[i]);
+      var snap = await ref.get().catch(function () { return null; });
+      if (!snap || !snap.exists) continue;
+      var data = snap.data() || {}; var participants = (data.participants || []).map(String);
+      if (participants.indexOf(String(a)) >= 0 && participants.indexOf(String(b)) >= 0) return { id: snap.id, ref: ref, data: data };
+    }
+    return null;
+  }
   function goScreen(id) { if (window.screenHistory && window.currentScreen) window.screenHistory.push(window.currentScreen); if (window.showScreen) window.showScreen(id); }
   function isGroup() { return state.chatId === 'public_chat'; }
   function chatMessagesRef() { return isGroup() ? db.collection('public_chat') : db.collection('messages').doc(state.chatId).collection('msgs'); }
@@ -28,7 +55,7 @@
     document.head.appendChild(style);
   }
   async function ensureMyPublicProfile() {
-    var user = me(); if (!user || !user.uid) return null;
+    var user = me(); if (!user || !user.uid || !hasAuthIdentity()) return null;
     var ref = db.collection('public_profiles').doc(String(user.uid));
     try {
       var profile = await ref.get();
@@ -56,6 +83,7 @@
     state.homeTab = tab;
     var box = document.getElementById('chatSystemHome'); if (!box) return;
     box.innerHTML = '<div class="empty-state">⏳ جاري التحميل...</div>';
+    if (!hasSecureIdentity()) { box.innerHTML = '<div class="empty-state">المحادثات الخاصة ستُفعّل بعد ربط الدخول الآمن ونشر قواعد الحماية.</div>'; return; }
     if (tab === 'friends') return window.openFriendsDirectory(box);
     if (tab === 'requests') return window.openFriendRequests(box);
     if (tab === 'calls') return window.openCallHistory(box);
@@ -85,7 +113,7 @@
     if (window.screenHistory && window.currentScreen) window.screenHistory.push(window.currentScreen);
     if (window.showScreen) window.showScreen('messagesScreen');
     await ensureMyPublicProfile();
-    var securityNote = document.getElementById('chatSecurityNote'); if (securityNote) securityNote.style.display = hasSecureIdentity() ? 'none' : 'block';
+    var securityNote = document.getElementById('chatSecurityNote'); if (securityNote) { securityNote.textContent = !hasAuthIdentity() ? 'الخاص وطلبات الصداقة والمكالمات تحتاج ربط الحساب بمصادقة Firebase الآمنة. الدردشة الجماعية متاحة الآن.' : 'تم توثيق الحساب؛ يظل الخاص متوقفًا حتى نشر ومراجعة قواعد Firestore وStorage.'; securityNote.style.display = hasSecureIdentity() ? 'none' : 'block'; }
     if (!state.homeTab) state.homeTab = 'chats';
     renderHomeTab(state.homeTab);
     listenForIncomingCalls();
@@ -127,6 +155,7 @@
     if (targetBox) container = targetBox;
     else { makeScreen('chatFriendsScreen', '👥 الأصدقاء'); goScreen('chatFriendsScreen'); container = document.getElementById('chatFriendsScreenContent'); }
     if (!container) return;
+    if (!requireSecureIdentity()) { container.innerHTML = '<div class="empty-state">دليل الأصدقاء يتاح بعد تفعيل الأمان الخادمي.</div>'; return; }
     container.innerHTML = '<div class="chatx-tabs"><input id="chatFriendSearch" class="form-input" placeholder="ابحث باسم العضو" style="flex:1"><button class="chatx-btn chatx-blue" id="chatFriendSearchBtn">بحث</button></div><div id="chatFriendResults"><div class="empty-state">اكتب اسمًا للبحث في دليل الأعضاء</div></div><div class="section-title">👥 أصدقائي</div><div id="chatFriendList">⏳</div>';
     document.getElementById('chatFriendSearchBtn').onclick = function () { searchProfiles(document.getElementById('chatFriendSearch').value, document.getElementById('chatFriendResults')); };
     document.getElementById('chatFriendSearch').onkeydown = function (e) { if (e.key === 'Enter') searchProfiles(e.target.value, document.getElementById('chatFriendResults')); };
@@ -180,6 +209,7 @@
     if (targetBox) box = targetBox;
     else { makeScreen('chatRequestsScreen', '📩 طلبات الصداقة'); goScreen('chatRequestsScreen'); box = document.getElementById('chatRequestsScreenContent'); }
     if (!box) return;
+    if (!requireSecureIdentity()) { box.innerHTML = '<div class="empty-state">طلبات الصداقة تتاح بعد تفعيل الأمان الخادمي.</div>'; return; }
     box.innerHTML = '<div class="empty-state">⏳ جارٍ تحميل الطلبات...</div>';
     try {
       var snap = await db.collection('friend_requests').where('toId', '==', myId()).get();
@@ -198,7 +228,8 @@
     if (!requireSecureIdentity()) return;
     try {
       var ids = sortIds(myId(), request.fromId); var names = {}; names[myId()] = me().name || 'عضو'; names[request.fromId] = request.fromName || 'عضو';
-      await db.collection('friendships').doc(friendshipId(ids[0], ids[1])).set({ participants: ids, names: names, createdAt: timestamp() }, { merge: true });
+      var previousFriendship = await findPairDocument('friendships', ids[0], ids[1]);
+      await (previousFriendship ? previousFriendship.ref : db.collection('friendships').doc(friendshipId(ids[0], ids[1]))).set({ participants: ids, names: names, createdAt: timestamp() }, { merge: true });
       await db.collection('friend_requests').doc(requestId).update({ status: 'accepted', acceptedAt: timestamp() });
       toast('تمت إضافة الصديق'); window.openFriendRequests();
     } catch (error) { console.error(error); toast('تعذر قبول الطلب'); }
@@ -206,14 +237,15 @@
   async function rejectFriendRequest(id) { if (!requireSecureIdentity()) return; try { await db.collection('friend_requests').doc(id).update({ status: 'rejected', rejectedAt: timestamp() }); toast('تم رفض الطلب'); window.openFriendRequests(); } catch (error) { console.error(error); toast('تعذر رفض الطلب'); } }
   async function isFriend(otherId) {
     if (!hasSecureIdentity()) return false;
-    try { var doc = await db.collection('friendships').doc(friendshipId(myId(), otherId)).get(); return doc.exists && (doc.data().participants || []).indexOf(myId()) >= 0; } catch (_) { return false; }
+    try { return !!(await findPairDocument('friendships', myId(), otherId)); } catch (_) { return false; }
   }
   async function openPrivateWithFriend(profile) {
     if (!requireSecureIdentity()) return;
     if (!(await isFriend(profile.id))) return toast('المحادثة الخاصة متاحة بعد قبول طلب الصداقة');
-    var ids = sortIds(myId(), profile.id); var id = friendshipId(ids[0], ids[1]);
-    var ref = db.collection('messages').doc(id); var doc = await ref.get();
-    if (!doc.exists) {
+    var ids = sortIds(myId(), profile.id); var existingChat = await findPairDocument('messages', ids[0], ids[1]);
+    var id = existingChat ? existingChat.id : friendshipId(ids[0], ids[1]);
+    var ref = existingChat ? existingChat.ref : db.collection('messages').doc(id);
+    if (!existingChat) {
       var names = {}; names[myId()] = me().name || 'عضو'; names[profile.id] = profile.displayName || 'عضو';
       await ref.set({ participants: ids, participantNames: names, text: '', createdAt: timestamp(), updatedAt: timestamp() });
     }
@@ -354,7 +386,7 @@
     var button = document.createElement('button'); button.id = 'profilePhotoButton'; button.className = 'chatx-btn chatx-blue chatx-profile-edit'; button.textContent = '📷 إضافة أو تغيير صورتي';
     var input = document.createElement('input'); input.type = 'file'; input.id = 'profilePhotoInput'; input.accept = 'image/*'; input.className = 'chatx-file';
     input.onchange = function () { if (input.files && input.files[0]) uploadProfilePhoto(input.files[0]); input.value = ''; };
-    button.onclick = function () { input.click(); }; card.appendChild(button); card.appendChild(input); refreshProfileAvatar();
+    button.onclick = function () { if (requireSecureIdentity()) input.click(); }; card.appendChild(button); card.appendChild(input); refreshProfileAvatar();
   }
   async function refreshProfileAvatar() {
     var img = document.getElementById('myProfileAvatar'); if (!img || !myId() || state.profileAvatarLoadedFor === myId()) return;
@@ -373,6 +405,7 @@
   }
 
   window.reportChatMessage = async function (messageId) {
+    if (!hasAuthIdentity()) return toast('الإبلاغ يتطلب حسابًا موثقًا.');
     var reason = window.prompt('سبب الإبلاغ (إساءة، محتوى غير مناسب، أو غير ذلك):');
     if (!reason || !reason.trim()) return;
     try {
@@ -382,7 +415,7 @@
   };
 
   function listenForIncomingCalls() {
-    if (!myId() || state.inboxUnsub) return;
+    if (!hasSecureIdentity() || !myId() || state.inboxUnsub) return;
     state.inboxUnsub = db.collection('calls').where('toId', '==', myId()).onSnapshot(function (snap) {
       snap.docChanges().forEach(function (change) {
         var call = change.doc.data();
@@ -535,6 +568,7 @@
     var box;
     if (targetBox) box = targetBox;
     else { makeScreen('chatCallsScreen', '📞 المكالمات'); goScreen('chatCallsScreen'); box = document.getElementById('chatCallsScreenContent'); }
+    if (!requireSecureIdentity()) { box.innerHTML = '<div class="empty-state">سجل المكالمات يتاح بعد تفعيل الأمان الخادمي.</div>'; return; }
     box.innerHTML = '<div class="empty-state">⏳ جارٍ تحميل سجل المكالمات...</div>';
     try {
       var snap = await db.collection('calls').where('participants', 'array-contains', myId()).get();
@@ -552,15 +586,18 @@
   };
   window.endChatCall = endCall;
   function ensureChatReportEntry() {
-    if (window.currentRole !== 'owner') return;
-    var admin = document.getElementById('adminScreen'); var content = admin && admin.querySelector('.content');
-    if (!content || document.getElementById('chatReportsEntry')) return;
-    var entry = document.createElement('div'); entry.id = 'chatReportsEntry'; entry.className = 'menu-item';
-    entry.innerHTML = '<span style="font-size:25px">⚑</span><span style="flex:1;font-weight:700;color:#B71C1C">بلاغات الدردشة</span><span style="color:#999;font-size:24px">‹</span>';
-    entry.onclick = window.openChatReports; content.insertBefore(entry, content.firstChild);
+    if (window.currentRole !== 'owner' || document.getElementById('chatReportsEntry')) return;
+    hasOwnerAuth().then(function (valid) {
+      if (!valid || document.getElementById('chatReportsEntry')) return;
+      var admin = document.getElementById('adminScreen'); var content = admin && admin.querySelector('.content');
+      if (!content) return;
+      var entry = document.createElement('div'); entry.id = 'chatReportsEntry'; entry.className = 'menu-item';
+      entry.innerHTML = '<span style="font-size:25px">⚑</span><span style="flex:1;font-weight:700;color:#B71C1C">بلاغات الدردشة</span><span style="color:#999;font-size:24px">‹</span>';
+      entry.onclick = window.openChatReports; content.insertBefore(entry, content.firstChild);
+    });
   }
   window.openChatReports = async function () {
-    if (window.currentRole !== 'owner') return toast('هذه الصفحة للمالك فقط');
+    if (!(await hasOwnerAuth())) return toast('مراجعة البلاغات تحتاج جلسة مالك موثقة من Firebase.');
     injectStyle(); makeScreen('chatReportsScreen', '⚑ بلاغات الدردشة'); goScreen('chatReportsScreen');
     var box = document.getElementById('chatReportsScreenContent'); box.innerHTML = '<div class="empty-state">⏳ جاري تحميل البلاغات...</div>';
     try {
@@ -580,7 +617,7 @@
     } catch (error) { console.error(error); box.innerHTML = '<div class="empty-state">تعذر تحميل البلاغات.</div>'; }
   };
   window.reviewChatReport = async function (reportId, deleteMessage) {
-    if (window.currentRole !== 'owner') return toast('هذه العملية للمالك فقط');
+    if (!(await hasOwnerAuth())) return toast('هذه العملية تحتاج جلسة مالك موثقة من Firebase.');
     try {
       var ref = db.collection('chat_reports').doc(reportId); var doc = await ref.get(); if (!doc.exists) return;
       var report = doc.data();
