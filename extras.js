@@ -748,16 +748,6 @@ window.addEventListener('load', function(){
       btn2.onclick = function(){ window.openPomodoro(); };
       content.insertBefore(btn2, content.firstChild);
     }
-    
-    // زر البث
-    if(!document.getElementById('broadcastBtn')){
-      var btn3 = document.createElement('div');
-      btn3.id = 'broadcastBtn';
-      btn3.style.cssText = 'margin:20px 16px;padding:18px;background:linear-gradient(135deg,#D32F2F,#E53935);color:#fff;border-radius:16px;text-align:center;cursor:pointer;font-weight:bold;';
-      btn3.innerHTML = '<div style="font-size:28px;">🔴</div><div style="margin-top:8px;font-size:15px;">البث المباشر</div>';
-      btn3.onclick = function(){ window.openBroadcast(); };
-      content.insertBefore(btn3, content.firstChild);
-    }
   }, 4000);
 });
 
@@ -1739,21 +1729,16 @@ console.log('✅ Exercises UI loaded');
 })();
 // ═══ تحديث إجباري للتطبيق عشان يقرأ الكود الجديد ═══
 (function(){
-  var currentVersion = '1.0.2'; // غير الرقم ده كل مرة تعدل
+  var currentVersion = '1.0.3'; // غيّر الرقم ده مع كل تحديث منشور
   var savedVersion = localStorage.getItem('app_version');
   if(savedVersion !== currentVersion){
     localStorage.setItem('app_version', currentVersion);
-    if('caches' in window){
-      caches.keys().then(function(names){
-        for(var i = 0; i < names.length; i++){ caches.delete(names[i]); }
-      });
-    }
     if('serviceWorker' in navigator){
       navigator.serviceWorker.getRegistrations().then(function(regs){
-        for(var i = 0; i < regs.length; i++){ regs[i].unregister(); }
+        regs.forEach(function(reg){ reg.update().catch(function(){}); });
       });
     }
-    setTimeout(function(){ location.reload(true); }, 500);
+    if(savedVersion){ setTimeout(function(){ location.reload(); }, 1200); }
   }
 })();
 // ═══════════════════════════════════════════════════════
