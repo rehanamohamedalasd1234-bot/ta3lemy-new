@@ -626,49 +626,7 @@ window.addEventListener('load', function(){
   }, 3000);
 });
 console.log('✅ Quick Menu loaded');
-// ═══ زر التحميل للعمل بدون نت ═══
-window.downloadAllOffline = async function(){
-  if(!navigator.onLine){ if(typeof showToast === 'function') showToast('⚠️ محتاج نت'); return; }
-  if(typeof showToast === 'function') showToast('⏳ جاري التحميل...');
-  try {
-    var fs = firebase.firestore();
-    var ls = await fs.collection('lessons').get();
-    var lessons = [];
-    ls.forEach(function(d){ lessons.push(Object.assign({id: d.id}, d.data())); });
-    localStorage.setItem('offline_lessons', JSON.stringify(lessons));
-    if(typeof showToast === 'function') showToast('✅ الدروس: ' + lessons.length);
-    
-    var r = await fetch('https://api.alquran.cloud/v1/quran/quran-uthmani');
-    var j = await r.json();
-    var quran = {};
-    j.data.surahs.forEach(function(s){
-      quran[s.number] = {name: s.name, ayahs: s.ayahs.map(function(a){return {num: a.numberInSurah, text: a.text};})};
-    });
-    localStorage.setItem('offline_quran_full', JSON.stringify(quran));
-    if(typeof showToast === 'function') showToast('✅ القرآن: ' + j.data.surahs.length + ' سورة');
-    
-    if(typeof showToast === 'function') showToast('🎉 تم التحميل الكامل!');
-  } catch(e){
-    console.error(e);
-    if(typeof showToast === 'function') showToast('❌ فشل');
-  }
-};
 
-window.addEventListener('load', function(){
-  setTimeout(function(){
-    var home = document.getElementById('homeScreen');
-    if(!home || document.getElementById('offlineBtn')) return;
-    var content = home.querySelector('.content');
-    if(!content) return;
-    var btn = document.createElement('div');
-    btn.id = 'offlineBtn';
-    btn.style.cssText = 'margin:20px 16px;padding:18px;background:linear-gradient(135deg,#1976D2,#0D47A1);color:#fff;border-radius:16px;text-align:center;cursor:pointer;font-weight:bold;';
-    btn.innerHTML = '<div style="font-size:28px;">📥</div><div style="margin-top:8px;font-size:15px;">تحميل المنصة بدون نت</div><div style="font-size:12px;opacity:.9;margin-top:4px;">(يحتاج نت — مرة واحدة)</div>';
-    btn.onclick = function(){ window.downloadAllOffline(); };
-    content.insertBefore(btn, content.firstChild);
-  }, 3000);
-});
-console.log('✅ Offline Button loaded');
 // ═══ الأخبار والمقالات ═══
 window.openNews = async function(){
   if(!window.currentUser) return;
@@ -843,49 +801,7 @@ window.addEventListener('load', function(){
     console.log('✅ Chat bar fixed');
   }, 3000);
 });
-// ═══ زر التحميل للعمل بدون نت ═══
-window.downloadAllOffline = async function(){
-  if(!navigator.onLine){ if(typeof showToast === 'function') showToast('⚠️ محتاج نت'); return; }
-  if(typeof showToast === 'function') showToast('⏳ جاري التحميل...');
-  try {
-    var fs = firebase.firestore();
-    var ls = await fs.collection('lessons').get();
-    var lessons = [];
-    ls.forEach(function(d){ lessons.push(Object.assign({id: d.id}, d.data())); });
-    localStorage.setItem('offline_lessons', JSON.stringify(lessons));
-    if(typeof showToast === 'function') showToast('✅ الدروس: ' + lessons.length);
-    
-    var r = await fetch('https://api.alquran.cloud/v1/quran/quran-uthmani');
-    var j = await r.json();
-    var quran = {};
-    j.data.surahs.forEach(function(s){
-      quran[s.number] = {name: s.name, ayahs: s.ayahs.map(function(a){return {num: a.numberInSurah, text: a.text};})};
-    });
-    localStorage.setItem('offline_quran_full', JSON.stringify(quran));
-    if(typeof showToast === 'function') showToast('✅ القرآن: ' + j.data.surahs.length + ' سورة');
-    
-    if(typeof showToast === 'function') showToast('🎉 تم التحميل الكامل!');
-  } catch(e){
-    console.error(e);
-    if(typeof showToast === 'function') showToast('❌ فشل');
-  }
-};
 
-window.addEventListener('load', function(){
-  setTimeout(function(){
-    var home = document.getElementById('homeScreen');
-    if(!home || document.getElementById('offlineBtn')) return;
-    var content = home.querySelector('.content');
-    if(!content) return;
-    var btn = document.createElement('div');
-    btn.id = 'offlineBtn';
-    btn.style.cssText = 'margin:20px 16px;padding:18px;background:linear-gradient(135deg,#1976D2,#0D47A1);color:#fff;border-radius:16px;text-align:center;cursor:pointer;font-weight:bold;';
-    btn.innerHTML = '<div style="font-size:28px;">📥</div><div style="margin-top:8px;font-size:15px;">تحميل المنصة بدون نت</div><div style="font-size:12px;opacity:.9;margin-top:4px;">(يحتاج نت — مرة واحدة)</div>';
-    btn.onclick = function(){ window.downloadAllOffline(); };
-    content.insertBefore(btn, content.firstChild);
-  }, 3000);
-});
-console.log('✅ Offline Button loaded');
 // ═══ حذف ملف من محطتي الإذاعية ═══
 window.deleteMyStationAudio = async function(id){
   if(!window.currentUser) return;
@@ -951,8 +867,9 @@ window.openMultiplication = function(){
   
   html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;">';
   var colors = ['#FF6B6B','#4ECDC4','#45B7D1','#FFA07A','#98D8C8','#F7DC6F','#BB8FCE','#85C1E2','#F8B195','#C06C84'];
+  var arabicDigits = function(value){ return String(value).replace(/[0-9]/g, function(d){ return '٠١٢٣٤٥٦٧٨٩'[d]; }); };
   for(var i = 1; i <= 10; i++){
-    html += '<button onclick="showTable(' + i + ')" style="padding:24px 8px;background:' + colors[i-1] + ';color:#fff;border:none;border-radius:20px;font-family:inherit;font-size:28px;font-weight:bold;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.15);">×' + i + '</button>';
+    html += '<button onclick="showTable(' + i + ')" style="padding:24px 8px;background:' + colors[i-1] + ';color:#fff;border:none;border-radius:20px;font-family:inherit;font-size:28px;font-weight:bold;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.15);">×' + arabicDigits(i) + '</button>';
   }
   html += '</div>';
   
@@ -967,13 +884,14 @@ window.openMultiplication = function(){
 window.showTable = function(num){
   var c = document.getElementById('multResult');
   if(!c) return;
-  var html = '<div style="text-align:center;font-size:22px;font-weight:bold;color:#E65100;margin-bottom:16px;">جدول الـ ' + num + '</div>';
+  var arabicDigits = function(value){ return String(value).replace(/[0-9]/g, function(d){ return '٠١٢٣٤٥٦٧٨٩'[d]; }); };
+  var html = '<div style="text-align:center;font-size:22px;font-weight:bold;color:#E65100;margin-bottom:16px;">جدول الـ ' + arabicDigits(num) + '</div>';
   html += '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;">';
   for(var i = 1; i <= 10; i++){
     var result = num * i;
     html += '<div onclick="speakText(\'' + num + ' في ' + i + ' يساوي ' + result + '\')" style="background:linear-gradient(135deg,#FFF3E0,#FFE0B2);padding:14px;border-radius:14px;text-align:center;cursor:pointer;border:2px solid #FFB74D;">';
-    html += '<div style="font-size:18px;font-weight:bold;color:#E65100;">' + num + ' × ' + i + '</div>';
-    html += '<div style="font-size:24px;font-weight:bold;color:#BF360C;margin-top:4px;">= ' + result + '</div>';
+    html += '<div style="font-size:18px;font-weight:bold;color:#E65100;">' + arabicDigits(num) + ' × ' + arabicDigits(i) + '</div>';
+    html += '<div style="font-size:24px;font-weight:bold;color:#BF360C;margin-top:4px;">= ' + arabicDigits(result) + '</div>';
     html += '</div>';
   }
   html += '</div>';
@@ -2059,52 +1977,98 @@ console.log('✅ Exercises UI loaded');
   console.log('✅ Full News System loaded');
 })();
 // ═══════════════════════════════════════════════════════
-// 📥 إرجاع زرار التحميل بدون نت
+// 📥 تنزيل محتوى التطبيق للاستخدام دون إنترنت
+// ═══════════════════════════════════════════════════════
+(function(){
+  var MEDIA_CACHE_NAME='ta3lemy-media-v1';
+  window.offlineMediaIsCached=async function(url){
+    if(!url||!('caches' in window))return false;
+    try{var cache=await caches.open(MEDIA_CACHE_NAME);return !!(await cache.match(url));}catch(e){return false;}
+  };
+  window.cacheOfflineMediaUrl=async function(url){
+    if(!url||!('caches' in window))return false;
+    try{
+      var cache=await caches.open(MEDIA_CACHE_NAME);
+      if(await cache.match(url))return true;
+      var response;
+      try{response=await fetch(url,{mode:'cors',credentials:'omit'});}catch(corsError){response=await fetch(url,{mode:'no-cors',credentials:'omit'});}
+      if(!response||(!response.ok&&response.type!=='opaque'))return false;
+      await cache.put(url,response.clone());
+      return true;
+    }catch(e){console.warn('تعذر حفظ الوسيط دون اتصال:',url,e);return false;}
+  };
+  window.downloadQuranSurahOffline=async function(surahNumber,reciter,surahData){
+    if(!navigator.onLine){if(typeof showToast==='function')showToast('⚠️ اتصل بالإنترنت لتنزيل صوت السورة');return;}
+    var surah=surahData||window.currentSurahData;
+    if(!surah||Number(surah.number)!==Number(surahNumber)){if(typeof showToast==='function')showToast('⚠️ افتح السورة أولًا');return;}
+    var reader=reciter||window.currentReciter||'ar.alafasy',saved=0,failed=0;
+    for(var i=0;i<surah.ayahs.length;i++){
+      var ayah=surah.ayahs[i],url='https://cdn.islamic.network/quran/audio/128/'+reader+'/'+ayah.number+'.mp3';
+      if(await window.cacheOfflineMediaUrl(url))saved++;else failed++;
+      if((i+1)%12===0||i===surah.ayahs.length-1){if(typeof showToast==='function')showToast('⏳ تنزيل صوت السورة: '+(i+1)+'/'+surah.ayahs.length);}
+    }
+    if(typeof showToast==='function')showToast('✅ حُفظ صوت '+surah.name+': '+saved+' آية'+(failed?' • تعذر '+failed:''));
+  };
+  function mediaUrlsFromLesson(item){
+    var keys=['image_url','imageUrl','video_url','videoUrl','audio_url','audioUrl','file_url','fileUrl','media_url','mediaUrl','attachment_url','attachmentUrl'];
+    return keys.map(function(k){return item&&item[k];}).filter(function(u){return typeof u==='string'&&/^https?:\/\//i.test(u);});
+  }
+  window.downloadAllOffline=async function(){
+    if(!navigator.onLine){if(typeof showToast==='function')showToast('⚠️ اتصل بالإنترنت أولًا لبدء تنزيل المحتوى');return;}
+    if(typeof showToast==='function')showToast('⏳ بدء تنزيل المحتوى للعمل دون إنترنت...');
+    var report={lessons:0,quran:0,station:0,mediaSaved:0,mediaFailed:0};
+    try{
+      var lessonSnap=await firebase.firestore().collection('lessons').get(),lessons=[];
+      lessonSnap.forEach(function(doc){lessons.push(Object.assign({id:doc.id},doc.data()));});
+      localStorage.setItem('offline_lessons',JSON.stringify(lessons));report.lessons=lessons.length;
+      var lessonMedia=[];lessons.forEach(function(item){lessonMedia=lessonMedia.concat(mediaUrlsFromLesson(item));});
+      var lessonUnique=Array.from(new Set(lessonMedia));
+      for(var li=0;li<lessonUnique.length;li++){
+        if(await window.cacheOfflineMediaUrl(lessonUnique[li]))report.mediaSaved++;else report.mediaFailed++;
+        if((li+1)%4===0||li===lessonUnique.length-1){if(typeof showToast==='function')showToast('⏳ تنزيل وسائط المنهج: '+(li+1)+'/'+lessonUnique.length);}
+      }
+      if(typeof showToast==='function')showToast('✅ حُفظت بيانات '+report.lessons+' درسًا وملفات الوسائط');
+    }catch(e){console.error('تعذر تنزيل الدروس:',e);report.mediaFailed++;if(typeof showToast==='function')showToast('⚠️ تعذر تنزيل بعض الدروس أو وسائطها');}
+    try{
+      var response=await fetch('https://api.alquran.cloud/v1/quran/quran-uthmani');
+      if(!response.ok)throw new Error('Quran API '+response.status);
+      var payload=await response.json();if(!payload.data||!payload.data.surahs)throw new Error('بيانات القرآن غير مكتملة');
+      var quran={},surahIndex=payload.data.surahs.map(function(s){
+        quran[s.number]={name:s.name,revelationType:s.revelationType,ayahs:s.ayahs.map(function(a){return {number:a.number,numberInSurah:a.numberInSurah,num:a.numberInSurah,text:a.text};})};
+        return {number:s.number,name:s.name,englishName:s.englishName,numberOfAyahs:s.numberOfAyahs,revelationType:s.revelationType};
+      });
+      localStorage.setItem('offline_quran_full',JSON.stringify(quran));
+      localStorage.setItem('ta3lemy_surahs',JSON.stringify(surahIndex));
+      report.quran=surahIndex.length;
+    }catch(e){console.error('تعذر تنزيل القرآن:',e);if(typeof showToast==='function')showToast('⚠️ لم يكتمل تنزيل نص القرآن');}
+    try{
+      var stationSnap=await firebase.firestore().collection('station').orderBy('created_at','desc').get(),stations=[];
+      stationSnap.forEach(function(doc){stations.push(Object.assign({id:doc.id},doc.data()));});
+      localStorage.setItem('offline_station_items',JSON.stringify(stations));report.station=stations.length;
+      for(var si=0;si<stations.length;si++){
+        var station=stations[si];if(station.url){if(await window.cacheOfflineMediaUrl(station.url))report.mediaSaved++;else report.mediaFailed++;}
+        if(typeof showToast==='function'&&stations.length>0)showToast('⏳ تنزيل ملفات محطتي: '+(si+1)+'/'+stations.length);
+      }
+    }catch(e){console.error('تعذر تنزيل محطة المستخدم:',e);if(typeof showToast==='function')showToast('⚠️ تعذر تنزيل بيانات محطة المستخدم');}
+    try{localStorage.setItem('offline_downloaded_at',new Date().toISOString());}catch(e){}
+    var summary='اكتمل التنزيل: '+report.lessons+' درسًا، '+report.quran+' سورة نصية، '+report.station+' ملف محطة، '+report.mediaSaved+' ملف وسائط محفوظ';
+    if(report.mediaFailed)summary+='، '+report.mediaFailed+' تعذر تنزيلها';
+    if(typeof showToast==='function')showToast(summary);
+    console.log('Offline download report:',report);
+  };
+  window.addEventListener('load',function(){
+    setTimeout(function(){
+      var toolsGrid=document.querySelector('#homeScreen .tools-grid');
+      if(!toolsGrid||document.getElementById('offlineBtnInGrid'))return;
+      var btn=document.createElement('div');btn.id='offlineBtnInGrid';btn.className='tool-btn';
+      btn.innerHTML='<div class="tool-icon" style="background:#1976D215;color:#1976D2;font-size:22px;">📥</div><div class="tool-label">تحميل محتوى التطبيق ليعمل بدون نت</div>';
+      btn.onclick=function(){window.downloadAllOffline();};toolsGrid.appendChild(btn);
+    },4500);
+  });
+  console.log('✅ Offline content download loaded');
+})();
 // ═══════════════════════════════════════════════════════
 
-(function(){
-  window.downloadAllOffline = async function(){
-    if(!navigator.onLine){ if(typeof showToast === 'function') showToast('⚠️ محتاج نت'); return; }
-    if(typeof showToast === 'function') showToast('⏳ جاري التحميل...');
-    try {
-      var fs = firebase.firestore();
-      var ls = await fs.collection('lessons').get();
-      var lessons = [];
-      ls.forEach(function(d){ lessons.push(Object.assign({id: d.id}, d.data())); });
-      localStorage.setItem('offline_lessons', JSON.stringify(lessons));
-      if(typeof showToast === 'function') showToast('✅ الدروس: ' + lessons.length);
-      
-      var r = await fetch('https://api.alquran.cloud/v1/quran/quran-uthmani');
-      var j = await r.json();
-      var quran = {};
-      j.data.surahs.forEach(function(s){
-        quran[s.number] = {name: s.name, ayahs: s.ayahs.map(function(a){return {num: a.numberInSurah, text: a.text};})};
-      });
-      localStorage.setItem('offline_quran_full', JSON.stringify(quran));
-      if(typeof showToast === 'function') showToast('✅ القرآن: ' + j.data.surahs.length + ' سورة');
-      if(typeof showToast === 'function') showToast('🎉 تم التحميل الكامل!');
-    } catch(e){
-      console.error(e);
-      if(typeof showToast === 'function') showToast('❌ فشل');
-    }
-  };
-
-  window.addEventListener('load', function(){
-    setTimeout(function(){
-      var toolsGrid = document.querySelector('#homeScreen .tools-grid');
-      if(!toolsGrid || document.getElementById('offlineBtnInGrid')) return;
-      
-      var btn = document.createElement('div');
-      btn.id = 'offlineBtnInGrid';
-      btn.className = 'tool-btn';
-      btn.innerHTML = '<div class="tool-icon" style="background:#1976D215;color:#1976D2;font-size:22px;">📥</div><div class="tool-label">تحميل</div>';
-      btn.onclick = function(){ window.downloadAllOffline(); };
-      toolsGrid.appendChild(btn);
-    }, 4500);
-  });
-
-  console.log('✅ Offline Button Restored');
-})();
 // ═══════════════════════════════════════════════════════
 // 😊 الإيموشن والإعجابات (للتعليقات والدردشة)
 // ═══════════════════════════════════════════════════════

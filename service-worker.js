@@ -1,20 +1,73 @@
 // Service Worker for the Hafez educational platform.
-// Network-first keeps published GitHub Pages updates visible in the APK/WebView;
-// cached responses are only a fallback when the device is offline.
+// Shell files are prefetched for offline launch; media is stored only when the user explicitly downloads it.
 const CACHE_PREFIX = 'ta3lemy-shell-';
-const CACHE_NAME = CACHE_PREFIX + '1.0.10';
+const CACHE_NAME = CACHE_PREFIX + '1.0.11';
+const MEDIA_CACHE_NAME = 'ta3lemy-media-v1';
+const APP_SHELL = [
+  './', './index.html', './extras.js', './service-worker.js', './manifest.json', './version.json',
+  './teacher-auth.js', './teacher.js', './owner-approvals.js', './teacher-workflow.js',
+  './creativity-config.js', './creativity.js', './chat-config.js', './chat-system.js',
+  './admin-system.js', './azhar-all-content.js', './azhar-aqeeda-content.js',
+  './azhar-fiqh-lessons.js', './azhar-hadith-content.js', './azhar-nahw-content.js',
+  './azhar-quran-content.js', './azhar-seera-content.js', './azhar-run-all.js',
+  './zhar-exercises-exams.js', './icon-512.png'
+];
+const EXTERNAL_SHELL = [
+  'https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js',
+  'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js',
+  'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js',
+  'https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js',
+  'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js'
+];
 const APP_SHELL_FALLBACK = new URL('./index.html', self.registration.scope).href;
 
+function isMediaRequest(request, url) {
+  if (request.destination === 'audio' || request.destination === 'video' || request.destination === 'image') return true;
+  return /\.(mp3|m4a|aac|wav|ogg|mp4|m4v|webm|mov|jpg|jpeg|png|gif|webp|avif|pdf)(?:$|[?#])/i.test(url.href);
+}
+
+async function withRangeSupport(response, request) {
+  const range = request.headers.get('range');
+  if (!range || response.type === 'opaque' || response.status === 206) return response;
+  const match = /^bytes=(\d*)-(\d*)$/i.exec(range.trim());
+  if (!match) return response;
+  try {
+    const body = await response.arrayBuffer();
+    const start = match[1] ? Number(match[1]) : 0;
+    const end = match[2] ? Math.min(Number(match[2]), body.byteLength - 1) : body.byteLength - 1;
+    if (start > end || start >= body.byteLength) return new Response(null, { status: 416, headers: { 'Content-Range': 'bytes */' + body.byteLength } });
+    const headers = new Headers(response.headers);
+    headers.set('Accept-Ranges', 'bytes');
+    headers.set('Content-Range', 'bytes ' + start + '-' + end + '/' + body.byteLength);
+    headers.set('Content-Length', String(end - start + 1));
+    return new Response(body.slice(start, end + 1), { status: 206, statusText: 'Partial Content', headers });
+  } catch (error) { return response; }
+}
+
 self.addEventListener('install', (event) => {
-  self.skipWaiting();
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    for (const path of APP_SHELL) {
+      try {
+        const url = new URL(path, self.registration.scope).href;
+        const response = await fetch(url, { cache: 'reload' });
+        if (response && response.ok && response.type !== 'opaque') await cache.put(url, response.clone());
+      } catch (error) { /* An optional missing file must not prevent installation. */ }
+    }
+    for (const url of EXTERNAL_SHELL) {
+      try {
+        const response = await fetch(url, { mode: 'no-cors', cache: 'reload' });
+        if (response) await cache.put(url, response.clone());
+      } catch (error) { /* A CDN restriction must not prevent installation. */ }
+    }
+    await self.skipWaiting();
+  })());
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
     const keys = await caches.keys();
-    await Promise.all(keys
-      .filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME)
-      .map((key) => caches.delete(key)));
+    await Promise.all(keys.filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME).map((key) => caches.delete(key)));
     await self.clients.claim();
   })());
 });
@@ -22,17 +75,45 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const request = event.request;
   if (request.method !== 'GET') return;
-
   const url = new URL(request.url);
-  if (url.origin !== self.location.origin) return;
 
+  // Serve explicit Cloudinary/Quran/course downloads, including media range requests.
+  if (isMediaRequest(request, url)) {
+    event.respondWith((async () => {
+      const mediaCache = await caches.open(MEDIA_CACHE_NAME);
+      let cached = await mediaCache.match(request.url);
+      const shellCache = await caches.open(CACHE_NAME);
+      if (!cached && url.origin === self.location.origin) cached = await shellCache.match(request);
+      if (cached) return withRangeSupport(cached, request);
+      try {
+        const response = await fetch(request);
+        if (url.origin === self.location.origin && response && response.ok && response.type !== 'opaque') await shellCache.put(request, response.clone());
+        return response;
+      }
+      catch (error) {
+        return new Response('هذا الملف لم يُنزّل على الجهاز بعد', { status: 503, statusText: 'Offline Media Not Found', headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+      }
+    })());
+    return;
+  }
+
+  if (url.origin !== self.location.origin) {
+    const isFirebaseSdk = url.hostname === 'www.gstatic.com' && /firebasejs\/10\.12\.0\//.test(url.pathname);
+    if (!isFirebaseSdk) return;
+    event.respondWith((async () => {
+      const cache = await caches.open(CACHE_NAME);
+      const cached = await cache.match(request.url);
+      if (cached) return cached;
+      try { return await fetch(request); }
+      catch (error) { return new Response('', { status: 503, statusText: 'Offline SDK Not Found' }); }
+    })());
+    return;
+  }
   event.respondWith((async () => {
     const cache = await caches.open(CACHE_NAME);
     try {
       const response = await fetch(request);
-      if (response && response.ok && response.type !== 'opaque') {
-        await cache.put(request, response.clone());
-      }
+      if (response && response.ok && response.type !== 'opaque') await cache.put(request, response.clone());
       return response;
     } catch (error) {
       const cached = await cache.match(request);
@@ -41,11 +122,7 @@ self.addEventListener('fetch', (event) => {
         const shell = await cache.match(APP_SHELL_FALLBACK);
         if (shell) return shell;
       }
-      return new Response('غير متصل بالإنترنت', {
-        status: 503,
-        statusText: 'Offline',
-        headers: { 'Content-Type': 'text/plain; charset=utf-8' }
-      });
+      return new Response('غير متصل بالإنترنت', { status: 503, statusText: 'Offline', headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
     }
   })());
 });

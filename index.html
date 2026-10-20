@@ -146,8 +146,35 @@ function openStage(id){currentStage=id;const s=stagesData[id];document.getElemen
 function openGrade(id,name){currentGrade=name;document.getElementById('subjectsTitle').textContent='الصف '+name;const l=document.getElementById('subjectsList');l.innerHTML=generalSubjects.map(s=>'<div class="subject-card" onclick="openSubject(\''+s.id+'\',\''+s.name+'\')"><div class="subject-icon" style="background:'+s.color+'20;color:'+s.color+';">'+s.icon+'</div><div class="subject-name">'+s.name+'</div></div>').join('');screenHistory.push(currentScreen);showScreen('subjectsScreen');}
 function openSubject(id,name){currentSubject=name;document.getElementById('termsTitle').textContent=name;document.getElementById('termsHeader').textContent=name+' - '+(currentGrade||'');renderTerms();screenHistory.push(currentScreen);showScreen('termsScreen');}
 function renderTerms(){const l=document.getElementById('termsList');const terms=[{num:1,name:'الترم الأول',icon:'📘'},{num:2,name:'الترم الثاني',icon:'📙'}];l.innerHTML=terms.map(t=>'<div class="term-card '+(t.num===2?'term-2':'')+'"><div class="term-header"><div class="term-icon">'+t.icon+'</div><div class="term-title">'+t.name+'</div><div class="term-count">منهج كامل</div></div><div class="term-sections"><div class="section-chip" onclick="openContent(\'lessons\','+t.num+',\''+t.name+'\')">📄 الدروس</div><div class="section-chip" onclick="openContent(\'exercises\','+t.num+',\''+t.name+'\')">✏️ تدريبات</div><div class="section-chip" onclick="openContent(\'exams\','+t.num+',\''+t.name+'\')">📝 امتحانات</div><div class="section-chip" onclick="openContent(\'videos\','+t.num+',\''+t.name+'\')">🎥 فيديوهات</div></div></div>').join('');}
-async function openContent(type,num,name){currentTerm=num;currentSection=type;const titles={lessons:'📄 الدروس',exercises:'✏️ تدريبات',exams:'📝 امتحانات',videos:'🎥 فيديوهات'};document.getElementById('contentTitle').textContent=titles[type]||'المحتوى';document.getElementById('contentHeaderTitle').textContent=(currentSubject||'')+' - '+name;document.getElementById('contentHeaderSub').textContent=titles[type];const l=document.getElementById('contentList');screenHistory.push(currentScreen);showScreen('contentScreen');l.innerHTML='<div class="empty-state"><p>⏳ جاري التحميل...</p></div>';try{let q=db.collection('lessons').where('subject','==',currentSubject).where('term','==',num).where('type','==',type).where('grade','==',currentGrade);if(currentStage)q=q.where('stage','==',currentStage);const snap=await q.get();if(snap.empty){l.innerHTML='<div class="empty-state"><div class="empty-state-icon">📭</div><p>لا يوجد محتوى بعد</p></div>';return;}const sorted=snap.docs.sort((a,b)=>(a.data().order||99)-(b.data().order||99));let html='';sorted.forEach(doc=>{const it=doc.data();html+='<div class="content-item" onclick="viewContent(\''+doc.id+'\')"><div class="content-item-icon">📄</div><div class="content-item-info"><div class="content-item-title">'+(it.title||'بدون عنوان')+'</div><div class="content-item-sub">'+(it.content?it.content.substring(0,50)+'...':'')+'</div></div><div class="content-item-arrow">‹</div></div>';});l.innerHTML=html;}catch(e){console.error('openContent:',e);l.innerHTML='<div class="empty-state">حدث خطأ</div>';}}
-async function viewContent(id){try{const doc=await db.collection('lessons').doc(id).get();if(!doc.exists)return;const it=doc.data();document.getElementById('viewerTitle').textContent=it.title||'';let h='<h2 style="color:#2E7D32;margin-bottom:16px;">'+(it.title||'')+'</h2>';if(it.image_url)h+='<img src="'+it.image_url+'">';if(it.content)h+='<div style="line-height:2;font-size:15px;white-space:pre-wrap;">'+it.content+'</div>';if(it.video_url){if(it.video_url.includes('youtube')){const v=it.video_url.split('v=')[1]||it.video_url.split('/').pop();h+='<iframe style="width:100%;height:250px;margin-top:16px;border-radius:12px;" src="https://www.youtube.com/embed/'+v+'" frameborder="0" allowfullscreen></iframe>';}else{h+='<video controls style="width:100%;margin-top:16px;border-radius:12px;"><source src="'+it.video_url+'"></video>';}}if(it.question){h+='<div style="margin-top:20px;background:#E8F5E9;border-radius:14px;padding:16px;"><div style="font-weight:bold;color:#2E7D32;margin-bottom:8px;">📝 سؤال:</div><div style="font-size:15px;line-height:1.8;white-space:pre-wrap;">'+it.question+'</div><button onclick="toggleAnswer(this)" style="background:#2E7D32;color:#fff;border:none;padding:10px 20px;border-radius:10px;font-family:inherit;font-weight:bold;margin-top:12px;cursor:pointer;">👁️ إظهار الإجابة</button><div class="answer-box"><div style="font-weight:bold;color:#2E7D32;margin-bottom:6px;">✅ الإجابة:</div><div style="line-height:1.8;white-space:pre-wrap;">'+(it.answer||'')+'</div></div><div style="margin-top:16px;"><div style="font-weight:bold;color:#2E7D32;margin-bottom:8px;">✍️ اكتب إجابتك:</div><textarea class="student-answer" id="studentAnswer" placeholder="اكتب إجابتك هنا..."></textarea><button onclick="saveStudentAnswer(\''+id+'\')" style="background:#1976D2;color:#fff;border:none;padding:10px 20px;border-radius:10px;font-family:inherit;font-weight:bold;margin-top:8px;cursor:pointer;">💾 حفظ إجابتي</button></div></div>';}document.getElementById('viewerBody').innerHTML=h;screenHistory.push(currentScreen);showScreen('viewerScreen');}catch(e){console.error(e);}}
+async function openContent(type,num,name){
+  currentTerm=num;currentSection=type;
+  const titles={lessons:'📄 الدروس',exercises:'✏️ تدريبات',exams:'📝 امتحانات',videos:'🎥 فيديوهات'};
+  document.getElementById('contentTitle').textContent=titles[type]||'المحتوى';
+  document.getElementById('contentHeaderTitle').textContent=(currentSubject||'')+' - '+name;
+  document.getElementById('contentHeaderSub').textContent=titles[type];
+  const l=document.getElementById('contentList');screenHistory.push(currentScreen);showScreen('contentScreen');l.innerHTML='<div class="empty-state"><p>⏳ جاري التحميل...</p></div>';
+  let items=[];
+  if(navigator.onLine){try{let q=db.collection('lessons').where('subject','==',currentSubject).where('term','==',num).where('type','==',type).where('grade','==',currentGrade);if(currentStage)q=q.where('stage','==',currentStage);const snap=await q.get();items=snap.docs.map(function(doc){return Object.assign({id:doc.id},doc.data());});}catch(e){console.warn('تعذر الاتصال؛ استخدام الدروس المحفوظة',e);}}
+  if(!items.length){try{items=JSON.parse(localStorage.getItem('offline_lessons')||'[]').filter(function(it){return it.subject===currentSubject&&Number(it.term)===Number(num)&&it.type===type&&it.grade===currentGrade&&(!currentStage||it.stage===currentStage);});}catch(e){items=[];}}
+  if(!items.length){l.innerHTML='<div class="empty-state"><div class="empty-state-icon">📭</div><p>لا يوجد محتوى محفوظ لهذا القسم</p></div>';return;}
+  items.sort(function(a,b){return (a.order||99)-(b.order||99);});
+  l.innerHTML=items.map(function(it){return '<div class="content-item" onclick="viewContent(\''+String(it.id).replace(/'/g,'')+'\')"><div class="content-item-icon">📄</div><div class="content-item-info"><div class="content-item-title">'+(it.title||'بدون عنوان')+'</div><div class="content-item-sub">'+(it.content?it.content.substring(0,50)+'...':'')+'</div></div><div class="content-item-arrow">‹</div></div>';}).join('');
+}
+async function viewContent(id){
+  try{
+    let it=null;
+    if(navigator.onLine){try{const doc=await db.collection('lessons').doc(id).get();if(doc.exists)it=doc.data();}catch(e){console.warn('استخدام نسخة الدرس المحفوظة',e);}}
+    if(!it){const saved=JSON.parse(localStorage.getItem('offline_lessons')||'[]');it=saved.find(function(x){return String(x.id)===String(id);})||null;}
+    if(!it){showToast('⚠️ الدرس غير محفوظ على هذا الجهاز');return;}
+    document.getElementById('viewerTitle').textContent=it.title||'';
+    let h='<h2 style="color:#2E7D32;margin-bottom:16px;">'+(it.title||'')+'</h2>';
+    if(it.image_url)h+='<img src="'+it.image_url+'">';
+    if(it.content)h+='<div style="line-height:2;font-size:15px;white-space:pre-wrap;">'+it.content+'</div>';
+    if(it.video_url){if(it.video_url.includes('youtube')){const v=it.video_url.split('v=')[1]||it.video_url.split('/').pop();h+='<iframe style="width:100%;height:250px;margin-top:16px;border-radius:12px;" src="https://www.youtube.com/embed/'+v+'" frameborder="0" allowfullscreen></iframe>';}else{h+='<video controls style="width:100%;margin-top:16px;border-radius:12px;"><source src="'+it.video_url+'"></video>';}}
+    if(it.question){h+='<div style="margin-top:20px;background:#E8F5E9;border-radius:14px;padding:16px;"><div style="font-weight:bold;color:#2E7D32;margin-bottom:8px;">📝 سؤال:</div><div style="font-size:15px;line-height:1.8;white-space:pre-wrap;">'+it.question+'</div><button onclick="toggleAnswer(this)" style="background:#2E7D32;color:#fff;border:none;padding:10px 20px;border-radius:10px;font-family:inherit;font-weight:bold;margin-top:12px;cursor:pointer;">👁️ إظهار الإجابة</button><div class="answer-box"><div style="font-weight:bold;color:#2E7D32;margin-bottom:6px;">✅ الإجابة:</div><div style="line-height:1.8;white-space:pre-wrap;">'+(it.answer||'')+'</div></div><div style="margin-top:16px;"><div style="font-weight:bold;color:#2E7D32;margin-bottom:8px;">✍️ اكتب إجابتك:</div><textarea class="student-answer" id="studentAnswer" placeholder="اكتب إجابتك هنا..."></textarea><button onclick="saveStudentAnswer(\''+String(id).replace(/'/g,'')+'\')" style="background:#1976D2;color:#fff;border:none;padding:10px 20px;border-radius:10px;font-family:inherit;font-weight:bold;margin-top:8px;cursor:pointer;">💾 حفظ إجابتي</button></div></div>';}
+    document.getElementById('viewerBody').innerHTML=h;screenHistory.push(currentScreen);showScreen('viewerScreen');
+  }catch(e){console.error(e);showToast('❌ تعذر فتح المحتوى');}
+}
 function toggleAnswer(btn){const box=btn.nextElementSibling;if(box.style.display==='none'||!box.style.display){box.style.display='block';btn.textContent='🙈 إخفاء الإجابة';}else{box.style.display='none';btn.textContent='👁️ إظهار الإجابة';}}
 async function saveStudentAnswer(lessonId){const ta=document.getElementById('studentAnswer');if(!ta)return;const ans=ta.value.trim();if(!ans){showToast('⚠️ اكتب إجابتك أولاً');return;}if(!currentUser){showToast('⚠️ سجل دخول');return;}try{await db.collection('answers').add({lessonId:lessonId,studentId:currentUser.uid,studentName:currentUser.name,answer:ans,createdAt:new Date().toISOString()});showToast('✅ تم حفظ إجابتك');ta.value='';}catch(e){console.error(e);showToast('❌ فشل الحفظ');}}
 function openBakkalorya(){screenHistory.push(currentScreen);showScreen('bakkaloryaScreen');const l=document.getElementById('bakkaloryaGradesList');const grades=[{id:'1',name:'الصف الأول الثانوي (تأسيسي)',icon:'📘',desc:'مواد عامة مشتركة'},{id:'2',name:'الصف الثاني الثانوي',icon:'📗',desc:'اختيار المسار + 400 درجة'},{id:'3',name:'الصف الثالث الثانوي',icon:'📕',desc:'مواد متقدمة + 200 درجة'}];l.innerHTML=grades.map(g=>'<div class="stage-item" onclick="openBakkaloryaGrade(\''+g.id+'\',\''+g.name+'\')"><div class="stage-icon">'+g.icon+'</div><div class="stage-info"><div class="stage-name">'+g.name+'</div><div class="stage-sub">'+g.desc+'</div></div><div class="stage-arrow">‹</div></div>').join('');}
@@ -178,9 +205,68 @@ function openAzharGrade(gradeName){
     l.innerHTML=azharSubjects.map(s=>'<div class="azhar-subject-item" onclick="openAzharSubject(\''+s.id+'\',\''+s.name+'\')"><div style="font-size:30px;">'+s.icon+'</div><div class="stage-info"><div class="stage-name">'+s.name+'</div></div><div class="stage-arrow" style="color:#C9A227;">‹</div></div>').join('');
     screenHistory.push(currentScreen);showScreen('azharScreen');
 }
-function openAzharSubject(id,name){currentSubject=name;document.getElementById('termsTitle').textContent=name;document.getElementById('termsHeader').textContent=name+' - '+(currentGrade||'');renderTerms();screenHistory.push(currentScreen);showScreen('termsScreen');}async function openQuran(){const l=document.getElementById('surahsList');if(!l)return;screenHistory.push(currentScreen);showScreen('quranScreen');l.innerHTML='<div class="empty-state"><p>⏳ جاري التحميل...</p></div>';try{const cached=localStorage.getItem('ta3lemy_surahs');let data;if(cached){data=JSON.parse(cached);}else{const r=await fetch('https://api.alquran.cloud/v1/surah');const j=await r.json();data=j.data;localStorage.setItem('ta3lemy_surahs',JSON.stringify(data));}l.innerHTML=data.map(s=>'<div class="content-item" onclick="openSurah('+s.number+')"><div class="content-item-icon" style="background:linear-gradient(135deg,#00695C,#26A69A);color:#fff;font-weight:bold;">'+s.number+'</div><div class="content-item-info"><div class="content-item-title">'+s.name+'</div><div class="content-item-sub">'+s.numberOfAyahs+' آية • '+s.revelationType+'</div></div><div class="content-item-arrow">‹</div></div>').join('');}catch(e){console.error('Quran API:',e);l.innerHTML='<div class="empty-state"><p>⚠️ تعذر التحميل</p></div>';}}
-async function openSurah(num){const c=document.getElementById('surahContent');document.getElementById('surahTitle').textContent='جاري التحميل...';c.innerHTML='<div class="empty-state"><p>⏳</p></div>';screenHistory.push(currentScreen);showScreen('surahScreen');try{const r=await fetch('https://api.alquran.cloud/v1/surah/'+num+'/'+currentReciter);const j=await r.json();const d=j.data;currentSurahData=d;document.getElementById('surahTitle').textContent=d.name;let html='<div style="text-align:center;background:linear-gradient(135deg,#00695C,#26A69A);color:#fff;padding:20px;border-radius:16px;margin-bottom:16px;"><div style="font-size:24px;font-weight:bold;">'+d.name+'</div><div style="font-size:13px;opacity:.9;margin-top:6px;">'+d.numberOfAyahs+' آية • '+d.revelationType+'</div></div>';if(num!==1&&num!==9){html+='<div style="text-align:center;font-size:22px;padding:16px;color:#2E7D32;font-weight:bold;font-family:Amiri,serif;">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>';}d.ayahs.forEach((a,idx)=>{let text=a.text;if(num!==1&&num!==9&&a.numberInSurah===1){text=text.replace('بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ','').trim();}html+='<div class="ayah-card" id="ayah-'+a.number+'" onclick="playAyah('+a.number+','+idx+')"><span class="ayah-num">'+a.numberInSurah+'</span>'+text+'</div>';});c.innerHTML=html;c.scrollTop=0;currentAyahIndex=0;}catch(e){console.error('Surah:',e);c.innerHTML='<div class="empty-state"><p>⚠️ تعذر التحميل</p></div>';}}
-function playAyah(num,idx){if(!currentSurahData)return;const a=currentSurahData.ayahs.find(x=>x.number===num);if(!a)return;if(quranAudio){quranAudio.pause();quranAudio=null;}document.querySelectorAll('.ayah-card').forEach(el=>el.classList.remove('active'));const el=document.getElementById('ayah-'+num);if(el){el.classList.add('active');el.scrollIntoView({behavior:'smooth',block:'center'});}currentAyah=a;currentAyahIndex=idx!==undefined?idx:currentSurahData.ayahs.indexOf(a);const url='https://cdn.islamic.network/quran/audio/128/'+currentReciter+'/'+num+'.mp3';quranAudio=new Audio(url);quranAudio.play().catch(()=>showToast('⚠️ اضغط مرة أخرى'));quranAudio.onended=()=>{if(el)el.classList.remove('active');if(autoPlayEnabled&&currentSurahData&&currentAyahIndex<currentSurahData.ayahs.length-1){const next=currentSurahData.ayahs[currentAyahIndex+1];setTimeout(()=>playAyah(next.number,currentAyahIndex+1),500);}};document.getElementById('ayahPlayer').style.display='block';document.getElementById('ayahNowPlaying').textContent='🎧 آية '+a.numberInSurah;}
+function openAzharSubject(id,name){currentSubject=name;document.getElementById('termsTitle').textContent=name;document.getElementById('termsHeader').textContent=name+' - '+(currentGrade||'');renderTerms();screenHistory.push(currentScreen);showScreen('termsScreen');}async function openQuran(){
+  const l=document.getElementById('surahsList');
+  if(!l)return;
+  screenHistory.push(currentScreen);showScreen('quranScreen');
+  l.innerHTML='<div class="empty-state"><p>⏳ جاري التحميل...</p></div>';
+  try{
+    let data=JSON.parse(localStorage.getItem('ta3lemy_surahs')||'[]');
+    const offlineQuran=JSON.parse(localStorage.getItem('offline_quran_full')||'null');
+    if(!data.length&&offlineQuran){
+      data=Object.keys(offlineQuran).map(function(k){const s=offlineQuran[k];return {number:Number(k),name:s.name,numberOfAyahs:(s.ayahs||[]).length,revelationType:s.revelationType||'قرآن كريم'};});
+      localStorage.setItem('ta3lemy_surahs',JSON.stringify(data));
+    }
+    if(!data.length&&navigator.onLine){
+      const r=await fetch('https://api.alquran.cloud/v1/surah');
+      if(!r.ok)throw new Error('فشل جلب فهرس السور');
+      const j=await r.json();data=j.data||[];localStorage.setItem('ta3lemy_surahs',JSON.stringify(data));
+    }
+    if(!data.length)throw new Error('لا توجد نسخة محفوظة');
+    l.innerHTML=data.map(function(s){return '<div class="content-item" onclick="openSurah('+s.number+')"><div class="content-item-icon" style="background:linear-gradient(135deg,#00695C,#26A69A);color:#fff;font-weight:bold;">'+s.number+'</div><div class="content-item-info"><div class="content-item-title">'+s.name+'</div><div class="content-item-sub">'+s.numberOfAyahs+' آية • '+(s.revelationType||'قرآن كريم')+'</div></div><div class="content-item-arrow">‹</div></div>';}).join('');
+  }catch(e){console.error('Quran API:',e);l.innerHTML='<div class="empty-state"><p>⚠️ لم يُحفظ القرآن على هذا الجهاز بعد. اتصل بالإنترنت واضغط «تحميل محتوى التطبيق ليعمل بدون نت».</p></div>';}
+}
+async function openSurah(num){
+  const c=document.getElementById('surahContent');
+  document.getElementById('surahTitle').textContent='جاري تحميل السورة...';
+  c.innerHTML='<div class="empty-state"><p>⏳</p></div>';
+  screenHistory.push(currentScreen);showScreen('surahScreen');
+  try{
+    let d=null;
+    if(navigator.onLine){
+      try{const r=await fetch('https://api.alquran.cloud/v1/surah/'+num+'/'+currentReciter);if(!r.ok)throw new Error('API');const j=await r.json();d=j.data||null;}catch(e){console.warn('تعذر جلب السورة عبر الإنترنت؛ محاولة النسخة المحفوظة',e);}
+    }
+    if(!d){
+      const stored=JSON.parse(localStorage.getItem('offline_quran_full')||'null');
+      const raw=stored&&stored[num];
+      if(!raw)throw new Error('السورة غير محفوظة');
+      const idx=JSON.parse(localStorage.getItem('ta3lemy_surahs')||'[]');
+      const meta=idx.find(function(x){return Number(x.number)===Number(num);})||{};
+      let offset=0;for(let n=1;n<Number(num);n++){offset+=((stored[n]&&stored[n].ayahs)||[]).length;}
+      d={number:Number(num),name:raw.name||meta.name||'سورة '+num,numberOfAyahs:(raw.ayahs||[]).length,revelationType:raw.revelationType||meta.revelationType||'قرآن كريم',ayahs:(raw.ayahs||[]).map(function(a,i){return {number:Number(a.number||offset+i+1),numberInSurah:Number(a.numberInSurah||a.num||i+1),text:a.text};})};
+    }
+    currentSurahData=d;
+    document.getElementById('surahTitle').textContent=d.name;
+    let html='<div style="text-align:center;background:linear-gradient(135deg,#00695C,#26A69A);color:#fff;padding:20px;border-radius:16px;margin-bottom:16px;"><div style="font-size:24px;font-weight:bold;">'+d.name+'</div><div style="font-size:13px;opacity:0.9;margin-top:6px;">'+d.numberOfAyahs+' آية • '+(d.revelationType||'قرآن كريم')+'</div></div>';
+    html+='<button onclick="downloadQuranSurahOffline('+Number(num)+',currentReciter,currentSurahData)" style="width:100%;padding:12px;margin:0 0 12px;background:#00695C;color:#fff;border:0;border-radius:12px;font-family:inherit;font-weight:bold;">⬇️ حفظ صوت السورة للعمل بدون إنترنت</button>';
+    if(Number(num)!==1&&Number(num)!==9){html+='<div style="text-align:center;font-size:22px;padding:16px;color:#2E7D32;font-weight:bold;font-family:Amiri,serif;">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>';}
+    d.ayahs.forEach(function(a,idx){let text=a.text;if(Number(num)!==1&&Number(num)!==9&&a.numberInSurah===1){text=text.replace('بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ','').trim();}html+='<div class="ayah-card" id="ayah-'+a.number+'" onclick="playAyah('+a.number+','+idx+')"><span class="ayah-num">'+a.numberInSurah+'</span>'+text+'</div>';});
+    c.innerHTML=html;c.scrollTop=0;currentAyahIndex=0;
+  }catch(e){console.error('Surah:',e);c.innerHTML='<div class="empty-state"><p>⚠️ تعذر عرض السورة. عند الاتصال بالإنترنت نزّل محتوى التطبيق أولًا.</p></div>';}
+}
+async function playAyah(num,idx){
+  if(!currentSurahData)return;
+  const a=currentSurahData.ayahs.find(function(x){return x.number===num;});if(!a)return;
+  if(quranAudio){quranAudio.pause();quranAudio=null;}
+  document.querySelectorAll('.ayah-card').forEach(function(el){el.classList.remove('active');});
+  const el=document.getElementById('ayah-'+num);if(el){el.classList.add('active');el.scrollIntoView({behavior:'smooth',block:'center'});}
+  currentAyah=a;currentAyahIndex=idx!==undefined?idx:currentSurahData.ayahs.indexOf(a);
+  const url='https://cdn.islamic.network/quran/audio/128/'+currentReciter+'/'+num+'.mp3';
+  if(!navigator.onLine&&window.offlineMediaIsCached&&!(await window.offlineMediaIsCached(url))){if(el)el.classList.remove('active');showToast('📴 نص الآية متاح، لكن صوتها لم يُنزّل لهذا الجهاز');return;}
+  quranAudio=new Audio(url);quranAudio.play().catch(function(){showToast('⚠️ لم يتوفر الصوت؛ نزّل صوت السورة أثناء الاتصال');});
+  quranAudio.onended=function(){if(el)el.classList.remove('active');if(autoPlayEnabled&&currentSurahData&&currentAyahIndex<currentSurahData.ayahs.length-1){const next=currentSurahData.ayahs[currentAyahIndex+1];setTimeout(function(){playAyah(next.number,currentAyahIndex+1);},500);}};
+  document.getElementById('ayahPlayer').style.display='block';document.getElementById('ayahNowPlaying').textContent='🎧 آية '+a.numberInSurah;
+}
 function stopAyahAudio(){if(quranAudio){quranAudio.pause();quranAudio=null;}document.getElementById('ayahPlayer').style.display='none';document.querySelectorAll('.ayah-card').forEach(el=>el.classList.remove('active'));showToast('⏹️ تم الإيقاف');}
 function nextAyah(){if(!currentSurahData)return;if(currentAyahIndex<currentSurahData.ayahs.length-1){const next=currentSurahData.ayahs[currentAyahIndex+1];playAyah(next.number,currentAyahIndex+1);}else{showToast('📖 نهاية السورة');}}
 function prevAyah(){if(!currentSurahData)return;if(currentAyahIndex>0){const prev=currentSurahData.ayahs[currentAyahIndex-1];playAyah(prev.number,currentAyahIndex-1);}else{showToast('📖 بداية السورة');}}
@@ -189,10 +275,42 @@ function toggleAutoPlay(){autoPlayEnabled=!autoPlayEnabled;const btn=document.ge
 async function showCurrentTafsir(){if(!currentAyah){showToast('⚠️ اختر آية أولاً');return;}showToast('⏳ جاري التفسير...');try{const r=await fetch('https://api.alquran.cloud/v1/ayah/'+currentAyah.number+'/ar.muyassar');const j=await r.json();alert('📖 التفسير الميسر:\n\n'+j.data.text);}catch(e){console.error(e);showToast('⚠️ تعذر جلب التفسير');}}
 function changeReciter(val){currentReciter=val;showToast('🎧 تم تغيير الشيخ');if(currentSurahData){const num=currentSurahData.number;openSurah(num);}}
 function filterSurahs(q){const l=document.getElementById('surahsList');const cached=JSON.parse(localStorage.getItem('ta3lemy_surahs')||'[]');if(!cached.length)return;const f=cached.filter(s=>s.name.includes(q)||s.englishName.toLowerCase().includes(q.toLowerCase()));l.innerHTML=f.map(s=>'<div class="content-item" onclick="openSurah('+s.number+')"><div class="content-item-icon" style="background:linear-gradient(135deg,#00695C,#26A69A);color:#fff;font-weight:bold;">'+s.number+'</div><div class="content-item-info"><div class="content-item-title">'+s.name+'</div><div class="content-item-sub">'+s.numberOfAyahs+' آية</div></div></div>').join('');}
-async function openRadio(){const myList=document.getElementById('myStationList');const publicList=document.getElementById('radioList');let myHtml='';try{const snap=await db.collection('station').orderBy('created_at','desc').get();if(snap.empty){myHtml='<div class="empty-state"><div class="empty-state-icon">🎵</div><p>لا توجد ملفات بعد</p></div>';}else{snap.forEach(doc=>{const x=doc.data();myHtml+='<div class="content-item" onclick="playMyStationAudio(\''+doc.id+'\')"><div class="content-item-icon" style="background:linear-gradient(135deg,#7B1FA2,#9C27B0);color:#fff;font-size:24px;">🎵</div><div class="content-item-info"><div class="content-item-title">'+(x.title||'')+'</div><div class="content-item-sub">من محطتي</div></div><div class="content-item-arrow">▶️</div></div>';});}}catch(e){console.error(e);myHtml='<div class="empty-state">حدث خطأ</div>';}myList.innerHTML=myHtml;publicList.innerHTML=radioStations.map((s,i)=>'<div class="content-item" onclick="playRadio('+i+')"><div class="content-item-icon" style="background:linear-gradient(135deg,#D32F2F,#FF8F00);color:#fff;font-size:24px;">📻</div><div class="content-item-info"><div class="content-item-title">'+s.name+'</div><div class="content-item-sub">اضغط للتشغيل</div></div><div class="content-item-arrow">▶️</div></div>').join('');screenHistory.push(currentScreen);showScreen('radioScreen');}
-function playRadio(i){const s=radioStations[i];if(radioAudio){radioAudio.pause();radioAudio=null;}radioAudio=new Audio(s.url);radioAudio.play().catch(e=>showToast('❌ تعذر التشغيل'));document.getElementById('radioPlayer').style.display='block';document.getElementById('radioStationName').textContent=s.name;document.getElementById('radioNowPlaying').textContent='🎵 جاري التشغيل...';showToast('▶️ '+s.name);}
+async function openRadio(){
+  const myList=document.getElementById('myStationList');const publicList=document.getElementById('radioList');
+  if(!myList||!publicList)return;
+  let items=[];
+  try{items=JSON.parse(localStorage.getItem('offline_station_items')||'[]');}catch(e){items=[];}
+  if(navigator.onLine){
+    try{
+      const snap=await db.collection('station').orderBy('created_at','desc').get();
+      const fresh=[];snap.forEach(function(doc){fresh.push(Object.assign({id:doc.id},doc.data()));});
+      if(fresh.length||!items.length){items=fresh;localStorage.setItem('offline_station_items',JSON.stringify(items));}
+    }catch(e){console.warn('استخدام بيانات المحطة المحفوظة محليًا',e);}
+  }
+  if(!items.length){myList.innerHTML='<div class="empty-state"><div class="empty-state-icon">🎵</div><p>لا توجد ملفات محطة محفوظة على هذا الجهاز</p></div>';}
+  else{myList.innerHTML=items.map(function(x){const id=String(x.id||'').replace(/'/g,'');const title=String(x.title||'ملف صوتي');return '<div class="content-item" onclick="playMyStationAudio(\''+id+'\')"><div class="content-item-icon" style="background:linear-gradient(135deg,#7B1FA2,#9C27B0);color:#fff;font-size:24px;">🎵</div><div class="content-item-info"><div class="content-item-title">'+title+'</div><div class="content-item-sub">'+(navigator.onLine?'من محطتي':'محفوظ محليًا • من محطتي')+'</div></div><div class="content-item-arrow">▶️</div></div>';}).join('');}
+  publicList.innerHTML=radioStations.map(function(station,i){return '<div class="content-item" onclick="playRadio('+i+')"><div class="content-item-icon" style="background:linear-gradient(135deg,#D32F2F,#FF8F00);color:#fff;font-size:24px;">📻</div><div class="content-item-info"><div class="content-item-title">'+station.name+'</div><div class="content-item-sub">بث مباشر — يحتاج إنترنت</div></div><div class="content-item-arrow">▶️</div></div>';}).join('');
+  screenHistory.push(currentScreen);showScreen('radioScreen');
+}
+function playRadio(i){
+  if(!navigator.onLine){showToast('📴 البث المباشر يحتاج إنترنت؛ شغّل ملفًا محفوظًا في «محطتي»');return;}
+  const station=radioStations[i];if(!station)return;
+  if(radioAudio){radioAudio.pause();radioAudio=null;}
+  radioAudio=new Audio(station.url);radioAudio.play().catch(function(){showToast('❌ تعذر تشغيل البث');});
+  document.getElementById('radioPlayer').style.display='block';document.getElementById('radioStationName').textContent=station.name;document.getElementById('radioNowPlaying').textContent='🎵 جاري التشغيل...';showToast('▶️ '+station.name);
+}
 function stopRadio(){if(radioAudio){radioAudio.pause();radioAudio=null;}document.getElementById('radioPlayer').style.display='none';showToast('⏹️ تم الإيقاف');}
-async function playMyStationAudio(id){try{const doc=await db.collection('station').doc(id).get();if(!doc.exists)return;const x=doc.data();if(radioAudio){radioAudio.pause();radioAudio=null;}radioAudio=new Audio(x.url);radioAudio.play().catch(e=>showToast('❌ اضغط مرة أخرى'));document.getElementById('radioPlayer').style.display='block';document.getElementById('radioStationName').textContent=x.title||'';document.getElementById('radioNowPlaying').textContent='🎵 جاري التشغيل...';showToast('▶️ '+(x.title||''));}catch(e){console.error(e);}}
+async function playMyStationAudio(id){
+  try{
+    let item=null;try{item=(JSON.parse(localStorage.getItem('offline_station_items')||'[]')).find(function(x){return String(x.id)===String(id);})||null;}catch(e){}
+    if(navigator.onLine){try{const doc=await db.collection('station').doc(id).get();if(doc.exists){item=Object.assign({id:doc.id},doc.data());const all=JSON.parse(localStorage.getItem('offline_station_items')||'[]');const pos=all.findIndex(function(x){return String(x.id)===String(id);});if(pos>=0)all[pos]=item;else all.unshift(item);localStorage.setItem('offline_station_items',JSON.stringify(all));}}catch(e){console.warn('استخدام بيانات المحطة المحلية',e);}}
+    if(!item||!item.url){showToast('⚠️ لا توجد بيانات محفوظة لهذا الملف');return;}
+    if(!navigator.onLine&&window.offlineMediaIsCached&&!(await window.offlineMediaIsCached(item.url))){showToast('📴 الملف الصوتي غير منزّل على هذا الجهاز؛ اتصل بالإنترنت واضغط تحميل المحتوى');return;}
+    if(radioAudio){radioAudio.pause();radioAudio=null;}
+    radioAudio=new Audio(item.url);radioAudio.play().catch(function(){showToast('❌ تعذر التشغيل؛ قد يحتاج الملف إلى تنزيله أثناء الاتصال');});
+    document.getElementById('radioPlayer').style.display='block';document.getElementById('radioStationName').textContent=item.title||'';document.getElementById('radioNowPlaying').textContent='🎵 جاري التشغيل...';showToast('▶️ '+(item.title||''));
+  }catch(e){console.error(e);showToast('❌ تعذر تشغيل الملف');}
+}
 async function addMyStationAudio(){const t=document.getElementById('myStationTitle').value.trim();const fi=document.getElementById('myStationFile');const btn=document.getElementById('saveStationBtn');if(!t){showToast('⚠️ أدخل عنوان');return;}if(!fi.files||!fi.files[0]){showToast('⚠️ اختر ملف');return;}if(btn){btn.disabled=true;btn.textContent='⏳ جاري الرفع...';}const url=await uploadFile(fi.files[0],'mystation');if(btn){btn.disabled=false;btn.textContent='➕ إضافة للمحطة';}if(!url){showToast('❌ فشل الرفع');return;}try{await db.collection('station').add({title:t,url:url,created_at:new Date().toISOString()});showToast('✅ تم إضافة الملف');document.getElementById('myStationTitle').value='';fi.value='';openRadio();}catch(e){console.error(e);showToast('❌ فشل');}}
 async function openPublicChat() {
     if (!currentUser) { showToast('⚠️ سجل دخول'); return; }
@@ -203,7 +321,7 @@ async function openPublicChat() {
     c.innerHTML = '<p style="text-align:center;color:#999;">⏳ جاري التحميل...</p>';
     screenHistory.push(currentScreen);
     showScreen('chatScreen');
-    
+
     if (chatUnsubscribe) { try { chatUnsubscribe(); } catch(e) {} }
     chatUnsubscribe = db.collection('public_chat').orderBy('createdAt', 'asc').limit(100).onSnapshot(snap => {
         const c2 = document.getElementById('chatMessages');
@@ -356,7 +474,7 @@ async function openPublicChat() {
     c.innerHTML = '<p style="text-align:center;color:#999;">⏳ جاري التحميل...</p>';
     screenHistory.push(currentScreen);
     showScreen('chatScreen');
-    
+
     if (chatUnsubscribe) { try { chatUnsubscribe(); } catch(e) {} }
     chatUnsubscribe = db.collection('public_chat').orderBy('createdAt', 'asc').limit(100).onSnapshot(snap => {
         const c2 = document.getElementById('chatMessages');
@@ -399,7 +517,7 @@ async function openPublicChat() {
     c.innerHTML = '<p style="text-align:center;color:#999;">⏳ جاري التحميل...</p>';
     screenHistory.push(currentScreen);
     showScreen('chatScreen');
-    
+
     if (chatUnsubscribe) { try { chatUnsubscribe(); } catch(e) {} }
     chatUnsubscribe = db.collection('public_chat').orderBy('createdAt', 'asc').limit(100).onSnapshot(snap => {
         const c2 = document.getElementById('chatMessages');
@@ -445,9 +563,68 @@ function openStage(id){currentStage=id;const s=stagesData[id];document.getElemen
 function openGrade(id,name){currentGrade=name;document.getElementById('subjectsTitle').textContent='الصف '+name;const l=document.getElementById('subjectsList');l.innerHTML=generalSubjects.map(s=>'<div class="subject-card" onclick="openSubject(\''+s.id+'\',\''+s.name+'\')"><div class="subject-icon" style="background:'+s.color+'20;color:'+s.color+';">'+s.icon+'</div><div class="subject-name">'+s.name+'</div></div>').join('');screenHistory.push(currentScreen);showScreen('subjectsScreen');}
 function openSubject(id,name){currentSubject=name;document.getElementById('termsTitle').textContent=name;document.getElementById('termsHeader').textContent=name+' - '+(currentGrade||'');renderTerms();screenHistory.push(currentScreen);showScreen('termsScreen');}
 function renderTerms(){const l=document.getElementById('termsList');const terms=[{num:1,name:'الترم الأول',icon:'📘'},{num:2,name:'الترم الثاني',icon:'📙'}];l.innerHTML=terms.map(t=>'<div class="term-card '+(t.num===2?'term-2':'')+'"><div class="term-header"><div class="term-icon">'+t.icon+'</div><div class="term-title">'+t.name+'</div><div class="term-count">منهج كامل</div></div><div class="term-sections"><div class="section-chip" onclick="openContent(\'lessons\','+t.num+',\''+t.name+'\')">📄 الدروس</div><div class="section-chip" onclick="openContent(\'exercises\','+t.num+',\''+t.name+'\')">✏️ تدريبات</div><div class="section-chip" onclick="openContent(\'exams\','+t.num+',\''+t.name+'\')">📝 امتحانات</div><div class="section-chip" onclick="openContent(\'videos\','+t.num+',\''+t.name+'\')">🎥 فيديوهات</div></div></div>').join('');}
-async function openQuran(){const l=document.getElementById('surahsList');if(!l)return;screenHistory.push(currentScreen);showScreen('quranScreen');l.innerHTML='<div class="empty-state"><p>⏳ جاري التحميل...</p></div>';try{const cached=localStorage.getItem('ta3lemy_surahs');let data;if(cached){data=JSON.parse(cached);}else{const r=await fetch('https://api.alquran.cloud/v1/surah');const j=await r.json();data=j.data;localStorage.setItem('ta3lemy_surahs',JSON.stringify(data));}l.innerHTML=data.map(s=>'<div class="content-item" onclick="openSurah('+s.number+')"><div class="content-item-icon" style="background:linear-gradient(135deg,#00695C,#26A69A);color:#fff;font-weight:bold;">'+s.number+'</div><div class="content-item-info"><div class="content-item-title">'+s.name+'</div><div class="content-item-sub">'+s.numberOfAyahs+' آية • '+s.revelationType+'</div></div><div class="content-item-arrow">‹</div></div>').join('');}catch(e){console.error('Quran API:',e);l.innerHTML='<div class="empty-state"><p>⚠️ تعذر التحميل — تأكد من الإنترنت</p></div>';}}
-async function openSurah(num){const c=document.getElementById('surahContent');document.getElementById('surahTitle').textContent='جاري التحميل...';c.innerHTML='<div class="empty-state"><p>⏳ جاري تحميل السورة...</p></div>';screenHistory.push(currentScreen);showScreen('surahScreen');try{const r=await fetch('https://api.alquran.cloud/v1/surah/'+num+'/'+currentReciter);const j=await r.json();const d=j.data;currentSurahData=d;document.getElementById('surahTitle').textContent=d.name;let html='<div style="text-align:center;background:linear-gradient(135deg,#00695C,#26A69A);color:#fff;padding:20px;border-radius:16px;margin-bottom:16px;"><div style="font-size:24px;font-weight:bold;">'+d.name+'</div><div style="font-size:13px;opacity:0.9;margin-top:6px;">'+d.numberOfAyahs+' آية • '+d.revelationType+'</div></div>';if(num!==1&&num!==9){html+='<div style="text-align:center;font-size:22px;padding:16px;color:#2E7D32;font-weight:bold;font-family:Amiri,serif;">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>';}d.ayahs.forEach((a,idx)=>{let text=a.text;if(num!==1&&num!==9&&a.numberInSurah===1){text=text.replace('بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ','').trim();}html+='<div class="ayah-card" id="ayah-'+a.number+'" onclick="playAyah('+a.number+','+idx+')"><span class="ayah-num">'+a.numberInSurah+'</span>'+text+'</div>';});c.innerHTML=html;c.scrollTop=0;currentAyahIndex=0;}catch(e){console.error('Surah:',e);c.innerHTML='<div class="empty-state"><p>⚠️ تعذر التحميل</p></div>';}}
-function playAyah(num,idx){if(!currentSurahData)return;const a=currentSurahData.ayahs.find(x=>x.number===num);if(!a)return;if(quranAudio){quranAudio.pause();quranAudio=null;}document.querySelectorAll('.ayah-card').forEach(el=>el.classList.remove('active'));const el=document.getElementById('ayah-'+num);if(el){el.classList.add('active');el.scrollIntoView({behavior:'smooth',block:'center'});}currentAyah=a;currentAyahIndex=idx!==undefined?idx:currentSurahData.ayahs.indexOf(a);const url='https://cdn.islamic.network/quran/audio/128/'+currentReciter+'/'+num+'.mp3';quranAudio=new Audio(url);quranAudio.play().catch(()=>showToast('⚠️ اضغط مرة أخرى'));quranAudio.onended=()=>{if(el)el.classList.remove('active');if(autoPlayEnabled&&currentSurahData&&currentAyahIndex<currentSurahData.ayahs.length-1){const next=currentSurahData.ayahs[currentAyahIndex+1];setTimeout(()=>playAyah(next.number,currentAyahIndex+1),500);}};document.getElementById('ayahPlayer').style.display='block';document.getElementById('ayahNowPlaying').textContent='🎧 آية '+a.numberInSurah;}
+async function openQuran(){
+  const l=document.getElementById('surahsList');
+  if(!l)return;
+  screenHistory.push(currentScreen);showScreen('quranScreen');
+  l.innerHTML='<div class="empty-state"><p>⏳ جاري التحميل...</p></div>';
+  try{
+    let data=JSON.parse(localStorage.getItem('ta3lemy_surahs')||'[]');
+    const offlineQuran=JSON.parse(localStorage.getItem('offline_quran_full')||'null');
+    if(!data.length&&offlineQuran){
+      data=Object.keys(offlineQuran).map(function(k){const s=offlineQuran[k];return {number:Number(k),name:s.name,numberOfAyahs:(s.ayahs||[]).length,revelationType:s.revelationType||'قرآن كريم'};});
+      localStorage.setItem('ta3lemy_surahs',JSON.stringify(data));
+    }
+    if(!data.length&&navigator.onLine){
+      const r=await fetch('https://api.alquran.cloud/v1/surah');
+      if(!r.ok)throw new Error('فشل جلب فهرس السور');
+      const j=await r.json();data=j.data||[];localStorage.setItem('ta3lemy_surahs',JSON.stringify(data));
+    }
+    if(!data.length)throw new Error('لا توجد نسخة محفوظة');
+    l.innerHTML=data.map(function(s){return '<div class="content-item" onclick="openSurah('+s.number+')"><div class="content-item-icon" style="background:linear-gradient(135deg,#00695C,#26A69A);color:#fff;font-weight:bold;">'+s.number+'</div><div class="content-item-info"><div class="content-item-title">'+s.name+'</div><div class="content-item-sub">'+s.numberOfAyahs+' آية • '+(s.revelationType||'قرآن كريم')+'</div></div><div class="content-item-arrow">‹</div></div>';}).join('');
+  }catch(e){console.error('Quran API:',e);l.innerHTML='<div class="empty-state"><p>⚠️ لم يُحفظ القرآن على هذا الجهاز بعد. اتصل بالإنترنت واضغط «تحميل محتوى التطبيق ليعمل بدون نت».</p></div>';}
+}
+async function openSurah(num){
+  const c=document.getElementById('surahContent');
+  document.getElementById('surahTitle').textContent='جاري تحميل السورة...';
+  c.innerHTML='<div class="empty-state"><p>⏳</p></div>';
+  screenHistory.push(currentScreen);showScreen('surahScreen');
+  try{
+    let d=null;
+    if(navigator.onLine){
+      try{const r=await fetch('https://api.alquran.cloud/v1/surah/'+num+'/'+currentReciter);if(!r.ok)throw new Error('API');const j=await r.json();d=j.data||null;}catch(e){console.warn('تعذر جلب السورة عبر الإنترنت؛ محاولة النسخة المحفوظة',e);}
+    }
+    if(!d){
+      const stored=JSON.parse(localStorage.getItem('offline_quran_full')||'null');
+      const raw=stored&&stored[num];
+      if(!raw)throw new Error('السورة غير محفوظة');
+      const idx=JSON.parse(localStorage.getItem('ta3lemy_surahs')||'[]');
+      const meta=idx.find(function(x){return Number(x.number)===Number(num);})||{};
+      let offset=0;for(let n=1;n<Number(num);n++){offset+=((stored[n]&&stored[n].ayahs)||[]).length;}
+      d={number:Number(num),name:raw.name||meta.name||'سورة '+num,numberOfAyahs:(raw.ayahs||[]).length,revelationType:raw.revelationType||meta.revelationType||'قرآن كريم',ayahs:(raw.ayahs||[]).map(function(a,i){return {number:Number(a.number||offset+i+1),numberInSurah:Number(a.numberInSurah||a.num||i+1),text:a.text};})};
+    }
+    currentSurahData=d;
+    document.getElementById('surahTitle').textContent=d.name;
+    let html='<div style="text-align:center;background:linear-gradient(135deg,#00695C,#26A69A);color:#fff;padding:20px;border-radius:16px;margin-bottom:16px;"><div style="font-size:24px;font-weight:bold;">'+d.name+'</div><div style="font-size:13px;opacity:0.9;margin-top:6px;">'+d.numberOfAyahs+' آية • '+(d.revelationType||'قرآن كريم')+'</div></div>';
+    html+='<button onclick="downloadQuranSurahOffline('+Number(num)+',currentReciter,currentSurahData)" style="width:100%;padding:12px;margin:0 0 12px;background:#00695C;color:#fff;border:0;border-radius:12px;font-family:inherit;font-weight:bold;">⬇️ حفظ صوت السورة للعمل بدون إنترنت</button>';
+    if(Number(num)!==1&&Number(num)!==9){html+='<div style="text-align:center;font-size:22px;padding:16px;color:#2E7D32;font-weight:bold;font-family:Amiri,serif;">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>';}
+    d.ayahs.forEach(function(a,idx){let text=a.text;if(Number(num)!==1&&Number(num)!==9&&a.numberInSurah===1){text=text.replace('بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ','').trim();}html+='<div class="ayah-card" id="ayah-'+a.number+'" onclick="playAyah('+a.number+','+idx+')"><span class="ayah-num">'+a.numberInSurah+'</span>'+text+'</div>';});
+    c.innerHTML=html;c.scrollTop=0;currentAyahIndex=0;
+  }catch(e){console.error('Surah:',e);c.innerHTML='<div class="empty-state"><p>⚠️ تعذر عرض السورة. عند الاتصال بالإنترنت نزّل محتوى التطبيق أولًا.</p></div>';}
+}
+async function playAyah(num,idx){
+  if(!currentSurahData)return;
+  const a=currentSurahData.ayahs.find(function(x){return x.number===num;});if(!a)return;
+  if(quranAudio){quranAudio.pause();quranAudio=null;}
+  document.querySelectorAll('.ayah-card').forEach(function(el){el.classList.remove('active');});
+  const el=document.getElementById('ayah-'+num);if(el){el.classList.add('active');el.scrollIntoView({behavior:'smooth',block:'center'});}
+  currentAyah=a;currentAyahIndex=idx!==undefined?idx:currentSurahData.ayahs.indexOf(a);
+  const url='https://cdn.islamic.network/quran/audio/128/'+currentReciter+'/'+num+'.mp3';
+  if(!navigator.onLine&&window.offlineMediaIsCached&&!(await window.offlineMediaIsCached(url))){if(el)el.classList.remove('active');showToast('📴 نص الآية متاح، لكن صوتها لم يُنزّل لهذا الجهاز');return;}
+  quranAudio=new Audio(url);quranAudio.play().catch(function(){showToast('⚠️ لم يتوفر الصوت؛ نزّل صوت السورة أثناء الاتصال');});
+  quranAudio.onended=function(){if(el)el.classList.remove('active');if(autoPlayEnabled&&currentSurahData&&currentAyahIndex<currentSurahData.ayahs.length-1){const next=currentSurahData.ayahs[currentAyahIndex+1];setTimeout(function(){playAyah(next.number,currentAyahIndex+1);},500);}};
+  document.getElementById('ayahPlayer').style.display='block';document.getElementById('ayahNowPlaying').textContent='🎧 آية '+a.numberInSurah;
+}
 function stopAyahAudio(){if(quranAudio){quranAudio.pause();quranAudio=null;}document.getElementById('ayahPlayer').style.display='none';document.querySelectorAll('.ayah-card').forEach(el=>el.classList.remove('active'));showToast('⏹️ تم الإيقاف');}
 function nextAyah(){if(!currentSurahData)return;if(currentAyahIndex<currentSurahData.ayahs.length-1){const next=currentSurahData.ayahs[currentAyahIndex+1];playAyah(next.number,currentAyahIndex+1);}else{showToast('📖 نهاية السورة');}}
 function prevAyah(){if(!currentSurahData)return;if(currentAyahIndex>0){const prev=currentSurahData.ayahs[currentAyahIndex-1];playAyah(prev.number,currentAyahIndex-1);}else{showToast('📖 بداية السورة');}}
@@ -456,10 +633,42 @@ function toggleAutoPlay(){autoPlayEnabled=!autoPlayEnabled;const btn=document.ge
 async function showCurrentTafsir(){if(!currentAyah){showToast('⚠️ اختر آية أولاً');return;}showToast('⏳ جاري التفسير...');try{const r=await fetch('https://api.alquran.cloud/v1/ayah/'+currentAyah.number+'/ar.muyassar');const j=await r.json();alert('📖 التفسير الميسر:\n\n'+j.data.text);}catch(e){console.error(e);showToast('⚠️ تعذر جلب التفسير');}}
 function changeReciter(val){currentReciter=val;showToast('🎧 تم تغيير الشيخ');if(currentSurahData){const num=currentSurahData.number;openSurah(num);}}
 function filterSurahs(q){const l=document.getElementById('surahsList');const cached=JSON.parse(localStorage.getItem('ta3lemy_surahs')||'[]');if(!cached.length)return;const f=cached.filter(s=>s.name.includes(q)||s.englishName.toLowerCase().includes(q.toLowerCase()));l.innerHTML=f.map(s=>'<div class="content-item" onclick="openSurah('+s.number+')"><div class="content-item-icon" style="background:linear-gradient(135deg,#00695C,#26A69A);color:#fff;font-weight:bold;">'+s.number+'</div><div class="content-item-info"><div class="content-item-title">'+s.name+'</div><div class="content-item-sub">'+s.numberOfAyahs+' آية</div></div></div>').join('');}
-async function openRadio(){const myList=document.getElementById('myStationList');const publicList=document.getElementById('radioList');let myHtml='';try{const snap=await db.collection('station').orderBy('created_at','desc').get();if(snap.empty){myHtml='<div class="empty-state"><div class="empty-state-icon">🎵</div><p>لا توجد ملفات بعد</p></div>';}else{snap.forEach(doc=>{const x=doc.data();myHtml+='<div class="content-item" onclick="playMyStationAudio(\''+doc.id+'\')"><div class="content-item-icon" style="background:linear-gradient(135deg,#7B1FA2,#9C27B0);color:#fff;font-size:24px;">🎵</div><div class="content-item-info"><div class="content-item-title">'+(x.title||'')+'</div><div class="content-item-sub">من محطتي</div></div><div class="content-item-arrow">▶️</div></div>';});}}catch(e){console.error(e);myHtml='<div class="empty-state">حدث خطأ</div>';}myList.innerHTML=myHtml;publicList.innerHTML=radioStations.map((s,i)=>'<div class="content-item" onclick="playRadio('+i+')"><div class="content-item-icon" style="background:linear-gradient(135deg,#D32F2F,#FF8F00);color:#fff;font-size:24px;">📻</div><div class="content-item-info"><div class="content-item-title">'+s.name+'</div><div class="content-item-sub">اضغط للتشغيل</div></div><div class="content-item-arrow">▶️</div></div>').join('');screenHistory.push(currentScreen);showScreen('radioScreen');}
-function playRadio(i){const s=radioStations[i];if(radioAudio){radioAudio.pause();radioAudio=null;}radioAudio=new Audio(s.url);radioAudio.play().catch(e=>showToast('❌ تعذر التشغيل'));document.getElementById('radioPlayer').style.display='block';document.getElementById('radioStationName').textContent=s.name;document.getElementById('radioNowPlaying').textContent='🎵 جاري التشغيل...';showToast('▶️ '+s.name);}
+async function openRadio(){
+  const myList=document.getElementById('myStationList');const publicList=document.getElementById('radioList');
+  if(!myList||!publicList)return;
+  let items=[];
+  try{items=JSON.parse(localStorage.getItem('offline_station_items')||'[]');}catch(e){items=[];}
+  if(navigator.onLine){
+    try{
+      const snap=await db.collection('station').orderBy('created_at','desc').get();
+      const fresh=[];snap.forEach(function(doc){fresh.push(Object.assign({id:doc.id},doc.data()));});
+      if(fresh.length||!items.length){items=fresh;localStorage.setItem('offline_station_items',JSON.stringify(items));}
+    }catch(e){console.warn('استخدام بيانات المحطة المحفوظة محليًا',e);}
+  }
+  if(!items.length){myList.innerHTML='<div class="empty-state"><div class="empty-state-icon">🎵</div><p>لا توجد ملفات محطة محفوظة على هذا الجهاز</p></div>';}
+  else{myList.innerHTML=items.map(function(x){const id=String(x.id||'').replace(/'/g,'');const title=String(x.title||'ملف صوتي');return '<div class="content-item" onclick="playMyStationAudio(\''+id+'\')"><div class="content-item-icon" style="background:linear-gradient(135deg,#7B1FA2,#9C27B0);color:#fff;font-size:24px;">🎵</div><div class="content-item-info"><div class="content-item-title">'+title+'</div><div class="content-item-sub">'+(navigator.onLine?'من محطتي':'محفوظ محليًا • من محطتي')+'</div></div><div class="content-item-arrow">▶️</div></div>';}).join('');}
+  publicList.innerHTML=radioStations.map(function(station,i){return '<div class="content-item" onclick="playRadio('+i+')"><div class="content-item-icon" style="background:linear-gradient(135deg,#D32F2F,#FF8F00);color:#fff;font-size:24px;">📻</div><div class="content-item-info"><div class="content-item-title">'+station.name+'</div><div class="content-item-sub">بث مباشر — يحتاج إنترنت</div></div><div class="content-item-arrow">▶️</div></div>';}).join('');
+  screenHistory.push(currentScreen);showScreen('radioScreen');
+}
+function playRadio(i){
+  if(!navigator.onLine){showToast('📴 البث المباشر يحتاج إنترنت؛ شغّل ملفًا محفوظًا في «محطتي»');return;}
+  const station=radioStations[i];if(!station)return;
+  if(radioAudio){radioAudio.pause();radioAudio=null;}
+  radioAudio=new Audio(station.url);radioAudio.play().catch(function(){showToast('❌ تعذر تشغيل البث');});
+  document.getElementById('radioPlayer').style.display='block';document.getElementById('radioStationName').textContent=station.name;document.getElementById('radioNowPlaying').textContent='🎵 جاري التشغيل...';showToast('▶️ '+station.name);
+}
 function stopRadio(){if(radioAudio){radioAudio.pause();radioAudio=null;}document.getElementById('radioPlayer').style.display='none';showToast('⏹️ تم الإيقاف');}
-async function playMyStationAudio(id){try{const doc=await db.collection('station').doc(id).get();if(!doc.exists)return;const x=doc.data();if(radioAudio){radioAudio.pause();radioAudio=null;}radioAudio=new Audio(x.url);radioAudio.play().catch(e=>showToast('❌ اضغط مرة أخرى'));document.getElementById('radioPlayer').style.display='block';document.getElementById('radioStationName').textContent=x.title||'';document.getElementById('radioNowPlaying').textContent='🎵 جاري التشغيل...';showToast('▶️ '+(x.title||''));}catch(e){console.error(e);}}
+async function playMyStationAudio(id){
+  try{
+    let item=null;try{item=(JSON.parse(localStorage.getItem('offline_station_items')||'[]')).find(function(x){return String(x.id)===String(id);})||null;}catch(e){}
+    if(navigator.onLine){try{const doc=await db.collection('station').doc(id).get();if(doc.exists){item=Object.assign({id:doc.id},doc.data());const all=JSON.parse(localStorage.getItem('offline_station_items')||'[]');const pos=all.findIndex(function(x){return String(x.id)===String(id);});if(pos>=0)all[pos]=item;else all.unshift(item);localStorage.setItem('offline_station_items',JSON.stringify(all));}}catch(e){console.warn('استخدام بيانات المحطة المحلية',e);}}
+    if(!item||!item.url){showToast('⚠️ لا توجد بيانات محفوظة لهذا الملف');return;}
+    if(!navigator.onLine&&window.offlineMediaIsCached&&!(await window.offlineMediaIsCached(item.url))){showToast('📴 الملف الصوتي غير منزّل على هذا الجهاز؛ اتصل بالإنترنت واضغط تحميل المحتوى');return;}
+    if(radioAudio){radioAudio.pause();radioAudio=null;}
+    radioAudio=new Audio(item.url);radioAudio.play().catch(function(){showToast('❌ تعذر التشغيل؛ قد يحتاج الملف إلى تنزيله أثناء الاتصال');});
+    document.getElementById('radioPlayer').style.display='block';document.getElementById('radioStationName').textContent=item.title||'';document.getElementById('radioNowPlaying').textContent='🎵 جاري التشغيل...';showToast('▶️ '+(item.title||''));
+  }catch(e){console.error(e);showToast('❌ تعذر تشغيل الملف');}
+}
 async function addMyStationAudio(){const t=document.getElementById('myStationTitle').value.trim();const fi=document.getElementById('myStationFile');const btn=document.getElementById('saveStationBtn');if(!t){showToast('⚠️ أدخل عنوان');return;}if(!fi.files||!fi.files[0]){showToast('⚠️ اختر ملف');return;}if(btn){btn.disabled=true;btn.textContent='⏳ جاري الرفع...';}const url=await uploadFile(fi.files[0],'mystation');if(btn){btn.disabled=false;btn.textContent='➕ إضافة للمحطة';}if(!url){showToast('❌ فشل الرفع');return;}try{await db.collection('station').add({title:t,url:url,created_at:new Date().toISOString()});showToast('✅ تم إضافة الملف');document.getElementById('myStationTitle').value='';fi.value='';openRadio();}catch(e){console.error(e);showToast('❌ فشل');}}
 async function openMessages(){if(!currentUser){showToast('⚠️ سجل دخول');return;}const l=document.getElementById('messagesList');screenHistory.push(currentScreen);showScreen('messagesScreen');l.innerHTML='<div class="empty-state"><p>⏳ جاري التحميل...</p></div>';try{const snap=await db.collection('messages').where('participants','array-contains',currentUser.uid).get();const chats={};snap.forEach(doc=>{const m=doc.data();const otherId=m.participants.find(p=>p!==currentUser.uid);if(!chats[otherId]){chats[otherId]={id:doc.id,withId:otherId,withName:m.participantNames[otherId]||otherId,lastMsg:m.text,time:m.updatedAt||m.createdAt};}else if(m.updatedAt>chats[otherId].time){chats[otherId].lastMsg=m.text;chats[otherId].time=m.updatedAt;}});const arr=Object.values(chats).sort((a,b)=>(b.time||'').localeCompare(a.time||''));if(arr.length===0){l.innerHTML='<div class="empty-state"><div class="empty-state-icon">💬</div><p>لا توجد محادثات</p><p style="font-size:13px;margin-top:8px;">ابدأ محادثة جديدة</p></div>';return;}l.innerHTML=arr.map(c=>'<div class="content-item" onclick="openChat(\''+c.id+'\',\''+c.withId+'\',\''+c.withName+'\')"><div class="content-item-icon" style="background:#E8F5E9;color:#2E7D32;font-size:24px;">👤</div><div class="content-item-info"><div class="content-item-title">'+c.withName+'</div><div class="content-item-sub">'+(c.lastMsg||'').substring(0,40)+'</div></div><div class="content-item-arrow">‹</div></div>').join('');}catch(e){console.error(e);l.innerHTML='<div class="empty-state">حدث خطأ</div>';}}
 async function openNewMessage(){if(!currentUser){showToast('⚠️ سجل دخول');return;}const name=prompt('اسم المستخدم (معلم/طالب/مالك):');if(!name||name.trim().length<2)return;const uid=name.trim();try{const usersSnap=await db.collection('users').where('name','==',uid).limit(1).get();if(usersSnap.empty){showToast('⚠️ المستخدم غير موجود');return;}const targetId=usersSnap.docs[0].id;const pid=[currentUser.uid,targetId].sort().join('_');const ref=db.collection('messages').doc(pid);const doc=await ref.get();if(!doc.exists){const names={};names[currentUser.uid]=currentUser.name;names[targetId]=uid;await ref.set({participants:[currentUser.uid,targetId].sort(),participantNames:names,text:'',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()});}openChat(pid,targetId,uid);}catch(e){console.error(e);showToast('❌ فشل');}}
