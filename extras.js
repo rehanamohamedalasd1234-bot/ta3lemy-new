@@ -230,7 +230,7 @@
         }
         
         // Student: prefer the server-issued Firebase token; fall back only if the endpoint is not deployed.
-        if (window.currentRole !== 'owner' && typeof window.loginStudentWithBackend === 'function') {
+        if (window.STUDENT_CUSTOM_AUTH_ENABLED === true && window.currentRole !== 'owner' && typeof window.loginStudentWithBackend === 'function') {
           var backendHandled = await window.loginStudentWithBackend(uname, pwd);
           if (backendHandled) return;
         }
@@ -1800,7 +1800,7 @@ console.log('✅ Exercises UI loaded');
 })();
 // ═══ تحديث إجباري للتطبيق عشان يقرأ الكود الجديد ═══
 (function(){
-  var currentVersion = '1.0.8'; // غيّر الرقم ده مع كل تحديث منشور
+  var currentVersion = '1.0.9'; // غيّر الرقم ده مع كل تحديث منشور
   var savedVersion = localStorage.getItem('app_version');
   if(savedVersion !== currentVersion){
     localStorage.setItem('app_version', currentVersion);

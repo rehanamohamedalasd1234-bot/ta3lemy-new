@@ -10,7 +10,7 @@
 - `functions/package.json`: اعتماديات Functions/Admin SDK وNode 20.
 - `firebase.json`: إعداد نشر Functions فقط. لا يحدد ولا ينشر قواعد Firestore أو Storage.
 - `.firebaserc`: المشروع الافتراضي `ta3lemt-hafez`؛ تحقّق من أنه مشروع Firebase الصحيح قبل النشر.
-- `extras.js`: يحاول مسار Custom Token أولًا، وإذا كانت الدالة غير منشورة/غير متاحة مؤقتًا يبقي مسار الدخول القديم كحل رجوع. في هذه الحالة لا تفتح واجهة الخاص.
+- `extras.js`: مسار Custom Token متوقف افتراضيًا عبر `STUDENT_CUSTOM_AUTH_ENABLED=false` حتى تُنشر الدالة وتُختبر. تشغيله قبل ذلك قد يوقف دخول الطالب؛ اترك العلم `false` حاليًا. في هذه الحالة يستخدم التطبيق مسار الدخول القديم، والخاص يظل مغلقًا.
 - `chat-config.js`: `CHAT_PRIVATE_ENABLED` مضبوط `false` افتراضيًا؛ هذا قفل احترازي في الواجهة وليس بديلًا عن قواعد الخادم.
 
 ## نشر دالة تسجيل الطالب
