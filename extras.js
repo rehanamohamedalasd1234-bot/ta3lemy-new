@@ -108,6 +108,14 @@
       var origLogin = window.login;
       
       window.login = async function(){
+        // لا نسمح للمعلم باستخدام مسار الاسم/كلمة المرور أو حفظ الدور محليًا.
+        if (window.currentRole === 'teacher') {
+          if (typeof window.teacherPhoneLogin !== 'function') {
+            if (typeof showToast === 'function') showToast('تسجيل الهاتف الآمن غير جاهز؛ حدّث الصفحة');
+            return;
+          }
+          return window.teacherPhoneLogin();
+        }
         var unameEl = document.getElementById('usernameInput');
         var pwdEl = document.getElementById('passwordInput');
         var ownerCodeEl = document.getElementById('ownerCodeInput');
@@ -131,8 +139,12 @@
           if (saved) {
             try {
               var su = JSON.parse(saved);
+              if (su.role !== 'student') {
+                if(typeof showToast === 'function') showToast('تسجيل المعلم أو المالك يتطلب تحققًا آمنًا عبر الإنترنت');
+                return;
+              }
               window.currentUser = {name: uname, uid: su.uid, points: su.points || 0};
-              window.currentRole = su.role || 'student';
+              window.currentRole = 'student';
               if(typeof showToast === 'function') showToast('📴 دخول offline');
               if(typeof showScreen === 'function') setTimeout(function(){ showScreen('homeScreen'); }, 400);
               return;
@@ -1729,7 +1741,7 @@ console.log('✅ Exercises UI loaded');
 })();
 // ═══ تحديث إجباري للتطبيق عشان يقرأ الكود الجديد ═══
 (function(){
-  var currentVersion = '1.0.4'; // غيّر الرقم ده مع كل تحديث منشور
+  var currentVersion = '1.0.5'; // غيّر الرقم ده مع كل تحديث منشور
   var savedVersion = localStorage.getItem('app_version');
   if(savedVersion !== currentVersion){
     localStorage.setItem('app_version', currentVersion);
