@@ -1,1 +1,99 @@
+/* التصميم الأصلي بتاع الأداة (للكمبيوتر) */
+#drawingScreen .content {
+  display: flex !important;
+  flex-direction: column !important;
+  height: calc(100vh - 60px) !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+  background: #f5f7f3;
+}
 
+.creativity-toolbar, .creativity-palette {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 10px;
+  overflow-x: auto;
+  background: #fff;
+}
+
+.creativity-canvas-frame {
+  position: relative;
+  flex: 1 1 auto;
+  margin: 10px;
+  overflow: hidden;
+  border: 1px solid #dbe5d8;
+  border-radius: 16px;
+  background: #fff;
+}
+
+#fullDrawingCanvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  cursor: crosshair;
+}
+
+.creativity-action {
+  flex: 0 0 auto;
+  min-height: 40px;
+  padding: 8px 11px;
+  border: 0;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.creativity-color-swatch {
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  border: 3px solid #fff;
+  border-radius: 50%;
+}
+
+.creativity-title-input {
+  flex: 1 1 150px;
+  min-width: 120px;
+  max-width: 250px;
+  height: 38px;
+  padding: 0 10px;
+  border: 1px solid #dce5da;
+  border-radius: 10px;
+}
+
+/* التعديل بتاعنا (للموبايل) عشان نصغر الأزرار ونكبر الرسم */
+@media (max-width: 600px) {
+  .creativity-toolbar, .creativity-palette {
+    padding: 3px 5px !important;
+    gap: 4px !important;
+  }
+  
+  .creativity-action, .creativity-palette button {
+    padding: 4px 6px !important;
+    font-size: 10px !important;
+    min-height: 28px !important;
+    border-radius: 6px !important;
+  }
+  
+  .creativity-color-swatch {
+    width: 22px !important;
+    height: 22px !important;
+  }
+  
+  .creativity-title-input {
+    display: none !important; /* إخفاء مربع الاسم في الموبايل عشان يوفر مساحة */
+  }
+
+  .creativity-size-control input {
+    width: 50px !important;
+  }
+
+  .creativity-canvas-frame {
+    margin: 2px 4px !important;
+  }
+}
