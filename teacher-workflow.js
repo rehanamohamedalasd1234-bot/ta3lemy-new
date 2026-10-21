@@ -8,6 +8,7 @@
   'use strict';
   var db = window.firebase && window.firebase.firestore ? window.firebase.firestore() : null;
   var liveRefreshTimer = null;
+  var teacherDirectoryState = null;
 
   function toast(message) { if (window.showToast) window.showToast(message); else console.log(message); }
   function uid() { return window.currentUser && window.currentUser.uid ? String(window.currentUser.uid) : ''; }
@@ -65,6 +66,68 @@
     container.appendChild(button);
   }
 
+  function teacherWorkKind(item) {
+    return ({ lesson: 'درس / شرح', explanation: 'شرح', exercise: 'تدريب', exam: 'امتحان', review: 'مراجعة', image: 'صورة تعليمية', video: 'فيديو' })[item.teacherContentType || item.type] || 'عمل تعليمي';
+  }
+  function teacherWorkCard(doc) {
+    var item = doc.data() || {};
+    var content = typeof item.content === 'string' ? item.content : '';
+    var summary = content ? esc(content.substring(0, 70)) + (content.length > 70 ? '…' : '') : (item.video_url ? '🎥 فيديو' : item.image_url ? '🖼️ صورة' : 'افتح العمل للمشاهدة');
+    return '<div class="content-item" onclick="viewContent(\'' + attr(doc.id) + '\')"><div class="content-item-icon">📚</div><div class="content-item-info"><div class="content-item-title">' + esc(item.title || 'بدون عنوان') + '</div><div class="content-item-sub">📌 ' + esc(teacherWorkKind(item)) + (summary ? ' • ' + summary : '') + '</div></div><div class="content-item-arrow">‹</div></div>';
+  }
+  function regularContentCard(doc, type) {
+    var item = doc.data() || {};
+    var teacher = item.teacherName ? ' • 👨‍🏫 ' + esc(item.teacherName) : '';
+    var kinds = { lesson: 'درس / شرح', explanation: 'شرح', exercise: 'تدريب', exam: 'امتحان', review: 'مراجعة', image: 'صورة تعليمية', video: 'فيديو' };
+    var workKind = type === 'teacher_explanation' && item.teacherContentType ? kinds[item.teacherContentType] || 'عمل تعليمي' : '';
+    var content = typeof item.content === 'string' ? item.content : '';
+    var contentSummary = content ? esc(content.substring(0, 70)) + (content.length > 70 ? '…' : '') : (item.video_url ? '🎥 فيديو' : item.image_url ? '🖼️ صورة' : '');
+    var summary = (workKind ? '📌 ' + workKind + (contentSummary ? ' • ' : '') : '') + contentSummary;
+    return '<div class="content-item" onclick="viewContent(\'' + attr(doc.id) + '\')"><div class="content-item-icon">📄</div><div class="content-item-info"><div class="content-item-title">' + esc(item.title || 'بدون عنوان') + '</div><div class="content-item-sub">' + summary + teacher + '</div></div><div class="content-item-arrow">‹</div></div>';
+  }
+  function renderTeacherDirectory(docs) {
+    var list = document.getElementById('contentList');
+    if (!list) return;
+    var groupsById = Object.create(null);
+    var groups = [];
+    docs.forEach(function (doc) {
+      var item = doc.data() || {};
+      var identity = String(item.teacherId || item.authUid || item.teacherName || 'teacher_unknown');
+      if (!groupsById[identity]) {
+        groupsById[identity] = { name: item.teacherName || 'المعلم', docs: [] };
+        groups.push(groupsById[identity]);
+      }
+      groupsById[identity].docs.push(doc);
+    });
+    groups.sort(function (a, b) { return a.name.localeCompare(b.name); });
+    teacherDirectoryState = { docs: docs.slice(), groups: groups };
+    var subtitle = document.getElementById('contentHeaderSub');
+    if (subtitle) subtitle.textContent = 'اختر الأستاذ لمشاهدة أعماله في هذه المادة والصف';
+    if (!groups.length) {
+      list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div><p>لا توجد أعمال معتمدة للمعلمين في هذا الجزء من المنهج بعد.</p></div>';
+      return;
+    }
+    var html = '<div style="background:#E8F5E9;color:#245b35;padding:12px 14px;border-radius:12px;margin-bottom:12px;line-height:1.8;font-size:13px">📚 اختر أيقونة الأستاذ لعرض الدروس والامتحانات والمراجعات المعتمدة في هذه المرحلة والصف والمادة.</div>';
+    groups.forEach(function (group, index) {
+      var kinds = [];
+      group.docs.forEach(function (doc) { var kind = teacherWorkKind(doc.data() || {}); if (kinds.indexOf(kind) < 0) kinds.push(kind); });
+      html += '<button type="button" onclick="openTeacherWorkGroup(' + index + ')" style="width:100%;display:flex;align-items:center;gap:12px;text-align:right;background:#fff;border:1px solid #e5ece5;border-radius:16px;padding:14px;margin:0 0 10px;box-shadow:0 2px 8px rgba(0,0,0,.05);font-family:inherit;cursor:pointer"><span style="width:54px;height:54px;flex:0 0 54px;border-radius:16px;background:#E0F2F1;color:#00695C;display:flex;align-items:center;justify-content:center;font-size:30px">👨‍🏫</span><span style="flex:1"><span style="display:block;font-weight:700;color:#245b35;font-size:15px">أعمال الأستاذ ' + esc(group.name) + '</span><span style="display:block;margin-top:4px;font-size:12px;color:#68756d">' + group.docs.length + ' عمل • ' + esc(kinds.join('، ')) + '</span></span><span style="font-size:24px;color:#999">‹</span></button>';
+    });
+    list.innerHTML = html;
+  }
+  window.openTeacherWorkGroup = function (index) {
+    if (!teacherDirectoryState) return;
+    var group = teacherDirectoryState.groups[Number(index)];
+    var list = document.getElementById('contentList');
+    if (!group || !list) return;
+    var subtitle = document.getElementById('contentHeaderSub');
+    if (subtitle) subtitle.textContent = 'أعمال الأستاذ: ' + group.name;
+    list.innerHTML = '<button type="button" onclick="returnToTeacherDirectory()" style="width:100%;padding:11px;margin-bottom:12px;border:0;border-radius:10px;background:#E8F5E9;color:#245b35;font:inherit;font-weight:700;text-align:right">↩ العودة إلى قائمة المعلمين</button>' + group.docs.map(teacherWorkCard).join('');
+  };
+  window.returnToTeacherDirectory = function () {
+    if (teacherDirectoryState) renderTeacherDirectory(teacherDirectoryState.docs);
+  };
+
   // Replace the exercise tile with the teacher's approved work feed.
   window.renderTerms = function () {
     var list = document.getElementById('termsList');
@@ -99,21 +162,64 @@
         return;
       }
       var docs = snapshot.docs.slice().sort(function (a, b) { return (a.data().order || 99) - (b.data().order || 99); });
-      list.innerHTML = docs.map(function (doc) {
-        var item = doc.data();
-        var teacher = item.teacherName ? ' • 👨‍🏫 ' + esc(item.teacherName) : '';
-        var kinds = { lesson: 'درس / شرح', explanation: 'شرح', exercise: 'تدريب', exam: 'امتحان', review: 'مراجعة', image: 'صورة تعليمية', video: 'فيديو' };
-        var workKind = type === 'teacher_explanation' && item.teacherContentType ? kinds[item.teacherContentType] || 'عمل تعليمي' : '';
-        var contentSummary = item.content ? esc(item.content.substring(0, 70)) + (item.content.length > 70 ? '…' : '') : (item.video_url ? '🎥 فيديو' : item.image_url ? '🖼️ صورة' : '');
-        var summary = (workKind ? '📌 ' + workKind + (contentSummary ? ' • ' : '') : '') + contentSummary;
-        return '<div class="content-item" onclick="viewContent(\'' + attr(doc.id) + '\')"><div class="content-item-icon">' + (type === 'teacher_explanation' ? '👨‍🏫' : '📄') + '</div><div class="content-item-info"><div class="content-item-title">' + esc(item.title || 'بدون عنوان') + '</div><div class="content-item-sub">' + summary + teacher + '</div></div><div class="content-item-arrow">‹</div></div>';
-      }).join('');
+      if (type === 'teacher_explanation') { renderTeacherDirectory(docs); return; }
+      list.innerHTML = docs.map(function (doc) { return regularContentCard(doc, type); }).join('');
     } catch (error) {
       console.error('Teacher content query failed', error);
       list.innerHTML = '<div class="empty-state">تعذر تحميل المحتوى. تحقق من اتصال قاعدة البيانات.</div>';
     }
   };
 
+  function selectFieldFromExisting(id) {
+    var field = document.getElementById(id);
+    if (!field || field.tagName === 'SELECT') return field;
+    var select = document.createElement('select');
+    select.id = field.id;
+    select.className = field.className || 'form-input';
+    select.setAttribute('aria-label', id === 'upGrade' ? 'الصف الدراسي' : 'المادة الدراسية');
+    if (field.parentNode) field.parentNode.replaceChild(select, field);
+    return select;
+  }
+  function setUploadSelectOptions(select, values, placeholder, previousValue) {
+    select.innerHTML = '';
+    var first = document.createElement('option'); first.value = ''; first.textContent = placeholder; select.appendChild(first);
+    values.forEach(function (value) { var option = document.createElement('option'); option.value = value; option.textContent = value; select.appendChild(option); });
+    if (values.indexOf(previousValue) >= 0) select.value = previousValue;
+  }
+  function ensureUploadCurriculumSelectors() {
+    var stage = document.getElementById('upStage');
+    var grade = selectFieldFromExisting('upGrade');
+    var subject = selectFieldFromExisting('upSubject');
+    if (!stage || !grade || !subject) return;
+    var gradeNames = function (stageId) {
+      if (typeof stagesData !== 'undefined' && stagesData[stageId] && stagesData[stageId].grades) return stagesData[stageId].grades.slice();
+      if (stageId === 'bakkalorya') return ['الأول', 'الثاني', 'الثالث'];
+      return [];
+    };
+    var subjectNames = function (stageId) {
+      if (stageId === 'bakkalorya') return ['اللغة العربية', 'اللغة الأجنبية الأولى', 'التاريخ', 'الرياضيات', 'العلوم المتكاملة', 'الفلسفة والمنطق', 'التربية الدينية', 'البرمجة والذكاء الاصطناعي', 'الأحياء', 'الكيمياء', 'الفيزياء', 'الاقتصاد', 'المحاسبة', 'الجغرافيا', 'علم النفس', 'الإحصاء'];
+      if (typeof generalSubjects !== 'undefined' && generalSubjects.length) return generalSubjects.map(function (item) { return item.name; });
+      return ['اللغة العربية', 'رياضيات', 'علوم', 'فيزياء', 'كيمياء', 'أحياء', 'إنجليزي', 'دراسات', 'تاريخ', 'جغرافيا', 'فلسفة ومنطق', 'تربية دينية', 'حاسب آلي', 'فنية'];
+    };
+    function populate(force) {
+      var stageId = stage.value;
+      if (force || grade.getAttribute('data-curriculum-stage') !== stageId) {
+        var previousGrade = grade.value;
+        setUploadSelectOptions(grade, gradeNames(stageId), 'اختر الصف من المنهج', previousGrade);
+        grade.setAttribute('data-curriculum-stage', stageId);
+      }
+      if (force || subject.getAttribute('data-curriculum-stage') !== stageId) {
+        var previousSubject = subject.value;
+        setUploadSelectOptions(subject, subjectNames(stageId), 'اختر المادة من المنهج', previousSubject);
+        subject.setAttribute('data-curriculum-stage', stageId);
+      }
+    }
+    if (stage.getAttribute('data-curriculum-bound') !== '1') {
+      stage.setAttribute('data-curriculum-bound', '1');
+      stage.addEventListener('change', function () { populate(true); });
+    }
+    populate(false);
+  }
   function ensureUploadForm() {
     var type = document.getElementById('upType');
     if (!type) return;
@@ -138,7 +244,7 @@
       if (stage && stage.parentElement) stage.parentElement.after(termGroup);
       var hint = document.createElement('p');
       hint.style.cssText = 'font-size:12px;color:#617568;line-height:1.8;margin:-4px 0 12px;';
-      hint.textContent = 'كل الأعمال تُرسل للمالك للمراجعة، ثم تظهر للطلاب في قسم «شرح الأستاذ» بعد اعتمادها.';
+      hint.textContent = 'مكان الرفع: لوحة المعلم ← رفع درس أو تدريب أو امتحان أو مراجعة. اختر المرحلة والصف والمادة والترم من القوائم المطابقة للمنهج. ينتظر العمل موافقة المالك، ثم يظهر للطلاب في: المنهج ← المرحلة ← الصف ← المادة ← الترم ← شرح الأستاذ ← أيقونة المعلم.';
       var button = document.getElementById('upSubmitBtn');
       if (button) button.parentNode.insertBefore(hint, button);
     }
@@ -147,6 +253,7 @@
       name.value = window.currentUser.name || '';
       name.setAttribute('data-prefilled', '1');
     }
+    ensureUploadCurriculumSelectors();
   }
 
   window.submitTeacherUpload = async function () {
