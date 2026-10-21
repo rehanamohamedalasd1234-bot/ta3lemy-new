@@ -102,6 +102,89 @@
   };
   
   // ═══ تسجيل الطالب عبر Firebase Custom Token مع الحفاظ على UID القديم ═══
+  var REMEMBERED_STUDENT_LOGIN_KEY = 'hafez_remembered_student_login_v1';
+  function getRememberedStudentLogin() {
+    try {
+      var saved = localStorage.getItem(REMEMBERED_STUDENT_LOGIN_KEY);
+      if (!saved) return null;
+      var record = JSON.parse(saved);
+      if (!record || typeof record.username !== 'string' || typeof record.password !== 'string' || !record.username || !record.password) {
+        localStorage.removeItem(REMEMBERED_STUDENT_LOGIN_KEY);
+        return null;
+      }
+      return record;
+    } catch (e) { return null; }
+  }
+  function updateRememberStudentVisibility() {
+    var wrapper = document.getElementById('rememberStudentLoginWrap');
+    if (wrapper) wrapper.style.display = (!window.currentRole || window.currentRole === 'student') ? 'block' : 'none';
+  }
+  function ensureRememberStudentLoginUI() {
+    var username = document.getElementById('usernameInput');
+    var password = document.getElementById('passwordInput');
+    if (!username || !password || document.getElementById('rememberStudentLoginWrap')) return;
+    username.setAttribute('autocomplete', 'username');
+    password.setAttribute('autocomplete', 'current-password');
+    var wrapper = document.createElement('div');
+    wrapper.id = 'rememberStudentLoginWrap';
+    wrapper.style.cssText = 'margin:-4px 0 16px;padding:10px 12px;border:1px solid #dfe8df;border-radius:12px;background:#f7fbf7;';
+    var label = document.createElement('label');
+    label.style.cssText = 'display:flex;align-items:center;gap:9px;font-size:14px;font-weight:700;color:#344034;cursor:pointer;';
+    var checkbox = document.createElement('input');
+    checkbox.id = 'rememberStudentLogin';
+    checkbox.type = 'checkbox';
+    checkbox.style.cssText = 'width:18px;height:18px;margin:0;accent-color:#2E7D32;';
+    checkbox.checked = !!getRememberedStudentLogin();
+    var caption = document.createElement('span');
+    caption.textContent = 'تذكر اسم الحساب وكلمة المرور على هذا الجهاز';
+    label.appendChild(checkbox);
+    label.appendChild(caption);
+    var help = document.createElement('div');
+    help.textContent = 'يحفظ كلمة المرور محليًا على هذا الجهاز؛ لا تفعّل الخيار على جهاز مشترك.';
+    help.style.cssText = 'margin:5px 27px 0 0;font-size:11px;line-height:1.6;color:#687568;';
+    wrapper.appendChild(label);
+    wrapper.appendChild(help);
+    var fieldGroup = password.parentNode;
+    if (fieldGroup && fieldGroup.parentNode) fieldGroup.parentNode.insertBefore(wrapper, fieldGroup.nextSibling);
+    checkbox.addEventListener('change', function () {
+      if (!checkbox.checked) {
+        try { localStorage.removeItem(REMEMBERED_STUDENT_LOGIN_KEY); } catch (e) {}
+      }
+    });
+    var roleSelector = document.querySelector('#loginScreen .role-selector');
+    if (roleSelector) roleSelector.addEventListener('click', function () {
+      setTimeout(function () {
+        updateRememberStudentVisibility();
+        if (window.currentRole === 'student') window.restoreRememberedStudentLogin();
+      }, 0);
+    });
+    window.restoreRememberedStudentLogin();
+  }
+  window.restoreRememberedStudentLogin = function () {
+    var username = document.getElementById('usernameInput');
+    var password = document.getElementById('passwordInput');
+    var checkbox = document.getElementById('rememberStudentLogin');
+    var record = getRememberedStudentLogin();
+    if (checkbox) checkbox.checked = !!record;
+    if (record && (!window.currentRole || window.currentRole === 'student')) {
+      if (username && !username.value) username.value = record.username;
+      if (password && !password.value) password.value = record.password;
+    }
+    updateRememberStudentVisibility();
+  };
+  window.saveRememberedStudentLogin = function (username, password) {
+    var checkbox = document.getElementById('rememberStudentLogin');
+    if (window.currentRole !== 'student' || !checkbox || !checkbox.checked) {
+      try { localStorage.removeItem(REMEMBERED_STUDENT_LOGIN_KEY); } catch (e) {}
+      return;
+    }
+    try {
+      localStorage.setItem(REMEMBERED_STUDENT_LOGIN_KEY, JSON.stringify({username: String(username || ''), password: String(password || '')}));
+    } catch (e) {
+      if (typeof showToast === 'function') showToast('تعذر حفظ بيانات الدخول على هذا الجهاز.');
+    }
+  };
+
   window.loginStudentWithBackend = async function(username, password){
     if (!window.firebase || !firebase.functions || !firebase.auth) return false;
     var callable;
@@ -141,6 +224,7 @@
       }
       window.currentUser = {name: reply.name || username, uid: String(reply.uid), points: Number(reply.points || 0)};
       window.currentRole = 'student';
+      window.saveRememberedStudentLogin(username, password);
       try { localStorage.setItem('lastUser', JSON.stringify({name: window.currentUser.name, uid: window.currentUser.uid, role: 'student', points: window.currentUser.points})); } catch (e) {}
       if (typeof window.logLogin === 'function') await window.logLogin(username, 'student', true, 'custom auth');
       if (reply.isNew && reply.recoveryCode && typeof window.showRecoveryCode === 'function') window.showRecoveryCode(reply.recoveryCode, window.currentUser.name);
@@ -156,6 +240,17 @@
 
   // ═══ 7. Login Override ═══
   window.addEventListener('load', function(){
+    ensureRememberStudentLoginUI();
+    var originalShowScreen = window.showScreen;
+    if (typeof originalShowScreen === 'function' && !originalShowScreen.__rememberStudentLoginWrapped) {
+      var wrappedShowScreen = function (screenId) {
+        var result = originalShowScreen.apply(this, arguments);
+        if (screenId === 'loginScreen') window.restoreRememberedStudentLogin();
+        return result;
+      };
+      wrappedShowScreen.__rememberStudentLoginWrapped = true;
+      window.showScreen = wrappedShowScreen;
+    }
     setTimeout(function(){
       if(typeof window.login !== 'function') return;
       var origLogin = window.login;
@@ -261,6 +356,7 @@
             });
             
             window.currentUser = {name: uname, uid: uid, points: 0};
+            window.saveRememberedStudentLogin(uname, pwd);
             localStorage.setItem('lastUser', JSON.stringify({
               name: uname, uid: uid, role: window.currentRole, points: 0
             }));
@@ -303,6 +399,7 @@
           }
           
           window.currentUser = {name: uname, uid: uid2, points: user.points || 0};
+          window.saveRememberedStudentLogin(uname, pwd);
           localStorage.setItem('lastUser', JSON.stringify({
             name: uname, uid: uid2, role: user.role || window.currentRole, points: user.points || 0
           }));
