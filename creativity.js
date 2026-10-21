@@ -375,6 +375,10 @@
       '#drawingScreen .creative-action.active{outline:3px solid #ffb300;}',
       '#drawingScreen .creative-palette{display:flex;align-items:center;gap:5px;padding:6px 8px;overflow-x:auto;background:#fff;border-bottom:1px solid #e5eee5;}',
       '#drawingScreen .creative-swatch{width:28px;height:28px;flex:0 0 28px;border:2px solid #fff;border-radius:50%;box-shadow:0 0 0 1px #cbd5cb;cursor:pointer;}',
+      '#drawingScreen .creative-main-toolbar{display:flex;flex-wrap:wrap;align-items:stretch;gap:6px;padding:7px 8px;overflow:visible!important;width:100%;min-width:0;box-sizing:border-box;}',
+      '#drawingScreen .creative-main-toolbar>.creative-action{box-sizing:border-box;flex:1 1 88px;min-width:0;margin:0!important;text-align:center;white-space:normal;line-height:1.2;}',
+      '#drawingScreen .creative-extra-toolbar{display:flex;flex-wrap:wrap;align-items:stretch;gap:6px;padding:6px 8px;overflow:visible!important;width:100%;min-width:0;box-sizing:border-box;}',
+      '#drawingScreen .creative-extra-toolbar>.creative-action{box-sizing:border-box;flex:1 1 100px;min-width:84px;margin:0!important;text-align:center;white-space:normal;line-height:1.2;}',
       '.creative-screen .content{padding:14px;}',
       '.creative-card{background:#fff;border:1px solid #e6eee6;border-radius:15px;padding:11px;margin:0 0 12px;box-shadow:0 3px 10px rgba(0,0,0,.05);}',
       '.creative-card img{display:block;width:100%;max-height:280px;object-fit:contain;background:#f8f8f8;border-radius:10px;cursor:pointer;}',
@@ -386,7 +390,7 @@
       '.creative-modal-panel{width:100%;max-width:620px;max-height:90vh;overflow:auto;background:#fff;border-radius:18px;padding:14px;}',
       '.creative-motion{animation:creativeFloat 2.4s ease-in-out infinite alternate;transform-origin:center;}',
       '@keyframes creativeFloat{from{transform:translateY(4px) rotate(-1deg) scale(.98)}to{transform:translateY(-8px) rotate(1deg) scale(1.02)}}',
-      '@media(max-width:480px){#drawingScreen .creative-meta input{font-size:12px;padding:8px;}#drawingScreen .creative-action{padding:8px;font-size:11px;}}'
+      '@media(max-width:600px){#drawingScreen .content{min-height:0;min-width:0;width:100%;box-sizing:border-box;overflow:hidden;}#drawingScreen .creative-meta{gap:6px;padding:6px 8px;}#drawingScreen .creative-meta input{font-size:12px;padding:8px;}#drawingScreen .creative-main-toolbar{display:flex;flex-wrap:wrap;width:100%;min-width:0;box-sizing:border-box;gap:6px;padding:6px 8px!important;overflow:visible!important;}#drawingScreen .creative-main-toolbar>button{box-sizing:border-box;display:flex;flex:0 0 calc((100% - 18px)/4);width:calc((100% - 18px)/4);max-width:calc((100% - 18px)/4);min-width:0;min-height:40px;align-items:center;justify-content:center;margin:0!important;padding:6px 3px!important;font-size:10px!important;line-height:1.2;text-align:center;white-space:normal!important;border-radius:9px;}#drawingScreen .creative-extra-toolbar{display:flex;flex-wrap:nowrap;width:100%;min-width:0;box-sizing:border-box;gap:4px;padding:6px 8px;overflow:visible!important;}#drawingScreen .creative-extra-toolbar>.creative-action{box-sizing:border-box;display:flex;flex:0 0 calc((100% - 16px)/5);width:calc((100% - 16px)/5);max-width:calc((100% - 16px)/5);min-width:0;min-height:40px;align-items:center;justify-content:center;margin:0!important;padding:4px 2px!important;font-size:9px!important;line-height:1.15;white-space:normal!important;border-radius:8px;}#drawingScreen .creative-tools:not(.creative-main-toolbar):not(.creative-extra-toolbar){gap:6px;padding:6px 8px;}#drawingScreen .creative-tools input[type=range]{min-width:0;}#homeScreen .tools-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;}#homeScreen .tool-btn{min-width:0;min-height:86px;padding:9px 3px;}#homeScreen .tool-icon{width:40px;height:40px;font-size:21px;margin-bottom:6px;}#homeScreen .tool-label{min-height:2.4em;display:flex;align-items:center;justify-content:center;text-align:center;font-size:11px;line-height:1.3;}}'
     ].join('');
     document.head.appendChild(style);
   }
@@ -438,15 +442,36 @@
     }
 
     var mainToolbar = meta.nextElementSibling;
-    if (mainToolbar && !document.getElementById('creativeUndoBtn')) {
-      var undoBtn = makeButton('creativeUndoBtn', '↶ تراجع', '#E3F2FD', '#1976D2', undo);
-      var redoBtn = makeButton('creativeRedoBtn', '↷ إعادة', '#E3F2FD', '#1976D2', redo);
-      var galleryBtn = makeButton('creativeGalleryBtn', '🖼️ المعرض', '#F3E5F5', '#7B1FA2', function () { window.openCreativeGallery(); });
-      var worksBtn = makeButton('creativeWorksBtn', '📁 أعمالي', '#E8F5E9', '#2E7D32', function () { window.openMyCreations(); });
-      mainToolbar.insertBefore(undoBtn, mainToolbar.firstChild);
-      mainToolbar.insertBefore(redoBtn, undoBtn.nextSibling);
-      mainToolbar.appendChild(galleryBtn);
-      mainToolbar.appendChild(worksBtn);
+    if (mainToolbar) {
+      mainToolbar.classList.add('creative-main-toolbar');
+      var undoBtn = mainToolbar.querySelector('#creativeUndoBtn') || mainToolbar.querySelector('[onclick*="drawingUndo"]');
+      if (!undoBtn) {
+        undoBtn = makeButton('creativeUndoBtn', '↶ تراجع', '#E3F2FD', '#1976D2', undo);
+        mainToolbar.insertBefore(undoBtn, mainToolbar.firstChild);
+      } else {
+        undoBtn.id = 'creativeUndoBtn';
+        undoBtn.classList.add('creative-action');
+        undoBtn.onclick = undo;
+      }
+      var redoBtn = mainToolbar.querySelector('#creativeRedoBtn') || mainToolbar.querySelector('[onclick*="drawingRedo"]');
+      if (!redoBtn) {
+        redoBtn = makeButton('creativeRedoBtn', '↷ إعادة', '#E3F2FD', '#1976D2', redo);
+        mainToolbar.insertBefore(redoBtn, undoBtn.nextSibling);
+      } else {
+        redoBtn.id = 'creativeRedoBtn';
+        redoBtn.classList.add('creative-action');
+        redoBtn.onclick = redo;
+      }
+      var galleryBtn = mainToolbar.querySelector('#creativeGalleryBtn');
+      if (!galleryBtn) {
+        galleryBtn = makeButton('creativeGalleryBtn', '🖼️ المعرض', '#F3E5F5', '#7B1FA2', function () { window.openCreativeGallery(); });
+        mainToolbar.appendChild(galleryBtn);
+      } else galleryBtn.onclick = function () { window.openCreativeGallery(); };
+      var worksBtn = mainToolbar.querySelector('#creativeWorksBtn');
+      if (!worksBtn) {
+        worksBtn = makeButton('creativeWorksBtn', '📁 أعمالي', '#E8F5E9', '#2E7D32', function () { window.openMyCreations(); });
+        mainToolbar.appendChild(worksBtn);
+      } else worksBtn.onclick = function () { window.openMyCreations(); };
     }
 
     var palette = meta.nextElementSibling && meta.nextElementSibling.nextElementSibling;
@@ -1156,8 +1181,8 @@
     if (!toolbar) {
       toolbar = document.createElement('div');
       toolbar.id = 'creativeActionToolbar';
-      toolbar.className = 'creative-tools';
-      toolbar.style.overflowX = 'auto';
+      toolbar.className = 'creative-tools creative-extra-toolbar';
+      toolbar.style.overflowX = 'visible';
       var actions = [
         ['creativeDownloadBtn', '⬇️ تنزيل', '#E3F2FD', '#1565C0', downloadCurrent],
         ['creativeShareBtn', 'مشاركة', '#E0F2F1', '#00695C', shareCurrent],
@@ -1197,6 +1222,8 @@
 
   document.addEventListener('DOMContentLoaded', function () {
     ensureStyles();
+    var drawingShortcutLabel = document.querySelector('#homeScreen .tools-grid .tool-btn[onclick*="openDrawing"] .tool-label');
+    if (drawingShortcutLabel) drawingShortcutLabel.textContent = 'إبداع';
     ensureDrawingControls();
     addExtraActions();
     ensureHomeGalleryShortcut();
