@@ -1,16 +1,40 @@
-/* تنسيقات متوافقة مع أسماء العناصر التي ينشئها creativity.js */
+/* تخطيط لوحة الرسم: مصدر واحد لقواعد الهاتف والارتفاع. */
+#drawingScreen {
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+#drawingScreen > .top-bar {
+  flex: 0 0 auto;
+}
+
 #drawingScreen .content {
   display: flex !important;
+  flex: 1 1 0 !important;
   flex-direction: column !important;
   width: 100%;
+  height: auto !important;
+  max-height: none;
   min-width: 0;
-  height: calc(100vh - 60px) !important;
   min-height: 0;
   box-sizing: border-box;
   padding: 0 !important;
   margin: 0 !important;
   overflow: hidden !important;
   background: #f5f7f3;
+}
+
+/* الحاوية البيضاء التي تتمدد هي مساحة الرسم فقط. */
+#drawingScreen .content > div:last-child {
+  flex: 1 1 0 !important;
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
 }
 
 #drawingScreen .creative-meta,
@@ -20,10 +44,11 @@
 #drawingScreen .creative-palette {
   box-sizing: border-box;
   max-width: 100%;
+  flex: 0 0 auto;
 }
 
 #drawingScreen .creative-action {
-  min-height: 34px;
+  min-height: 36px;
   padding: 5px 8px;
   border: 0;
   border-radius: 9px;
@@ -48,25 +73,40 @@
 }
 
 @media (max-width: 600px) {
-  #drawingScreen .content {
-    height: calc(100vh - 60px) !important;
+  #drawingScreen .creative-meta {
+    gap: 6px;
+    padding: 6px 8px;
+  }
+
+  #drawingScreen .creative-meta input {
+    font-size: 12px;
+    padding: 8px;
   }
 
   #drawingScreen .creative-main-toolbar {
     display: grid !important;
     grid-template-columns: repeat(4, minmax(0, 1fr));
+    width: 100%;
+    min-width: 0;
     gap: 4px !important;
     padding: 4px 6px !important;
     overflow: hidden !important;
   }
 
   #drawingScreen .creative-main-toolbar > button {
+    display: flex;
     box-sizing: border-box;
+    width: 100%;
+    max-width: none;
     min-width: 0 !important;
     min-height: 34px !important;
+    align-items: center;
+    justify-content: center;
+    margin: 0 !important;
     padding: 4px 2px !important;
-    font-size: 9px !important;
+    font-size: 10px !important;
     line-height: 1.15 !important;
+    text-align: center;
     white-space: normal !important;
     border-radius: 7px !important;
   }
@@ -74,17 +114,25 @@
   #drawingScreen .creative-extra-toolbar {
     display: grid !important;
     grid-template-columns: repeat(5, minmax(0, 1fr));
+    width: 100%;
+    min-width: 0;
     gap: 3px !important;
     padding: 4px 5px !important;
     overflow: hidden !important;
   }
 
   #drawingScreen .creative-extra-toolbar > .creative-action {
+    display: flex;
     box-sizing: border-box;
+    width: 100%;
+    max-width: none;
     min-width: 0 !important;
-    min-height: 34px !important;
+    min-height: 32px !important;
+    align-items: center;
+    justify-content: center;
+    margin: 0 !important;
     padding: 3px 1px !important;
-    font-size: 8px !important;
+    font-size: 9px !important;
     line-height: 1.1 !important;
     white-space: normal !important;
     border-radius: 7px !important;
@@ -97,7 +145,7 @@
   }
 
   #drawingScreen .creative-tools input[type="range"] {
-    min-width: 60px !important;
+    min-width: 0 !important;
     flex: 1 1 90px;
   }
 
@@ -130,15 +178,15 @@
 
   #homeScreen .tool-btn {
     min-width: 0;
-    min-height: 70px;
-    padding: 6px 2px;
+    min-height: 64px;
+    padding: 5px 2px;
   }
 
   #homeScreen .tool-icon {
-    width: 34px;
-    height: 34px;
-    font-size: 18px;
-    margin-bottom: 4px;
+    width: 30px;
+    height: 30px;
+    font-size: 16px;
+    margin-bottom: 3px;
   }
 
   #homeScreen .tool-label {
