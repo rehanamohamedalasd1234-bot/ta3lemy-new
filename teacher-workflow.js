@@ -85,8 +85,12 @@
     var summary = (workKind ? '📌 ' + workKind + (contentSummary ? ' • ' : '') : '') + contentSummary;
     return '<div class="content-item" onclick="viewContent(\'' + attr(doc.id) + '\')"><div class="content-item-icon">📄</div><div class="content-item-info"><div class="content-item-title">' + esc(item.title || 'بدون عنوان') + '</div><div class="content-item-sub">' + summary + teacher + '</div></div><div class="content-item-arrow">‹</div></div>';
   }
+  function teacherStageName(stage) {
+    return ({ primary: 'الابتدائية', prep: 'الإعدادية', sec: 'الثانوية', bakkalorya: 'البكالوريا' })[stage] || stage || 'مرحلة غير محددة';
+  }
+  function teacherTermName(term) { return Number(term) === 2 ? 'الترم الثاني' : 'الترم الأول'; }
   function renderTeacherDirectory(docs) {
-    var list = document.getElementById('contentList');
+    var list = document.getElementById('teacherDirectoryScreenContent');
     if (!list) return;
     var groupsById = Object.create(null);
     var groups = [];
@@ -101,28 +105,76 @@
     });
     groups.sort(function (a, b) { return a.name.localeCompare(b.name); });
     teacherDirectoryState = { docs: docs.slice(), groups: groups };
-    var subtitle = document.getElementById('contentHeaderSub');
-    if (subtitle) subtitle.textContent = 'اختر الأستاذ لمشاهدة أعماله في هذه المادة والصف';
     if (!groups.length) {
-      list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div><p>لا توجد أعمال معتمدة للمعلمين في هذا الجزء من المنهج بعد.</p></div>';
+      list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div><p>لا توجد أعمال معتمدة من المعلمين حتى الآن.</p><p style="font-size:12px;color:#777">ستظهر هنا أيقونة كل معلم بعد موافقة المالك على أعماله.</p></div>';
       return;
     }
-    var html = '<div style="background:#E8F5E9;color:#245b35;padding:12px 14px;border-radius:12px;margin-bottom:12px;line-height:1.8;font-size:13px">📚 اختر أيقونة الأستاذ لعرض الدروس والامتحانات والمراجعات المعتمدة في هذه المرحلة والصف والمادة.</div>';
+    var html = '<div style="background:#E8F5E9;color:#245b35;padding:12px 14px;border-radius:12px;margin-bottom:12px;line-height:1.8;font-size:13px">👨‍🏫 اختر المعلم الذي تريده؛ ستجد داخل صفحته أعماله مرتبة حسب المرحلة والصف والمادة والترم.</div>';
     groups.forEach(function (group, index) {
-      var kinds = [];
-      group.docs.forEach(function (doc) { var kind = teacherWorkKind(doc.data() || {}); if (kinds.indexOf(kind) < 0) kinds.push(kind); });
-      html += '<button type="button" onclick="openTeacherWorkGroup(' + index + ')" style="width:100%;display:flex;align-items:center;gap:12px;text-align:right;background:#fff;border:1px solid #e5ece5;border-radius:16px;padding:14px;margin:0 0 10px;box-shadow:0 2px 8px rgba(0,0,0,.05);font-family:inherit;cursor:pointer"><span style="width:54px;height:54px;flex:0 0 54px;border-radius:16px;background:#E0F2F1;color:#00695C;display:flex;align-items:center;justify-content:center;font-size:30px">👨‍🏫</span><span style="flex:1"><span style="display:block;font-weight:700;color:#245b35;font-size:15px">أعمال الأستاذ ' + esc(group.name) + '</span><span style="display:block;margin-top:4px;font-size:12px;color:#68756d">' + group.docs.length + ' عمل • ' + esc(kinds.join('، ')) + '</span></span><span style="font-size:24px;color:#999">‹</span></button>';
+      var scopes = [];
+      group.docs.forEach(function (doc) {
+        var item = doc.data() || {};
+        var scope = teacherStageName(item.stage) + ' • الصف ' + (item.grade || '—') + ' • ' + (item.subject || '—');
+        if (scopes.indexOf(scope) < 0) scopes.push(scope);
+      });
+      var summary = scopes.slice(0, 2).join(' | ') + (scopes.length > 2 ? ' | +' + (scopes.length - 2) : '');
+      html += '<button type="button" onclick="openTeacherWorkGroup(' + index + ')" style="width:100%;display:flex;align-items:center;gap:12px;text-align:right;background:#fff;border:1px solid #e5ece5;border-radius:16px;padding:14px;margin:0 0 10px;box-shadow:0 2px 8px rgba(0,0,0,.05);font-family:inherit;cursor:pointer"><span style="width:54px;height:54px;flex:0 0 54px;border-radius:16px;background:#E0F2F1;color:#00695C;display:flex;align-items:center;justify-content:center;font-size:30px">👨‍🏫</span><span style="flex:1"><span style="display:block;font-weight:700;color:#245b35;font-size:15px">الأستاذ ' + esc(group.name) + '</span><span style="display:block;margin-top:4px;font-size:12px;color:#68756d">' + group.docs.length + ' عمل معتمد</span><span style="display:block;margin-top:4px;font-size:11px;color:#68756d">' + esc(summary) + '</span></span><span style="font-size:24px;color:#999">‹</span></button>';
     });
     list.innerHTML = html;
   }
+  window.openTeacherDirectory = async function () {
+    styleOnce();
+    screen('teacherDirectoryScreen', '👨‍🏫 شرح الأستاذ', 'linear-gradient(135deg,#00695C,#26A69A)');
+    enterScreen('teacherDirectoryScreen');
+    await window.loadTeacherDirectory();
+  };
+  window.loadTeacherDirectory = async function () {
+    var list = document.getElementById('teacherDirectoryScreenContent');
+    if (!list) return;
+    list.innerHTML = '<div class="tw-empty">⏳ جاري تحميل قائمة المعلمين...</div>';
+    try {
+      var snapshot = await db.collection('lessons').where('type', '==', 'teacher_explanation').get();
+      var docs = snapshot.docs ? snapshot.docs.slice() : [];
+      if (!docs.length) {
+        try {
+          var saved = JSON.parse(localStorage.getItem('offline_lessons') || '[]');
+          docs = saved.filter(function (item) { return item && item.type === 'teacher_explanation'; }).map(function (item) { return { id: String(item.id), data: function () { return item; } }; });
+        } catch (cacheError) { console.warn('Offline teacher content unavailable', cacheError); }
+      }
+      docs.sort(function (a, b) { var ad = a.data() || {}; var bd = b.data() || {}; return String(bd.created_at || bd.createdAt || '').localeCompare(String(ad.created_at || ad.createdAt || '')); });
+      renderTeacherDirectory(docs);
+    } catch (error) {
+      console.error('Teacher directory query failed', error);
+      var savedDocs = [];
+      try {
+        var cached = JSON.parse(localStorage.getItem('offline_lessons') || '[]');
+        savedDocs = cached.filter(function (item) { return item && item.type === 'teacher_explanation'; }).map(function (item) { return { id: String(item.id), data: function () { return item; } }; });
+      } catch (cacheError) { console.warn(cacheError); }
+      if (savedDocs.length) renderTeacherDirectory(savedDocs);
+      else list.innerHTML = '<div class="tw-empty">تعذر تحميل قائمة المعلمين. تحقق من الاتصال، أو افتحها بعد الاتصال بالإنترنت أول مرة.</div>';
+    }
+  };
   window.openTeacherWorkGroup = function (index) {
     if (!teacherDirectoryState) return;
     var group = teacherDirectoryState.groups[Number(index)];
-    var list = document.getElementById('contentList');
+    var list = document.getElementById('teacherDirectoryScreenContent');
     if (!group || !list) return;
-    var subtitle = document.getElementById('contentHeaderSub');
-    if (subtitle) subtitle.textContent = 'أعمال الأستاذ: ' + group.name;
-    list.innerHTML = '<button type="button" onclick="returnToTeacherDirectory()" style="width:100%;padding:11px;margin-bottom:12px;border:0;border-radius:10px;background:#E8F5E9;color:#245b35;font:inherit;font-weight:700;text-align:right">↩ العودة إلى قائمة المعلمين</button>' + group.docs.map(teacherWorkCard).join('');
+    var scopesByKey = Object.create(null);
+    var scopes = [];
+    group.docs.forEach(function (doc) {
+      var item = doc.data() || {};
+      var key = [item.stage || '', item.grade || '', item.subject || '', item.term || 1].join('|');
+      if (!scopesByKey[key]) {
+        scopesByKey[key] = { title: teacherStageName(item.stage) + ' • الصف ' + (item.grade || '—') + ' • ' + (item.subject || '—') + ' • ' + teacherTermName(item.term), docs: [] };
+        scopes.push(scopesByKey[key]);
+      }
+      scopesByKey[key].docs.push(doc);
+    });
+    var html = '<button type="button" onclick="returnToTeacherDirectory()" style="width:100%;padding:11px;margin-bottom:12px;border:0;border-radius:10px;background:#E8F5E9;color:#245b35;font:inherit;font-weight:700;text-align:right">↩ العودة إلى قائمة المعلمين</button><div style="padding:13px 14px;background:#E0F2F1;border-radius:12px;margin-bottom:12px;color:#00695C;font-weight:700">أعمال الأستاذ ' + esc(group.name) + '</div>';
+    scopes.forEach(function (scope) {
+      html += '<section style="background:#fff;border-radius:13px;padding:12px;margin-bottom:12px;border:1px solid #e5ece5"><h3 style="font-size:14px;color:#245b35;margin:0 0 10px">' + esc(scope.title) + '</h3>' + scope.docs.map(teacherWorkCard).join('') + '</section>';
+    });
+    list.innerHTML = html;
   };
   window.returnToTeacherDirectory = function () {
     if (teacherDirectoryState) renderTeacherDirectory(teacherDirectoryState.docs);
@@ -134,10 +186,11 @@
     if (!list) return;
     var terms = [{ num: 1, name: 'الترم الأول', icon: '📘' }, { num: 2, name: 'الترم الثاني', icon: '📙' }];
     list.innerHTML = terms.map(function (term) {
-      return '<div class="term-card ' + (term.num === 2 ? 'term-2' : '') + '"><div class="term-header"><div class="term-icon">' + term.icon + '</div><div class="term-title">' + term.name + '</div><div class="term-count">منهج كامل</div></div><div class="term-sections"><div class="section-chip" onclick="openContent(\'lessons\',' + term.num + ',\'' + term.name + '\')">📄 الدروس</div><div class="section-chip" onclick="openContent(\'teacher_explanation\',' + term.num + ',\'' + term.name + '\')">👨‍🏫 شرح الأستاذ</div><div class="section-chip" onclick="openContent(\'exams\',' + term.num + ',\'' + term.name + '\')">📝 امتحانات</div><div class="section-chip" onclick="openContent(\'videos\',' + term.num + ',\'' + term.name + '\')">🎥 فيديوهات</div></div></div>';
+      return '<div class="term-card ' + (term.num === 2 ? 'term-2' : '') + '"><div class="term-header"><div class="term-icon">' + term.icon + '</div><div class="term-title">' + term.name + '</div><div class="term-count">منهج كامل</div></div><div class="term-sections"><div class="section-chip" onclick="openContent(\'lessons\',' + term.num + ',\'' + term.name + '\')">📄 الدروس</div><div class="section-chip" onclick="openContent(\'exams\',' + term.num + ',\'' + term.name + '\')">📝 امتحانات</div><div class="section-chip" onclick="openContent(\'videos\',' + term.num + ',\'' + term.name + '\')">🎥 فيديوهات</div></div></div>';
     }).join('');
   };
   window.openContent = async function (type, termNumber, termName) {
+    if (type === 'teacher_explanation') { await window.openTeacherDirectory(); return; }
     currentTerm = termNumber;
     currentSection = type;
     var titles = { lessons: '📄 الدروس', teacher_explanation: '👨‍🏫 شرح الأستاذ', exercises: '✏️ تدريبات', exams: '📝 امتحانات', videos: '🎥 فيديوهات' };
@@ -162,7 +215,6 @@
         return;
       }
       var docs = snapshot.docs.slice().sort(function (a, b) { return (a.data().order || 99) - (b.data().order || 99); });
-      if (type === 'teacher_explanation') { renderTeacherDirectory(docs); return; }
       list.innerHTML = docs.map(function (doc) { return regularContentCard(doc, type); }).join('');
     } catch (error) {
       console.error('Teacher content query failed', error);
@@ -244,7 +296,7 @@
       if (stage && stage.parentElement) stage.parentElement.after(termGroup);
       var hint = document.createElement('p');
       hint.style.cssText = 'font-size:12px;color:#617568;line-height:1.8;margin:-4px 0 12px;';
-      hint.textContent = 'مكان الرفع: لوحة المعلم ← رفع درس أو تدريب أو امتحان أو مراجعة. اختر المرحلة والصف والمادة والترم من القوائم المطابقة للمنهج. ينتظر العمل موافقة المالك، ثم يظهر للطلاب في: المنهج ← المرحلة ← الصف ← المادة ← الترم ← شرح الأستاذ ← أيقونة المعلم.';
+      hint.textContent = 'مكان الرفع: لوحة المعلم ← رفع درس أو تدريب أو امتحان أو مراجعة. اختر المرحلة والصف والمادة والترم من القوائم المطابقة للمنهج. ينتظر العمل موافقة المالك، ثم يظهر للطلاب في الرئيسية ← أيقونة شرح الأستاذ ← بطاقة المعلم، وتكون أعماله مرتبة حسب المرحلة والصف والمادة والترم.';
       var button = document.getElementById('upSubmitBtn');
       if (button) button.parentNode.insertBefore(hint, button);
     }
@@ -401,7 +453,7 @@
       html += '<div class="tw-section">📤 أعمالي المرفوعة</div>';
       if (!uploads.length) html += '<div class="tw-empty">لم ترفع محتوى بعد.</div>';
       uploads.sort(function (a, b) { return String(b.createdAt || '').localeCompare(String(a.createdAt || '')); }).forEach(function (item) {
-        var status = item.status === 'approved' ? '✅ معتمد — يظهر تحت شرح الأستاذ' : item.status === 'rejected' ? '❌ مرفوض' : '⏳ عند المالك للمراجعة';
+        var status = item.status === 'approved' ? '✅ معتمد — يظهر في أيقونة شرح الأستاذ المستقلة' : item.status === 'rejected' ? '❌ مرفوض' : '⏳ عند المالك للمراجعة';
         html += '<div class="tw-card"><div class="tw-title">' + esc(item.title) + '</div><div class="tw-meta">' + esc(item.subject) + ' • ' + esc(item.grade) + ' • ' + status + '</div></div>';
       });
       body.innerHTML = html;
@@ -693,6 +745,16 @@
     } catch (error) { console.error(error); body.innerHTML = '<div class="tw-empty">تعذر قراءة الطلبات. راجع قواعد Firestore.</div>'; }
   };
 
+  window.ensureTeacherDirectoryEntry = function () {
+    var grid = document.querySelector('#homeScreen .tools-grid');
+    if (!grid || document.getElementById('teacherDirectoryEntry')) return;
+    var entry = document.createElement('button');
+    entry.type = 'button'; entry.id = 'teacherDirectoryEntry'; entry.className = 'tool-btn';
+    entry.style.fontFamily = 'inherit';
+    entry.innerHTML = '<div class="tool-icon" style="background:#E0F2F1;color:#00695C">👨‍🏫</div><div class="tool-label">شرح الأستاذ</div>';
+    entry.onclick = function () { window.openTeacherDirectory(); };
+    grid.insertBefore(entry, grid.firstChild);
+  };
   window.ensureTeacherEntry = function () {
     if (!isTeacher()) return;
     var grid = document.querySelector('#homeScreen .tools-grid');
@@ -708,9 +770,9 @@
   function repairUploadScreen() { if (document.getElementById('teacherUploadScreen')) ensureUploadForm(); }
   function initialize() {
     styleOnce(); ensureBroadcastRequestScreen(); repairUploadScreen();
-    window.ensureTeacherEntry(); ensureOwnerEntries();
+    window.ensureTeacherDirectoryEntry(); window.ensureTeacherEntry(); ensureOwnerEntries();
     if (liveRefreshTimer) clearInterval(liveRefreshTimer);
-    liveRefreshTimer = setInterval(function () { repairUploadScreen(); window.ensureTeacherEntry(); ensureOwnerEntries(); }, 1200);
+    liveRefreshTimer = setInterval(function () { repairUploadScreen(); window.ensureTeacherDirectoryEntry(); window.ensureTeacherEntry(); ensureOwnerEntries(); }, 1200);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initialize);
   else initialize();

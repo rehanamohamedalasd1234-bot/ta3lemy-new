@@ -46,8 +46,8 @@
   function renderApprovedCard(doc) {
     var item = doc.data() || {};
     var lessonId = item.lessonId || ('teacher_' + doc.id);
-    var location = 'المنهج الرسمي ← ' + (item.stage || 'المرحلة') + ' ← الصف ' + (item.grade || '—') + ' ← ' + (item.subject || '—') + ' ← الترم ' + (item.term || '—') + ' ← شرح الأستاذ ← ' + (item.teacherName || 'المعلم');
-    return '<article style="background:#fff;border-radius:14px;padding:14px;margin:0 0 12px;border-right:5px solid #2E7D32;box-shadow:0 2px 8px rgba(0,0,0,.06)"><div style="font-size:12px;color:#2E7D32;font-weight:700">✅ منشور للطلاب • ' + esc(label(item.type)) + '</div><h3 style="margin:7px 0">' + esc(item.title || 'بدون عنوان') + '</h3><div style="font-size:12px;line-height:1.9;color:#555">' + details(item) + '</div><div style="margin-top:8px;padding:9px;border-radius:8px;background:#E8F5E9;font-size:12px;line-height:1.8;color:#245b35">مكان ظهوره: ' + esc(location) + '</div><button onclick="removeTeacherPublication(\'' + esc(doc.id) + '\',\'' + esc(lessonId) + '\')" style="margin-top:11px;width:100%;background:#C62828;color:#fff;border:0;padding:11px;border-radius:9px;font-weight:bold">🗑 إزالة المنشور من شرح الأستاذ</button></article>';
+    var location = 'الرئيسية ← أيقونة شرح الأستاذ ← ' + (item.teacherName || 'المعلم') + ' ← ' + (item.stage || 'المرحلة') + ' ← الصف ' + (item.grade || '—') + ' ← ' + (item.subject || '—') + ' ← الترم ' + (item.term || '—');
+    return '<article style="background:#fff;border-radius:14px;padding:14px;margin:0 0 12px;border-right:5px solid #2E7D32;box-shadow:0 2px 8px rgba(0,0,0,.06)"><div style="font-size:12px;color:#2E7D32;font-weight:700">✅ منشور للطلاب • ' + esc(label(item.type)) + '</div><h3 style="margin:7px 0">' + esc(item.title || 'بدون عنوان') + '</h3><div style="font-size:12px;line-height:1.9;color:#555">' + details(item) + '</div><div style="margin-top:8px;padding:9px;border-radius:8px;background:#E8F5E9;font-size:12px;line-height:1.8;color:#245b35">مكان ظهوره: ' + esc(location) + '</div><button onclick="removeTeacherPublication(\'' + esc(doc.id) + '\',\'' + esc(lessonId) + '\')" style="margin-top:11px;width:100%;background:#C62828;color:#fff;border:0;padding:11px;border-radius:9px;font-weight:bold">🗑 إزالة العمل من أيقونة شرح الأستاذ</button></article>';
   }
 
   window.openOwnerApprovals = function () {
@@ -75,7 +75,7 @@
         return String(bd.createdAt || bd.approvedAt || '').localeCompare(String(ad.createdAt || ad.approvedAt || ''));
       });
       var html = tabsHtml(activeTab, docs.length);
-      if (activeTab === 'pending') html += '<div style="background:#FFF8E1;border-radius:10px;padding:10px;margin-bottom:12px;font-size:12px;line-height:1.8">عند الضغط على «موافقة ونشر»، يظهر العمل للطلاب عبر: المرحلة ← الصف ← المادة ← الترم ← شرح الأستاذ، ثم داخل أيقونة المعلم.</div>';
+      if (activeTab === 'pending') html += '<div style="background:#FFF8E1;border-radius:10px;padding:10px;margin-bottom:12px;font-size:12px;line-height:1.8">عند الضغط على «موافقة ونشر»، تظهر أيقونة المعلم في الرئيسية داخل «شرح الأستاذ»، وتُرتب أعماله حسب المرحلة ← الصف ← المادة ← الترم.</div>';
       html += docs.map(function (doc) { return activeTab === 'pending' ? renderPendingCard(doc) : renderApprovedCard(doc); }).join('');
       content.innerHTML = html;
     } catch (error) {
