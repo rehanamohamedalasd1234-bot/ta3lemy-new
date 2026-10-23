@@ -73,11 +73,6 @@
   };
   
   // ═══ 6. Recovery Code Modal ═══
-  function escapeHtmlText(value) {
-    return String(value == null ? '' : value).replace(/[&<>"']/g, function(ch){
-      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];
-    });
-  }
   window.showRecoveryCode = function(code, username){
     var m = document.createElement('div');
     m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;';
@@ -86,9 +81,9 @@
       '<div style="font-size:20px;font-weight:bold;color:#2E7D32;margin-bottom:8px;">كود الاستعادة</div>' +
       '<div style="font-size:13px;color:#666;margin-bottom:20px;">احفظ الكود ده في مكان آمن</div>' +
       '<div style="background:#FFF8E1;padding:20px;border-radius:14px;margin-bottom:16px;">' +
-      '<div style="font-size:36px;font-weight:bold;letter-spacing:8px;color:#F9A825;direction:ltr;">' + escapeHtmlText(code) + '</div>' +
+      '<div style="font-size:36px;font-weight:bold;letter-spacing:8px;color:#F9A825;direction:ltr;">' + code + '</div>' +
       '</div>' +
-      '<div style="font-size:13px;color:#666;margin-bottom:20px;">الحساب: <b>' + escapeHtmlText(username) + '</b></div>' +
+      '<div style="font-size:13px;color:#666;margin-bottom:20px;">الحساب: <b>' + username + '</b></div>' +
       '<button id="copyRecBtn" style="width:100%;padding:14px;background:linear-gradient(135deg,#2E7D32,#4CAF50);color:#fff;border:none;border-radius:14px;font-family:inherit;font-size:16px;font-weight:bold;cursor:pointer;">📋 نسخ ومتابعة</button>' +
       '</div>';
     document.body.appendChild(m);
@@ -113,13 +108,9 @@
       var saved = localStorage.getItem(REMEMBERED_STUDENT_LOGIN_KEY);
       if (!saved) return null;
       var record = JSON.parse(saved);
-      if (!record || typeof record.username !== 'string' || !record.username) {
+      if (!record || typeof record.username !== 'string' || typeof record.password !== 'string' || !record.username || !record.password) {
         localStorage.removeItem(REMEMBERED_STUDENT_LOGIN_KEY);
         return null;
-      }
-      if (Object.prototype.hasOwnProperty.call(record, 'password')) {
-        record = { username: record.username };
-        localStorage.setItem(REMEMBERED_STUDENT_LOGIN_KEY, JSON.stringify(record));
       }
       return record;
     } catch (e) { return null; }
@@ -145,11 +136,11 @@
     checkbox.style.cssText = 'width:18px;height:18px;margin:0;accent-color:#2E7D32;';
     checkbox.checked = !!getRememberedStudentLogin();
     var caption = document.createElement('span');
-    caption.textContent = 'تذكر اسم الحساب على هذا الجهاز';
+    caption.textContent = 'تذكر اسم الحساب وكلمة المرور على هذا الجهاز';
     label.appendChild(checkbox);
     label.appendChild(caption);
     var help = document.createElement('div');
-    help.textContent = 'لا تُحفظ كلمة المرور على الجهاز؛ لا تفعّل الخيار على جهاز مشترك.';
+    help.textContent = 'يحفظ كلمة المرور محليًا على هذا الجهاز؛ لا تفعّل الخيار على جهاز مشترك.';
     help.style.cssText = 'margin:5px 27px 0 0;font-size:11px;line-height:1.6;color:#687568;';
     wrapper.appendChild(label);
     wrapper.appendChild(help);
@@ -177,132 +168,48 @@
     if (checkbox) checkbox.checked = !!record;
     if (record && (!window.currentRole || window.currentRole === 'student')) {
       if (username && !username.value) username.value = record.username;
+      if (password && !password.value) password.value = record.password;
     }
     updateRememberStudentVisibility();
   };
-  window.saveRememberedStudentLogin = function (username) {
+  window.saveRememberedStudentLogin = function (username, password) {
     var checkbox = document.getElementById('rememberStudentLogin');
     if (window.currentRole !== 'student' || !checkbox || !checkbox.checked) {
       try { localStorage.removeItem(REMEMBERED_STUDENT_LOGIN_KEY); } catch (e) {}
       return;
     }
     try {
-      localStorage.setItem(REMEMBERED_STUDENT_LOGIN_KEY, JSON.stringify({username: String(username || '')}));
+      localStorage.setItem(REMEMBERED_STUDENT_LOGIN_KEY, JSON.stringify({username: String(username || ''), password: String(password || '')}));
     } catch (e) {
       if (typeof showToast === 'function') showToast('تعذر حفظ بيانات الدخول على هذا الجهاز.');
     }
   };
 
   window.loginStudentWithBackend = async function(username, password){
-    var workerUrl = String(window.STUDENT_AUTH_WORKER_URL || '').replace(/\/+$/, '');
-    if (!workerUrl) {
-      if (typeof showToast === 'function') showToast('تسجيل الطلاب الآمن غير مُعد بعد؛ لا نستخدم الدخول القديم لحماية الحسابات.');
-      return true;
-    }
-    if (!window.firebase || !firebase.auth) {
-      if (typeof showToast === 'function') showToast('تعذر تهيئة Firebase Auth على هذا الجهاز.');
-      return true;
-    }
-    if (!window.crypto || !crypto.subtle || String(password || '').length < 4 || String(password || '').length > 256) {
-      if (typeof showToast === 'function') showToast('تحقق من كلمة المرور أو حدّث المتصفح لتفعيل التحقق الآمن.');
-      return true;
-    }
-    try {
-      if (window.firebaseAuthReady && typeof window.firebaseAuthReady.then === 'function') await window.firebaseAuthReady;
-      if (window.firebaseAnonymousSignInPromise && typeof window.firebaseAnonymousSignInPromise.then === 'function') await window.firebaseAnonymousSignInPromise;
-    } catch (_) {}
+    if (!window.firebase || !firebase.functions || !firebase.auth) return false;
+    var callable;
+    try { callable = firebase.app().functions('us-central1').httpsCallable('loginLegacyStudent'); }
+    catch (e) { return false; }
     var deviceId = window.getDeviceId();
-    var safeUsername = String(username || '').trim();
     var reply;
-    function toHex(bytes){ return Array.from(bytes, function(value){ return value.toString(16).padStart(2, '0'); }).join(''); }
-    function toBase64Url(bytes){
-      var binary = '';
-      for (var i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-      return btoa(binary).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-    }
-    async function sha256Hex(value){
-      var digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(String(value)));
-      return toHex(new Uint8Array(digest));
-    }
-    async function derivePasswordHash(value, salt, iterations){
-      var key = await crypto.subtle.importKey('raw', new TextEncoder().encode(String(value)), 'PBKDF2', false, ['deriveBits']);
-      var bits = await crypto.subtle.deriveBits({name:'PBKDF2', salt:new TextEncoder().encode(String(salt)), iterations:iterations, hash:'SHA-256'}, key, 256);
-      return toHex(new Uint8Array(bits));
-    }
-    function legacyFallbackHash(value, salt){
-      var input = String(salt || '') + '|' + String(value) + '|hafez_secure';
-      var h1 = 5381, h2 = 52711;
-      for (var i = 0; i < input.length; i++) {
-        var code = input.charCodeAt(i);
-        h1 = ((h1 * 33) ^ code) >>> 0;
-        h2 = ((h2 * 31) ^ code) >>> 0;
-      }
-      return 'f_' + h1.toString(16) + h2.toString(16);
-    }
-    async function makeProof(verifier, message){
-      var key = await crypto.subtle.importKey('raw', new TextEncoder().encode(String(verifier)), {name:'HMAC', hash:'SHA-256'}, false, ['sign']);
-      var signature = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(message));
-      return toBase64Url(new Uint8Array(signature));
-    }
-    async function invoke(path, body){
-      var response = await fetch(workerUrl + path, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'omit',
-        cache: 'no-store',
-        body: JSON.stringify(body)
-      });
-      var data = await response.json().catch(function(){ return {}; });
-      if (!response.ok) {
-        var error = new Error(data.message || 'تعذر التحقق من الحساب. حاول مرة أخرى.');
-        error.code = data.code || ('http-' + response.status);
-        throw error;
-      }
-      return data;
+    async function invoke(recoveryCode){
+      var result = await callable({username: username, password: password, deviceId: deviceId, recoveryCode: recoveryCode || ''});
+      return result && result.data || {};
     }
     try {
-      var challenge = await invoke('/challenge', {username:safeUsername, deviceId:deviceId});
-      if (!challenge.challengeId || !challenge.nonce || !challenge.legacySalt || !challenge.passwordSaltV2 || Number(challenge.iterations) !== 210000) {
-        throw new Error('إعداد التحقق الآمن غير مكتمل.');
-      }
-      var message = 'ta3lemy-login-v1|' + challenge.challengeId + '|' + challenge.nonce + '|' + deviceId + '|' + safeUsername;
-      var legacyPassHash = await sha256Hex(String(challenge.legacySalt) + '|' + String(password) + '|hafez_secure');
-      var legacyFallback = legacyFallbackHash(password, challenge.legacySalt);
-      var passwordHashV2 = await derivePasswordHash(password, challenge.passwordSaltV2, Number(challenge.iterations));
-      var proofs = await Promise.all([
-        makeProof(passwordHashV2, message),
-        makeProof(legacyPassHash, message),
-        makeProof(legacyFallback, message)
-      ]);
-      var loginPayload = {
-        challengeId: challenge.challengeId,
-        deviceId: deviceId,
-        proofPbkdf2: proofs[0],
-        proofLegacySha256: proofs[1],
-        proofLegacyFallback: proofs[2]
-      };
-      reply = await invoke('/login', loginPayload);
-      var needsSecondStep = false;
-      if (reply.needsRegistrationVerifier) {
-        loginPayload.passwordHashV2 = passwordHashV2;
-        loginPayload.legacyPassHash = legacyPassHash;
-        needsSecondStep = true;
-      }
-      if (reply.needsUpgradeVerifier) {
-        loginPayload.upgradePasswordHashV2 = passwordHashV2;
-        needsSecondStep = true;
-      }
+      reply = await invoke('');
       if (reply.needsRecovery) {
-        var recoveryCode = window.prompt('جهاز جديد! أدخل كود الاستعادة المحفوظ للحساب:');
+        var recoveryCode = window.prompt('🔐 جهاز جديد! أدخل كود الاستعادة المحفوظ للحساب:');
         if (recoveryCode === null) return true;
-        loginPayload.recoveryCode = recoveryCode.trim();
-        needsSecondStep = true;
+        reply = await invoke(recoveryCode.trim());
       }
-      if (needsSecondStep) reply = await invoke('/login', loginPayload);
     } catch (error) {
-      console.error('Cloudflare student auth failed', error && error.code || 'network');
-      var message = error instanceof TypeError ? 'تعذر الاتصال بخدمة تسجيل الدخول الآمنة. حاول مرة أخرى لاحقًا.' : (error && error.message || 'تعذر التحقق من الحساب. حاول مرة أخرى.');
-      if (typeof showToast === 'function') showToast(message);
+      var code = String(error && error.code || '');
+      if (code === 'functions/not-found' || code === 'functions/unavailable' || code === 'functions/deadline-exceeded') {
+        if (typeof showToast === 'function') showToast('تسجيل الدخول الآمن غير متاح الآن؛ سنستخدم الدخول الحالي مؤقتًا، والخاص يظل مغلقًا.');
+        return false;
+      }
+      if (typeof showToast === 'function') showToast(error && error.message || 'تعذر التحقق من الحساب. حاول مرة أخرى.');
       return true;
     }
     if (!reply || !reply.customToken || !reply.uid) {
@@ -315,10 +222,11 @@
         await firebase.auth().signOut();
         throw new Error('معرّف الحساب لم يتطابق مع الجلسة الآمنة.');
       }
-      window.currentUser = {name: reply.name || username, uid: String(reply.uid), authUid: String(reply.uid), points: Number(reply.points || 0)};
+      window.currentUser = {name: reply.name || username, uid: String(reply.uid), points: Number(reply.points || 0)};
       window.currentRole = 'student';
-      window.saveRememberedStudentLogin(username);
-      try { localStorage.setItem('lastUser', JSON.stringify({name: window.currentUser.name, uid: window.currentUser.uid, authUid: window.currentUser.authUid, role: 'student', points: window.currentUser.points})); } catch (e) {}
+      window.saveRememberedStudentLogin(username, password);
+      try { localStorage.setItem('lastUser', JSON.stringify({name: window.currentUser.name, uid: window.currentUser.uid, role: 'student', points: window.currentUser.points})); } catch (e) {}
+      if (typeof window.logLogin === 'function') await window.logLogin(username, 'student', true, 'custom auth');
       if (reply.isNew && reply.recoveryCode && typeof window.showRecoveryCode === 'function') window.showRecoveryCode(reply.recoveryCode, window.currentUser.name);
       if (typeof showToast === 'function') showToast(reply.isNew ? 'تم إنشاء الحساب وربطه بتسجيل Firebase الآمن.' : 'تم تسجيل الدخول الآمن.');
       if (typeof showScreen === 'function') setTimeout(function(){ showScreen('homeScreen'); }, reply.isNew ? 1800 : 600);
@@ -364,16 +272,12 @@
         var pwd = pwdEl ? pwdEl.value : '';
         var ownerCode = ownerCodeEl ? ownerCodeEl.value : '';
         
-        if (!uname || uname.length < 3 || uname.length > 64) {
-          if(typeof showToast === 'function') showToast('⚠️ اسم المستخدم من 3 إلى 64 حرفًا');
+        if (!uname || uname.length < 3) {
+          if(typeof showToast === 'function') showToast('⚠️ اسم المستخدم 3 أحرف على الأقل');
           return;
         }
         if (pwd.length < 4) {
           if(typeof showToast === 'function') showToast('⚠️ كلمة المرور 4 أحرف على الأقل');
-          return;
-        }
-        if (pwd.length > 256) {
-          if(typeof showToast === 'function') showToast('⚠️ كلمة المرور طويلة أكثر من اللازم');
           return;
         }
         
@@ -387,13 +291,7 @@
                 if(typeof showToast === 'function') showToast('تسجيل المعلم أو المالك يتطلب تحققًا آمنًا عبر الإنترنت');
                 return;
               }
-              var authUser = window.firebase && firebase.auth ? firebase.auth().currentUser : null;
-              var savedAuthUid = String(su.authUid || '');
-              if (!authUser || !savedAuthUid || String(authUser.uid) !== savedAuthUid || String(su.name || '') !== uname) {
-                if(typeof showToast === 'function') showToast('⚠️ يلزم اتصال بالإنترنت للتحقق من الحساب على هذا الجهاز');
-                return;
-              }
-              window.currentUser = {name: su.name, uid: su.uid, authUid: savedAuthUid, points: su.points || 0};
+              window.currentUser = {name: uname, uid: su.uid, points: su.points || 0};
               window.currentRole = 'student';
               if(typeof showToast === 'function') showToast('📴 دخول offline');
               if(typeof showScreen === 'function') setTimeout(function(){ showScreen('homeScreen'); }, 400);
