@@ -1,10 +1,6 @@
-/* عنوان Worker عام؛ نضعه بعد النشر. لا تضع أي مفتاح سري هنا. */
-window.STUDENT_AUTH_WORKER_URL = '';
-/* اتركه false حتى نشر Worker ووضع رابطه؛ فعّله بعد اختبار /health. */
+/* Keep false until loginLegacyStudent has been deployed and tested. */
 window.STUDENT_CUSTOM_AUTH_ENABLED = false;
-/* فعّل هذا فقط بعد نشر قواعد public_profiles المحدودة. */
-window.PROFILE_PHOTOS_ENABLED = false;
-/* لا تفعّل الخاص قبل مراجعة قواعد Firestore وStorage؛ الصور إعداد مستقل. */
+/* لا تفعّل الخاص قبل نشر ومراجعة قواعد Firestore وStorage. هذا العلم ليس بديلًا عن القواعد. */
 window.CHAT_PRIVATE_ENABLED = false;
 window.CHAT_RTC_CONFIG = {
   iceServers: [

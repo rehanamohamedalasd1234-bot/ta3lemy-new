@@ -1,8 +1,0 @@
-name = "ta3lemy-auth"
-main = "index.mjs"
-compatibility_date = "2026-10-23"
-workers_dev = true
-
-[vars]
-FIREBASE_PROJECT_ID = "ta3lemt-hafez"
-APP_ORIGIN = "https://rehanamohamedalasd1234-bot.github.io"
