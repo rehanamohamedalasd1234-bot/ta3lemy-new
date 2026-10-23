@@ -519,7 +519,7 @@ async function lookupFirebaseAuthUser(projectId, uid, accessToken) {
   return (result.users || []).find((user) => String(user.localId || '') === String(uid)) || null;
 }
 
-async function ensureCompatibleAuthUid(projectId, uid, accessToken) {
+async function ensureCompatibleAuthUid(projectId, uid, accessToken, expectedRole) {
   const existing = await lookupFirebaseAuthUser(projectId, uid, accessToken);
   if (!existing) return;
   if (existing.phoneNumber || (Array.isArray(existing.providerUserInfo) && existing.providerUserInfo.length)) {
@@ -527,12 +527,12 @@ async function ensureCompatibleAuthUid(projectId, uid, accessToken) {
   }
   let currentClaims = {};
   try { currentClaims = JSON.parse(existing.customAttributes || '{}'); } catch (_) {}
-  if (currentClaims.role && currentClaims.role !== 'student') {
+  if (currentClaims.role && currentClaims.role !== (expectedRole || 'student')) {
     throw new ApiError('failed-precondition', 'معرّف الحساب يحمل دورًا مختلفًا؛ أوقفنا الربط لحماية الصلاحيات.');
   }
 }
 
-async function createStudentCustomToken(serviceAccount, uid) {
+async function createCustomToken(serviceAccount, uid, role) {
   const now = Math.floor(Date.now() / 1000);
   return signJwt(serviceAccount, {
     iss: serviceAccount.client_email,
@@ -541,8 +541,121 @@ async function createStudentCustomToken(serviceAccount, uid) {
     iat: now,
     exp: now + 3600,
     uid: String(uid),
-    claims: { role: 'student' }
+    claims: { role: String(role) }
   });
+}
+
+async function createStudentCustomToken(serviceAccount, uid) {
+  return createCustomToken(serviceAccount, uid, 'student');
+}
+
+async function createTeacherCustomToken(serviceAccount, uid) {
+  return createCustomToken(serviceAccount, uid, 'teacher');
+}
+
+function parseTeacherLoginCredentials(env) {
+  const raw = String(env && env.TEACHER_LOGIN_CREDENTIALS_JSON || '').trim();
+  if (!raw) throw new ApiError('failed-precondition', 'لم يُضف إعداد دخول المعلمين في Cloudflare بعد.');
+  let input;
+  try { input = JSON.parse(raw); }
+  catch (_) { throw new ApiError('failed-precondition', 'صيغة حسابات المعلمين في Cloudflare غير صحيحة.'); }
+  if (!input || typeof input !== 'object' || Array.isArray(input)) {
+    throw new ApiError('failed-precondition', 'صيغة حسابات المعلمين في Cloudflare غير صحيحة.');
+  }
+  const credentials = Object.create(null);
+  for (const [rawUsername, rawPassword] of Object.entries(input)) {
+    const username = String(rawUsername || '').trim();
+    const password = typeof rawPassword === 'string' ? rawPassword : '';
+    const key = username.toLowerCase();
+    if (username.length < 3 || username.length > 64 || password.length < 16 || password.length > 256 || credentials[key]) {
+      throw new ApiError('failed-precondition', 'تأكد أن لكل معلم اسمًا فريدًا وكلمة مرور لا تقل عن 16 حرفًا.');
+    }
+    credentials[key] = { username, password };
+  }
+  if (!Object.keys(credentials).length) throw new ApiError('failed-precondition', 'لم تُضف أي حسابات للمعلمين في Cloudflare.');
+  return credentials;
+}
+
+function teacherCredentialForUsername(env, rawUsername) {
+  const username = String(rawUsername || '').trim();
+  const credentials = parseTeacherLoginCredentials(env);
+  const credential = credentials[username.toLowerCase()];
+  if (!credential) throw new ApiError('permission-denied', 'اسم المستخدم أو كلمة المرور غير صحيحة.');
+  return credential;
+}
+
+function validateTeacherIdentity(data, env) {
+  const identity = validateIdentity(data);
+  const credential = teacherCredentialForUsername(env, identity.username);
+  return { username: credential.username, deviceId: identity.deviceId };
+}
+
+function validateTeacherLoginInput(data) {
+  const challengeId = String(data && data.challengeId || '').trim();
+  const deviceId = String(data && data.deviceId || '').trim();
+  const proof = String(data && data.proof || '');
+  if (!/^[a-f0-9]{32}$/.test(challengeId) || !deviceId || deviceId.length > 200 || !proof || proof.length > 128) {
+    throw new ApiError('invalid-argument', 'طلب تسجيل دخول المعلم غير صالح.');
+  }
+  return { challengeId, deviceId, proof };
+}
+
+function teacherChallengeMessage(challengeId, challenge) {
+  return 'ta3lemy-teacher-login-v1|' + challengeId + '|' + challenge.nonce + '|' + challenge.deviceId + '|' + challenge.username;
+}
+
+async function createTeacherLoginChallenge(db, identity, ip, env) {
+  const credential = teacherCredentialForUsername(env, identity.username);
+  const limiter = await reserveLoginAttempt(db, 'teacher|' + credential.username.toLowerCase(), ip);
+  const now = Date.now();
+  const challengeId = randomId();
+  const nonce = bytesToBase64Url(randomBytes(32));
+  const challenge = {
+    username: credential.username,
+    deviceId: identity.deviceId,
+    nonce,
+    createdAt: now,
+    expiresAt: now + CHALLENGE_TTL_MS,
+    ttlExpiresAt: new Date(now + CHALLENGE_TTL_MS),
+    limiterPath: limiter.path
+  };
+  await db.update('teacher_auth_challenges/' + challengeId, challenge, false);
+  return { challengeId, nonce, username: credential.username };
+}
+
+async function completeTeacherLogin(db, projectId, accessToken, serviceAccount, input, env) {
+  const challengePath = 'teacher_auth_challenges/' + input.challengeId;
+  const transaction = await db.beginTransaction();
+  let settled = false;
+  const consumeChallenge = async () => {
+    await db.commit([deleteWrite(projectId, challengePath)], transaction);
+    settled = true;
+  };
+  try {
+    const challengeDoc = await db.get(challengePath, transaction);
+    if (!challengeDoc) throw new ApiError('failed-precondition', 'انتهت صلاحية الطلب؛ أعد المحاولة.');
+    const challenge = challengeDoc.data || {};
+    if (Number(challenge.expiresAt || 0) < Date.now() || challenge.deviceId !== input.deviceId) {
+      await consumeChallenge();
+      throw new ApiError('failed-precondition', 'انتهت صلاحية الطلب؛ أعد المحاولة.');
+    }
+    const credential = teacherCredentialForUsername(env, challenge.username);
+    const expected = await challengeProof(credential.password, teacherChallengeMessage(input.challengeId, challenge));
+    if (!constantTimeEqual(expected, input.proof)) {
+      await consumeChallenge();
+      throw new ApiError('permission-denied', 'اسم المستخدم أو كلمة المرور غير صحيحة.');
+    }
+    const uid = 'teacher_' + await sha256Hex(credential.username.toLowerCase());
+    await ensureCompatibleAuthUid(projectId, uid, accessToken, 'teacher');
+    await consumeChallenge();
+    await clearRateLimit(db, { path: challenge.limiterPath });
+    const customToken = await createTeacherCustomToken(serviceAccount, uid);
+    await db.log({ username: credential.username, role: 'teacher', success: true, reason: 'cloudflare custom auth', timestamp: new Date().toISOString() });
+    return { customToken, uid, name: credential.username, role: 'teacher', points: 0 };
+  } catch (error) {
+    if (!settled) await db.rollback(transaction);
+    throw error;
+  }
 }
 
 function userResourceName(projectId, uid) {
@@ -758,7 +871,7 @@ async function completeLogin(db, projectId, accessToken, serviceAccount, input, 
 
 function decodeErrorResponse(error) {
   if (error instanceof ApiError) return { status: error.status, body: { code: error.code, message: error.message } };
-  console.error('Student auth Worker failed', error && error.message || 'unknown');
+  console.error('Auth Worker failed', error && error.message || 'unknown');
   return { status: 500, body: { code: 'internal', message: 'تعذر إكمال تسجيل الدخول الآمن. حاول مرة أخرى لاحقًا.' } };
 }
 
@@ -825,8 +938,8 @@ export default {
       'Vary': 'Origin'
     }});
     const url = new URL(request.url);
-    if (request.method === 'GET' && url.pathname === '/health') return response(request, env, { ok: true, service: 'student-auth' }, 200);
-    if (request.method !== 'POST' || !['/challenge', '/login'].includes(url.pathname)) return response(request, env, { code: 'not-found', message: 'المسار غير موجود.' }, 404);
+    if (request.method === 'GET' && url.pathname === '/health') return response(request, env, { ok: true, service: 'ta3lemy-auth' }, 200);
+    if (request.method !== 'POST' || !['/challenge', '/login', '/teacher-challenge', '/teacher-login'].includes(url.pathname)) return response(request, env, { code: 'not-found', message: 'المسار غير موجود.' }, 404);
     if (!origin || origin !== env.APP_ORIGIN) return response(request, env, { code: 'permission-denied', message: 'يجب استخدام المنصة لتسجيل الدخول.' }, 403);
     const contentLength = Number(request.headers.get('Content-Length') || 0);
     if (contentLength > 16384) return response(request, env, { code: 'invalid-argument', message: 'حجم الطلب أكبر من المسموح.' }, 413);
@@ -839,6 +952,16 @@ export default {
       const accessToken = await googleAccessToken(serviceAccount);
       const db = new FirestoreRest(serviceAccount.project_id, accessToken);
       const ip = String(request.headers.get('CF-Connecting-IP') || 'unknown').slice(0, 200);
+      if (url.pathname === '/teacher-challenge') {
+        const identity = validateTeacherIdentity(body, env);
+        const result = await createTeacherLoginChallenge(db, identity, ip, env);
+        return response(request, env, result, 200);
+      }
+      if (url.pathname === '/teacher-login') {
+        const input = validateTeacherLoginInput(body);
+        const result = await completeTeacherLogin(db, serviceAccount.project_id, accessToken, serviceAccount, input, env);
+        return response(request, env, result, 200);
+      }
       if (url.pathname === '/challenge') {
         const identity = validateIdentity(body);
         const result = await createLoginChallenge(db, identity.username, identity.deviceId, ip);
@@ -863,6 +986,9 @@ export {
   legacyFallbackHash,
   legacyHash,
   parseJsonSequence,
+  parseTeacherLoginCredentials,
   readJson,
-  sha256Hex
+  sha256Hex,
+  teacherChallengeMessage,
+  validateTeacherLoginInput
 };

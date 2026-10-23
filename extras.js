@@ -330,6 +330,82 @@
     }
   };
 
+  window.loginTeacherWithBackend = async function(username, password){
+    var workerUrl = String(window.TEACHER_AUTH_WORKER_URL || window.STUDENT_AUTH_WORKER_URL || '').replace(/\/+$/, '');
+    var safeUsername = String(username || '').trim();
+    var safePassword = String(password || '');
+    if (!workerUrl) {
+      if (typeof showToast === 'function') showToast('عنوان Cloudflare Worker غير مُعد بعد.');
+      return true;
+    }
+    if (safeUsername.length < 3 || safeUsername.length > 64 || safePassword.length < 16 || safePassword.length > 256) {
+      if (typeof showToast === 'function') showToast('تحقق من اسم المستخدم وكلمة المرور (16 حرفًا على الأقل).');
+      return true;
+    }
+    if (!navigator.onLine) {
+      if (typeof showToast === 'function') showToast('تسجيل المعلم يتطلب اتصالًا بالإنترنت للتحقق الآمن.');
+      return true;
+    }
+    if (!window.crypto || !crypto.subtle || !window.firebase || !firebase.auth) {
+      if (typeof showToast === 'function') showToast('تعذر تجهيز التحقق الآمن؛ حدّث المتصفح وحاول مجددًا.');
+      return true;
+    }
+    try {
+      if (window.firebaseAuthReady && typeof window.firebaseAuthReady.then === 'function') await window.firebaseAuthReady;
+      if (window.firebaseAnonymousSignInPromise && typeof window.firebaseAnonymousSignInPromise.then === 'function') await window.firebaseAnonymousSignInPromise;
+      var deviceId = window.getDeviceId();
+      function toBase64Url(bytes){
+        var binary = '';
+        for (var i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+        return btoa(binary).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+      }
+      async function makeProof(secret, message){
+        var key = await crypto.subtle.importKey('raw', new TextEncoder().encode(String(secret)), {name:'HMAC', hash:'SHA-256'}, false, ['sign']);
+        var signature = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(message));
+        return toBase64Url(new Uint8Array(signature));
+      }
+      async function invoke(path, body){
+        var response = await fetch(workerUrl + path, {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          credentials: 'omit',
+          cache: 'no-store',
+          body: JSON.stringify(body)
+        });
+        var data = await response.json().catch(function(){ return {}; });
+        if (!response.ok) {
+          var error = new Error(data.message || 'تعذر التحقق من حساب المعلم.');
+          error.code = data.code || ('http-' + response.status);
+          throw error;
+        }
+        return data;
+      }
+      var challenge = await invoke('/teacher-challenge', {username:safeUsername, deviceId:deviceId});
+      if (!challenge.challengeId || !challenge.nonce || !challenge.username) throw new Error('إعداد دخول المعلم غير مكتمل.');
+      var message = 'ta3lemy-teacher-login-v1|' + challenge.challengeId + '|' + challenge.nonce + '|' + deviceId + '|' + challenge.username;
+      var proof = await makeProof(safePassword, message);
+      var reply = await invoke('/teacher-login', {challengeId:challenge.challengeId, deviceId:deviceId, proof:proof});
+      if (!reply.customToken || !reply.uid || reply.role !== 'teacher') throw new Error('استجابة تسجيل المعلم غير مكتملة.');
+      var credential = await firebase.auth().signInWithCustomToken(reply.customToken);
+      if (!credential.user || credential.user.uid !== String(reply.uid)) {
+        await firebase.auth().signOut();
+        throw new Error('لم يتطابق حساب Firebase مع حساب المعلم.');
+      }
+      window.currentUser = {name: reply.name || challenge.username, uid: String(reply.uid), authUid: String(reply.uid), points: Number(reply.points || 0)};
+      window.currentRole = 'teacher';
+      try { localStorage.setItem('lastUser', JSON.stringify({name:window.currentUser.name, uid:window.currentUser.uid, authUid:window.currentUser.authUid, role:'teacher', points:0})); } catch (e) {}
+      if (typeof showToast === 'function') showToast('تم تسجيل الدخول الآمن بحساب المعلم.');
+      if (typeof showScreen === 'function') setTimeout(function(){ showScreen('homeScreen'); }, 500);
+      if (typeof window.ensureTeacherEntry === 'function') window.ensureTeacherEntry();
+      return true;
+    } catch (error) {
+      console.error('Cloudflare teacher auth failed', error && error.code || 'network');
+      var message = error instanceof TypeError ? 'تعذر الاتصال بخدمة Cloudflare الآمنة. تحقق من عنوان Worker.' : (error && error.message || 'تعذر تسجيل دخول المعلم.');
+      if (typeof showToast === 'function') showToast(message);
+      return true;
+    }
+  };
+
   // ═══ 7. Login Override ═══
   window.addEventListener('load', function(){
     ensureRememberStudentLoginUI();
@@ -348,13 +424,15 @@
       var origLogin = window.login;
       
       window.login = async function(){
-        // لا نسمح للمعلم باستخدام مسار الاسم/كلمة المرور أو حفظ الدور محليًا.
+        // المعلم يدخل فقط عبر Worker ويستلم رمز Firebase بدور teacher.
         if (window.currentRole === 'teacher') {
-          if (typeof window.teacherPhoneLogin !== 'function') {
-            if (typeof showToast === 'function') showToast('تسجيل الهاتف الآمن غير جاهز؛ حدّث الصفحة');
+          if (typeof window.loginTeacherWithBackend !== 'function') {
+            if (typeof showToast === 'function') showToast('مسار دخول المعلم الآمن غير جاهز؛ حدّث الصفحة.');
             return;
           }
-          return window.teacherPhoneLogin();
+          var teacherName = document.getElementById('usernameInput');
+          var teacherPassword = document.getElementById('passwordInput');
+          return window.loginTeacherWithBackend(teacherName ? teacherName.value : '', teacherPassword ? teacherPassword.value : '');
         }
         var unameEl = document.getElementById('usernameInput');
         var pwdEl = document.getElementById('passwordInput');

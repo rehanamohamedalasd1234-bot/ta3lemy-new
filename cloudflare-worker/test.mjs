@@ -7,8 +7,11 @@ import {
   encodeFirestoreFields,
   legacyFallbackHash,
   legacyHash,
+  parseTeacherLoginCredentials,
   parseJsonSequence,
-  readJson
+  readJson,
+  teacherChallengeMessage,
+  validateTeacherLoginInput
 } from './index.mjs';
 
 const password = 'school-pass-742';
@@ -35,6 +38,24 @@ const expectedProof = createHmac('sha256', Buffer.from(verifier, 'utf8')).update
 assert.equal(await challengeProof(verifier, message), expectedProof, 'HMAC challenge proof matches browser WebCrypto format');
 assert.equal(constantTimeEqual(expectedProof, expectedProof), true);
 assert.equal(constantTimeEqual(expectedProof, 'wrong-proof'), false);
+
+const teacherPassword = 'local-test-teacher-password-2026';
+const teacherCredentials = parseTeacherLoginCredentials({
+  TEACHER_LOGIN_CREDENTIALS_JSON: JSON.stringify({ 'teacher-hafez': teacherPassword })
+});
+assert.equal(teacherCredentials['teacher-hafez'].password, teacherPassword, 'teacher credentials are read from Worker secret JSON');
+assert.throws(() => parseTeacherLoginCredentials({ TEACHER_LOGIN_CREDENTIALS_JSON: '{invalid' }));
+assert.throws(() => parseTeacherLoginCredentials({ TEACHER_LOGIN_CREDENTIALS_JSON: JSON.stringify({ teacher: 'short' }) }));
+
+const teacherChallenge = { nonce: 'teacher-nonce', deviceId: 'teacher-device', username: 'teacher-hafez' };
+const teacherMessage = teacherChallengeMessage('a'.repeat(32), teacherChallenge);
+assert.equal(teacherMessage, 'ta3lemy-teacher-login-v1|' + 'a'.repeat(32) + '|teacher-nonce|teacher-device|teacher-hafez');
+const teacherProof = await challengeProof(teacherPassword, teacherMessage);
+assert.equal(teacherProof, createHmac('sha256', Buffer.from(teacherPassword, 'utf8')).update(teacherMessage, 'utf8').digest('base64url'), 'teacher password is sent only as a challenge proof');
+assert.deepEqual(validateTeacherLoginInput({ challengeId: 'a'.repeat(32), deviceId: 'teacher-device', proof: teacherProof }), {
+  challengeId: 'a'.repeat(32), deviceId: 'teacher-device', proof: teacherProof
+});
+assert.throws(() => validateTeacherLoginInput({ challengeId: 'bad', deviceId: 'teacher-device', proof: 'proof' }));
 
 const stream = '{"document":{"name":"projects/p/databases/(default)/documents/users/u1","fields":{"name":{"stringValue":"طالب"}}}}\n{"readTime":"2026-10-23T00:00:00Z"}\n';
 assert.equal(parseJsonSequence(stream).length, 2, 'Firestore streaming JSON records are parsed');
