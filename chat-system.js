@@ -24,6 +24,7 @@
     finally { state.ownerClaimLoading = false; }
   }
   function requireSecureIdentity() { if (!hasAuthIdentity()) { toast('الخاص يتطلب ربط الحساب بمصادقة Firebase أولًا.'); return false; } if (window.CHAT_PRIVATE_ENABLED !== true) { toast('الخاص متوقف مؤقتًا حتى تُنشر وتُراجع قواعد Firestore وStorage.'); return false; } return true; }
+  function requireProfileIdentity() { if (!hasAuthIdentity()) { toast('رفع الصورة يتطلب تسجيل الدخول الآمن أولًا.'); return false; } if (window.PROFILE_PHOTOS_ENABLED !== true) { toast('رفع الصور متوقف حتى نشر قواعد الصور الآمنة.'); return false; } return true; }
   function toast(text) { if (window.showToast) window.showToast(text); else console.log(text); }
   function esc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); }
   function safeUrl(v) { return /^https:\/\//i.test(String(v || '')) ? String(v) : ''; }
@@ -388,7 +389,7 @@
     var button = document.createElement('button'); button.id = 'profilePhotoButton'; button.className = 'chatx-btn chatx-blue chatx-profile-edit'; button.textContent = '📷 إضافة أو تغيير صورتي';
     var input = document.createElement('input'); input.type = 'file'; input.id = 'profilePhotoInput'; input.accept = 'image/*'; input.className = 'chatx-file';
     input.onchange = function () { if (input.files && input.files[0]) uploadProfilePhoto(input.files[0]); input.value = ''; };
-    button.onclick = function () { if (requireSecureIdentity()) input.click(); }; card.appendChild(button); card.appendChild(input); refreshProfileAvatar();
+    button.onclick = function () { if (requireProfileIdentity()) input.click(); }; card.appendChild(button); card.appendChild(input); refreshProfileAvatar();
   }
   async function refreshProfileAvatar() {
     var img = document.getElementById('myProfileAvatar'); if (!img || !myId() || state.profileAvatarLoadedFor === myId()) return;
@@ -396,7 +397,7 @@
     try { var doc = await db.collection('public_profiles').doc(myId()).get(); if (doc.exists && doc.data().avatarURL) img.src = safeUrl(doc.data().avatarURL) || img.src; } catch (_) {}
   }
   async function uploadProfilePhoto(file) {
-    if (!requireSecureIdentity()) return;
+    if (!requireProfileIdentity()) return;
     if (!file.type || file.type.indexOf('image/') !== 0 || file.size > 8 * 1024 * 1024) return toast('اختر صورة لا تتجاوز 8 ميجابايت');
     try {
       toast('⏳ جارٍ رفع الصورة...'); var url = await window.uploadFile(file, 'profile_photos'); if (!url) throw new Error('فشل الرفع');
