@@ -116,6 +116,13 @@
         { q: 'إذا كان A={1,2,4} وB={2,3,4}، فما A−B؟', options: ['{1}', '{2,4}', '{3}', '{1,3}'], answer: 0, why: 'العدد 1 وحده ينتمي إلى A ولا ينتمي إلى B.' },
         { q: 'أي نسبة تكافئ 4:10؟', options: ['2:5', '5:2', '4:5', '8:10'], answer: 0, why: 'نقسم الطرفين على 2 فنحصل على 2:5.' },
         { q: 'ما قيمة 12.5% من 80؟', options: ['8', '10', '12', '16'], answer: 1, why: '12.5% = 1/8، و80÷8 = 10.' }
+      ],
+      writtenExercises: [
+        { q: 'ثمن 5 كراسات متماثلة 40 جنيهاً. استخدم التناسب لإيجاد ثمن 8 كراسات، واكتب خطواتك.', answerText: 'ثمن الكراسة الواحدة = 40÷5 = 8 جنيهات. ثمن 8 كراسات = 8×8 = 64 جنيهاً. ويمكن كتابة التناسب 5/8 = 40/x، ومنه 5x=320 ثم x=64.', rubric: 'درجتان: درجة لكتابة التناسب أو إيجاد ثمن الواحدة، ودرجة للناتج الصحيح مع الوحدة.', points: 2 },
+        { q: 'خريطة مقياسها 1:200,000. إذا كانت المسافة بين قريتين 4.5 سم على الخريطة، فأوجد المسافة الحقيقية بالكيلومترات موضحاً تحويل الوحدة.', answerText: 'المسافة الحقيقية = 4.5×200,000 = 900,000 سم. وبما أن 100,000 سم = 1 كم، فالمسافة = 9 كم.', rubric: 'درجتان: درجة لحساب المسافة بالسنتيمتر، ودرجة للتحويل الصحيح إلى 9 كم.', points: 2 },
+        { q: 'وُزعت مكافأة قدرها 1,200 جنيه بين ثلاثة أشخاص بنسبة 2:3:5. أوجد نصيب كل شخص، ثم تحقق من مجموع الأنصبة.', answerText: 'مجموع أجزاء النسبة 2+3+5=10، وقيمة الجزء الواحد 1,200÷10=120 جنيهاً. الأنصبة: 240، و360، و600 جنيه. والتحقق: 240+360+600=1,200.', rubric: '3 درجات: درجة لمجموع الأجزاء وقيمة الجزء، ودرجة للأنصبة الثلاثة، ودرجة للتحقق.', points: 3 },
+        { q: 'سعر جهاز 900 جنيه وخُفّض بنسبة 18%. احسب قيمة الخصم والسعر بعد التخفيض.', answerText: 'قيمة الخصم = 900×18÷100 = 162 جنيهاً. السعر بعد التخفيض = 900−162 = 738 جنيهاً.', rubric: 'درجتان: درجة لحساب الخصم، ودرجة للسعر النهائي الصحيح.', points: 2 },
+        { q: 'إذا كانت A={1,2,3,5} وB={3,4,5}، فأوجد A∪B وA∩B وA−B، واكتب معنى كل عملية بكلماتك.', answerText: 'A∪B={1,2,3,4,5} وهو جميع العناصر دون تكرار. A∩B={3,5} وهما العنصران المشتركان. A−B={1,2} وهما العنصران الموجودان في A وغير الموجودين في B.', rubric: '3 درجات: درجة لكل ناتج صحيح، مع توضيح معنى عملية واحدة على الأقل.', points: 3 }
       ]
     },
     {
@@ -228,6 +235,13 @@
         { q: 'زاوية متكاملة مع زاوية قياسها 47° تساوي:', options: ['43°', '133°', '143°', '227°'], answer: 1, why: '180°−47°=133°.' },
         { q: 'في مستقيمين متوازيين، زاويتان متبادلتان داخلياً قياس إحداهما 109°. قياس الثانية:', options: ['71°', '90°', '109°', '180°'], answer: 2, why: 'الزاويتان المتبادلتان داخلياً متساويتان.' },
         { q: 'في مثلث متساوي الأضلاع، قياس كل زاوية داخلية:', options: ['45°', '60°', '90°', '120°'], answer: 1, why: 'الزوايا متساوية ومجموعها 180°؛ إذن كل زاوية 60°.' }
+      ],
+      writtenExercises: [
+        { q: 'اكتب تعبيراً يمثل «ثلاثة أمثال x ناقص 4»، ثم أوجد قيمته عندما x=5. بسّط أيضاً 2a+3a−7.', answerText: 'التعبير هو 3x−4. عند x=5 تكون قيمته 3×5−4=11. والتعبير 2a+3a−7 يُبسط إلى 5a−7 لأن الحدين متشابهان.', rubric: 'درجتان: درجة للتعبير والتعويض الصحيح، ودرجة للتبسيط الصحيح.', points: 2 },
+        { q: 'مستطيل طوله 8 سم وعرضه 5 سم. استخدم الصيغتين P=2(l+w) وA=l×w لإيجاد محيطه ومساحته مع كتابة الوحدات.', answerText: 'المحيط P=2(8+5)=26 سم. المساحة A=8×5=40 سم².', rubric: 'درجتان: درجة للمحيط بوحدة سم، ودرجة للمساحة بوحدة سم².', points: 2 },
+        { q: 'زاويتان متجاورتان على خط مستقيم قياساهما x+20 و2x+10. أوجد x وقياس كل زاوية، واذكر العلاقة المستخدمة.', answerText: 'الزاويتان متكاملتان ومجموعهما 180°. إذن (x+20)+(2x+10)=180، ومنها 3x=150 وx=50. قياسا الزاويتين 70° و110°.', rubric: '3 درجات: درجة للعلاقة والمعادلة، ودرجة لقيمة x، ودرجة لقياسي الزاويتين.', points: 3 },
+        { q: 'يقطع قاطع مستقيمين متوازيين. إذا كانت زاوية داخلية على أحد جانبي القاطع 127°، فأوجد الزاوية الداخلية على الجانب نفسه عند المستقيم الآخر، وفسر إجابتك.', answerText: 'الزاويتان الداخليتان على جهة واحدة من القاطع متكاملتان؛ قياس الثانية = 180°−127°=53°.', rubric: 'درجتان: درجة لتحديد علاقة التكامل، ودرجة للإجابة 53°.', points: 2 },
+        { q: 'في مثلث زاويتان قياسهما 46° و59°. أوجد الزاوية الثالثة. ثم بيّن هل يمكن تكوين مثلث أطوال أضلاعه 4 سم و6 سم و11 سم، مع ذكر السبب.', answerText: 'الزاوية الثالثة = 180°−(46°+59°)=75°. ولا يمكن تكوين مثلث بالأطوال 4 و6 و11؛ لأن 4+6=10 وهو أقل من طول الضلع الثالث 11.', rubric: '3 درجات: درجة للزاوية الثالثة، ودرجة لاختبار متباينة المثلث، ودرجة للاستنتاج المعلل.', points: 3 }
       ]
     }
   ];
@@ -269,7 +283,7 @@
     },
     {
       id: 'comprehensive-term-exam', title: 'امتحان شامل إضافي — منهج الترم الأول بالكامل',
-      note: 'اختبار تدريبي أصلي غير رسمي • 24 سؤالاً تغطي الدروس الاثني عشر • زمن مقترح 45 دقيقة',
+      note: 'اختبار تدريبي أصلي غير رسمي • 24 سؤال اختيار من متعدد و8 أسئلة مقالية وتعبيرية • زمن مقترح 60 دقيقة',
       questions: [
         { q: 'إذا كان 6/9 = x/12، فما قيمة x؟', options: ['6', '8', '9', '10'], answer: 1, why: '6×12=9x، ومنه x=8.' },
         { q: 'أي مساواة تمثل تناسباً صحيحاً؟', options: ['4/7=12/21', '3/5=9/10', '2/3=6/8', '5/8=10/12'], answer: 0, why: '4×21=7×12=84.' },
@@ -294,7 +308,15 @@
         { q: 'إذا كانت زاويتان متبادلتان داخلياً بين مستقيمين متوازيين وقياس إحداهما 63°، فقياس الأخرى:', options: ['27°', '63°', '117°', '180°'], answer: 1, why: 'الزاويتان المتبادلتان داخلياً متساويتان.' },
         { q: 'زاويتان داخليتان على جهة واحدة من قاطع لمستقيمين متوازيين؛ إذا كانت إحداهما 118°، فالأخرى:', options: ['52°', '62°', '118°', '242°'], answer: 1, why: 'مجموعهما 180°؛ 180°−118°=62°.' },
         { q: 'مثلث زاويتاه 43° و72°. قياس الزاوية الثالثة:', options: ['55°', '65°', '75°', '115°'], answer: 1, why: '180°−(43°+72°)=65°.' },
-        { q: 'أي مجموعة أطوال لا يمكن أن تمثل أضلاع مثلث؟', options: ['4، 5، 6', '3، 4، 5', '2، 3، 5', '5، 6، 8'], answer: 2, why: 'مجموع أصغر ضلعين 2+3=5، ولا يزيد على الضلع الثالث.' }
+        { q: 'أي مجموعة أطوال لا يمكن أن تمثل أضلاع مثلث؟', options: ['4، 5، 6', '3، 4، 5', '2، 3، 5', '5، 6، 8'], answer: 2, why: 'مجموع أصغر ضلعين 2+3=5، ولا يزيد على الضلع الثالث.' },
+        { q: 'ثمن 4 عبوات متماثلة 60 جنيهاً. اكتب تناسباً لإيجاد ثمن 10 عبوات، ثم أوجد الثمن وتحقق منه.', answerText: 'إذا كان ثمن 10 عبوات x، فالتناسب 4/60=10/x. بالضرب التبادلي 4x=600، إذن x=150 جنيهاً. والتحقق: ثمن العبوة 15 جنيهاً، و10×15=150.', rubric: '3 درجات: درجة للتناسب، ودرجة للحل، ودرجة للتحقق والوحدة.', points: 3 },
+        { q: 'مقياس خريطة 1:250,000. قِس طول طريق على الخريطة فكان 6.4 سم. أوجد طول الطريق الحقيقي بالكيلومترات موضحاً خطواتك.', answerText: 'الطول الحقيقي = 6.4×250,000=1,600,000 سم. وبالتحويل إلى كيلومترات: 1,600,000÷100,000=16 كم.', rubric: 'درجتان: درجة للمسافة بالسنتيمتر، ودرجة للتحويل إلى 16 كم.', points: 2 },
+        { q: 'قُسم مبلغ 960 جنيهاً بنسبة 2:3:7. أوجد نصيب كل طرف، وبيّن كيف تحققت من إجابتك.', answerText: 'مجموع الأجزاء 2+3+7=12؛ قيمة الجزء الواحد 960÷12=80. الأنصبة: 160، 240، 560 جنيهاً. التحقق: 160+240+560=960.', rubric: '3 درجات: درجة لقيمة الجزء، ودرجة للأنصبة الثلاثة، ودرجة للتحقق.', points: 3 },
+        { q: 'زاد سعر سلعة من 450 جنيهاً بنسبة 12%. احسب مقدار الزيادة والسعر الجديد، واكتب العملية الحسابية.', answerText: 'مقدار الزيادة = 450×12÷100=54 جنيهاً. السعر الجديد = 450+54=504 جنيهات.', rubric: 'درجتان: درجة لمقدار الزيادة، ودرجة للسعر الجديد.', points: 2 },
+        { q: 'إذا كانت A={1,2,3,5,7} وB={3,4,5,8}، أوجد الاتحاد والتقاطع والفرق A−B، ثم اشرح الفرق بين الاتحاد والتقاطع.', answerText: 'A∪B={1,2,3,4,5,7,8}، وA∩B={3,5}، وA−B={1,2,7}. الاتحاد يجمع كل عناصر المجموعتين، أما التقاطع فيضم العناصر المشتركة فقط.', rubric: '4 درجات: درجة لكل مجموعة صحيحة، ودرجة لشرح الفرق بين الاتحاد والتقاطع.', points: 4 },
+        { q: 'اكتب تعبيراً لعبارة «ضعف العدد n مضافاً إليه 7»، ثم احسب قيمته عندما n=6. بعد ذلك أوجد محيط مستطيل طوله 7 سم وعرضه 3 سم باستخدام صيغة المحيط.', answerText: 'التعبير 2n+7، وعند n=6 تكون قيمته 2×6+7=19. محيط المستطيل P=2(7+3)=20 سم.', rubric: '3 درجات: درجة للتعبير، ودرجة للتعويض، ودرجة للمحيط مع وحدته.', points: 3 },
+        { q: 'زاويتان متكاملتان قياساهما 3x+15 و2x+15. أوجد x وقياس كل زاوية، ثم وضح لماذا هما متكاملتان.', answerText: '(3x+15)+(2x+15)=180، إذن 5x+30=180 ومنه x=30. قياس الزاويتين 105° و75°، ومجموعهما 180°؛ لذلك فهما متكاملتان.', rubric: '3 درجات: درجة للمعادلة، ودرجة للحل وقياسي الزاويتين، ودرجة للتفسير.', points: 3 },
+        { q: 'أجب عن الجزأين: (أ) زاويتان داخليتان على جهة واحدة من قاطع لمستقيمين متوازيين، إحداهما 124°. أوجد الأخرى وفسر. (ب) مثلث متساوي الساقين زاوية رأسه 40°. أوجد زاويتي القاعدة.', answerText: '(أ) الزاويتان متكاملتان، لذا قياس الأخرى 180°−124°=56°. (ب) مجموع زاويتي القاعدة 180°−40°=140°، وهما متساويتان؛ إذن قياس كل واحدة 70°.', rubric: '4 درجات: درجتان لعلاقة التوازي والنتيجة، ودرجتان لمجموع زاويتي القاعدة وتساويهما.', points: 4 }
       ]
     }
   ];
@@ -349,36 +371,60 @@
 
   function questionsBox(questions, prefix) {
     var wrap = document.createElement('div');
+    var writtenCount = questions.filter(function (question) { return !Array.isArray(question.options); }).length;
     questions.forEach(function (question, index) {
       var block = document.createElement('section');
       block.style.cssText = 'border:1px solid #e4e9e4;border-radius:12px;padding:14px;margin:12px 0;background:#fff;';
       var title = text('div', (index + 1) + '. ' + question.q);
       title.style.cssText = 'font-weight:700;line-height:1.8;margin-bottom:10px;';
       block.appendChild(title);
-      var choices = document.createElement('div');
-      question.options.forEach(function (choice, choiceIndex) {
-        var label = document.createElement('label');
-        label.style.cssText = 'display:flex;gap:8px;align-items:flex-start;padding:7px 3px;line-height:1.7;cursor:pointer;';
-        var input = document.createElement('input');
-        input.type = 'radio';
-        input.name = prefix + '-' + index;
-        input.value = String(choiceIndex);
-        input.style.marginTop = '6px';
-        label.appendChild(input);
-        label.appendChild(text('span', choice));
-        choices.appendChild(label);
-      });
-      block.appendChild(choices);
-      var result = text('div', '');
-      result.style.cssText = 'display:none;margin-top:9px;padding:9px;border-radius:8px;line-height:1.7;';
-      block.appendChild(result);
-      block._mathQuestion = question;
-      block._mathResult = result;
+      if (Array.isArray(question.options)) {
+        var choices = document.createElement('div');
+        question.options.forEach(function (choice, choiceIndex) {
+          var label = document.createElement('label');
+          label.style.cssText = 'display:flex;gap:8px;align-items:flex-start;padding:7px 3px;line-height:1.7;cursor:pointer;';
+          var input = document.createElement('input');
+          input.type = 'radio';
+          input.name = prefix + '-' + index;
+          input.value = String(choiceIndex);
+          input.style.marginTop = '6px';
+          label.appendChild(input);
+          label.appendChild(text('span', choice));
+          choices.appendChild(label);
+        });
+        block.appendChild(choices);
+        var result = text('div', '');
+        result.style.cssText = 'display:none;margin-top:9px;padding:9px;border-radius:8px;line-height:1.7;';
+        block.appendChild(result);
+        block._mathQuestion = question;
+        block._mathResult = result;
+      } else {
+        var kindLabel = text('div', 'سؤال مقالي/تعبيري' + (question.points ? ' • الدرجة الكلية: ' + question.points : ''));
+        kindLabel.style.cssText = 'display:inline-block;background:#FFF3E0;color:#8A4B08;border-radius:16px;padding:4px 10px;margin:2px 0 8px;font-size:13px;font-weight:700;';
+        block.appendChild(kindLabel);
+        var answerLabel = text('label', 'اكتب إجابتك وخطوات الحل:');
+        answerLabel.style.cssText = 'display:block;font-weight:700;margin:10px 0 6px;';
+        var response = document.createElement('textarea');
+        response.rows = 4;
+        response.maxLength = 3000;
+        response.placeholder = 'اكتب الإجابة هنا...';
+        response.setAttribute('aria-label', 'إجابة السؤال المقالي');
+        response.style.cssText = 'display:block;width:100%;min-height:100px;padding:10px;border:1px solid #bdbdbd;border-radius:10px;font:inherit;line-height:1.8;resize:vertical;';
+        block.appendChild(answerLabel);
+        block.appendChild(response);
+        var details = document.createElement('details');
+        details.style.cssText = 'margin-top:10px;background:#F5F9F5;border-radius:9px;padding:9px 12px;line-height:1.8;';
+        details.appendChild(text('summary', 'عرض إجابة نموذجية ومعايير التقييم' + (question.points ? ' (' + question.points + ' درجات)' : '')));
+        details.appendChild(text('div', 'الإجابة النموذجية: ' + question.answerText));
+        if (question.rubric) details.appendChild(text('div', 'معايير التقييم: ' + question.rubric));
+        block.appendChild(details);
+        block._mathWrittenQuestion = true;
+      }
       wrap.appendChild(block);
     });
     var check = document.createElement('button');
     check.type = 'button';
-    check.textContent = 'تحقق من الإجابات';
+    check.textContent = writtenCount ? 'صحّح الاختيار من متعدد وراجع الأسئلة المقالية' : 'تحقق من الإجابات';
     check.style.cssText = 'background:#2E7D32;color:white;border:0;border-radius:10px;padding:11px 16px;font:inherit;font-weight:700;margin:8px 0 16px;cursor:pointer;';
     check.addEventListener('click', function () {
       var score = 0;
@@ -395,7 +441,7 @@
         block._mathResult.textContent = (correct ? 'إجابة صحيحة. ' : 'ليست الإجابة الصحيحة. ') + question.why;
       });
       var scoreBox = wrap.querySelector('.math-score');
-      if (scoreBox) scoreBox.textContent = 'نتيجتك: ' + score + ' من ' + total;
+      if (scoreBox) scoreBox.textContent = 'نتيجتك في الاختيار من متعدد: ' + score + ' من ' + total + (writtenCount ? ' • راجع إجابات ' + writtenCount + ' أسئلة مقالية بالنموذج ومعايير التقييم.' : '');
     });
     wrap.insertBefore(check, wrap.firstChild);
     var scoreBox = text('div', '', 'math-score');
@@ -451,7 +497,8 @@
       var message = found.kind === 'exam' ? found.item.note : 'تدريبات متنوعة على دروس الوحدة مع تصحيح فوري وتفسير للإجابة.';
       body.appendChild(text('p', message, 'math-exam-note'));
       if (found.kind === 'exercise') body.appendChild(text('h3', found.unit.title, 'math-section-title'));
-      body.appendChild(questionsBox(found.kind === 'exercise' ? found.item.exercises : found.item.questions, found.item.id));
+      var questionSet = found.kind === 'exercise' ? found.item.exercises.concat(found.item.writtenExercises || []) : found.item.questions;
+      body.appendChild(questionsBox(questionSet, found.item.id));
     }
     screenHistory.push(currentScreen);
     showScreen('viewerScreen');
@@ -476,7 +523,7 @@
       });
     } else if (type === 'exercises') {
       units.forEach(function (unit) {
-        root.appendChild(card('تدريبات ' + unit.title, unit.exercises.length + ' أسئلة متنوعة مع تصحيح فوري', unit.id, '✏️'));
+        root.appendChild(card('تدريبات ' + unit.title, unit.exercises.length + ' أسئلة اختيار من متعدد و' + (unit.writtenExercises || []).length + ' أسئلة مقالية مع نماذج إجابة', unit.id, '✏️'));
       });
     } else if (type === 'exams') {
       exams.forEach(function (exam) {
