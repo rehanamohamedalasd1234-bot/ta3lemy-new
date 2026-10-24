@@ -369,9 +369,39 @@
     return link;
   }
 
-  function questionsBox(questions, prefix) {
+  var ESSAY_SCORE_STORAGE_KEY = 'ta3lemy-math-g7-t1-essay-scores-v1';
+
+  function readEssayScores() {
+    try {
+      var raw = window.localStorage.getItem(ESSAY_SCORE_STORAGE_KEY);
+      var scores = raw ? JSON.parse(raw) : {};
+      return scores && typeof scores === 'object' && !Array.isArray(scores) ? scores : {};
+    } catch (error) {
+      return {};
+    }
+  }
+
+  function saveEssayScore(key, record) {
+    try {
+      var scores = readEssayScores();
+      scores[key] = record;
+      window.localStorage.setItem(ESSAY_SCORE_STORAGE_KEY, JSON.stringify(scores));
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function countEssayQuestions() {
+    var practiceCount = units.reduce(function (total, unit) { return total + (unit.writtenExercises || []).length; }, 0);
+    var examCount = exams.reduce(function (total, exam) { return total + exam.questions.filter(function (question) { return !Array.isArray(question.options); }).length; }, 0);
+    return practiceCount + examCount;
+  }
+
+  function questionsBox(questions, prefix, itemTitle) {
     var wrap = document.createElement('div');
     var writtenCount = questions.filter(function (question) { return !Array.isArray(question.options); }).length;
+    var storedScores = readEssayScores();
     questions.forEach(function (question, index) {
       var block = document.createElement('section');
       block.style.cssText = 'border:1px solid #e4e9e4;border-radius:12px;padding:14px;margin:12px 0;background:#fff;';
@@ -418,6 +448,57 @@
         details.appendChild(text('div', 'الإجابة النموذجية: ' + question.answerText));
         if (question.rubric) details.appendChild(text('div', 'معايير التقييم: ' + question.rubric));
         block.appendChild(details);
+        var scoreKey = String(prefix || 'content') + '::' + (question.id || index);
+        var savedRecord = storedScores[scoreKey];
+        var scorePanel = document.createElement('div');
+        scorePanel.style.cssText = 'margin-top:12px;padding:11px;background:#F3F6FA;border-radius:10px;';
+        var scoreLabel = text('label', 'درجتك بعد المراجعة الذاتية (من 0 إلى ' + question.points + '):');
+        scoreLabel.style.cssText = 'display:block;font-weight:700;margin-bottom:6px;';
+        var scoreInput = document.createElement('input');
+        scoreInput.type = 'number';
+        scoreInput.min = '0';
+        scoreInput.max = String(question.points);
+        scoreInput.step = '1';
+        scoreInput.value = savedRecord ? String(savedRecord.score) : '';
+        scoreInput.placeholder = 'أدخل درجتك';
+        scoreInput.setAttribute('aria-label', 'درجتك بعد المراجعة من صفر إلى ' + question.points);
+        scoreInput.style.cssText = 'width:120px;max-width:100%;padding:9px;border:1px solid #bdbdbd;border-radius:8px;font:inherit;';
+        var saveButton = document.createElement('button');
+        saveButton.type = 'button';
+        saveButton.textContent = 'حفظ درجتي';
+        saveButton.style.cssText = 'margin:6px 8px;padding:9px 13px;background:#1565C0;color:white;border:0;border-radius:8px;font:inherit;font-weight:700;cursor:pointer;';
+        var scoreStatus = text('div', savedRecord ? 'الدرجة المحفوظة حالياً: ' + savedRecord.score + ' من ' + question.points : '');
+        scoreStatus.style.cssText = 'margin-top:6px;font-size:13px;line-height:1.7;';
+        saveButton.addEventListener('click', function () {
+          var rawScore = String(scoreInput.value || '').trim();
+          var enteredScore = Number(rawScore);
+          if (!rawScore || !Number.isInteger(enteredScore) || enteredScore < 0 || enteredScore > question.points) {
+            scoreStatus.style.color = '#B71C1C';
+            scoreStatus.textContent = 'أدخل درجة صحيحة من 0 إلى ' + question.points + '.';
+            return;
+          }
+          var record = {
+            sourceId: prefix,
+            itemTitle: itemTitle || prefix,
+            question: question.q,
+            score: enteredScore,
+            points: question.points,
+            updatedAt: new Date().toISOString()
+          };
+          if (!saveEssayScore(scoreKey, record)) {
+            scoreStatus.style.color = '#B71C1C';
+            scoreStatus.textContent = 'تعذر حفظ الدرجة على هذا الجهاز. تحقق من إعدادات التخزين ثم حاول مجدداً.';
+            return;
+          }
+          storedScores[scoreKey] = record;
+          scoreStatus.style.color = '#2E7D32';
+          scoreStatus.textContent = 'تم حفظ درجتك: ' + enteredScore + ' من ' + question.points + ' على هذا الجهاز.';
+        });
+        scorePanel.appendChild(scoreLabel);
+        scorePanel.appendChild(scoreInput);
+        scorePanel.appendChild(saveButton);
+        scorePanel.appendChild(scoreStatus);
+        block.appendChild(scorePanel);
         block._mathWrittenQuestion = true;
       }
       wrap.appendChild(block);
@@ -450,6 +531,54 @@
     return wrap;
   }
 
+  function openEssayScoreTracker() {
+    var body = document.getElementById('viewerBody');
+    var title = document.getElementById('viewerTitle');
+    if (!body || !title) return;
+    body.textContent = '';
+    body.setAttribute('dir', 'rtl');
+    title.textContent = 'متابعة درجات المراجعة الذاتية للأسئلة المقالية';
+    body.appendChild(noticeBox());
+    var scores = readEssayScores();
+    var entries = Object.keys(scores).map(function (key) { return scores[key]; }).filter(function (record) {
+      return record && typeof record === 'object' && isFinite(Number(record.score)) && isFinite(Number(record.points));
+    });
+    var earned = entries.reduce(function (total, record) { return total + Number(record.score); }, 0);
+    var possible = entries.reduce(function (total, record) { return total + Number(record.points); }, 0);
+    var percentage = possible ? Math.round(earned / possible * 100) : 0;
+    var summary = document.createElement('section');
+    summary.style.cssText = 'background:#E8F5E9;border-radius:12px;padding:14px;margin:12px 0;line-height:1.9;';
+    summary.appendChild(text('h3', 'ملخص تقدمك في التقييم الذاتي'));
+    summary.appendChild(text('p', 'مجموع الدرجات المحفوظة: ' + earned + ' من ' + possible + ' درجة (' + percentage + '%).'));
+    summary.appendChild(text('p', 'عدد الأسئلة التي سجلت لها درجة: ' + entries.length + ' من ' + countEssayQuestions() + ' سؤالاً مقالياً.'));
+    summary.appendChild(text('p', 'تُحفظ الدرجات على هذا الجهاز فقط، ولا تُرسل إجاباتك المكتوبة إلى الخادم.'));
+    body.appendChild(summary);
+    if (!entries.length) {
+      body.appendChild(text('p', 'لم تسجل درجات بعد. افتح تدريب إحدى الوحدتين أو الامتحان الشامل، وقيّم إجابتك بعد مراجعة النموذج ثم اضغط «حفظ درجتي».'));
+    } else {
+      entries.sort(function (a, b) { return String(b.updatedAt || '').localeCompare(String(a.updatedAt || '')); });
+      entries.forEach(function (record) {
+        var row = document.createElement('section');
+        row.style.cssText = 'border:1px solid #e4e9e4;border-radius:11px;padding:12px;margin:10px 0;background:#fff;line-height:1.8;';
+        row.appendChild(text('h4', record.itemTitle || 'تقييم مقالي'));
+        row.appendChild(text('p', record.question || ''));
+        row.appendChild(text('strong', 'تقييمك: ' + record.score + ' من ' + record.points));
+        if (record.updatedAt) row.appendChild(text('div', 'آخر تحديث: ' + new Date(record.updatedAt).toLocaleString('ar-EG')));
+        if (record.sourceId) {
+          var editSource = document.createElement('button');
+          editSource.type = 'button';
+          editSource.textContent = 'فتح التدريب/الامتحان لتعديل الدرجة';
+          editSource.style.cssText = 'margin-top:8px;padding:8px 12px;background:#1565C0;color:white;border:0;border-radius:8px;font:inherit;cursor:pointer;';
+          editSource.addEventListener('click', function () { openItem(record.sourceId); });
+          row.appendChild(editSource);
+        }
+        body.appendChild(row);
+      });
+    }
+    screenHistory.push(currentScreen);
+    showScreen('viewerScreen');
+  }
+
   function findItem(id) {
     for (var unitIndex = 0; unitIndex < units.length; unitIndex += 1) {
       var unit = units[unitIndex];
@@ -465,6 +594,10 @@
   }
 
   function openItem(id) {
+    if (id === 'essay-score-tracker') {
+      openEssayScoreTracker();
+      return;
+    }
     var found = findItem(id);
     if (!found) return;
     var body = document.getElementById('viewerBody');
@@ -492,13 +625,13 @@
       summary.appendChild(text('span', found.item.key));
       body.appendChild(summary);
       body.appendChild(text('h3', 'تدريب فوري', 'math-section-title'));
-      body.appendChild(questionsBox(found.item.questions, found.item.id));
+      body.appendChild(questionsBox(found.item.questions, found.item.id, found.item.title));
     } else {
       var message = found.kind === 'exam' ? found.item.note : 'تدريبات متنوعة على دروس الوحدة مع تصحيح فوري وتفسير للإجابة.';
       body.appendChild(text('p', message, 'math-exam-note'));
       if (found.kind === 'exercise') body.appendChild(text('h3', found.unit.title, 'math-section-title'));
       var questionSet = found.kind === 'exercise' ? found.item.exercises.concat(found.item.writtenExercises || []) : found.item.questions;
-      body.appendChild(questionsBox(questionSet, found.item.id));
+      body.appendChild(questionsBox(questionSet, found.item.id, found.item.title));
     }
     screenHistory.push(currentScreen);
     showScreen('viewerScreen');
@@ -514,6 +647,9 @@
     root.className = 'math-original-content';
     root.setAttribute('dir', 'rtl');
     root.appendChild(noticeBox());
+    if (type === 'exercises' || type === 'exams') {
+      root.appendChild(card('متابعة درجات المراجعة الذاتية', 'اعرض مجموع درجاتك المقالية المحفوظة، وافتح التدريب أو الامتحان لتعديل أي درجة.', 'essay-score-tracker', '📊'));
+    }
     if (type === 'lessons') {
       units.forEach(function (unit) {
         root.appendChild(text('h3', unit.title, 'math-unit-heading'));
