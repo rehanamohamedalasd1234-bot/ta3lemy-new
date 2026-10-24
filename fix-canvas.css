@@ -171,6 +171,54 @@
     height: 30px !important;
   }
 
+  /* استهداف صفوف الأدوات الموجودة فعليًا في HTML، لا أسماء فئات غير مستخدمة. */
+  #drawingScreen .content > div:nth-child(1) {
+    gap: 3px !important;
+    padding: 4px 5px !important;
+  }
+
+  #drawingScreen .content > div:nth-child(1) > button {
+    flex: 0 0 auto;
+    min-height: 28px !important;
+    padding: 4px 6px !important;
+    border-radius: 7px !important;
+    font-size: 10px !important;
+    line-height: 1.1 !important;
+  }
+
+  #drawingScreen .content > div:nth-child(2) {
+    gap: 4px !important;
+    padding: 4px 5px !important;
+  }
+
+  #drawingScreen .content > div:nth-child(2) > button {
+    flex: 0 0 auto;
+    width: 26px !important;
+    height: 26px !important;
+    min-width: 26px !important;
+    padding: 0 !important;
+    border-width: 2px !important;
+    font-size: 14px !important;
+  }
+
+  #drawingScreen .content > div:nth-child(2) > button[onclick^="drawingSetColor"] {
+    width: 24px !important;
+    height: 24px !important;
+    min-width: 24px !important;
+  }
+
+  #drawingScreen .content > div:nth-child(2) > button[onclick^="drawingSetSize"] {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    border-radius: 8px !important;
+  }
+
+  #drawingScreen .content > div:nth-child(3) {
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+  }
+
   #homeScreen .tools-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 6px;
