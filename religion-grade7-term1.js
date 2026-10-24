@@ -257,6 +257,17 @@
     link.appendChild(el('div', '‹', 'content-item-arrow'));
     return link;
   }
+  function shuffledIndices(length) {
+    var order = [];
+    for (var i = 0; i < length; i += 1) order.push(i);
+    for (var j = order.length - 1; j > 0; j -= 1) {
+      var swapIndex = Math.floor(Math.random() * (j + 1));
+      var value = order[j];
+      order[j] = order[swapIndex];
+      order[swapIndex] = value;
+    }
+    return order;
+  }
   function questionBox(questions, ownerId) {
     var wrap = el('section', undefined, 'religion-question-set');
     wrap.setAttribute('dir', 'rtl');
@@ -266,7 +277,8 @@
       var legend = el('legend', (index + 1) + '. ' + question.q, 'religion-question-title');
       legend.style.cssText = 'font-weight:700;line-height:1.8;padding:0 5px;';
       block.appendChild(legend);
-      question.options.forEach(function (option, optionIndex) {
+      shuffledIndices(question.options.length).forEach(function (optionIndex) {
+        var option = question.options[optionIndex];
         var label = el('label', undefined, 'religion-option');
         label.style.cssText = 'display:block;padding:7px 9px;margin:5px 0;border-radius:8px;background:#f8faf8;cursor:pointer;line-height:1.7;';
         var input = document.createElement('input');

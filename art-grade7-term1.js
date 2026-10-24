@@ -208,6 +208,18 @@
     return notice;
   }
 
+  function shuffledIndices(length) {
+    var order = [];
+    for (var i = 0; i < length; i += 1) order.push(i);
+    for (var j = order.length - 1; j > 0; j -= 1) {
+      var swapIndex = Math.floor(Math.random() * (j + 1));
+      var value = order[j];
+      order[j] = order[swapIndex];
+      order[swapIndex] = value;
+    }
+    return order;
+  }
+
   function questionBox(questions, prefix) {
     var wrap = document.createElement('div');
     wrap.setAttribute('dir', 'rtl');
@@ -218,7 +230,8 @@
       title.style.cssText = 'font-weight:700;line-height:1.8;margin-bottom:10px;';
       block.appendChild(title);
       var choices = document.createElement('div');
-      question.options.forEach(function (choice, choiceIndex) {
+      shuffledIndices(question.options.length).forEach(function (choiceIndex) {
+        var choice = question.options[choiceIndex];
         var label = document.createElement('label');
         label.style.cssText = 'display:flex;gap:8px;align-items:flex-start;padding:7px 3px;line-height:1.7;cursor:pointer;';
         var input = document.createElement('input');

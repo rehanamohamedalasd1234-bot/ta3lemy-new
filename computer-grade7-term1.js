@@ -151,6 +151,18 @@
     return link;
   }
 
+  function shuffledIndices(length) {
+    var order = [];
+    for (var i = 0; i < length; i += 1) order.push(i);
+    for (var j = order.length - 1; j > 0; j -= 1) {
+      var swapIndex = Math.floor(Math.random() * (j + 1));
+      var value = order[j];
+      order[j] = order[swapIndex];
+      order[swapIndex] = value;
+    }
+    return order;
+  }
+
   function questionsBox(questions, prefix) {
     var wrap = document.createElement('div');
     var questionBlocks = [];
@@ -161,7 +173,8 @@
       heading.style.cssText = 'font-weight:700;line-height:1.8;margin-bottom:10px;';
       block.appendChild(heading);
       var choices = document.createElement('div');
-      question.options.forEach(function (choice, choiceIndex) {
+      shuffledIndices(question.options.length).forEach(function (choiceIndex) {
+        var choice = question.options[choiceIndex];
         var label = document.createElement('label');
         label.style.cssText = 'display:flex;gap:8px;align-items:flex-start;padding:7px 3px;line-height:1.8;cursor:pointer;';
         var input = document.createElement('input');
@@ -169,8 +182,8 @@
         input.name = prefix + '-' + question.id;
         input.value = String(choiceIndex);
         input.style.marginTop = '6px';
-        var result = block._result;
         input.addEventListener('change', function () {
+          var result = block._result;
           var correct = Number(input.value) === question.answer;
           result.style.display = 'block';
           result.style.background = correct ? '#E8F5E9' : '#FFF3E0';
