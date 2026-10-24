@@ -9,6 +9,7 @@
   function me() { return window.currentUser || null; }
   function myId() { var user = me(); return user && user.uid ? String(user.uid) : ''; }
   function hasAuthIdentity() { try { var authUser = firebase.auth && firebase.auth().currentUser; return !!(authUser && authUser.uid === myId()); } catch (_) { return false; } }
+  function hasFirebaseSession() { try { return !!(firebase.auth && firebase.auth().currentUser); } catch (_) { return false; } }
   function hasSecureIdentity() { return window.CHAT_PRIVATE_ENABLED === true && hasAuthIdentity(); }
   async function hasOwnerAuth() {
     try {
@@ -323,7 +324,7 @@
   window.sendMessage = async function () {
     var input = document.getElementById('chatInput'); var text = input && input.value.trim(); if (!text || !state.chatId || !me()) return;
     if (!isGroup() && !requireSecureIdentity()) return;
-    if (isGroup() && !hasAuthIdentity()) return toast('إرسال رسائل المجموعة يتطلب ربط الحساب بمصادقة Firebase أولًا.');
+    if (isGroup() && !hasFirebaseSession()) return toast('جلسة Firebase لم تجهز بعد؛ انتظر لحظات ثم أعد المحاولة.');
     try {
       var message = { senderId: myId(), senderName: me().name || 'عضو', senderAvatar: me().avatarURL || '', text: text, kind: 'text', createdAt: timestamp() };
       await chatMessagesRef().add(message);
@@ -333,7 +334,7 @@
   };
   async function sendChatMedia(file) {
     if (!file || !state.chatId) return;
-    if (isGroup() && !hasAuthIdentity()) return toast('إرسال مرفقات المجموعة يتطلب ربط الحساب بمصادقة Firebase أولًا.');
+    if (isGroup() && !hasFirebaseSession()) return toast('جلسة Firebase لم تجهز بعد؛ انتظر لحظات ثم أعد المحاولة.');
     if (file.size > MAX_MEDIA_BYTES) return toast('الحد الأقصى للمرفق 25 ميجابايت');
     var kind = file.type.indexOf('image/') === 0 ? 'image' : file.type.indexOf('video/') === 0 ? 'video' : file.type.indexOf('audio/') === 0 ? 'audio' : '';
     if (!kind) return toast('الأنواع المتاحة: صورة أو فيديو أو ملف صوتي');
