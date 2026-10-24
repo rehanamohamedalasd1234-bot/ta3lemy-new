@@ -11,3 +11,16 @@ match /teacher_uploads/{uploadId} {
 match /teacher_grades/{gradeId} {
   allow read, write: if false;
 }
+
+match /broadcast_rooms/{roomId} {
+  allow read, write: if false;
+}
+match /broadcast_join_requests/{requestId} {
+  allow read, write: if false;
+}
+match /broadcast_capacity/{capacityId} {
+  allow read, write: if false;
+}
+match /broadcast_control/{controlId} {
+  allow read, write: if false;
+}

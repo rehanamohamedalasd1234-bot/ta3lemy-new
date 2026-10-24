@@ -11,6 +11,8 @@ const SHELL_FILES = [
   './chat.js',
   './creativity-config.js',
   './creativity.js',
+  './broadcast.js',
+  './vendor/livekit-client.umd.js',
   './fix-canvas.css'
 ];
 

@@ -293,3 +293,5 @@ exports.creativityReview = callable({
 
 // بوابة المعلم: تسجيل الطلبات، إدارة المحتوى والدرجات عبر تحقق خادمي.
 Object.assign(exports, require('./teacher-portal'));
+// غرف بث LiveKit: رموز خاصة بالخادم، موافقات لكل غرفة، وإنهاء مجدول.
+Object.assign(exports, require('./live-rooms'));
