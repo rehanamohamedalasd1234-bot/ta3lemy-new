@@ -1,6 +1,8 @@
-// Official Ministry of Education resources for preparatory-grade video lessons.
-// Source: https://lessons.moe.gov.eg/ (grade pages g7-g9, terms t1-t2).
-// The linked resources stay on the Ministry site; this file does not copy or claim to complete its content.
+// Official Ministry of Education and Al-Azhar resources for curriculum browsing.
+// MOE prep lessons: https://lessons.moe.gov.eg/ (g7-g9, terms t1-t2).
+// MOE prep books: https://studentbooks.moe.gov.eg/books/Books-Preparatory/.
+// Al-Azhar Student Corner 2026/2027: https://mtrl.azhar.gov.eg/education/index.htm.
+// External resources are linked, not copied or presented as a complete in-app curriculum.
 (function () {
   'use strict';
 
@@ -11,6 +13,7 @@
   };
   var MINISTRY_LESSONS = 'https://lessons.moe.gov.eg/';
   var MINISTRY_BOOKS = 'https://studentbooks.moe.gov.eg/books/Books-Preparatory/';
+  var AZHAR_BOOKS = 'https://mtrl.azhar.gov.eg/education/index.htm';
 
   function normalizedArabic(value) {
     return String(value || '')
@@ -39,7 +42,7 @@
     card.href = url;
     card.target = '_blank';
     card.rel = 'noopener noreferrer';
-    card.setAttribute('aria-label', title + ' — يفتح في موقع وزارة التربية والتعليم');
+    card.setAttribute('aria-label', title + ' — يفتح في المصدر الرسمي');
 
     var iconBox = document.createElement('div');
     iconBox.className = 'content-item-icon';
@@ -68,7 +71,7 @@
     return card;
   }
 
-  function addOfficialResources(type, termNumber) {
+  function addOfficialPreparatoryResources(type, termNumber) {
     if (type !== 'videos') return;
     var gradePath = currentPreparatoryGradePath();
     var list = document.getElementById('contentList');
@@ -81,10 +84,10 @@
     resources.className = 'official-curriculum-resources';
     resources.setAttribute('dir', 'rtl');
     resources.appendChild(officialCard(
-      'فيديوهات ودروس الوزارة الرسمية',
-      'اختر المادة من منصة الوزارة — الصف ' + gradeName + ' • الترم ' + (semester === 't1' ? 'الأول' : 'الثاني'),
+      'دروس الوزارة الرسمية',
+      'اختر المادة ثم استكشف دروس الصف ' + gradeName + ' • الترم ' + (semester === 't1' ? 'الأول' : 'الثاني'),
       lessonUrl,
-      '🎥'
+      '📖'
     ));
     resources.appendChild(officialCard(
       'كتب الوزارة الرسمية للمرحلة الإعدادية',
@@ -96,13 +99,40 @@
   }
 
   var originalOpenContent = window.openContent;
-  if (typeof originalOpenContent !== 'function' || window.openContent.__officialResourcesWrapped) return;
+  if (typeof originalOpenContent === 'function' && !originalOpenContent.__officialResourcesWrapped) {
+    var wrappedOpenContent = async function (type, termNumber, termName) {
+      var result = await originalOpenContent.apply(this, arguments);
+      addOfficialPreparatoryResources(type, termNumber);
+      return result;
+    };
+    wrappedOpenContent.__officialResourcesWrapped = true;
+    window.openContent = wrappedOpenContent;
+  }
 
-  var wrappedOpenContent = async function (type, termNumber, termName) {
-    var result = await originalOpenContent.apply(this, arguments);
-    addOfficialResources(type, termNumber);
-    return result;
-  };
-  wrappedOpenContent.__officialResourcesWrapped = true;
-  window.openContent = wrappedOpenContent;
+  var originalOpenAzharGrade = window.openAzharGrade;
+  if (typeof originalOpenAzharGrade === 'function' && !originalOpenAzharGrade.__officialResourcesWrapped) {
+    var wrappedOpenAzharGrade = function (gradeName) {
+      var result = originalOpenAzharGrade.apply(this, arguments);
+      var stage = '';
+      try { stage = typeof currentStage === 'undefined' ? '' : String(currentStage || ''); }
+      catch (error) { return result; }
+      if (stage === 'azhar_sec') {
+        var list = document.getElementById('azharList');
+        if (list) {
+          var link = officialCard(
+            'الكتب الرسمية للأزهر الشريف 2026/2027',
+            'اختر الصف والمادة من ركن الطالب الرسمي',
+            AZHAR_BOOKS,
+            '🕌'
+          );
+          link.className = 'stage-item';
+          link.style.borderRight = '5px solid #C9A227';
+          list.appendChild(link);
+        }
+      }
+      return result;
+    };
+    wrappedOpenAzharGrade.__officialResourcesWrapped = true;
+    window.openAzharGrade = wrappedOpenAzharGrade;
+  }
 })();
