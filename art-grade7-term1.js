@@ -69,7 +69,19 @@
         { q: 'في نشاط اللون، ما الخيار الأفضل عند عدم توفر ألوان كثيرة؟', options: ['تجريب درجات قليلة بقلم متاح وملاحظة الفرق', 'شراء خامات خاصة قبل البدء', 'خلط مواد منزلية مجهولة', 'استخدام أداة حادة لتلوين الورق'], answer: 0, why: 'يمكن استكشاف العلاقات بقلم أو لون متاح؛ لا حاجة لمواد مجهولة أو أدوات غير آمنة.' },
         { q: 'إذا غلبت الأشكال المثلثة على عمل، فما خطوة تذوق مفيدة؟', options: ['ملاحظة اتجاهها وتكرارها وأثر ذلك في الصورة', 'افتراض أنها تعني معنى واحداً حتماً', 'تجاهلها لأنها أشكال بسيطة', 'الانتقال للحكم دون وصف'], answer: 0, why: 'وصف اتجاه العناصر وتكرارها يتيح فهماً أعمق من إطلاق حكم سريع.' },
         { q: 'ما الاستجابة الأنسب لرأي زميلك المختلف في العمل؟', options: ['أسأله عن التفصيل الذي بنى عليه رأيه', 'أخبره أن رأيه ممنوع', 'أنسخ تفسيره دون ملاحظة', 'أحذف العمل كي لا نختلف'], answer: 0, why: 'السؤال عن الشواهد يعزز الحوار والتذوق ويحترم اختلاف وجهات النظر.' }
-      ]
+      ],
+      writtenExercises: [{
+        id: 'art-g7t1-essay-composition-principles',
+        q: 'صف تكويناً فنياً بسيطاً يحقق التوازن والإيقاع والوحدة، واذكر كيف يتحقق كل منها',
+        answerText: 'أضع عنصراً رئيسياً واضحاً في جهة من الصفحة، وأقابله بعناصر أصغر موزعة في الجهة الأخرى حتى يبدو التكوين متوازناً. أكرر لوناً أو شكلاً صغيراً في أكثر من موضع لصنع إيقاع بصري. وأربط الأجزاء باستعمال ألوان متقاربة وأشكال تنتمي إلى الفكرة نفسها، فتبدو وحدة واحدة.',
+        rubric: [
+          { criterion: 'يصف التوازن مع مثال على توزيع العناصر', points: 1 },
+          { criterion: 'يصف الإيقاع مع مثال على التكرار أو التنويع المنظم', points: 1 },
+          { criterion: 'يصف الوحدة مع مثال على علاقة تربط الأجزاء', points: 1 },
+          { criterion: 'وضوح الوصف وترابطه', points: 1 }
+        ],
+        points: 4
+      }]
     },
     {
       id: 'art-g7t1-unit-design',
@@ -117,7 +129,19 @@
         { q: 'أي اختيار يصف مراجعة جيدة للتصميم؟', options: ['أتحقق من وضوح العبارة ومكان العنصر الأبرز', 'أضيف تفاصيل دون النظر إلى النتيجة', 'أستخدم مادة مجهولة لتحسين اللون', 'أقرر أن التعديل ممنوع'], answer: 0, why: 'مراجعة القراءة والموضع تساعد على تحسين التصميم بصورة واعية وآمنة.' },
         { q: 'إذا بدا جانب من التكوين أثقل بصرياً، فما خطوة مناسبة؟', options: ['أجرب تحريك عنصر أو تغيير حجمه ثم أقارن', 'أمزق الورقة فوراً', 'أضيف ألواناً عشوائية كثيرة', 'أفترض أنه متوازن دون نظر'], answer: 0, why: 'تجريب تغيير محدد ومقارنة النتيجة طريقة عملية لفحص التوازن.' },
         { q: 'ما الخامة الأنسب لنشاط بسيط منخفض التكلفة؟', options: ['ورق مستعمل نظيف وقلم متاح', 'مادة كيميائية مجهولة', 'زجاج مكسور', 'سلك كهربائي'], answer: 0, why: 'الورق المستعمل النظيف وأدوات الرسم المعتادة متاحة وآمنة نسبياً عند استخدامها بالشكل المعتاد.' }
-      ]
+      ],
+      writtenExercises: [{
+        id: 'art-g7t1-essay-water-awareness-poster',
+        q: 'خطط لملصق توعوي عن ترشيد الماء: حدد الرسالة، عناصر التصميم، الألوان، وطريقة التنفيذ الآمنة',
+        answerText: 'أختار رسالة قصيرة مثل «أغلق الصنبور بعد الاستعمال». أضيف رسماً واضحاً لقطرة ماء أو صنبور، وأرتب العبارة والرسم بحيث يسهل قراءتهما. أستخدم ألواناً قليلة وواضحة مع تباين يجعل الرسالة بارزة. أنفذ التخطيط على ورق مستعمل نظيف بأقلام مأمونة ومتاحة، وأراجع وضوح الملصق دون استخدام مواد مجهولة أو أدوات خطرة.',
+        rubric: [
+          { criterion: 'رسالة واضحة ومناسبة لترشيد الماء', points: 1 },
+          { criterion: 'عناصر بصرية مناسبة للرسالة', points: 1 },
+          { criterion: 'علاقات لونية وتباين يخدمان الوضوح', points: 1 },
+          { criterion: 'خامات آمنة وخطة تنفيذ واضحة', points: 1 }
+        ],
+        points: 4
+      }]
     }
   ];
 
@@ -125,7 +149,7 @@
     {
       id: 'art-g7t1-final-exam',
       title: 'امتحان ختامي استرشادي: مراجعة مهارية',
-      note: '14 سؤال اختيار من متعدد • تدريب غير رسمي بتصحيح فوري وتعليل. لا يمثل امتحاناً وزارياً أو فهرساً مقرراً للعام 2026/2027.',
+      note: '14 سؤال اختيار من متعدد وسؤالان مقاليان • مراجعة مهارية استرشادية غير رسمية. لا تمثل منهجاً وزارياً مؤكداً أو فهرساً مقرراً للعام 2026/2027.',
       questions: [
         { q: 'أي عنصر بصري يمكن أن يصف حافة الشكل أو يوجه العين؟', options: ['الخط', 'عنوان الملف', 'زمن الرسم فقط', 'اسم الأداة'], answer: 0, why: 'الخط قد يحدد الحافة أو يوجه حركة العين داخل التكوين.' },
         { q: 'أي مثال يمثل شكلاً هندسياً محدد الحافة؟', options: ['مثلث مرسوم', 'بقعة ضبابية', 'ظل متغير', 'أثر عشوائي'], answer: 0, why: 'المثلث شكل هندسي ذو حدود واضحة.' },
@@ -141,7 +165,8 @@
         { q: 'أي ممارسة آمنة ومنخفضة التكلفة لنشاط فني؟', options: ['رسم على ورق مستعمل نظيف بقلم متاح', 'خلط مواد تنظيف وألوان', 'العمل قرب سلك مكشوف', 'استخدام زجاج مكسور'], answer: 0, why: 'ورق نظيف وأداة رسم معروفة خيار عملي؛ يجب تجنب المواد المجهولة والمخاطر.' },
         { q: 'كيف نعرف إن كان ملصقنا يوصل رسالته؟', options: ['نسأل مشاهداً ماذا فهم ونراجع الوضوح', 'نضيف كلمات صغيرة لا تقرأ', 'نخفي الفكرة عن المشاهد', 'نفترض نجاحه بلا اختبار'], answer: 0, why: 'استجابة المشاهد تساعد على فحص وصول الرسالة وتحديد ما يحتاج إلى تعديل.' },
         { q: 'عند مشاهدة مثال لفن مصري قديم في هذا المحتوى، كيف ينبغي فهمه؟', options: ['مثال بصري للملاحظة لا إثبات لكونه درساً مقرراً', 'وحدة وزارية مؤكدة لعام 2026/2027', 'امتحان رسمي منشور', 'فهرس كامل للكتاب الجديد'], answer: 0, why: 'المثال البصري للتذوق لا يعني أن موضوع الفن المصري القديم مقرر في فهرس 2026/2027.' }
-      ]
+      ],
+      writtenQuestions: [units[0].writtenExercises[0], units[1].writtenExercises[0]]
     }
   ];
 
@@ -220,7 +245,126 @@
     return order;
   }
 
-  function questionBox(questions, prefix) {
+  var ESSAY_SCORE_STORAGE_KEY = 'ta3lemy-art-g7-t1-essay-scores-v1';
+
+  function readEssayScores() {
+    try {
+      var raw = window.localStorage.getItem(ESSAY_SCORE_STORAGE_KEY);
+      var scores = raw ? JSON.parse(raw) : {};
+      return scores && typeof scores === 'object' && !Array.isArray(scores) ? scores : {};
+    } catch (error) {
+      return {};
+    }
+  }
+
+  function saveEssayScore(key, record) {
+    try {
+      var scores = readEssayScores();
+      scores[key] = record;
+      window.localStorage.setItem(ESSAY_SCORE_STORAGE_KEY, JSON.stringify(scores));
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function countEssayQuestions() {
+    var practiceCount = units.reduce(function (total, unit) { return total + (unit.writtenExercises || []).length; }, 0);
+    var examCount = exams.reduce(function (total, exam) { return total + (exam.writtenQuestions || []).length; }, 0);
+    return practiceCount + examCount;
+  }
+
+  function essayQuestionBox(questions, sourceId, itemTitle) {
+    var wrap = document.createElement('div');
+    questions.forEach(function (question, questionIndex) {
+      var block = document.createElement('section');
+      block.style.cssText = 'border:1px solid #d8e5df;border-radius:12px;padding:14px;margin:12px 0;background:#fff;';
+      var heading = text('div', (questionIndex + 1) + '. ' + question.q);
+      heading.style.cssText = 'font-weight:700;line-height:1.9;margin-bottom:10px;';
+      block.appendChild(heading);
+      var label = text('label', 'إجابة وصفية اختيارية (لا تُحفظ على الجهاز):');
+      label.style.cssText = 'display:block;font-weight:700;margin:10px 0 6px;';
+      var response = document.createElement('textarea');
+      response.rows = 4;
+      response.maxLength = 3000;
+      response.placeholder = 'اكتب إجابتك هنا؛ لن يُحفظ نص الإجابة.';
+      response.setAttribute('aria-label', 'إجابة وصفية اختيارية');
+      response.style.cssText = 'display:block;width:100%;min-height:100px;padding:10px;border:1px solid #bdbdbd;border-radius:10px;font:inherit;line-height:1.8;resize:vertical;';
+      block.appendChild(label);
+      block.appendChild(response);
+
+      var details = document.createElement('details');
+      details.style.cssText = 'margin-top:10px;background:#F5F9F5;border-radius:9px;padding:9px 12px;line-height:1.9;';
+      details.appendChild(text('summary', 'عرض نموذج الإجابة وروبريك التقييم (' + question.points + ' درجات)'));
+      var model = text('p', 'نموذج إجابة: ' + question.answerText);
+      model.style.margin = '8px 0';
+      details.appendChild(model);
+      details.appendChild(text('strong', 'توزيع الدرجات:'));
+      var rubricList = document.createElement('ul');
+      rubricList.style.margin = '6px 0';
+      question.rubric.forEach(function (criterion) {
+        rubricList.appendChild(text('li', criterion.criterion + ' — ' + criterion.points + ' درجة'));
+      });
+      details.appendChild(rubricList);
+      block.appendChild(details);
+
+      var scoreKey = String(sourceId || 'source') + '::' + question.id;
+      var storedRecord = readEssayScores()[scoreKey];
+      var scorePanel = document.createElement('div');
+      scorePanel.style.cssText = 'margin-top:12px;padding:11px;background:#F3F6FA;border-radius:10px;';
+      var scoreLabel = text('label', 'درجتك الذاتية (عدد صحيح من 0 إلى ' + question.points + '):');
+      scoreLabel.style.cssText = 'display:block;font-weight:700;margin-bottom:6px;';
+      var scoreInput = document.createElement('input');
+      scoreInput.type = 'number';
+      scoreInput.min = '0';
+      scoreInput.max = String(question.points);
+      scoreInput.step = '1';
+      scoreInput.value = storedRecord && Number.isInteger(Number(storedRecord.score)) ? String(storedRecord.score) : '';
+      scoreInput.placeholder = 'أدخل الدرجة';
+      scoreInput.setAttribute('aria-label', 'درجتك الذاتية من صفر إلى ' + question.points);
+      scoreInput.style.cssText = 'width:120px;max-width:100%;padding:9px;border:1px solid #bdbdbd;border-radius:8px;font:inherit;';
+      var saveButton = document.createElement('button');
+      saveButton.type = 'button';
+      saveButton.textContent = 'حفظ الدرجة على هذا الجهاز';
+      saveButton.style.cssText = 'margin:6px 8px;padding:9px 13px;background:#176B5B;color:white;border:0;border-radius:8px;font:inherit;font-weight:700;cursor:pointer;';
+      var status = text('div', storedRecord ? 'الدرجة المحفوظة: ' + storedRecord.score + ' من ' + question.points : '');
+      status.style.cssText = 'margin-top:6px;font-size:13px;line-height:1.7;';
+      saveButton.addEventListener('click', function () {
+        var rawScore = String(scoreInput.value || '').trim();
+        var score = Number(rawScore);
+        if (!rawScore || !Number.isInteger(score) || score < 0 || score > question.points) {
+          status.style.color = '#B71C1C';
+          status.textContent = 'أدخل عدداً صحيحاً من 0 إلى ' + question.points + '.';
+          return;
+        }
+        var record = {
+          sourceId: sourceId,
+          itemTitle: itemTitle || sourceId,
+          questionId: question.id,
+          question: question.q,
+          score: score,
+          points: question.points,
+          updatedAt: new Date().toISOString()
+        };
+        if (!saveEssayScore(scoreKey, record)) {
+          status.style.color = '#B71C1C';
+          status.textContent = 'تعذر حفظ الدرجة محلياً على هذا الجهاز.';
+          return;
+        }
+        status.style.color = '#2E7D32';
+        status.textContent = 'تم حفظ درجتك: ' + score + ' من ' + question.points + ' على هذا الجهاز فقط.';
+      });
+      scorePanel.appendChild(scoreLabel);
+      scorePanel.appendChild(scoreInput);
+      scorePanel.appendChild(saveButton);
+      scorePanel.appendChild(status);
+      block.appendChild(scorePanel);
+      wrap.appendChild(block);
+    });
+    return wrap;
+  }
+
+  function questionBox(questions, prefix, writtenQuestions, itemTitle) {
     var wrap = document.createElement('div');
     wrap.setAttribute('dir', 'rtl');
     questions.forEach(function (question, questionIndex) {
@@ -251,6 +395,12 @@
       block._artResult = result;
       wrap.appendChild(block);
     });
+    if (writtenQuestions && writtenQuestions.length) {
+      var essayHeading = text('h3', 'أسئلة وصفية ومقالية للتقييم الذاتي');
+      essayHeading.style.cssText = 'margin:18px 0 8px;';
+      wrap.appendChild(essayHeading);
+      wrap.appendChild(essayQuestionBox(writtenQuestions, prefix, itemTitle));
+    }
     var check = document.createElement('button');
     check.type = 'button';
     check.textContent = 'تحقق من الإجابات';
@@ -278,6 +428,54 @@
     return wrap;
   }
 
+  function openEssayScoreTracker() {
+    var body = document.getElementById('viewerBody');
+    var title = document.getElementById('viewerTitle');
+    if (!body || !title) return;
+    body.textContent = '';
+    body.setAttribute('dir', 'rtl');
+    title.textContent = 'متابعة درجات المراجعة الذاتية للفنية';
+    body.appendChild(noticeBox());
+    var scores = readEssayScores();
+    var entries = Object.keys(scores).map(function (key) { return scores[key]; }).filter(function (record) {
+      return record && typeof record === 'object' && Number.isInteger(Number(record.score)) && Number.isInteger(Number(record.points));
+    });
+    var earned = entries.reduce(function (total, record) { return total + Number(record.score); }, 0);
+    var possible = entries.reduce(function (total, record) { return total + Number(record.points); }, 0);
+    var percentage = possible ? Math.round(earned / possible * 100) : 0;
+    var summary = document.createElement('section');
+    summary.style.cssText = 'background:#E8F5E9;border-radius:12px;padding:14px;margin:12px 0;line-height:1.9;';
+    summary.appendChild(text('h3', 'ملخص التقدم في التقييم الذاتي'));
+    summary.appendChild(text('p', 'مجموع الدرجات المسجلة: ' + earned + ' من ' + possible + ' درجة (' + percentage + '%).'));
+    summary.appendChild(text('p', 'عدد مرات تسجيل الدرجات: ' + entries.length + ' من ' + countEssayQuestions() + ' مواضع سؤال مقالي.'));
+    summary.appendChild(text('p', 'تُحفظ الدرجات محلياً على هذا الجهاز فقط؛ لا يُحفظ نص الإجابة ولا يُرسل إلى الخادم.'));
+    body.appendChild(summary);
+    if (!entries.length) {
+      body.appendChild(text('p', 'لم تُسجل درجات بعد. افتح تدريب الوحدة أو الامتحان الختامي، وراجع النموذج والروبريك ثم احفظ الدرجة.'));
+    } else {
+      entries.sort(function (a, b) { return String(b.updatedAt || '').localeCompare(String(a.updatedAt || '')); });
+      entries.forEach(function (record) {
+        var row = document.createElement('section');
+        row.style.cssText = 'border:1px solid #e4e9e4;border-radius:11px;padding:12px;margin:10px 0;background:#fff;line-height:1.8;';
+        row.appendChild(text('h4', record.itemTitle || 'تقييم مقالي'));
+        row.appendChild(text('p', record.question || ''));
+        row.appendChild(text('strong', 'الدرجة: ' + record.score + ' من ' + record.points));
+        if (record.updatedAt) row.appendChild(text('div', 'آخر تحديث: ' + new Date(record.updatedAt).toLocaleString('ar-EG')));
+        if (record.sourceId) {
+          var sourceButton = document.createElement('button');
+          sourceButton.type = 'button';
+          sourceButton.textContent = 'العودة إلى مصدر السؤال';
+          sourceButton.style.cssText = 'margin-top:8px;padding:8px 12px;background:#176B5B;color:white;border:0;border-radius:8px;font:inherit;cursor:pointer;';
+          sourceButton.addEventListener('click', function () { openItem(record.sourceId); });
+          row.appendChild(sourceButton);
+        }
+        body.appendChild(row);
+      });
+    }
+    screenHistory.push(currentScreen);
+    showScreen('viewerScreen');
+  }
+
   function findItem(id) {
     for (var unitIndex = 0; unitIndex < units.length; unitIndex += 1) {
       var unit = units[unitIndex];
@@ -293,6 +491,10 @@
   }
 
   function openItem(id) {
+    if (id === 'essay-score-tracker') {
+      openEssayScoreTracker();
+      return;
+    }
     var found = findItem(id);
     if (!found) return;
     var body = document.getElementById('viewerBody');
@@ -324,7 +526,11 @@
     } else {
       body.appendChild(text('p', found.kind === 'exam' ? found.item.note : 'بنك تدريبات استرشادي على المحور، مع تصحيح فوري وتعليل لكل سؤال.'));
       if (found.kind === 'exercise') body.appendChild(text('h3', found.unit.title));
-      body.appendChild(questionBox(found.kind === 'exercise' ? found.item.exercises : found.item.questions, found.item.id));
+      if (found.kind === 'exercise') {
+        body.appendChild(questionBox(found.item.exercises, found.item.id, found.item.writtenExercises || [], found.item.title));
+      } else {
+        body.appendChild(questionBox(found.item.questions, found.item.id, found.item.writtenQuestions || [], found.item.title));
+      }
     }
     if (typeof screenHistory !== 'undefined' && typeof currentScreen !== 'undefined' && typeof showScreen === 'function') {
       screenHistory.push(currentScreen);
@@ -343,6 +549,9 @@
     root.className = 'art-original-content art-g7t1-content';
     root.setAttribute('dir', 'rtl');
     root.appendChild(noticeBox());
+    if (type === 'exercises' || type === 'exams') {
+      root.appendChild(card('متابعة درجات المراجعة الذاتية', 'اعرض مجموع درجاتك المقالية وسجلها، ثم عُد إلى مصدر السؤال لتعديل أي درجة.', 'essay-score-tracker', '📊'));
+    }
     if (type === 'lessons') {
       units.forEach(function (unit) {
         root.appendChild(text('h3', unit.title, 'art-unit-heading'));
@@ -353,7 +562,8 @@
     } else if (type === 'exercises') {
       units.forEach(function (unit) {
         var questionCount = unit.exercises.length + unit.lessons.reduce(function (total, lesson) { return total + lesson.questions.length; }, 0);
-        root.appendChild(card('بنك تدريبات ' + unit.title, questionCount + ' سؤالاً مع تصحيح فوري وتعليل • يتضمن تدريباً لكل درس', unit.id, '✏️'));
+        var writtenCount = (unit.writtenExercises || []).length;
+        root.appendChild(card('بنك تدريبات ' + unit.title, questionCount + ' سؤال اختيار من متعدد مع تصحيح فوري وتعليل، و' + writtenCount + ' سؤال مقالي بنموذج وروبريك • يتضمن تدريباً لكل درس', unit.id, '✏️'));
       });
     } else if (type === 'exams') {
       exams.forEach(function (exam) {

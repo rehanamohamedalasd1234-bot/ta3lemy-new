@@ -210,14 +210,62 @@
     ])
   ];
 
-  // امتحانان مستقلان، 12 سؤالاً لكل مسار: أربعة أسئلة متنوعة من كل وحدة.
+  // أسئلة مقالية أصلية منفصلة عن مصفوفات الاختيار من متعدد.
+  units[0].essayQuestions = [{
+    id: 'religion-islam-essay-mercy-conflict',
+    q: 'اختلف زميلان في موقف مدرسي. اشرح كيف تُظهر الرحمة والسلام في تعاملك معهما، واقترح سلوكين يساعدان على حل الخلاف.',
+    answerText: 'أستمع إلى كل زميل باحترام ومن دون مقاطعة أو انحياز، وأمتنع عن نشر الشائعة أو الإهانة. ثم أساعدهما على التفاهم والصلح، أو أطلب مساعدة المعلم إذا احتاج الموقف إلى ذلك.',
+    rubric: [
+      { criterion: 'الإنصات للطرفين واحترامهما', points: 1 },
+      { criterion: 'وقف الأذى والامتناع عن الشائعة أو الإهانة', points: 1 },
+      { criterion: 'اقتراح الإصلاح أو الصلح', points: 1 },
+      { criterion: 'وضوح الإجابة وربطها بالرحمة والسلام', points: 1 }
+    ],
+    points: 4
+  }];
+  units[1].essayQuestions = [{
+    id: 'religion-islam-essay-environment',
+    q: 'اذكر ثلاث ممارسات للمحافظة على البيئة والنظافة المدرسية، وبيّن أثراً واضحاً لإحدى هذه الممارسات.',
+    answerText: 'أرشد استهلاك الماء والكهرباء، وأفرز النفايات أو أضعها في الحاويات المناسبة، وأحافظ على نظافة الفصل وساحته. تساعد هذه الممارسات على حفظ الموارد وتقليل التلوث وجعل المدرسة مكاناً صحياً ومريحاً.',
+    rubric: [
+      { criterion: 'ذكر ثلاثة أمثلة مناسبة للمحافظة على البيئة والنظافة', points: 3 },
+      { criterion: 'بيان أثر واضح لإحدى الممارسات', points: 1 }
+    ],
+    points: 4
+  }];
+  units[4].essayQuestions = [{
+    id: 'religion-christian-essay-repentance',
+    q: 'في ضوء درس التوبة والأنبا موسى الأسود، اشرح معنى التوبة، واذكر خطوة عملية يمكن أن تقوم بها لإصلاح خطأ ارتكبته.',
+    answerText: 'التوبة هي الرجوع عن الخطأ وتغيير السلوك نحو الأفضل. أتحمل مسؤولية ما فعلت وأعترف به، ثم أتوقف عن تكراره، وأسعى إلى إصلاح أثره أو تعويض المتضرر بما يناسب الموقف.',
+    rubric: [
+      { criterion: 'تعريف التوبة بأنها رجوع عن الخطأ', points: 1 },
+      { criterion: 'الاعتراف بالمسؤولية عن الخطأ', points: 1 },
+      { criterion: 'التوقف عن الخطأ وعدم تكراره', points: 1 },
+      { criterion: 'ذكر الإصلاح أو التعويض كخطوة عملية', points: 1 }
+    ],
+    points: 4
+  }];
+  units[5].essayQuestions = [{
+    id: 'religion-christian-essay-humility-selflessness',
+    q: 'اكتب فقرة قصيرة عن التواضع والإيثار في المدرسة، واذكر مثالين عمليين يوضحان كيف تمارسهما.',
+    answerText: 'التواضع هو احترام الآخرين ومعرفة أن النجاح قد يكون ثمرة جهد جماعي، من غير تكبر أو انتقاص من أحد. أمارسه بقبول التصحيح ونسب الفضل إلى زملائي. والإيثار هو مراعاة منفعة الآخر ومساعدته؛ ومن أمثلته مشاركة زميل أداة أحتاجها بعد انتهاء دوري، أو مساعدته على إنجاز عمله مع احترام مسؤوليات الجميع.',
+    rubric: [
+      { criterion: 'توضيح معنى التواضع', points: 1 },
+      { criterion: 'ذكر مثال تطبيقي للتواضع', points: 1 },
+      { criterion: 'توضيح معنى الإيثار أو خدمة الآخر', points: 1 },
+      { criterion: 'تنظيم الفقرة ووضوح الإجابة', points: 1 }
+    ],
+    points: 4
+  }];
+
+  // امتحانان مستقلان، 12 سؤال اختيار من متعدد لكل مسار: أربعة من كل وحدة.
   var exams = units.filter(function (unit) { return unit.path === islam; }).map(function (unit) { return unit.exercises; });
   var islamExamQuestions = [0, 1, 2].reduce(function (all, unitIndex) { return all.concat(exams[unitIndex].slice(0, 4)); }, []);
   var christianUnits = units.filter(function (unit) { return unit.path === christian; });
   var christianExamQuestions = christianUnits.reduce(function (all, unit) { return all.concat(unit.exercises.slice(0, 4)); }, []);
   var finalExams = [
-    { id: 'religion-islam-final-exam', title: 'امتحان ختامي — ' + islam, note: '12 سؤال اختيار من متعدد • يغطي الوحدات الثلاث للمسار الإسلامي الاسترشادي.', questions: islamExamQuestions },
-    { id: 'religion-christian-final-exam', title: 'امتحان ختامي — ' + christian, note: '12 سؤال اختيار من متعدد • يغطي الوحدات الثلاث للمسار المسيحي وفق موضوعات كتاب الوزارة.', questions: christianExamQuestions }
+    { id: 'religion-islam-final-exam', title: 'امتحان ختامي — ' + islam, note: '12 سؤال اختيار من متعدد • يغطي الوحدات الثلاث للمسار الإسلامي الاسترشادي.', questions: islamExamQuestions, essayQuestions: units.filter(function (unit) { return unit.path === islam; }).reduce(function (all, unit) { return all.concat(unit.essayQuestions || []); }, []) },
+    { id: 'religion-christian-final-exam', title: 'امتحان ختامي — ' + christian, note: '12 سؤال اختيار من متعدد • يغطي الوحدات الثلاث للمسار المسيحي وفق موضوعات كتاب الوزارة.', questions: christianExamQuestions, essayQuestions: units.filter(function (unit) { return unit.path === christian; }).reduce(function (all, unit) { return all.concat(unit.essayQuestions || []); }, []) }
   ];
 
   function norm(value) {
@@ -322,6 +370,165 @@
     wrap.insertBefore(check, score.nextSibling);
     return wrap;
   }
+  var ESSAY_SCORE_STORAGE_KEY = 'ta3lemy-religion-g7-t1-essay-scores-v1';
+  function readEssayScores() {
+    try {
+      var raw = window.localStorage.getItem(ESSAY_SCORE_STORAGE_KEY);
+      var scores = raw ? JSON.parse(raw) : {};
+      return scores && typeof scores === 'object' && !Array.isArray(scores) ? scores : {};
+    } catch (error) {
+      return {};
+    }
+  }
+  function saveEssayScores(scores) {
+    try {
+      window.localStorage.setItem(ESSAY_SCORE_STORAGE_KEY, JSON.stringify(scores));
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+  function countEssayAssessments() {
+    var practiceCount = units.reduce(function (total, unit) { return total + (unit.essayQuestions || []).length; }, 0);
+    var examCount = finalExams.reduce(function (total, exam) { return total + (exam.essayQuestions || []).length; }, 0);
+    return practiceCount + examCount;
+  }
+  function essayQuestionBox(questions, sourceId, itemTitle) {
+    var wrap = el('section', undefined, 'religion-essay-set');
+    wrap.setAttribute('dir', 'rtl');
+    (questions || []).forEach(function (question, index) {
+      var block = document.createElement('section');
+      block.style.cssText = 'border:1px solid #e4e9e4;border-radius:12px;padding:14px;margin:12px 0;background:#fff;';
+      var title = el('div', (index + 1) + '. ' + question.q);
+      title.style.cssText = 'font-weight:700;line-height:1.8;margin-bottom:10px;';
+      block.appendChild(title);
+      block.appendChild(el('div', 'سؤال مقالي • الدرجة الكلية: ' + question.points, 'religion-essay-label'));
+      var answerLabel = el('label', 'مساحة اختيارية لكتابة إجابتك:');
+      answerLabel.style.cssText = 'display:block;font-weight:700;margin:10px 0 6px;';
+      var response = document.createElement('textarea');
+      response.rows = 4;
+      response.maxLength = 3000;
+      response.placeholder = 'اكتب إجابتك هنا (لن تُحفظ ولن تُرسل).';
+      response.setAttribute('aria-label', 'إجابة اختيارية للسؤال المقالي');
+      response.style.cssText = 'display:block;width:100%;min-height:100px;padding:10px;border:1px solid #bdbdbd;border-radius:10px;font:inherit;line-height:1.8;resize:vertical;';
+      block.appendChild(answerLabel);
+      block.appendChild(response);
+
+      var details = document.createElement('details');
+      details.style.cssText = 'margin-top:10px;background:#F5F9F5;border-radius:9px;padding:9px 12px;line-height:1.9;';
+      details.appendChild(el('summary', 'عرض الإجابة النموذجية ومعايير التقييم (' + question.points + ' درجات)'));
+      details.appendChild(el('p', 'إجابة نموذجية: ' + question.answerText));
+      details.appendChild(el('strong', 'معايير التقييم:'));
+      var rubricList = document.createElement('ul');
+      (question.rubric || []).forEach(function (criterion) {
+        rubricList.appendChild(el('li', criterion.criterion + ' (' + criterion.points + ' درجة)'));
+      });
+      details.appendChild(rubricList);
+      block.appendChild(details);
+
+      var scores = readEssayScores();
+      var scoreKey = String(sourceId || 'content') + '::' + question.id;
+      var savedRecord = scores[scoreKey];
+      var panel = document.createElement('div');
+      panel.style.cssText = 'margin-top:12px;padding:11px;background:#F3F6FA;border-radius:10px;';
+      var scoreLabel = el('label', 'درجتك بعد المراجعة الذاتية (عدد صحيح من 0 إلى ' + question.points + '):');
+      scoreLabel.style.cssText = 'display:block;font-weight:700;margin-bottom:6px;';
+      var scoreInput = document.createElement('input');
+      scoreInput.type = 'number';
+      scoreInput.min = '0';
+      scoreInput.max = String(question.points);
+      scoreInput.step = '1';
+      scoreInput.value = savedRecord ? String(savedRecord.score) : '';
+      scoreInput.placeholder = 'أدخل درجتك';
+      scoreInput.setAttribute('aria-label', 'الدرجة الذاتية من صفر إلى ' + question.points);
+      scoreInput.style.cssText = 'width:130px;max-width:100%;padding:9px;border:1px solid #bdbdbd;border-radius:8px;font:inherit;';
+      var saveButton = el('button', 'حفظ الدرجة');
+      saveButton.type = 'button';
+      saveButton.style.cssText = 'margin:6px 8px;padding:9px 13px;background:#386B52;color:white;border:0;border-radius:8px;font:inherit;font-weight:700;cursor:pointer;';
+      var status = el('div', savedRecord ? 'الدرجة المحفوظة: ' + savedRecord.score + ' من ' + question.points : '');
+      status.style.cssText = 'margin-top:6px;font-size:13px;line-height:1.7;';
+      saveButton.addEventListener('click', function () {
+        var rawScore = String(scoreInput.value || '').trim();
+        var enteredScore = Number(rawScore);
+        if (!rawScore || !Number.isInteger(enteredScore) || enteredScore < 0 || enteredScore > question.points) {
+          status.style.color = '#B71C1C';
+          status.textContent = 'أدخل عدداً صحيحاً من 0 إلى ' + question.points + '.';
+          return;
+        }
+        var record = {
+          sourceId: sourceId,
+          itemTitle: itemTitle || sourceId,
+          questionId: question.id,
+          question: question.q,
+          score: enteredScore,
+          points: question.points,
+          updatedAt: new Date().toISOString()
+        };
+        scores[scoreKey] = record;
+        if (!saveEssayScores(scores)) {
+          status.style.color = '#B71C1C';
+          status.textContent = 'تعذر حفظ الدرجة على هذا الجهاز؛ قد لا يتوفر التخزين المحلي.';
+          return;
+        }
+        status.style.color = '#2E7D32';
+        status.textContent = 'تم حفظ درجتك: ' + enteredScore + ' من ' + question.points + ' على هذا الجهاز فقط.';
+      });
+      panel.appendChild(scoreLabel);
+      panel.appendChild(scoreInput);
+      panel.appendChild(saveButton);
+      panel.appendChild(status);
+      panel.appendChild(el('div', 'لا تُحفظ مساحة الإجابة النصية ولا تُرسل إلى الخادم.', 'religion-local-only-note'));
+      block.appendChild(panel);
+      wrap.appendChild(block);
+    });
+    return wrap;
+  }
+  function openEssayScoreTracker() {
+    var body = document.getElementById('viewerBody');
+    var title = document.getElementById('viewerTitle');
+    if (!body || !title) return;
+    body.textContent = '';
+    body.setAttribute('dir', 'rtl');
+    title.textContent = 'متابعة درجات المراجعة الذاتية للأسئلة المقالية';
+    body.appendChild(noticeBox());
+    var scores = readEssayScores();
+    var entries = Object.keys(scores).map(function (key) { return scores[key]; }).filter(function (record) {
+      return record && typeof record === 'object' && Number.isInteger(Number(record.score)) && Number.isInteger(Number(record.points));
+    });
+    var earned = entries.reduce(function (total, record) { return total + Number(record.score); }, 0);
+    var possible = entries.reduce(function (total, record) { return total + Number(record.points); }, 0);
+    var percentage = possible ? Math.round(earned / possible * 100) : 0;
+    var summary = document.createElement('section');
+    summary.style.cssText = 'background:#E8F5E9;border-radius:12px;padding:14px;margin:12px 0;line-height:1.9;';
+    summary.appendChild(el('h3', 'ملخص تقدمك في التقييم الذاتي'));
+    summary.appendChild(el('p', 'مجموع الدرجات المحفوظة: ' + earned + ' من ' + possible + ' درجة (' + percentage + '%).'));
+    summary.appendChild(el('p', 'عدد التقييمات المحفوظة: ' + entries.length + ' من ' + countEssayAssessments() + ' تقييماً مقالياً متاحاً.'));
+    summary.appendChild(el('p', 'تُحفظ الدرجات على هذا الجهاز فقط. لا تُحفظ إجابة الطالب المكتوبة ولا تُرسل إلى الخادم.'));
+    body.appendChild(summary);
+    if (!entries.length) {
+      body.appendChild(el('p', 'لم تسجل درجات بعد. افتح تدريب وحدة أو امتحاناً نهائياً، واكتب إجابتك إن رغبت، ثم راجع النموذج ومعايير التقييم واحفظ الدرجة.'));
+    } else {
+      entries.sort(function (a, b) { return String(b.updatedAt || '').localeCompare(String(a.updatedAt || '')); });
+      entries.forEach(function (record) {
+        var row = document.createElement('section');
+        row.style.cssText = 'border:1px solid #e4e9e4;border-radius:11px;padding:12px;margin:10px 0;background:#fff;line-height:1.8;';
+        row.appendChild(el('h4', record.itemTitle || 'تقييم مقالي'));
+        row.appendChild(el('p', record.question || ''));
+        row.appendChild(el('strong', 'تقييمك: ' + record.score + ' من ' + record.points));
+        if (record.updatedAt) row.appendChild(el('div', 'آخر تحديث: ' + new Date(record.updatedAt).toLocaleString('ar-EG')));
+        if (record.sourceId) {
+          var reopen = el('button', 'فتح مصدر السؤال لتعديل الدرجة');
+          reopen.type = 'button';
+          reopen.style.cssText = 'margin-top:8px;padding:8px 12px;background:#1565C0;color:white;border:0;border-radius:8px;font:inherit;cursor:pointer;';
+          reopen.addEventListener('click', function () { openItem(record.sourceId); });
+          row.appendChild(reopen);
+        }
+        body.appendChild(row);
+      });
+    }
+    if (typeof screenHistory !== 'undefined' && Array.isArray(screenHistory) && typeof currentScreen !== 'undefined') screenHistory.push(currentScreen);
+    if (typeof showScreen === 'function') showScreen('viewerScreen');
+  }
   function findItem(id) {
     for (var u = 0; u < units.length; u += 1) {
       if (units[u].id === id) return { kind: 'exercise', unit: units[u], item: units[u] };
@@ -333,6 +540,10 @@
     return null;
   }
   function openItem(id) {
+    if (id === 'religion-essay-score-tracker') {
+      openEssayScoreTracker();
+      return;
+    }
     var found = findItem(id);
     if (!found) return;
     var body = document.getElementById('viewerBody');
@@ -362,9 +573,14 @@
       body.appendChild(el('h3', 'أسئلة مراجعة فورية', 'religion-section-title'));
       body.appendChild(questionBox(found.item.questions, found.item.id));
     } else {
-      body.appendChild(el('p', found.kind === 'exam' ? found.item.note : 'تدريب الوحدة: خمسة أسئلة اختيار من متعدد مع تصحيح فوري وتفسير لكل إجابة.', 'religion-item-note'));
+      body.appendChild(el('p', found.kind === 'exam' ? found.item.note : 'تدريب الوحدة: خمسة أسئلة اختيار من متعدد مع تصحيح فوري وتفسير لكل إجابة، ثم أسئلة مقالية للمراجعة الذاتية.', 'religion-item-note'));
       if (found.kind === 'exercise') body.appendChild(el('h3', found.unit.title, 'religion-section-title'));
       body.appendChild(questionBox(found.kind === 'exercise' ? found.unit.exercises : found.item.questions, found.item.id));
+      var essayQuestions = found.kind === 'exercise' ? (found.unit.essayQuestions || []) : (found.item.essayQuestions || []);
+      if (essayQuestions.length) {
+        body.appendChild(el('h3', 'أسئلة مقالية للمراجعة الذاتية', 'religion-section-title'));
+        body.appendChild(essayQuestionBox(essayQuestions, found.item.id, found.item.title));
+      }
     }
     if (typeof screenHistory !== 'undefined' && Array.isArray(screenHistory) && typeof currentScreen !== 'undefined') screenHistory.push(currentScreen);
     if (typeof showScreen === 'function') showScreen('viewerScreen');
@@ -388,10 +604,12 @@
       });
     } else if (type === 'exercises') {
       units.forEach(function (unit) {
-        root.appendChild(card('تدريبات ' + unit.path + ' — ' + unit.title, 'خمسة أسئلة اختيار من متعدد مع التصحيح والتفسير.', unit.id, '✏️'));
+        root.appendChild(card('تدريبات ' + unit.path + ' — ' + unit.title, 'خمسة أسئلة اختيار من متعدد، وأسئلة مقالية للمراجعة الذاتية عند توافرها.', unit.id, '✏️'));
       });
+      root.appendChild(card('متابعة درجات المراجعة الذاتية للأسئلة المقالية', 'ملخص الدرجات المحفوظة ومصادر الأسئلة لإعادة فتحها.', 'religion-essay-score-tracker', '📊'));
     } else if (type === 'exams') {
       finalExams.forEach(function (exam) { root.appendChild(card(exam.title, exam.note, exam.id, '📝')); });
+      root.appendChild(card('متابعة درجات المراجعة الذاتية للأسئلة المقالية', 'ملخص الدرجات المحفوظة ومصادر الأسئلة لإعادة فتحها.', 'religion-essay-score-tracker', '📊'));
     }
     list.appendChild(root);
   }

@@ -6,6 +6,33 @@
 
   var NOTICE = 'تنبيه مهم: هذا محتوى استرشادي غير مثبت كمنهج وزارة 2026/2027، ولا يؤكد اكتمال مقرر الترم. الموضوعان مبنيان على موضوعات متداولة في مصدر تعليمي غير وزاري، وليس على كتاب وزاري حالي موثّق. راجع كتابك ومدرستك قبل اعتباره مقرراً.';
 
+  var essayQuestions = [
+    {
+      id: 'computer-essay-green-01',
+      q: 'اقترح ثلاث ممارسات للتكنولوجيا الخضراء في المدرسة وبيّن فائدة كل منها',
+      answerText: 'يمكن إطفاء الإنارة والأجهزة غير المستخدمة لتقليل استهلاك الكهرباء، وإغلاق الصنبور وإصلاح التسرب لترشيد الماء، وفرز المخلفات الإلكترونية والعادية وفق نظام المدرسة لتقليل النفايات. نلاحظ استهلاك الكهرباء والماء أو نسجل كمياتهما قبل المبادرة وبعدها لقياس التغيير ومعرفة أثر الممارسات.',
+      points: 4,
+      rubric: [
+        { criterion: 'اقتراح ممارسة مناسبة لترشيد الطاقة', points: 1 },
+        { criterion: 'اقتراح ممارسة مناسبة لترشيد الماء', points: 1 },
+        { criterion: 'اقتراح تقليل النفايات أو فرزها', points: 1 },
+        { criterion: 'بيان أثر بيئي واضح أو طريقة لملاحظة التغيير', points: 1 }
+      ]
+    },
+    {
+      id: 'computer-essay-digital-safety-01',
+      q: 'اكتب خطوات آمنة لاستخدام خدمة أو دفع رقمي',
+      answerText: 'أفتح التطبيق أو الموقع الرسمي بنفسي، وأتحقق من الجهة واسمها قبل الاستخدام. أراجع المبلغ والتفاصيل والبيانات المطلوبة قبل التأكيد، ولا أشارك كلمة المرور أو رمز التحقق مع أي شخص. إذا ظهر طلب أو رابط مريب أوقف العملية ولا أتابعها، وأطلب مساعدة ولي الأمر أو أتحقق من الجهة عبر قناة رسمية.',
+      points: 4,
+      rubric: [
+        { criterion: 'التحقق من مصدر الخدمة أو استخدام الموقع/التطبيق الرسمي', points: 1 },
+        { criterion: 'مراجعة تفاصيل العملية والمبلغ والبيانات المطلوبة', points: 1 },
+        { criterion: 'حماية كلمة المرور ورمز التحقق وعدم مشاركتهما', points: 1 },
+        { criterion: 'إيقاف العملية المشبوهة وطلب مساعدة موثوقة', points: 1 }
+      ]
+    }
+  ];
+
   var units = [
     {
       id: 'green-digital-living',
@@ -75,7 +102,8 @@
         { id: 'computer-bank-14', q: 'كيف نجمع بين التحول الرقمي والاستدامة؟', options: ['نرسل بيانات أكثر مما تحتاج الخدمة', 'نستخدم التقنية باعتدال ونحافظ على الأجهزة', 'نستبدل جهازاً صالحاً بلا حاجة', 'نبقي كل الأجهزة تعمل دائماً'], answer: 1, why: 'الاستخدام المعتدل والعناية بالأجهزة يقللان الهدر والموارد المستهلكة.' },
         { id: 'computer-bank-15', q: 'قبل إرسال بيانات في نموذج إلكتروني، ما الخطوة المناسبة؟', options: ['التحقق من الجهة وطلب البيانات الضرورية فقط', 'إدخال كل بيانات الأسرة دائماً', 'إرسال كلمة المرور في خانة الملاحظات', 'إرسال النموذج إلى رابط مجهول'], answer: 0, why: 'التحقق من الجهة وتقليل البيانات إلى ما يلزم يحمي الخصوصية.' },
         { id: 'computer-bank-16', q: 'ما العبارة الأدق عن الحساس؟', options: ['يعطي قراءة قد تساعد على اتخاذ قرار', 'يفسر كل الظروف بلا خطأ', 'يحل المشكلة من دون أي إجراء', 'لا يحتاج إلى استخدام آمن للبيانات'], answer: 0, why: 'الحساس أداة رصد؛ تظل القراءة بحاجة إلى تفسير واستخدام مسؤول.' }
-      ]
+      ],
+      writtenExercises: essayQuestions
     }
   ];
 
@@ -99,7 +127,8 @@
         { id: 'computer-final-12', q: 'ما إجراء مناسب بعد استخدام حساب على جهاز عام؟', options: ['تسجيل الخروج', 'ترك الصفحة مفتوحة', 'حفظ كلمة المرور في المتصفح العام', 'إرسال الرابط للآخرين'], answer: 0, why: 'تسجيل الخروج يحمي الحساب من الاستخدام اللاحق على الجهاز المشترك.' },
         { id: 'computer-final-13', q: 'أي عنصر يساعد ذوي احتياجات مختلفة على استخدام خدمة رقمية؟', options: ['تعليمات واضحة وتباين مقروء', 'نص صغير جداً', 'أزرار بلا تسميات', 'إخفاء خيار المساعدة'], answer: 0, why: 'الوضوح والتباين الجيد والتسميات الوصفية تحسن إمكانية الوصول.' },
         { id: 'computer-final-14', q: 'أي عبارة تلخص الاستخدام المستدام للتقنية؟', options: ['نستخدم التقنية باعتدال ونحافظ على الأجهزة والموارد', 'نستهلك أكبر قدر ممكن من الطاقة', 'نستبدل كل جهاز صالح', 'نجمع بيانات أكثر من الحاجة'], answer: 0, why: 'الاستخدام المعتدل والعناية بالموارد والأجهزة ينسجم مع الاستدامة.' }
-      ]
+      ],
+      writtenQuestions: essayQuestions
     }
   ];
 
@@ -220,6 +249,163 @@
     return wrap;
   }
 
+  var ESSAY_SCORE_STORAGE_KEY = 'ta3lemy-computer-g7-t1-essay-scores-v1';
+
+  function readEssayScores() {
+    try {
+      var raw = window.localStorage.getItem(ESSAY_SCORE_STORAGE_KEY);
+      var scores = raw ? JSON.parse(raw) : {};
+      return scores && typeof scores === 'object' && !Array.isArray(scores) ? scores : {};
+    } catch (error) {
+      return {};
+    }
+  }
+
+  function saveEssayScore(key, record) {
+    try {
+      var scores = readEssayScores();
+      scores[key] = record;
+      window.localStorage.setItem(ESSAY_SCORE_STORAGE_KEY, JSON.stringify(scores));
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function countEssayQuestions() {
+    var practiceCount = units.reduce(function (total, unit) { return total + (unit.writtenExercises || []).length; }, 0);
+    var examCount = exams.reduce(function (total, exam) { return total + (exam.writtenQuestions || []).length; }, 0);
+    return practiceCount + examCount;
+  }
+
+  function essayQuestionsBox(questions, sourceId, itemTitle) {
+    var wrap = document.createElement('div');
+    (questions || []).forEach(function (question, index) {
+      var block = document.createElement('section');
+      block.style.cssText = 'border:1px solid #D9E2EC;border-radius:12px;padding:14px;margin:12px 0;background:#fff;';
+      var heading = text('div', (index + 1) + '. ' + question.q);
+      heading.style.cssText = 'font-weight:700;line-height:1.9;margin-bottom:10px;';
+      block.appendChild(heading);
+      block.appendChild(text('div', 'سؤال مقالي • الدرجة الكلية: ' + question.points + ' درجات'));
+      var answerLabel = text('label', 'مساحة كتابة اختيارية (لا تُحفظ ولا تُرسل):');
+      answerLabel.style.cssText = 'display:block;font-weight:700;margin:10px 0 6px;';
+      var response = document.createElement('textarea');
+      response.rows = 4;
+      response.maxLength = 3000;
+      response.placeholder = 'اكتب إجابتك هنا إن رغبت...';
+      response.setAttribute('aria-label', 'مساحة اختيارية لإجابة السؤال المقالي');
+      response.style.cssText = 'display:block;width:100%;min-height:100px;padding:10px;border:1px solid #bdbdbd;border-radius:10px;font:inherit;line-height:1.8;resize:vertical;';
+      block.appendChild(answerLabel);
+      block.appendChild(response);
+      var details = document.createElement('details');
+      details.style.cssText = 'margin-top:10px;background:#F5F9F5;border-radius:9px;padding:9px 12px;line-height:1.9;';
+      details.appendChild(text('summary', 'اعرض الإجابة النموذجية ومعايير التقييم (' + question.points + ' درجات)'));
+      details.appendChild(text('p', 'الإجابة النموذجية: ' + question.answerText));
+      details.appendChild(text('strong', 'معايير التقييم:'));
+      var rubricList = document.createElement('ul');
+      rubricList.style.cssText = 'padding-right:22px;margin:6px 0;';
+      question.rubric.forEach(function (criterion) {
+        rubricList.appendChild(text('li', criterion.criterion + ' — ' + criterion.points + (criterion.points === 1 ? ' درجة' : ' درجات')));
+      });
+      details.appendChild(rubricList);
+      block.appendChild(details);
+
+      var scoreKey = String(sourceId) + '::' + question.id;
+      var stored = readEssayScores()[scoreKey];
+      var scorePanel = document.createElement('div');
+      scorePanel.style.cssText = 'margin-top:12px;padding:11px;background:#F3F6FA;border-radius:10px;';
+      var scoreLabel = text('label', 'درجتك بعد المراجعة الذاتية (من 0 إلى ' + question.points + '):');
+      scoreLabel.style.cssText = 'display:block;font-weight:700;margin-bottom:6px;';
+      var scoreInput = document.createElement('input');
+      scoreInput.type = 'number';
+      scoreInput.min = '0';
+      scoreInput.max = String(question.points);
+      scoreInput.step = '1';
+      scoreInput.value = stored && Number.isInteger(Number(stored.score)) ? String(stored.score) : '';
+      scoreInput.placeholder = 'أدخل الدرجة';
+      scoreInput.setAttribute('aria-label', 'درجة ذاتية صحيحة من صفر إلى ' + question.points);
+      scoreInput.style.cssText = 'width:120px;max-width:100%;padding:9px;border:1px solid #bdbdbd;border-radius:8px;font:inherit;';
+      var saveButton = document.createElement('button');
+      saveButton.type = 'button';
+      saveButton.textContent = 'حفظ الدرجة';
+      saveButton.style.cssText = 'margin:6px 8px;padding:9px 13px;background:#1565C0;color:white;border:0;border-radius:8px;font:inherit;font-weight:700;cursor:pointer;';
+      var status = text('div', stored ? 'الدرجة المحفوظة حالياً: ' + stored.score + ' من ' + question.points : '');
+      status.style.cssText = 'margin-top:6px;font-size:13px;line-height:1.7;';
+      saveButton.addEventListener('click', function () {
+        var rawScore = String(scoreInput.value || '').trim();
+        var score = Number(rawScore);
+        if (!rawScore || !Number.isInteger(score) || score < 0 || score > question.points) {
+          status.style.color = '#B71C1C';
+          status.textContent = 'أدخل عدداً صحيحاً من 0 إلى ' + question.points + '.';
+          return;
+        }
+        var record = { sourceId: sourceId, itemTitle: itemTitle, questionId: question.id, question: question.q, score: score, points: question.points, updatedAt: new Date().toISOString() };
+        if (!saveEssayScore(scoreKey, record)) {
+          status.style.color = '#B71C1C';
+          status.textContent = 'تعذر حفظ الدرجة على هذا الجهاز. تحقق من إعدادات التخزين.';
+          return;
+        }
+        status.style.color = '#2E7D32';
+        status.textContent = 'تم حفظ الدرجة ' + score + ' من ' + question.points + ' على هذا الجهاز فقط.';
+      });
+      scorePanel.appendChild(scoreLabel);
+      scorePanel.appendChild(scoreInput);
+      scorePanel.appendChild(saveButton);
+      scorePanel.appendChild(status);
+      block.appendChild(scorePanel);
+      wrap.appendChild(block);
+    });
+    return wrap;
+  }
+
+  function openEssayScoreTracker() {
+    var body = document.getElementById('viewerBody');
+    var title = document.getElementById('viewerTitle');
+    if (!body || !title) return;
+    body.textContent = '';
+    body.setAttribute('dir', 'rtl');
+    title.textContent = 'متابعة درجات المراجعة الذاتية للأسئلة المقالية';
+    body.appendChild(noticeBox());
+    var scores = readEssayScores();
+    var entries = Object.keys(scores).map(function (key) { return scores[key]; }).filter(function (record) {
+      return record && typeof record === 'object' && Number.isInteger(Number(record.score)) && Number.isInteger(Number(record.points));
+    });
+    var earned = entries.reduce(function (total, record) { return total + Number(record.score); }, 0);
+    var possible = entries.reduce(function (total, record) { return total + Number(record.points); }, 0);
+    var percentage = possible ? Math.round(earned / possible * 100) : 0;
+    var summary = document.createElement('section');
+    summary.style.cssText = 'background:#E8F5E9;border-radius:12px;padding:14px;margin:12px 0;line-height:1.9;';
+    summary.appendChild(text('h3', 'ملخص تقدمك في التقييم الذاتي'));
+    summary.appendChild(text('p', 'مجموع الدرجات المحفوظة: ' + earned + ' من ' + possible + ' درجة (' + percentage + '%).'));
+    summary.appendChild(text('p', 'عدد سجلات الدرجات المحفوظة: ' + entries.length + ' من ' + countEssayQuestions() + ' موضعاً مقالياً في التدريب والامتحان.'));
+    summary.appendChild(text('p', 'تُحفظ الدرجات فقط على هذا الجهاز، ولا يُحفظ نص إجابتك المكتوبة ولا يُرسل إلى الخادم.'));
+    body.appendChild(summary);
+    if (!entries.length) {
+      body.appendChild(text('p', 'لم تسجل درجات بعد. افتح تدريب الوحدة أو الامتحان، وحاول الإجابة ثم راجع النموذج والمعايير واضغط «حفظ الدرجة».'));
+    } else {
+      entries.sort(function (a, b) { return String(b.updatedAt || '').localeCompare(String(a.updatedAt || '')); });
+      entries.forEach(function (record) {
+        var row = document.createElement('section');
+        row.style.cssText = 'border:1px solid #e4e9e4;border-radius:11px;padding:12px;margin:10px 0;background:#fff;line-height:1.8;';
+        row.appendChild(text('h4', record.itemTitle || 'تقييم مقالي'));
+        row.appendChild(text('p', record.question || ''));
+        row.appendChild(text('strong', 'تقييمك: ' + record.score + ' من ' + record.points));
+        if (record.updatedAt) row.appendChild(text('div', 'آخر تحديث: ' + new Date(record.updatedAt).toLocaleString('ar-EG')));
+        if (record.sourceId) {
+          var reopen = document.createElement('button');
+          reopen.type = 'button';
+          reopen.textContent = 'إعادة فتح مصدر السؤال';
+          reopen.style.cssText = 'margin-top:8px;padding:8px 12px;background:#1565C0;color:white;border:0;border-radius:8px;font:inherit;cursor:pointer;';
+          reopen.addEventListener('click', function () { openItem(record.sourceId); });
+          row.appendChild(reopen);
+        }
+        body.appendChild(row);
+      });
+    }
+    screenHistory.push(currentScreen);
+    showScreen('viewerScreen');
+  }
+
   function findItem(id) {
     for (var u = 0; u < units.length; u += 1) {
       for (var l = 0; l < units[u].lessons.length; l += 1) {
@@ -234,6 +420,10 @@
   }
 
   function openItem(id) {
+    if (id === 'essay-score-tracker') {
+      openEssayScoreTracker();
+      return;
+    }
     var found = findItem(id);
     if (!found) return;
     var body = document.getElementById('viewerBody');
@@ -278,6 +468,11 @@
       body.appendChild(text('p', found.item.note || 'بنك تدريبات أصلي للمراجعة. اختر إجابتك لتظهر النتيجة والتعليل فوراً.'));
       if (found.kind === 'exercise') body.appendChild(text('h3', found.unit.title));
       body.appendChild(questionsBox(found.kind === 'exercise' ? found.item.exercises : found.item.questions, found.item.id));
+      var writtenQuestions = found.kind === 'exercise' ? found.item.writtenExercises : found.item.writtenQuestions;
+      if (writtenQuestions && writtenQuestions.length) {
+        body.appendChild(text('h3', 'أسئلة مقالية • حاول أولاً ثم افتح النموذج ومعايير التقييم'));
+        body.appendChild(essayQuestionsBox(writtenQuestions, found.item.id, found.item.title));
+      }
     }
     screenHistory.push(currentScreen);
     showScreen('viewerScreen');
@@ -294,6 +489,9 @@
     root.className = 'computer-original-content';
     root.setAttribute('dir', 'rtl');
     root.appendChild(noticeBox());
+    if (type === 'exercises' || type === 'exams') {
+      root.appendChild(card('متابعة درجات المراجعة الذاتية للأسئلة المقالية', 'اعرض المجموع وسجل الدرجات المحفوظة، وأعد فتح مصدر السؤال.', 'essay-score-tracker', '📊'));
+    }
     if (type === 'lessons') {
       units.forEach(function (unit) {
         root.appendChild(text('h3', unit.title, 'computer-unit-heading'));
@@ -303,11 +501,11 @@
       });
     } else if (type === 'exercises') {
       units.forEach(function (unit) {
-        root.appendChild(card('بنك التدريبات — ' + unit.title, unit.exercises.length + ' سؤالاً اختيارياً مع تصحيح فوري وتعليل', unit.id, '✏️'));
+        root.appendChild(card('بنك التدريبات — ' + unit.title, unit.exercises.length + ' سؤال اختيار من متعدد، وسؤالان مقاليان مع مراجعة ذاتية', unit.id, '✏️'));
       });
     } else if (type === 'exams') {
       exams.forEach(function (exam) {
-        root.appendChild(card(exam.title, exam.note, exam.id, '📝'));
+        root.appendChild(card(exam.title, exam.note + ' • 14 سؤال اختيار من متعدد وسؤالان مقاليان', exam.id, '📝'));
       });
     }
     list.appendChild(root);
