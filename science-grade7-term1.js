@@ -380,6 +380,10 @@
   function appendContent(type) {
     var list = document.getElementById('contentList');
     if (!list) return;
+    for (var i = list.children.length - 1; i >= 0; i -= 1) {
+      var existing = list.children[i];
+      if (String(existing.className || '').split(/\s+/).indexOf('empty-state') >= 0) list.removeChild(existing);
+    }
     var root = document.createElement('div');
     root.className = 'science-original-content';
     root.setAttribute('dir', 'rtl');
