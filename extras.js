@@ -803,50 +803,7 @@ window.openPomodoro = function(){
   };
 };
 
-// ═══ البث المباشر (مبسط) ═══
-window.openBroadcast = async function(){
-  if(!window.currentUser) return;
-  var isTeacher = window.currentRole === 'teacher';
-  var isOwner = window.currentRole === 'owner';
-  
-  if(isTeacher || isOwner){
-    var action = prompt('🔴 البث المباشر:\n\n1. بدء بث جديد\n2. عرض البثوث المتاحة');
-    if(action === '1'){
-      var title = prompt('عنوان البث:');
-      if(!title) return;
-      var roomId = 'hafez-' + Date.now().toString(36);
-      try {
-        await firebase.firestore().collection('broadcasts').add({
-          title: title,
-          teacherId: window.currentUser.uid,
-          teacherName: window.currentUser.name,
-          roomId: roomId,
-          status: 'live',
-          createdAt: new Date().toISOString()
-        });
-        var url = 'https://meet.jit.si/' + roomId;
-        window.open(url, '_blank');
-        if(typeof showToast === 'function') showToast('🔴 بدأ البث');
-      } catch(e){ console.error(e); }
-    }
-  } else {
-    try {
-      var snap = await firebase.firestore().collection('broadcasts').where('status','==','live').get();
-      if(snap.empty){ if(typeof showToast === 'function') showToast('لا يوجد بث حالياً'); return; }
-      var list = '';
-      var rooms = [];
-      snap.forEach(function(doc){
-        var b = doc.data();
-        list += '📺 ' + b.title + ' — ' + b.teacherName + '\n';
-        rooms.push(b.roomId);
-      });
-      if(confirm('🔴 البثوث المتاحة:\n\n' + list + '\n\nهل تريد الانضمام؟')){
-        window.open('https://meet.jit.si/' + rooms[0], '_blank');
-      }
-    } catch(e){ console.error(e); }
-  }
-};
-
+// البث المباشر يُدار حصريًا عبر teacher-workflow.js لضمان المرور بطلب وموافقة المالك.
 // ═══ إضافة الأزرار في الرئيسية ═══
 window.addEventListener('load', function(){
   setTimeout(function(){
