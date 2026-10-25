@@ -41,7 +41,7 @@
     bar.children[1].onclick = function () { showCards('الحروف', arabicLetters, 'ar-EG'); };
     bar.children[2].onclick = function () { showCards('الأرقام', numbers, 'ar-EG'); };
     bar.children[3].onclick = function () { addDrawPad(root); bar.children[3].disabled = true; };
-    Array.prototype.forEach.call(root.querySelectorAll('img'), function (img) { img.classList.add('touch-image'); img.setAttribute('role', 'button'); img.setAttribute('tabindex', '0'); var label = img.alt || 'صورة تعليمية'; img.addEventListener('click', function () { speak(label, 'ar-EG'); }); img.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') speak(label, 'ar-EG'); }); });
+    Array.prototype.forEach.call(root.querySelectorAll('img'), function (img) { img.classList.add('touch-image'); img.setAttribute('role', 'button'); img.setAttribute('tabindex', '0'); var label = img.alt || (document.getElementById('viewerTitle') ? document.getElementById('viewerTitle').textContent : 'صورة تعليمية'); img.addEventListener('click', function () { speak(label, 'ar-EG'); }); img.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') speak(label, 'ar-EG'); }); });
   }
   function showCards(label, items, lang) {
     var root = document.getElementById('viewerBody'); if (!root) return;
