@@ -24,3 +24,24 @@ match /broadcast_capacity/{capacityId} {
 match /broadcast_control/{controlId} {
   allow read, write: if false;
 }
+
+match /private_conversations/{conversationId} {
+  allow read, write: if false;
+  match /items/{messageId} {
+    allow read, write: if false;
+  }
+}
+match /private_chat_auth_limits/{limitId} {
+  allow read, write: if false;
+}
+match /private_chat_send_limits/{limitId} {
+  allow read, write: if false;
+}
+
+// المسار القديم للدردشة الخاصة؛ أوقف القراءة المباشرة بعد نقل الواجهة إلى Cloud Functions.
+match /messages/{conversationId} {
+  allow read, write: if false;
+  match /msgs/{messageId} {
+    allow read, write: if false;
+  }
+}

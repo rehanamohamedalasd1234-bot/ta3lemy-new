@@ -180,6 +180,9 @@
             localStorage.setItem('lastUser', JSON.stringify({
               name: uname, uid: uid, role: window.currentRole, points: 0
             }));
+            if (window.currentRole === 'student' && typeof window.activatePrivateChatSession === 'function') {
+              await window.activatePrivateChatSession(uid, pwd);
+            }
             
             await window.logLogin(uname, window.currentRole, true, 'new account');
             window.showRecoveryCode(recCode, uname);
@@ -222,6 +225,9 @@
           localStorage.setItem('lastUser', JSON.stringify({
             name: uname, uid: uid2, role: user.role || window.currentRole, points: user.points || 0
           }));
+          if (user.role === 'student' && typeof window.activatePrivateChatSession === 'function') {
+            await window.activatePrivateChatSession(uid2, pwd);
+          }
           
           await fs.collection('users').doc(uid2).update({lastLogin: new Date().toISOString()});
           await window.logLogin(uname, window.currentRole, true, '');

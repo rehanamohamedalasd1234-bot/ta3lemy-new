@@ -9,6 +9,7 @@ const SHELL_FILES = [
   './extras-patch.js',
   './teacher.js',
   './chat.js',
+  './private-chat.js',
   './creativity-config.js',
   './creativity.js',
   './broadcast.js',

@@ -67,7 +67,7 @@
 <div style="font-size:36px;margin-bottom:8px;">💬</div>
 محادثة خاصة
 </button>
-</div><div class="content-header"><div class="content-header-title">💬 محادثاتي</div><div class="content-header-sub">تواصل مع المعلمين والزملاء</div></div><button class="btn-primary" onclick="openNewMessage()" style="margin-bottom:16px;">➕ محادثة جديدة</button><div id="messagesList"></div></div></div>
+</div><div class="content-header"><div class="content-header-title">💬 محادثاتي</div><div class="content-header-sub">🔒 الرسائل الخاصة لا يراها إلا طرفاها</div></div><button class="btn-primary" onclick="openNewMessage()" style="margin-bottom:16px;">➕ محادثة جديدة</button><div id="messagesList"></div></div></div>
 
 <div id="chatScreen" class="screen">
 <div class="top-bar"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span id="chatTitle">المحادثة</span></div><div style="width:42px;"></div></div>
@@ -138,7 +138,7 @@ function goBack(){if(screenHistory.length>0)showScreen(screenHistory.pop());else
 function navTo(dest){document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));if(event&&event.target){const p=event.target.closest('.nav-item');if(p)p.classList.add('active');}if(dest==='home')showScreen('homeScreen');else if(dest==='education')openEducation();else if(dest==='quran')openQuran();else if(dest==='profile')goToProfile();}
 function selectRole(btn,role){document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');currentRole=role;const g=document.getElementById('ownerCodeGroup');if(g)g.style.display=(role==='owner')?'block':'none';}
 async function login(){if(!navigator.onLine){const u=document.getElementById('usernameInput').value.trim();const p=document.getElementById('passwordInput').value;if(!u||u.length<3){showToast('⚠️ أدخل اسم مستخدم');return;}if(p.length<4){showToast('⚠️ كلمة المرور قصيرة');return;}const saved=localStorage.getItem('lastUser');const su=saved?JSON.parse(saved):{uid:'offline_'+Date.now(),role:'student',points:0};if(currentRole==='teacher'||currentRole==='owner'){showToast('دخول المعلم والمالك يحتاج إلى الإنترنت.');return;}currentUser={name:u,uid:su.uid,points:su.points||0};currentRole='student';showToast('📴 دخول offline');setTimeout(()=>showScreen('homeScreen'),500);return;}const u=document.getElementById('usernameInput').value.trim();const p=document.getElementById('passwordInput').value;const oc=document.getElementById('ownerCodeInput')?document.getElementById('ownerCodeInput').value:'';if(!u||u.length<3){showToast('⚠️ أدخل اسم مستخدم');return;}if(p.length<4){showToast('⚠️ كلمة المرور قصيرة');return;}if(currentRole==='owner'||currentRole==='teacher'){showToast('يلزم تسجيل الدخول الآمن بحساب Firebase للمالك أو المعلم.');return;}currentUser={name:u,role:currentRole,points:1250,uid:u+'_'+Date.now()};try{const existing=await db.collection('users').where('name','==',u).limit(1).get();if(!existing.empty){const doc=existing.docs[0];currentUser.uid=doc.id;currentUser.points=doc.data().points||0;await db.collection('users').doc(doc.id).update({lastLogin:new Date().toISOString()});}else{await db.collection('users').doc(currentUser.uid).set({name:u,role:currentRole,points:0,createdAt:new Date().toISOString(),lastLogin:new Date().toISOString()});}}catch(e){console.error('login:',e);}showToast('✅ تم تسجيل الدخول');setTimeout(()=>showScreen('homeScreen'),800);}
-function logout(){if(confirm('تسجيل خروج؟')){if(chatUnsubscribe){try{chatUnsubscribe();}catch(e){}}currentUser=null;currentRole='student';screenHistory=[];document.getElementById('usernameInput').value='';document.getElementById('passwordInput').value='';showScreen('loginScreen');showToast('👋 تم الخروج');}}
+function logout(){if(confirm('تسجيل خروج؟')){if(chatUnsubscribe){try{chatUnsubscribe();}catch(e){}}if(firebase.auth&&firebase.auth().currentUser){firebase.auth().signOut().catch(function(e){console.warn('Auth sign-out:',e);});}currentUser=null;window.currentUser=null;currentRole='student';window.currentRole='student';currentChatId=null;currentChatWith=null;screenHistory=[];document.getElementById('usernameInput').value='';document.getElementById('passwordInput').value='';showScreen('loginScreen');showToast('👋 تم الخروج');}}
 const stagesData={primary:{name:'المرحلة الابتدائية',icon:'🎒',grades:['الأول','الثاني','الثالث','الرابع','الخامس','السادس']},prep:{name:'المرحلة الإعدادية',icon:'📗',grades:['الأول','الثاني','الثالث']},sec:{name:'المرحلة الثانوية',icon:'📕',grades:['الأول','الثاني','الثالث']}};
 const generalSubjects=[{id:'arabic',name:'اللغة العربية',icon:'📖',color:'#C2185B'},{id:'math',name:'رياضيات',icon:'🔢',color:'#1976D2'},{id:'science',name:'علوم',icon:'🔬',color:'#388E3C'},{id:'physics',name:'فيزياء',icon:'⚛️',color:'#7B1FA2'},{id:'chem',name:'كيمياء',icon:'⚗️',color:'#D32F2F'},{id:'biology',name:'أحياء',icon:'🧬',color:'#00897B'},{id:'english',name:'إنجليزي',icon:'🇬🇧',color:'#303F9F'},{id:'social',name:'دراسات',icon:'🌍',color:'#0097A7'},{id:'history',name:'تاريخ',icon:'📜',color:'#6D4C41'},{id:'geo',name:'جغرافيا',icon:'🗺️',color:'#00838F'},{id:'philosophy',name:'فلسفة ومنطق',icon:'💭',color:'#8E24AA'},{id:'religion',name:'تربية دينية',icon:'🕌',color:'#2E7D32'},{id:'computer',name:'حاسب آلي',icon:'💻',color:'#455A64'},{id:'art',name:'فنية',icon:'🎨',color:'#F57C00'}];
 const azharSubjects=[{id:'quran_t',name:'القرآن والتفسير',icon:'📖'},{id:'hadith',name:'الحديث الشريف',icon:'📜'},{id:'fiqh',name:'الفقه',icon:'⚖️'},{id:'aqeeda',name:'العقيدة',icon:'🕌'},{id:'seera',name:'السيرة النبوية',icon:'🌟'},{id:'nahw',name:'النحو',icon:'📝'},{id:'sarf',name:'الصرف والبلاغة',icon:'📚'}];
@@ -312,42 +312,17 @@ async function deletePublicMsg(id) {
         showToast('🗑️ تم حذف الرسالة');
     } catch(e) { console.error(e); }
 }
-async function openMessages(){if(!currentUser){showToast('⚠️ سجل دخول');return;}const l=document.getElementById('messagesList');screenHistory.push(currentScreen);showScreen('messagesScreen');l.innerHTML='<div class="empty-state"><p>⏳ جاري التحميل...</p></div>';try{const snap=await db.collection('messages').where('participants','array-contains',currentUser.uid).get();const chats={};snap.forEach(doc=>{const m=doc.data();const otherId=m.participants.find(p=>p!==currentUser.uid);if(!chats[otherId]){chats[otherId]={id:doc.id,withId:otherId,withName:m.participantNames[otherId]||otherId,lastMsg:m.text,time:m.updatedAt||m.createdAt};}else if(m.updatedAt>chats[otherId].time){chats[otherId].lastMsg=m.text;chats[otherId].time=m.updatedAt;}});const arr=Object.values(chats).sort((a,b)=>(b.time||'').localeCompare(a.time||''));if(arr.length===0){l.innerHTML='<div class="empty-state"><div class="empty-state-icon">💬</div><p>لا توجد محادثات</p></div>';return;}l.innerHTML=arr.map(c=>'<div class="content-item" onclick="openChat(\''+c.id+'\',\''+c.withId+'\',\''+c.withName+'\')"><div class="content-item-icon" style="background:#E8F5E9;color:#2E7D32;font-size:24px;">👤</div><div class="content-item-info"><div class="content-item-title">'+c.withName+'</div><div class="content-item-sub">'+(c.lastMsg||'').substring(0,40)+'</div></div><div class="content-item-arrow">‹</div></div>').join('');}catch(e){console.error(e);l.innerHTML='<div class="empty-state">حدث خطأ</div>';}}
-async function openNewMessage(){if(!currentUser){showToast('⚠️ سجل دخول');return;}const name=prompt('اسم المستخدم (معلم/طالب/مالك):');if(!name||name.trim().length<2)return;const uid=name.trim();try{const usersSnap=await db.collection('users').where('name','==',uid).limit(1).get();if(usersSnap.empty){showToast('⚠️ المستخدم غير موجود');return;}const targetId=usersSnap.docs[0].id;const pid=[currentUser.uid,targetId].sort().join('_');const ref=db.collection('messages').doc(pid);const doc=await ref.get();if(!doc.exists){const names={};names[currentUser.uid]=currentUser.name;names[targetId]=uid;await ref.set({participants:[currentUser.uid,targetId].sort(),participantNames:names,text:'',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()});}openChat(pid,targetId,uid);}catch(e){console.error(e);showToast('❌ فشل');}}
-async function openChat(chatId,withId,withName){currentChatId=chatId;currentChatWith={id:withId,name:withName};document.getElementById('chatTitle').textContent=withName;const c=document.getElementById('chatMessages');c.innerHTML='<p style="text-align:center;color:#999;">⏳</p>';screenHistory.push(currentScreen);showScreen('chatScreen');if(chatUnsubscribe){try{chatUnsubscribe();}catch(e){}}chatUnsubscribe=db.collection('messages').doc(chatId).collection('msgs').orderBy('createdAt','asc').onSnapshot(snap=>{const c2=document.getElementById('chatMessages');if(snap.empty){c2.innerHTML='<p style="text-align:center;color:#999;padding:20px;">لا توجد رسائل — ابدأ المحادثة</p>';return;}let html='';snap.forEach(doc=>{const m=doc.data();const mine=m.senderId===currentUser.uid;html+='<div class="chat-bubble '+(mine?'mine':'other')+'"><div style="font-size:14px;line-height:1.6;">'+m.text+'</div><span class="chat-bubble-time">'+new Date(m.createdAt).toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'})+'</span></div>';});c2.innerHTML=html;c2.scrollTop=c2.scrollHeight;});}
+async function openMessages(){showToast('جارٍ تجهيز صندوق الرسائل الآمن...');}
+async function openNewMessage(){showToast('جارٍ تجهيز بدء المحادثة الآمنة...');}
+async function openChat(){showToast('افتح المحادثة من صندوق الرسائل الآمن.');}
 function insertEmoji() {
     const emojis = ['😊', '❤️', '👍', '😂', '🔥', '✨', '📚', '✅', '🎉'];
     const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
     const input = document.getElementById('chatInput');
     if (input) input.value += randomEmoji;
 }
-async function sendMessage() {
-    const inp = document.getElementById('chatInput');
-    const txt = inp.value.trim();
-    if (!txt || !currentChatId || !currentUser) return;
-    try {
-        if (currentChatId === 'public_chat') {
-            await db.collection('public_chat').add({
-                senderId: currentUser.uid,
-                senderName: currentUser.name,
-                text: txt,
-                createdAt: new Date().toISOString()
-            });
-        } else {
-            await db.collection('messages').doc(currentChatId).collection('msgs').add({
-                senderId: currentUser.uid,
-                senderName: currentUser.name,
-                text: txt,
-                createdAt: new Date().toISOString()
-            });
-            await db.collection('messages').doc(currentChatId).update({
-                text: txt,
-                updatedAt: new Date().toISOString()
-            });
-        }
-        inp.value = '';
-    } catch(e) { console.error(e); showToast('❌ فشل الإرسال'); }
-}async function openRewards(){screenHistory.push(currentScreen);showScreen('rewardsScreen');loadRewards();}
+async function sendMessage(){if(currentChatId!=='public_chat'){showToast('الدردشة الخاصة غير جاهزة بعد.');return;}const inp=document.getElementById('chatInput');const txt=inp?inp.value.trim():'';if(!txt||!currentUser)return;try{await db.collection('public_chat').add({senderId:currentUser.uid,senderName:currentUser.name,text:txt,createdAt:new Date().toISOString()});inp.value='';}catch(e){console.error(e);showToast('❌ فشل الإرسال');}}
+async function openRewards(){screenHistory.push(currentScreen);showScreen('rewardsScreen');loadRewards();}
 async function loadRewards(){const st=document.getElementById('topStudents');const tt=document.getElementById('topTeachers');st.innerHTML='<p style="text-align:center;color:#999;">⏳</p>';tt.innerHTML='<p style="text-align:center;color:#999;">⏳</p>';try{const snap=await db.collection('users').orderBy('points','desc').limit(20).get();let students='',teachers='';snap.forEach(doc=>{const u=doc.data();const badge=u.points>=2000?'🥇':u.points>=1000?'🥈':u.points>=500?'🥉':'⭐';const html='<div style="background:#fff;border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;margin-bottom:10px;"><div style="font-size:28px;">'+badge+'</div><div style="flex:1;"><div style="font-weight:bold;">'+(u.name||'مستخدم')+'<span class="user-badge '+(u.role==='teacher'?'teacher':u.role==='owner'?'owner':'')+'">'+(u.role==='teacher'?'معلم':u.role==='owner'?'مالك':'طالب')+'</span></div><div style="font-size:12px;color:#999;">⭐ '+(u.points||0)+' نقطة</div></div></div>';if(u.role==='teacher'){teachers+=html;}else if(u.role==='student'){students+=html;}});st.innerHTML=students||'<p style="text-align:center;color:#999;">لا يوجد طلاب بعد</p>';tt.innerHTML=teachers||'<p style="text-align:center;color:#999;">لا يوجد معلمون بعد</p>';}catch(e){console.error(e);}}
 function showMyPoints(){if(!currentUser)return;showToast('⭐ لديك '+(currentUser.points||0)+' نقطة');}
 async function goToProfile(){if(!currentUser){showToast('⚠️ سجل دخول');return;}document.getElementById('profileName').textContent=currentUser.name;document.getElementById('profileRole').textContent=currentRole==='student'?'طالب':currentRole==='teacher'?'معلم':'المالك';document.getElementById('profilePoints').textContent='⭐ '+(currentUser.points||0)+' نقطة';const m=document.getElementById('adminMenu');if(m)m.style.display=currentRole==='owner'?'flex':'none';screenHistory.push(currentScreen);showScreen('profileScreen');}
@@ -536,83 +511,16 @@ function playRadio(i){const s=radioStations[i];if(radioAudio){radioAudio.pause()
 function stopRadio(){if(radioAudio){radioAudio.pause();radioAudio=null;}document.getElementById('radioPlayer').style.display='none';showToast('⏹️ تم الإيقاف');}
 async function playMyStationAudio(id){try{const doc=await db.collection('station').doc(id).get();if(!doc.exists)return;const x=doc.data();if(radioAudio){radioAudio.pause();radioAudio=null;}radioAudio=new Audio(x.url);radioAudio.play().catch(e=>showToast('❌ اضغط مرة أخرى'));document.getElementById('radioPlayer').style.display='block';document.getElementById('radioStationName').textContent=x.title||'';document.getElementById('radioNowPlaying').textContent='🎵 جاري التشغيل...';showToast('▶️ '+(x.title||''));}catch(e){console.error(e);}}
 async function addMyStationAudio(){const t=document.getElementById('myStationTitle').value.trim();const fi=document.getElementById('myStationFile');const btn=document.getElementById('saveStationBtn');if(!t){showToast('⚠️ أدخل عنوان');return;}if(!fi.files||!fi.files[0]){showToast('⚠️ اختر ملف');return;}if(btn){btn.disabled=true;btn.textContent='⏳ جاري الرفع...';}const url=await uploadFile(fi.files[0],'mystation');if(btn){btn.disabled=false;btn.textContent='➕ إضافة للمحطة';}if(!url){showToast('❌ فشل الرفع');return;}try{await db.collection('station').add({title:t,url:url,created_at:new Date().toISOString()});showToast('✅ تم إضافة الملف');document.getElementById('myStationTitle').value='';fi.value='';openRadio();}catch(e){console.error(e);showToast('❌ فشل');}}
-async function openMessages(){if(!currentUser){showToast('⚠️ سجل دخول');return;}const l=document.getElementById('messagesList');screenHistory.push(currentScreen);showScreen('messagesScreen');l.innerHTML='<div class="empty-state"><p>⏳ جاري التحميل...</p></div>';try{const snap=await db.collection('messages').where('participants','array-contains',currentUser.uid).get();const chats={};snap.forEach(doc=>{const m=doc.data();const otherId=m.participants.find(p=>p!==currentUser.uid);if(!chats[otherId]){chats[otherId]={id:doc.id,withId:otherId,withName:m.participantNames[otherId]||otherId,lastMsg:m.text,time:m.updatedAt||m.createdAt};}else if(m.updatedAt>chats[otherId].time){chats[otherId].lastMsg=m.text;chats[otherId].time=m.updatedAt;}});const arr=Object.values(chats).sort((a,b)=>(b.time||'').localeCompare(a.time||''));if(arr.length===0){l.innerHTML='<div class="empty-state"><div class="empty-state-icon">💬</div><p>لا توجد محادثات</p><p style="font-size:13px;margin-top:8px;">ابدأ محادثة جديدة</p></div>';return;}l.innerHTML=arr.map(c=>'<div class="content-item" onclick="openChat(\''+c.id+'\',\''+c.withId+'\',\''+c.withName+'\')"><div class="content-item-icon" style="background:#E8F5E9;color:#2E7D32;font-size:24px;">👤</div><div class="content-item-info"><div class="content-item-title">'+c.withName+'</div><div class="content-item-sub">'+(c.lastMsg||'').substring(0,40)+'</div></div><div class="content-item-arrow">‹</div></div>').join('');}catch(e){console.error(e);l.innerHTML='<div class="empty-state">حدث خطأ</div>';}}
-async function openNewMessage(){if(!currentUser){showToast('⚠️ سجل دخول');return;}const name=prompt('اسم المستخدم (معلم/طالب/مالك):');if(!name||name.trim().length<2)return;const uid=name.trim();try{const usersSnap=await db.collection('users').where('name','==',uid).limit(1).get();if(usersSnap.empty){showToast('⚠️ المستخدم غير موجود');return;}const targetId=usersSnap.docs[0].id;const pid=[currentUser.uid,targetId].sort().join('_');const ref=db.collection('messages').doc(pid);const doc=await ref.get();if(!doc.exists){const names={};names[currentUser.uid]=currentUser.name;names[targetId]=uid;await ref.set({participants:[currentUser.uid,targetId].sort(),participantNames:names,text:'',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()});}openChat(pid,targetId,uid);}catch(e){console.error(e);showToast('❌ فشل');}}
-async function openChat(chatId,withId,withName){currentChatId=chatId;currentChatWith={id:withId,name:withName};document.getElementById('chatTitle').textContent=withName;const c=document.getElementById('chatMessages');c.innerHTML='<p style="text-align:center;color:#999;">⏳ جاري التحميل...</p>';screenHistory.push(currentScreen);showScreen('chatScreen');if(chatUnsubscribe){try{chatUnsubscribe();}catch(e){}}chatUnsubscribe=db.collection('messages').doc(chatId).collection('msgs').orderBy('createdAt','asc').onSnapshot(snap=>{const c2=document.getElementById('chatMessages');if(snap.empty){c2.innerHTML='<p style="text-align:center;color:#999;padding:20px;">لا توجد رسائل — ابدأ المحادثة</p>';return;}let html='';snap.forEach(doc=>{const m=doc.data();const mine=m.senderId===currentUser.uid;html+='<div class="chat-bubble '+(mine?'mine':'other')+'"><div style="font-size:14px;line-height:1.6;word-wrap:break-word;">'+m.text+'</div><span class="chat-bubble-time">'+new Date(m.createdAt).toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'})+'</span></div>';});c2.innerHTML=html;c2.scrollTop=c2.scrollHeight;});}
+async function openMessages(){showToast('جارٍ تجهيز صندوق الرسائل الآمن...');}
+async function openNewMessage(){showToast('جارٍ تجهيز بدء المحادثة الآمنة...');}
+async function openChat(){showToast('افتح المحادثة من صندوق الرسائل الآمن.');}
 function insertEmoji() {
     const emojis = ['😊', '❤️', '👍', '😂', '🔥', '✨', '📚', '✅', '🎉'];
     const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
     const input = document.getElementById('chatInput');
     if (input) input.value += randomEmoji;
 }
-async function sendMessage() {
-    const inp = document.getElementById('chatInput');
-    const txt = inp.value.trim();
-    if (!txt || !currentChatId || !currentUser) return;
-    try {
-        if (currentChatId === 'public_chat') {
-            await db.collection('public_chat').add({
-                senderId: currentUser.uid,
-                senderName: currentUser.name,
-                text: txt,
-                createdAt: new Date().toISOString()
-            });
-        } else {
-            await db.collection('messages').doc(currentChatId).collection('msgs').add({
-                senderId: currentUser.uid,
-                senderName: currentUser.name,
-                text: txt,
-                createdAt: new Date().toISOString()
-            });
-            await db.collection('messages').doc(currentChatId).update({
-                text: txt,
-                updatedAt: new Date().toISOString()
-            });
-        }
-        inp.value = '';
-    } catch(e) { console.error(e); showToast('❌ فشل الإرسال'); }
-}
-async function openPublicChat() {
-    if (!currentUser) { showToast('⚠️ سجل دخول'); return; }
-    currentChatId = 'public_chat';
-    currentChatWith = { id: 'public', name: 'الدردشة الجماعية' };
-    document.getElementById('chatTitle').textContent = '👥 الدردشة الجماعية';
-    const c = document.getElementById('chatMessages');
-    c.innerHTML = '<p style="text-align:center;color:#999;">⏳ جاري التحميل...</p>';
-    screenHistory.push(currentScreen);
-    showScreen('chatScreen');
-    if (chatUnsubscribe) { try { chatUnsubscribe(); } catch(e) {} }
-    chatUnsubscribe = db.collection('public_chat').orderBy('createdAt', 'asc').limit(100).onSnapshot(snap => {
-        const c2 = document.getElementById('chatMessages');
-        if (snap.empty) {
-            c2.innerHTML = '<p style="text-align:center;color:#999;padding:20px;">لا توجد رسائل — كن أول من يكتب</p>';
-            return;
-        }
-        let html = '';
-        snap.forEach(doc => {
-            const m = doc.data();
-            const mine = m.senderId === currentUser.uid;
-            const isOwner = currentRole === 'owner';
-            html += '<div class="chat-bubble ' + (mine ? 'mine' : 'other') + '" data-msgid="' + doc.id + '" style="position:relative;">';
-            if (!mine && isOwner) {
-                html += '<button onclick="deletePublicMsg(\'' + doc.id + '\')" style="position:absolute;top:5px;left:5px;background:#E53935;color:#fff;border:none;border-radius:50%;width:22px;height:22px;font-size:12px;cursor:pointer;">✕</button>';
-            }
-            html += '<div style="font-size:11px;font-weight:bold;color:' + (mine ? '#A5D6A7' : '#2E7D32') + ';margin-bottom:4px;">' + (mine ? 'أنا' : m.senderName) + '</div>';
-            html += '<div style="font-size:14px;line-height:1.6;word-wrap:break-word;">' + m.text + '</div>';
-            html += '<span class="chat-bubble-time">' + new Date(m.createdAt).toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'}) + '</span></div>';
-        });
-        c2.innerHTML = html;
-        c2.scrollTop = c2.scrollHeight;
-    });
-}
-async function deletePublicMsg(id) {
-    if (currentRole !== 'owner') return;
-    if (!confirm('حذف الرسالة؟')) return;
-    try {
-        await db.collection('public_chat').doc(id).delete();
-        showToast('🗑️ تم حذف الرسالة');
-    } catch(e) { console.error(e); }
-}
+async function sendMessage(){if(currentChatId!=='public_chat'){showToast('الدردشة الخاصة غير جاهزة بعد.');return;}const inp=document.getElementById('chatInput');const txt=inp?inp.value.trim():'';if(!txt||!currentUser)return;try{await db.collection('public_chat').add({senderId:currentUser.uid,senderName:currentUser.name,text:txt,createdAt:new Date().toISOString()});inp.value='';}catch(e){console.error(e);showToast('❌ فشل الإرسال');}}
 async function openRewards(){screenHistory.push(currentScreen);showScreen('rewardsScreen');loadRewards();}
 async function loadRewards(){const st=document.getElementById('topStudents');const tt=document.getElementById('topTeachers');st.innerHTML='<p style="text-align:center;color:#999;">⏳</p>';tt.innerHTML='<p style="text-align:center;color:#999;">⏳</p>';try{const snap=await db.collection('users').orderBy('points','desc').limit(20).get();let students='',teachers='';snap.forEach(doc=>{const u=doc.data();const badge=u.points>=2000?'🥇':u.points>=1000?'🥈':u.points>=500?'🥉':'⭐';const html='<div style="background:#fff;border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;margin-bottom:10px;"><div style="font-size:28px;">'+badge+'</div><div style="flex:1;"><div style="font-weight:bold;">'+(u.name||'مستخدم')+'<span class="user-badge '+(u.role==='teacher'?'teacher':u.role==='owner'?'owner':'')+'">'+(u.role==='teacher'?'معلم':u.role==='owner'?'مالك':'طالب')+'</span></div><div style="font-size:12px;color:#999;">⭐ '+(u.points||0)+' نقطة</div></div></div>';if(u.role==='teacher'){teachers+=html;}else if(u.role==='student'){students+=html;}});st.innerHTML=students||'<p style="text-align:center;color:#999;">لا يوجد طلاب بعد</p>';tt.innerHTML=teachers||'<p style="text-align:center;color:#999;">لا يوجد معلمون بعد</p>';}catch(e){console.error(e);}}
 function showMyPoints(){if(!currentUser)return;showToast('⭐ لديك '+(currentUser.points||0)+' نقطة');}
@@ -677,6 +585,7 @@ window.addEventListener('load',()=>{setTimeout(()=>showScreen('loginScreen'),250
 
 <script src="./teacher.js"></script>
 <script src="./chat.js"></script>
+<script src="./private-chat.js"></script>
 <script src="./creativity.js?v=20261019"></script>
 <script>if(typeof window.globalThis==='undefined'){window.globalThis=window;}</script>
 <script src="./vendor/livekit-client.umd.js"></script>
