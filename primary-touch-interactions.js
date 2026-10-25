@@ -30,7 +30,7 @@
     wrap.querySelector('button').onclick = function () { ctx.clearRect(0, 0, canvas.width, canvas.height); };
   }
   function addLearningControls() {
-    if (String(window.currentStage || '') !== 'primary' || String(window.currentGrade || '') !== 'الأول') return;
+    if (String(window.currentStage || '') !== 'primary' || ['الأول', 'الثاني', 'الثالث'].indexOf(String(window.currentGrade || '')) < 0) return;
     css(); var root = document.getElementById('viewerBody'); if (!root || root.querySelector('[data-touch-learning]')) return;
     var title = document.getElementById('viewerTitle') ? document.getElementById('viewerTitle').textContent : '';
     var text = root.innerText || title;
