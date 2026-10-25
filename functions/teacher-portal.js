@@ -23,6 +23,19 @@ function cleanText(value, maxLength) {
   return value.replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, maxLength);
 }
 
+function normalizeTeacherUsername(value) {
+  const username = cleanText(value, 80).normalize('NFKC').toLowerCase();
+  if (!/^[\p{L}\p{N}._-]{3,40}$/u.test(username)) {
+    throw new HttpsError('invalid-argument', 'اسم الدخول يجب أن يكون من 3 إلى 40 حرفًا أو رقمًا، من دون مسافات.');
+  }
+  return username;
+}
+
+function teacherLoginEmail(username) {
+  const digest = crypto.createHash('sha256').update(username, 'utf8').digest('hex');
+  return 'teacher-' + digest + '@teachers.ta3lemt-hafez.firebaseapp.com';
+}
+
 function requireSignedIn(request) {
   const uid = request.auth && request.auth.uid;
   if (!uid) throw new HttpsError('unauthenticated', 'سجّل الدخول أولًا.');
@@ -113,51 +126,111 @@ exports.portalResolveAccess = callable(async (request) => {
   throw new HttpsError('permission-denied', 'لا توجد صلاحية لهذا الحساب.');
 }, [OWNER_UID]);
 
-exports.teacherApply = callable(async (request) => {
-  const uid = requireSignedIn(request);
-  const provider = request.auth.token.firebase && request.auth.token.firebase.sign_in_provider;
-  const email = cleanText(request.auth.token.email, 160).toLowerCase();
-  if (!email || provider === 'anonymous') throw new HttpsError('failed-precondition', 'يجب إنشاء حساب معلم ببريد إلكتروني وكلمة مرور.');
+// يعيد عنوانًا اصطناعيًا غير قابل لعكس اسم الدخول. كلمة المرور لا تمر بهذه الوظيفة؛
+// Firebase Auth يتحقق منها مباشرة عبر signInWithEmailAndPassword في الواجهة.
+exports.teacherResolveLoginName = callable(async (request) => {
+  const username = normalizeTeacherUsername((request.data || {}).username);
+  return { email: teacherLoginEmail(username) };
+});
+
+exports.ownerListTeacherAccounts = callable(async (request) => {
+  requireOwner(request);
+  const snapshot = await db.collection('users').where('role', '==', 'teacher').limit(100).get();
+  return {
+    items: snapshot.docs.map((doc) => {
+      const profile = doc.data();
+      return {
+        uid: doc.id,
+        name: cleanText(profile.name || profile.displayName, 80),
+        subject: cleanText(profile.subject, 80),
+        status: cleanText(profile.status, 20),
+        username: cleanText(profile.username, 40),
+        phone: cleanText(profile.phone, 30)
+      };
+    }).sort((a, b) => a.name.localeCompare(b.name, 'ar'))
+  };
+}, [OWNER_UID]);
+
+exports.ownerSetTeacherCredentials = callable(async (request) => {
+  requireOwner(request);
   const data = request.data || {};
+  const uid = cleanText(data.uid, 128);
+  const username = normalizeTeacherUsername(data.username);
+  const password = typeof data.password === 'string' ? data.password : '';
   const name = cleanText(data.name, 80);
   const subject = cleanText(data.subject, 80);
-  const phone = cleanText(data.phone, 30);
-  if (name.length < 2 || subject.length < 2) throw new HttpsError('invalid-argument', 'أدخل اسم المعلم والمادة.');
-
+  if (!/^[A-Za-z0-9_-]{1,128}$/.test(uid) || password.length < 8 || password.length > 128 || name.length < 2) {
+    throw new HttpsError('invalid-argument', 'أدخل المعلم واسم الدخول وكلمة مرور من 8 أحرف على الأقل.');
+  }
   const profileRef = db.collection('users').doc(uid);
-  const applicationRef = db.collection('teacher_applications').doc(uid);
-  await db.runTransaction(async (transaction) => {
-    const oldProfile = await transaction.get(profileRef);
-    const oldApplication = await transaction.get(applicationRef);
-    if (oldProfile.exists && oldProfile.get('role') === 'student') {
-      throw new HttpsError('already-exists', 'هذا الحساب مسجل كطالب، استخدم بريدًا آخر لحساب المعلم.');
-    }
-    if (oldApplication.exists && oldApplication.get('status') === 'approved') {
-      throw new HttpsError('already-exists', 'حساب المعلم معتمد بالفعل. سجّل الدخول بدل تقديم طلب جديد.');
-    }
-    transaction.set(profileRef, {
-      name,
-      email,
-      subject,
-      phone,
-      role: 'teacher',
-      status: 'pending',
-      updatedAt: admin.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
-    transaction.set(applicationRef, {
-      name,
-      email,
-      subject,
-      phone,
-      uid,
-      status: 'pending',
-      createdAt: oldApplication.exists && oldApplication.get('createdAt')
-        ? oldApplication.get('createdAt') : admin.firestore.FieldValue.serverTimestamp(),
-      updatedAt: admin.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
+  const profileSnap = await profileRef.get();
+  if (!profileSnap.exists || profileSnap.get('role') !== 'teacher') {
+    throw new HttpsError('not-found', 'حساب المعلم غير موجود في قائمة المنصة.');
+  }
+  const email = teacherLoginEmail(username);
+  try {
+    const existing = await admin.auth().getUserByEmail(email);
+    if (existing.uid !== uid) throw new HttpsError('already-exists', 'اسم الدخول مستخدم لمعلم آخر.');
+  } catch (error) {
+    if (error instanceof HttpsError) throw error;
+    if (error.code !== 'auth/user-not-found') throw error;
+  }
+  const authUser = await admin.auth().getUser(uid);
+  await admin.auth().updateUser(uid, { email, password, displayName: name });
+  const claims = Object.assign({}, authUser.customClaims || {}, {
+    role: profileSnap.get('status') === 'active' ? 'teacher' : 'teacher_pending'
   });
-  return { ok: true, status: 'pending' };
-});
+  await admin.auth().setCustomUserClaims(uid, claims);
+  await profileRef.set({
+    name,
+    username,
+    email,
+    subject: subject || cleanText(profileSnap.get('subject'), 80),
+    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+  }, { merge: true });
+  return { ok: true, username, status: cleanText(profileSnap.get('status'), 20) };
+}, [OWNER_UID]);
+
+exports.ownerCreateTeacherAccount = callable(async (request) => {
+  requireOwner(request);
+  const data = request.data || {};
+  const name = cleanText(data.name, 80);
+  const username = normalizeTeacherUsername(data.username);
+  const password = typeof data.password === 'string' ? data.password : '';
+  const subject = cleanText(data.subject, 80);
+  const phone = cleanText(data.phone, 30);
+  if (name.length < 2 || subject.length < 2 || password.length < 8 || password.length > 128) {
+    throw new HttpsError('invalid-argument', 'أكمل الاسم والمادة وكلمة مرور من 8 أحرف على الأقل.');
+  }
+  const email = teacherLoginEmail(username);
+  try {
+    await admin.auth().getUserByEmail(email);
+    throw new HttpsError('already-exists', 'اسم الدخول مستخدم بالفعل. اختر اسمًا آخر.');
+  } catch (error) {
+    if (error instanceof HttpsError) throw error;
+    if (error.code !== 'auth/user-not-found') throw error;
+  }
+  const authUser = await admin.auth().createUser({ email, password, displayName: name });
+  try {
+    await admin.auth().setCustomUserClaims(authUser.uid, { role: 'teacher_pending' });
+    const now = admin.firestore.FieldValue.serverTimestamp();
+    const batch = db.batch();
+    batch.set(db.collection('users').doc(authUser.uid), {
+      name, username, email, subject, phone,
+      role: 'teacher', status: 'pending',
+      createdAt: now, updatedAt: now
+    });
+    batch.set(db.collection('teacher_applications').doc(authUser.uid), {
+      uid: authUser.uid, name, username, email, subject, phone,
+      status: 'pending', createdAt: now, updatedAt: now
+    });
+    await batch.commit();
+  } catch (error) {
+    await admin.auth().deleteUser(authUser.uid).catch(() => {});
+    throw error;
+  }
+  return { ok: true, uid: authUser.uid, username, status: 'pending' };
+}, [OWNER_UID]);
 
 exports.ownerListTeacherApplications = callable(async (request) => {
   requireOwner(request);
@@ -168,7 +241,8 @@ exports.ownerListTeacherApplications = callable(async (request) => {
       return {
         uid: doc.id,
         name: cleanText(d.name, 80),
-        email: cleanText(d.email, 160),
+        email: /^teacher-[a-f0-9]{64}@teachers\.ta3lemt-hafez\.firebaseapp\.com$/i.test(String(d.email || '')) ? '' : cleanText(d.email, 160),
+        username: cleanText(d.username, 40),
         subject: cleanText(d.subject, 80),
         phone: cleanText(d.phone, 30),
         createdAt: millis(d.createdAt)
@@ -185,21 +259,33 @@ exports.ownerReviewTeacherApplication = callable(async (request) => {
   if (!uid || !['approve', 'reject'].includes(action)) throw new HttpsError('invalid-argument', 'الإجراء غير صالح.');
   const appRef = db.collection('teacher_applications').doc(uid);
   const profileRef = db.collection('users').doc(uid);
-  const pendingBefore = await appRef.get();
-  if (!pendingBefore.exists || pendingBefore.get('status') !== 'pending') {
-    throw new HttpsError('failed-precondition', 'تمت مراجعة طلب المعلم بالفعل.');
-  }
-  const authUser = await admin.auth().getUser(uid);
-  const claims = Object.assign({}, authUser.customClaims || {}, action === 'approve' ? { role: 'teacher' } : { role: 'teacher_pending' });
-  await admin.auth().setCustomUserClaims(uid, claims);
+  const desiredStatus = action === 'approve' ? 'active' : 'rejected';
   await db.runTransaction(async (transaction) => {
     const app = await transaction.get(appRef);
-    if (!app.exists || app.get('status') !== 'pending') throw new HttpsError('failed-precondition', 'تمت مراجعة الطلب أو لم يعد موجودًا.');
-    const status = action === 'approve' ? 'active' : 'rejected';
-    transaction.update(appRef, { status, reviewedBy: ownerUid, reviewedAt: admin.firestore.FieldValue.serverTimestamp() });
-    transaction.set(profileRef, { role: 'teacher', status, updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+    const profile = await transaction.get(profileRef);
+    if (!app.exists) throw new HttpsError('not-found', 'طلب المعلم غير موجود.');
+    const currentStatus = app.get('status');
+    if (currentStatus === 'pending') {
+      transaction.update(appRef, {
+        status: desiredStatus,
+        reviewedBy: ownerUid,
+        reviewedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+      transaction.set(profileRef, {
+        role: 'teacher',
+        status: desiredStatus,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+    } else if (currentStatus !== desiredStatus || !profile.exists || profile.get('status') !== desiredStatus) {
+      throw new HttpsError('failed-precondition', 'تمت مراجعة طلب المعلم بالفعل بإجراء مختلف.');
+    }
   });
-  return { ok: true, status: action === 'approve' ? 'active' : 'rejected' };
+  // حدّث العلامة بعد تثبيت قرار قاعدة البيانات؛ إذا فشل Auth في هذه الخطوة،
+  // إعادة نفس الإجراء من المالك تعيد مزامنة العلامة دون السماح بعكس القرار.
+  const authUser = await admin.auth().getUser(uid);
+  const claims = Object.assign({}, authUser.customClaims || {}, desiredStatus === 'active' ? { role: 'teacher' } : { role: 'teacher_pending' });
+  await admin.auth().setCustomUserClaims(uid, claims);
+  return { ok: true, status: desiredStatus };
 }, [OWNER_UID]);
 
 exports.teacherCreateUploadSignature = callable(async (request) => {

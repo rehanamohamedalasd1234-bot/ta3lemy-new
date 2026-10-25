@@ -91,17 +91,6 @@
     var owner = addScreen('ownerTeachersScreen', '👑 إدارة المعلمين والمحتوى',
       '<div id="ownerTeachersContent"></div>', '#B71C1C');
     owner.refresh = window.loadOwnerTeacherCenter;
-    var apply = addScreen('teacherApplyScreen', '📝 طلب حساب معلم',
-      '<div class="teacher-card"><p>بعد إنشاء الحساب ينتظر طلبك موافقة المالك. لا يمكنك رفع المحتوى قبل الموافقة.</p>' +
-      '<div class="form-group"><label class="form-label">الاسم الكامل</label><input class="form-input" id="taName" maxlength="80"></div>' +
-      '<div class="form-group"><label class="form-label">البريد الإلكتروني</label><input class="form-input" id="taEmail" type="email" maxlength="160" autocomplete="email"></div>' +
-      '<div class="form-group"><label class="form-label">كلمة المرور (8 أحرف على الأقل)</label><input class="form-input" id="taPassword" type="password" minlength="8" autocomplete="new-password"></div>' +
-      '<div class="form-group"><label class="form-label">المادة</label><input class="form-input" id="taSubject" maxlength="80"></div>' +
-      '<div class="form-group"><label class="form-label">رقم الهاتف (اختياري)</label><input class="form-input" id="taPhone" type="tel" maxlength="30"></div>' +
-      '<button class="btn-primary" id="taSubmit" type="button">إرسال طلب الانضمام</button><p id="taStatus" role="status"></p></div>', '#00695C');
-    apply.refresh = window.openTeacherApplication;
-    var submit = document.getElementById('taSubmit');
-    if (submit) submit.addEventListener('click', submitTeacherApplication);
     var contentSubmit = document.getElementById('tpSubmit');
     if (contentSubmit) contentSubmit.addEventListener('click', submitTeacherContent);
   }
@@ -147,12 +136,27 @@
     return firebase.auth();
   }
 
-  window.securePortalLogin = async function (role, email, password) {
+  window.securePortalLogin = async function (role, identifier, password) {
     if (!navigator.onLine) { toast('تسجيل المعلم والمالك يحتاج إلى الإنترنت.'); return; }
-    email = String(email || '').trim().toLowerCase();
+    identifier = String(identifier || '').trim();
     password = String(password || '');
-    if (email.indexOf('@') < 1 || password.length < 6) { toast('اكتب البريد الإلكتروني وكلمة المرور بشكل صحيح.'); return; }
+    if (!identifier || password.length < 6) {
+      toast(role === 'teacher' ? 'اكتب اسم المعلم وكلمة المرور.' : 'اكتب البريد الإلكتروني وكلمة المرور بشكل صحيح.');
+      return;
+    }
     try {
+      var email;
+      if (role === 'teacher') {
+        if (identifier.length < 3 || identifier.length > 40 || /\s/.test(identifier)) {
+          toast('اسم دخول المعلم من 3 إلى 40 حرفًا أو رقمًا ومن دون مسافات.');
+          return;
+        }
+        var loginName = await callFn('teacherResolveLoginName', { username: identifier });
+        email = loginName.email;
+      } else {
+        email = identifier.toLowerCase();
+        if (email.indexOf('@') < 1) { toast('اكتب البريد الإلكتروني وكلمة المرور بشكل صحيح.'); return; }
+      }
       var credential = await auth().signInWithEmailAndPassword(email, password);
       var result = await callFn('portalResolveAccess', {});
       if (result.role !== role) {
@@ -170,50 +174,15 @@
       showScreen('homeScreen');
     } catch (error) {
       console.error('بوابة المعلم: تعذر تسجيل الدخول', error && error.code);
-      toast(errorText(error));
-    }
-  };
-
-  async function submitTeacherApplication() {
-    var name = document.getElementById('taName').value.trim();
-    var email = document.getElementById('taEmail').value.trim().toLowerCase();
-    var password = document.getElementById('taPassword').value;
-    var subject = document.getElementById('taSubject').value.trim();
-    var phone = document.getElementById('taPhone').value.trim();
-    var status = document.getElementById('taStatus');
-    var button = document.getElementById('taSubmit');
-    if (name.length < 2 || email.indexOf('@') < 1 || password.length < 8 || subject.length < 2) {
-      status.textContent = 'أكمل الاسم والبريد وكلمة المرور والمادة.';
-      return;
-    }
-    if (!navigator.onLine) { status.textContent = 'يلزم الاتصال بالإنترنت لإرسال الطلب.'; return; }
-    button.disabled = true;
-    status.textContent = 'جارٍ إنشاء الحساب وإرسال الطلب...';
-    try {
-      var existingAuthUser = auth().currentUser;
-      var credential;
-      if (existingAuthUser && existingAuthUser.email && existingAuthUser.email.toLowerCase() === email) {
-        credential = { user: existingAuthUser };
-      } else {
-        credential = await auth().createUserWithEmailAndPassword(email, password);
+      if (role === 'teacher' && window.firebase && firebase.auth && auth().currentUser) {
+        try { await auth().signOut(); } catch (_) {}
       }
-      if (credential.user && credential.user.updateProfile) await credential.user.updateProfile({ displayName: name });
-      await callFn('teacherApply', { name: name, subject: subject, phone: phone });
-      await auth().signOut();
-      document.getElementById('taPassword').value = '';
-      status.textContent = 'وصل الطلب للمالك. ستتمكن من الدخول بعد الموافقة.';
-      toast('تم إرسال طلب حساب المعلم للمراجعة.');
-    } catch (error) {
-      console.error('طلب حساب المعلم تعذر', error && error.code);
-      status.textContent = errorText(error);
-      if (error && error.code === 'auth/email-already-in-use') status.textContent = 'هذا البريد مسجل. ارجع إلى صفحة الدخول وجرب تسجيل الدخول.';
+      if (role === 'teacher' && error && /^auth\/(user-not-found|wrong-password|invalid-credential|invalid-login-credentials|invalid-email)$/.test(error.code)) {
+        toast('اسم المعلم أو كلمة المرور غير صحيحة.');
+      } else {
+        toast(errorText(error));
+      }
     }
-    button.disabled = false;
-  }
-
-  window.openTeacherApplication = function () {
-    ensureScreens();
-    pushScreen('teacherApplyScreen');
   };
 
   window.openTeacherDashboard = async function () {
@@ -408,13 +377,33 @@
     if (!box) return;
     box.innerHTML = '<p>جارٍ تحميل الطلبات...</p>';
     try {
-      var results = await Promise.all([callFn('ownerListTeacherApplications', {}), callFn('ownerListTeacherContent', {})]);
+      var results = await Promise.all([
+        callFn('ownerListTeacherApplications', {}),
+        callFn('ownerListTeacherContent', {}),
+        callFn('ownerListTeacherAccounts', {})
+      ]);
       var applications = results[0].items || [];
       var content = results[1].items || [];
-      var html = '<h3>طلبات حسابات المعلمين</h3>';
+      var teachers = results[2].items || [];
+      var teacherOptions = '<option value="">إنشاء حساب دخول جديد لمعلم</option>';
+      teachers.forEach(function (teacher) {
+        teacherOptions += '<option value="' + esc(teacher.uid) + '" data-name="' + esc(teacher.name) + '" data-username="' + esc(teacher.username) + '" data-subject="' + esc(teacher.subject) + '">' +
+          esc(teacher.name || teacher.username || teacher.uid) + ' — ' + esc(teacher.status || 'غير محدد') + '</option>';
+      });
+      var html = '<h3>بيانات دخول المعلمين</h3>' +
+        '<p class="teacher-empty">لا يوجد تسجيل ذاتي أو رسائل SMS. أنشئ حسابًا جديدًا للمعلم أو اختر حسابًا قائمًا لتعيين/تغيير اسم الدخول وكلمة المرور.</p>' +
+        '<form id="ownerTeacherCredentialsForm" class="teacher-card">' +
+        '<div class="form-group"><label class="form-label" for="otTarget">الحساب</label><select class="form-input" id="otTarget">' + teacherOptions + '</select></div>' +
+        '<div class="form-group"><label class="form-label" for="otName">اسم المعلم</label><input class="form-input" id="otName" maxlength="80" required></div>' +
+        '<div class="form-group"><label class="form-label" for="otUsername">اسم الدخول (3–40 حرفًا/رقمًا، بلا مسافات)</label><input class="form-input" id="otUsername" maxlength="40" autocomplete="off" required></div>' +
+        '<div class="form-group"><label class="form-label" for="otPassword">كلمة المرور الجديدة (8 أحرف على الأقل)</label><input class="form-input" id="otPassword" type="password" minlength="8" maxlength="128" autocomplete="new-password" required></div>' +
+        '<div class="form-group"><label class="form-label" for="otSubject">المادة</label><input class="form-input" id="otSubject" maxlength="80" required></div>' +
+        '<p id="otStatus" role="status"></p><button class="btn-primary" id="otSubmit" type="submit">حفظ بيانات الدخول</button></form>' +
+        '<h3>طلبات حسابات المعلمين</h3>';
       if (!applications.length) html += '<p class="teacher-empty">لا توجد طلبات معلقة.</p>';
       applications.forEach(function (item) {
-        html += '<article class="teacher-item"><b>' + esc(item.name) + '</b><div>' + esc(item.email) + ' • ' + esc(item.subject) + '</div>' +
+        html += '<article class="teacher-item"><b>' + esc(item.name) + '</b><div>' +
+          (item.username ? 'اسم الدخول: ' + esc(item.username) : esc(item.email)) + ' • ' + esc(item.subject) + '</div>' +
           '<div>' + esc(item.phone) + '</div><div class="teacher-actions">' +
           '<button type="button" data-app="' + esc(item.uid) + '" data-action="approve">موافقة</button>' +
           '<button type="button" data-app="' + esc(item.uid) + '" data-action="reject">رفض</button></div></article>';
@@ -432,10 +421,59 @@
       });
       box.innerHTML = html;
       box.onclick = handleOwnerAction;
+      var target = document.getElementById('otTarget');
+      if (target) target.addEventListener('change', fillOwnerTeacherCredentials);
+      var credentialsForm = document.getElementById('ownerTeacherCredentialsForm');
+      if (credentialsForm) credentialsForm.addEventListener('submit', submitOwnerTeacherCredentials);
     } catch (error) {
       box.innerHTML = '<p class="teacher-error">' + esc(errorText(error)) + '</p>';
     }
   };
+
+  function fillOwnerTeacherCredentials() {
+    var target = document.getElementById('otTarget');
+    var option = target && target.options[target.selectedIndex];
+    if (!option) return;
+    document.getElementById('otName').value = option.getAttribute('data-name') || '';
+    document.getElementById('otUsername').value = option.getAttribute('data-username') || '';
+    document.getElementById('otSubject').value = option.getAttribute('data-subject') || '';
+    document.getElementById('otPassword').value = '';
+  }
+
+  async function submitOwnerTeacherCredentials(event) {
+    event.preventDefault();
+    var target = document.getElementById('otTarget');
+    var uid = target ? target.value : '';
+    var data = {
+      uid: uid,
+      name: document.getElementById('otName').value.trim(),
+      username: document.getElementById('otUsername').value.trim(),
+      password: document.getElementById('otPassword').value,
+      subject: document.getElementById('otSubject').value.trim()
+    };
+    var status = document.getElementById('otStatus');
+    var button = document.getElementById('otSubmit');
+    if (data.name.length < 2 || data.username.length < 3 || data.password.length < 8 || (!uid && data.subject.length < 2)) {
+      status.textContent = 'أكمل بيانات المعلم، واستخدم كلمة مرور من 8 أحرف على الأقل.';
+      return;
+    }
+    button.disabled = true;
+    status.textContent = 'جارٍ حفظ بيانات الدخول...';
+    try {
+      var result = uid
+        ? await callFn('ownerSetTeacherCredentials', data)
+        : await callFn('ownerCreateTeacherAccount', data);
+      status.textContent = uid
+        ? 'تم تحديث اسم الدخول وكلمة المرور للمعلم: ' + result.username
+        : 'تم إنشاء الحساب. سيظل معلقًا حتى توافق عليه من قائمة الطلبات.';
+      toast(uid ? 'تم حفظ بيانات دخول المعلم.' : 'تم إنشاء الحساب بانتظار موافقتك.');
+      document.getElementById('otPassword').value = '';
+      await window.loadOwnerTeacherCenter();
+    } catch (error) {
+      status.textContent = errorText(error);
+      button.disabled = false;
+    }
+  }
 
   async function handleOwnerAction(event) {
     var target = event.target;
@@ -475,7 +513,11 @@
     var code = document.getElementById('ownerCodeGroup');
     var role = window.currentRole || 'student';
     if (input) {
-      if (role === 'teacher' || role === 'owner') {
+      if (role === 'teacher') {
+        input.type = 'text';
+        input.placeholder = 'اسم دخول المعلم';
+        input.autocomplete = 'username';
+      } else if (role === 'owner') {
         input.type = 'email';
         input.placeholder = 'البريد الإلكتروني';
         input.autocomplete = 'email';
@@ -487,7 +529,7 @@
     }
     if (code) code.style.display = 'none';
     var applyButton = document.getElementById('teacherApplyButton');
-    if (applyButton) applyButton.style.display = role === 'teacher' ? 'block' : 'none';
+    if (applyButton) applyButton.remove();
   }
 
   function installLoginControls() {
@@ -500,17 +542,6 @@
       };
       wrapped._teacherWrapped = true;
       window.selectRole = wrapped;
-    }
-    var loginContent = document.querySelector('#loginScreen .content');
-    if (loginContent && !document.getElementById('teacherApplyButton')) {
-      var button = document.createElement('button');
-      button.id = 'teacherApplyButton';
-      button.type = 'button';
-      button.className = 'btn-primary';
-      button.textContent = 'إنشاء حساب معلم / تقديم طلب';
-      button.style.marginTop = '10px';
-      button.addEventListener('click', window.openTeacherApplication);
-      loginContent.appendChild(button);
     }
     updateLoginControls();
   }
