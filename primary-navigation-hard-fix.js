@@ -1,5 +1,6 @@
 /* مسار المرحلة الابتدائية: ربط مباشر وآمن للصف > المادة > الترم > المحتوى */
 (function(){'use strict';
+try{var cachedPrimary=JSON.parse(localStorage.getItem('offline_lessons')||'[]');var cleanedPrimary=cachedPrimary.filter(function(x){return !/^g[123]-/.test(String(x&&x.id||''))});if(cleanedPrimary.length!==cachedPrimary.length)localStorage.setItem('offline_lessons',JSON.stringify(cleanedPrimary))}catch(e){}
 function gradeKey(v){v=String(v||'');return v.replace(/\s+الابتدائي$/,'').replace(/\s+ابتدائي$/,'').trim()}
 function subjectKey(v){var m={'رياضيات':'الرياضيات','إنجليزي':'اللغة الإنجليزية','الإنجليزية':'اللغة الإنجليزية','علوم':'العلوم','دراسات':'الدراسات الاجتماعية','تربية دينية':'التربية الدينية','حاسب آلي':'تكنولوجيا المعلومات والاتصالات'};return m[v]||v}
 var early=[['اللغة العربية','📖','#C2185B'],['الرياضيات','🔢','#1976D2'],['اللغة الإنجليزية','🇬🇧','#00897B'],['اكتشف','🌍','#F57C00'],['التربية الدينية','🕌','#6A1B9A'],['القيم واحترام الآخر','🤝','#2E7D32']];
