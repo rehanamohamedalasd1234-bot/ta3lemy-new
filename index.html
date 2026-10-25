@@ -805,7 +805,6 @@ window.addEventListener('load',()=>{setTimeout(()=>showScreen('loginScreen'),250
 if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./service-worker.js').then(reg=>console.log('✅ SW registered')).catch(err=>console.log('❌ SW error:',err));});}
 </script>
 <script src="./extras.js"></script>
-<script src="./auth-init.js"></script>
 <script src="./teacher-auth.js"></script>
 <script src="./teacher.js"></script>
 <script src="./owner-approvals.js"></script>
