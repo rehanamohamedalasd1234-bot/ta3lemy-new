@@ -80,6 +80,7 @@
   }
 
   function addExamChip() {
+    if (String(window.currentStage || '') !== 'primary' || String(window.currentGrade || '') !== 'الأول') return;
     var list = document.getElementById('termsList');
     if (!list || list.querySelector('[data-interactive-exams]')) return;
     Array.prototype.forEach.call(list.querySelectorAll('.term-card'), function (card, i) {
