@@ -160,6 +160,20 @@ async function openContent(type,num,name){
   items.sort(function(a,b){return (a.order||99)-(b.order||99);});
   l.innerHTML=items.map(function(it){return '<div class="content-item" onclick="viewContent(\''+String(it.id).replace(/'/g,'')+'\')"><div class="content-item-icon">📄</div><div class="content-item-info"><div class="content-item-title">'+(it.title||'بدون عنوان')+'</div><div class="content-item-sub">'+(it.content?it.content.substring(0,50)+'...':'')+'</div></div><div class="content-item-arrow">‹</div></div>';}).join('');
 }
+function inAppVideoMarkup(rawUrl){
+  var unavailable='<div style="margin-top:16px;padding:14px;border-radius:12px;background:#FFF3E0;color:#7A4B00;line-height:1.8;">🎥 لا يوجد ملف فيديو مباشر مرفوع لهذا المحتوى حتى الآن. هذا المشغل لا يفتح روابط خارجية. لعرضه داخل التطبيق، ارفع ملف فيديو MP4 أو WEBM من لوحة المعلم.</div>';
+  if(!rawUrl)return unavailable;
+  try{
+    var url=new URL(String(rawUrl),window.location.href),host=url.hostname.toLowerCase(),path=url.pathname.toLowerCase();
+    var secure=url.protocol==='https:'||url.origin===window.location.origin;
+    var fileExtension=/\.(mp4|m4v|webm|ogv|ogg|mov)$/i.test(path);
+    var cloudinary=host==='res.cloudinary.com'&&/\/video\/upload\//i.test(path);
+    var firebaseVideo=host==='firebasestorage.googleapis.com'&&/[?&]alt=media(?:&|$)/i.test(url.search);
+    if(!secure||!(fileExtension||cloudinary||firebaseVideo))return unavailable;
+    var src=url.href.replace(/&/g,'&amp;').replace(/\"/g,'&quot;').replace(/</g,'%3C').replace(/>/g,'%3E');
+    return '<div style="margin-top:16px;"><video controls playsinline preload="metadata" aria-label="فيديو شرح داخل التطبيق" style="display:block;width:100%;max-height:70vh;border-radius:12px;background:#111;"><source src="'+src+'">متصفحك لا يدعم تشغيل الفيديو.</video><div style="margin-top:6px;color:#607D8B;font-size:13px;">يُشغّل الفيديو هنا داخل المنصة.</div></div>';
+  }catch(error){return unavailable;}
+}
 async function viewContent(id){
   try{
     let it=null;
@@ -170,7 +184,7 @@ async function viewContent(id){
     let h='<h2 style="color:#2E7D32;margin-bottom:16px;">'+(it.title||'')+'</h2>';
     if(it.image_url)h+='<img src="'+it.image_url+'">';
     if(it.content)h+='<div style="line-height:2;font-size:15px;white-space:pre-wrap;">'+it.content+'</div>';
-    if(it.video_url){if(it.video_url.includes('youtube')){const v=it.video_url.split('v=')[1]||it.video_url.split('/').pop();h+='<iframe style="width:100%;height:250px;margin-top:16px;border-radius:12px;" src="https://www.youtube.com/embed/'+v+'" frameborder="0" allowfullscreen></iframe>';}else{h+='<video controls style="width:100%;margin-top:16px;border-radius:12px;"><source src="'+it.video_url+'"></video>';}}else if(it.video_search){h+='<a href="'+it.video_search+'" target="_blank" rel="noopener" style="display:block;margin-top:16px;padding:14px;background:#E3F2FD;color:#1565C0;border-radius:12px;text-align:center;font-weight:bold;text-decoration:none;">🎥 فتح فيديوهات شرح مرتبطة بهذا الدرس</a>'; }
+    if(it.video_url)h+=inAppVideoMarkup(it.video_url);else if(it.video_search)h+=inAppVideoMarkup('');
     if(it.question){h+='<div style="margin-top:20px;background:#E8F5E9;border-radius:14px;padding:16px;"><div style="font-weight:bold;color:#2E7D32;margin-bottom:8px;">📝 سؤال:</div><div style="font-size:15px;line-height:1.8;white-space:pre-wrap;">'+it.question+'</div><button onclick="toggleAnswer(this)" style="background:#2E7D32;color:#fff;border:none;padding:10px 20px;border-radius:10px;font-family:inherit;font-weight:bold;margin-top:12px;cursor:pointer;">👁️ إظهار الإجابة</button><div class="answer-box"><div style="font-weight:bold;color:#2E7D32;margin-bottom:6px;">✅ الإجابة:</div><div style="line-height:1.8;white-space:pre-wrap;">'+(it.answer||'')+'</div></div><div style="margin-top:16px;"><div style="font-weight:bold;color:#2E7D32;margin-bottom:8px;">✍️ اكتب إجابتك:</div><textarea class="student-answer" id="studentAnswer" placeholder="اكتب إجابتك هنا..."></textarea><button onclick="saveStudentAnswer(\''+String(id).replace(/'/g,'')+'\')" style="background:#1976D2;color:#fff;border:none;padding:10px 20px;border-radius:10px;font-family:inherit;font-weight:bold;margin-top:8px;cursor:pointer;">💾 حفظ إجابتي</button></div></div>';}
     document.getElementById('viewerBody').innerHTML=h;screenHistory.push(currentScreen);showScreen('viewerScreen');
   }catch(e){console.error(e);showToast('❌ تعذر فتح المحتوى');}
