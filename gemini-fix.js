@@ -1,51 +1,106 @@
-// كسر حماية الأداة وتشغيل الذكاء الاصطناعي
-window.addEventListener('load', function() {
-  setTimeout(function() {
-    // إجبار الأداة إن الذكاء الاصطناعي شغال
-    window.CREATIVITY_APP_CHECK_READY = true;
-    if (!window.CREATIVITY_CONFIG) window.CREATIVITY_CONFIG = {};
-    window.CREATIVITY_CONFIG.appCheckSiteKey = 'fake-key-to-bypass';
-    
-    // إعادة تعريف دالة التحسين
-    window.enhanceArtwork = async function() {
-      var apiKey = localStorage.getItem('gemini_api_key');
-      if (!apiKey) {
-        if(typeof showToast === 'function') showToast('⚠️ مفتاح الذكاء الاصطناعي غير موجود');
-        return;
-      }
+const ENHANCE_WORKER_URL =
+  "https://ta3lemy-enhance.ta3lemy-hafez-free.workers.dev/enhance";
 
-      var canvas = document.getElementById('fullDrawingCanvas');
-      if (!canvas) return;
-      
-      if(typeof showToast === 'function') showToast('⏳ جاري تحسين الرسم...');
-      
-      try {
-        var imageData = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
-        
-        var response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + apiKey, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{
-              parts: [
-                { text: "حول هذا الرسم إلى صورة فنية ملونة واحترافية ومناسبة للأطفال. أعد الصورة فقط." },
-                { inline_data: { mime_type: "image/jpeg", data: imageData } }
-              ]
-            }]
-          })
-        });
+window.enhanceArtwork = async function enhanceArtwork() {
+  const canvas = document.getElementById("fullDrawingCanvas");
 
-        var data = await response.json();
-        if(data.error) throw new Error(data.error.message);
+  if (!canvas) {
+    if (typeof showToast === "function") {
+      showToast("لم يتم العثور على لوحة الرسم.");
+    }
+    return;
+  }
 
-        if(typeof showToast === 'function') showToast('✅ تم التحسين بنجاح');
-        
-      } catch (error) {
-        console.error(error);
-        if(typeof showToast === 'function') showToast('❌ فشل التحسين: ' + error.message);
-      }
-    };
-    
-    console.log('✅ AI Bypass Loaded');
-  }, 2000);
-});
+  if (typeof showToast === "function") {
+    showToast("جارٍ تحسين الرسم...");
+  }
+
+  try {
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
+    const commaIndex = dataUrl.indexOf(",");
+
+    if (commaIndex < 0) {
+      throw new Error("تعذر تجهيز صورة الرسم.");
+    }
+
+    const imageBase64 = dataUrl.slice(commaIndex + 1);
+
+    const response = await fetch(ENHANCE_WORKER_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        imageBase64,
+        mimeType: "image/jpeg"
+      })
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.error || `فشل الطلب (${response.status})`);
+    }
+
+    if (!result.imageBase64) {
+      throw new Error("لم تصل صورة محسّنة من الخدمة.");
+    }
+
+    // اعرض النتيجة بجانب الرسم الأصلي حتى لا نفقده.
+    let preview = document.getElementById("enhancedArtworkResult");
+
+    if (!preview) {
+      preview = document.createElement("section");
+      preview.id = "enhancedArtworkResult";
+      preview.style.cssText =
+        "margin:16px 0;padding:12px;border:1px solid #ddd;border-radius:12px;";
+
+      const heading = document.createElement("h3");
+      heading.textContent = "الرسم بعد التحسين";
+
+      const image = document.createElement("img");
+      image.id = "enhancedArtworkImage";
+      image.alt = "الرسم بعد تحسينه";
+      image.style.cssText =
+        "display:block;max-width:100%;height:auto;border-radius:8px;";
+
+      const download = document.createElement("a");
+      download.id = "enhancedArtworkDownload";
+      download.textContent = "تنزيل الصورة المحسّنة";
+      download.style.cssText = "display:inline-block;margin-top:10px;";
+
+      preview.append(heading, image, download);
+      canvas.insertAdjacentElement("afterend", preview);
+    }
+
+    const mimeType = ["image/png", "image/jpeg", "image/webp"].includes(
+      result.mimeType
+    )
+      ? result.mimeType
+      : "image/png";
+
+    const imageUrl = `data:${mimeType};base64,${result.imageBase64}`;
+
+    document.getElementById("enhancedArtworkImage").src = imageUrl;
+
+    const extension = mimeType === "image/jpeg"
+      ? "jpg"
+      : mimeType.split("/")[1];
+
+    const downloadLink =
+      document.getElementById("enhancedArtworkDownload");
+
+    downloadLink.href = imageUrl;
+    downloadLink.download = `drawing-enhanced.${extension}`;
+
+    if (typeof showToast === "function") {
+      showToast("تم تحسين الرسم. يمكنكِ معاينته أو تنزيله.");
+    }
+  } catch (error) {
+    console.error("Artwork enhancement error:", error);
+
+    if (typeof showToast === "function") {
+      showToast("تعذر تحسين الرسم: " + (error.message || "خطأ غير معروف"));
+    }
+  }
+};
