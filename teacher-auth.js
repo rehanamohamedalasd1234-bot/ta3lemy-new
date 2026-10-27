@@ -150,7 +150,8 @@
       }
     };
 
-    window.teacherEmailLogin = teacherLogin;
+window.teacherEmailLogin = teacherLogin;
+window.teacherPhoneLogin = teacherLogin;
   }
 
   // يركّب التعديل بعد تحميل تسجيل الدخول الحالي في الموقع
