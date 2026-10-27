@@ -2794,3 +2794,200 @@ console.log('✅ Exercises UI loaded');
 console.log('✅ extras.js loaded');
   
 })();
+/* إدارة حسابي: أضيفي هذا المقطع في آخر extras.js. */
+(function () {
+  'use strict';
+  function user() { return window.currentUser || null; }
+  function role() { return window.currentRole || (user() && user().role) || 'student'; }
+  function teacher() { return role() === 'teacher'; }
+  function db() { return firebase.firestore(); }
+  function toast(message) { if (typeof window.showToast === 'function') window.showToast(message); else alert(message); }
+  function displayName() { var u = user() || {}; return u.displayName || u.name || 'مستخدم'; }
+  function defaultPhoto(name) { return 'https://ui-avatars.com/api/?name=' + encodeURIComponent(name || 'مستخدم') + '&background=2E7D32&color=fff&size=200'; }
+  function safePhoto(url) { return /^https:\/\//i.test(String(url || '')) ? String(url) : ''; }
+  function doc() { if (!user() || !user().uid) throw new Error('لا يوجد حساب مسجل'); return db().collection(teacher() ? 'teacher_accounts' : 'users').doc(String(user().uid)); }
+  function roleName() { return role() === 'teacher' ? 'معلم' : role() === 'parent' ? 'ولي أمر' : role() === 'owner' ? 'المالك' : 'طالب'; }
+
+  function syncHeader() {
+    if (!user()) return;
+    var profile = document.getElementById('profileScreen');
+    var card = profile && profile.querySelector('.content > div');
+    var avatar = card && card.firstElementChild;
+    if (avatar) {
+      var img = document.getElementById('accountHeaderPhoto');
+      if (!img) {
+        img = document.createElement('img');
+        img.id = 'accountHeaderPhoto';
+        img.alt = 'صورة الحساب';
+        img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%';
+        avatar.replaceChildren(img);
+      }
+      img.src = safePhoto(user().photo_url || user().photoURL) || defaultPhoto(displayName());
+      img.onerror = function () { this.onerror = null; this.src = defaultPhoto(displayName()); };
+    }
+    var label = document.getElementById('profileName');
+    if (label) label.textContent = displayName();
+  }
+
+  function installEntry() {
+    var content = document.querySelector('#profileScreen .content');
+    if (!content || document.getElementById('accountManagementEntry')) return;
+    var title = Array.from(content.querySelectorAll('.section-title')).find(function (el) {
+      return el.textContent.indexOf('الإعدادات') >= 0;
+    });
+    var entry = document.createElement('div');
+    entry.id = 'accountManagementEntry';
+    entry.className = 'menu-item';
+    entry.innerHTML = '<span style="font-size:26px">⚙️</span><span style="flex:1;font-weight:700">إدارة حسابي</span><span style="color:#999;font-size:24px">‹</span>';
+    entry.onclick = window.openAccountManagement;
+    if (title && title.parentNode) title.parentNode.insertBefore(entry, title.nextSibling);
+    else content.appendChild(entry);
+  }
+
+  window.openAccountManagement = async function () {
+    if (!user()) return toast('سجّلي الدخول أولًا.');
+    var screen = document.getElementById('accountManagementScreen');
+    if (!screen) {
+      screen = document.createElement('div');
+      screen.id = 'accountManagementScreen';
+      screen.className = 'screen';
+      document.body.appendChild(screen);
+    }
+    screen.innerHTML = '<div class="top-bar"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>⚙️ إدارة حسابي</span></div><div style="width:42px"></div></div><div class="content"><div style="max-width:560px;margin:auto"><div style="background:#fff;border-radius:16px;padding:20px;text-align:center;margin-bottom:14px"><img id="accountManagerPhoto" alt="صورة الحساب" style="width:112px;height:112px;border-radius:50%;object-fit:cover;border:3px solid #e8f5e9"><div id="accountManagerRole" style="font-weight:700;margin:10px 0 4px"></div><div id="accountManagerLogin" style="font-size:12px;color:#68736b"></div><input id="accountManagerPhotoInput" type="file" accept="image/*" style="display:none"><div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:14px"><button class="btn-primary" id="accountChoosePhoto" type="button">📷 رفع أو تغيير الصورة</button><button class="btn-primary" id="accountRemovePhoto" type="button" style="background:#ffebee;color:#c62828">🗑️ إزالة الصورة</button></div><small style="display:block;color:#68736b;margin-top:10px">JPG أو PNG حتى 5 ميجابايت. إزالة الصورة لا تحذف النسخة الأصلية من Cloudinary.</small></div><div style="background:#fff;border-radius:16px;padding:18px"><label class="form-label" for="accountDisplayName">الاسم الظاهر</label><input id="accountDisplayName" class="form-input" type="text" maxlength="50"><small style="display:block;color:#68736b;margin:7px 0 12px">تغيير الاسم الظاهر لا يغيّر اسم الدخول أو كلمة المرور.</small><button class="btn-primary" id="accountSaveName" type="button">💾 حفظ الاسم</button></div></div></div>';
+    if (window.screenHistory && window.currentScreen) window.screenHistory.push(window.currentScreen);
+    if (typeof window.showScreen === 'function') window.showScreen('accountManagementScreen');
+
+    document.getElementById('accountManagerRole').textContent = roleName();
+    document.getElementById('accountManagerLogin').textContent =
+      user().email ? 'البريد: ' + user().email : 'اسم الدخول: ' + (user().name || '');
+    document.getElementById('accountDisplayName').value = displayName();
+
+    document.getElementById('accountChoosePhoto').onclick = function () {
+      document.getElementById('accountManagerPhotoInput').click();
+    };
+    document.getElementById('accountManagerPhotoInput').onchange = function () {
+      if (this.files && this.files[0]) savePhoto(this.files[0]);
+      this.value = '';
+    };
+    document.getElementById('accountRemovePhoto').onclick = removePhoto;
+    document.getElementById('accountSaveName').onclick = saveName;
+    await loadSettings();
+  };
+
+  async function loadSettings() {
+    var u = user();
+    var photo = document.getElementById('accountManagerPhoto');
+    if (photo) photo.src = safePhoto(u.photo_url || u.photoURL) || defaultPhoto(displayName());
+    try {
+      var snap = await doc().get();
+      if (!snap.exists) return;
+      var data = snap.data() || {};
+      u.displayName = data.displayName || u.displayName || data.name || u.name;
+      u.photo_url = data.photo_url || data.photoURL || u.photo_url || '';
+      document.getElementById('accountDisplayName').value = displayName();
+      if (photo) photo.src = safePhoto(u.photo_url) || defaultPhoto(displayName());
+      syncHeader();
+    } catch (error) {
+      console.error(error);
+      toast('تعذر تحميل بيانات الحساب.');
+    }
+  }
+
+  async function saveName() {
+    var input = document.getElementById('accountDisplayName');
+    var name = input && input.value.trim();
+    if (!name || name.length < 2 || name.length > 50) {
+      return toast('اكتبي اسمًا من حرفين إلى 50 حرفًا.');
+    }
+    try {
+      await doc().set({ displayName: name, updatedAt: new Date().toISOString() }, { merge: true });
+      user().displayName = name;
+      var profileName = document.getElementById('profileName');
+      if (profileName) profileName.textContent = name;
+      if (!user().photo_url) document.getElementById('accountManagerPhoto').src = defaultPhoto(name);
+      syncHeader();
+      toast('تم حفظ الاسم الظاهر دون تغيير بيانات الدخول.');
+    } catch (error) {
+      console.error(error);
+      toast('تعذر حفظ الاسم؛ تحققي من اتصال Firebase.');
+    }
+  }
+
+  async function savePhoto(file) {
+    if (!file || !/^image\//i.test(file.type) || file.size > 5 * 1024 * 1024) {
+      return toast('اختاري صورة صالحة لا تتجاوز 5 ميجابايت.');
+    }
+    try {
+      if (typeof window.uploadFile !== 'function') throw new Error('رفع الصور غير جاهز');
+      toast('جارٍ رفع الصورة...');
+      var url = safePhoto(await window.uploadFile(file, 'users/avatars'));
+      if (!url) throw new Error('رابط الصورة غير صالح');
+      await doc().set({ photo_url: url, updatedAt: new Date().toISOString() }, { merge: true });
+      user().photo_url = url;
+      if (teacher() && firebase.auth && firebase.auth().currentUser &&
+          firebase.auth().currentUser.uid === String(user().uid)) {
+        await firebase.auth().currentUser.updateProfile({ photoURL: url }).catch(function () {});
+      }
+      document.getElementById('accountManagerPhoto').src = url;
+      syncHeader();
+      try {
+        var auth = firebase.auth && firebase.auth().currentUser;
+        if (auth) await db().collection('public_profiles').doc(auth.uid).set({
+          avatarURL: url, displayName: displayName(), role: role(),
+          updatedAt: new Date().toISOString()
+        }, { merge: true });
+      } catch (e) { console.warn('تعذر مزامنة صورة الدردشة', e); }
+      toast('تم تحديث صورة الحساب.');
+    } catch (error) {
+      console.error(error);
+      toast('تعذر رفع الصورة؛ تحققي من Cloudinary.');
+    }
+  }
+
+  async function removePhoto() {
+    if (!confirm('إزالة الصورة من حسابك؟ لن تُحذف النسخة المخزنة لدى Cloudinary.')) return;
+    try {
+      await doc().set({ photo_url: '', updatedAt: new Date().toISOString() }, { merge: true });
+      user().photo_url = '';
+      if (teacher() && firebase.auth && firebase.auth().currentUser &&
+          firebase.auth().currentUser.uid === String(user().uid)) {
+        await firebase.auth().currentUser.updateProfile({ photoURL: null }).catch(function () {});
+      }
+      var photo = defaultPhoto(displayName());
+      document.getElementById('accountManagerPhoto').src = photo;
+      syncHeader();
+      try {
+        var auth = firebase.auth && firebase.auth().currentUser;
+        if (auth) await db().collection('public_profiles').doc(auth.uid).set({
+          avatarURL: '', updatedAt: new Date().toISOString()
+        }, { merge: true });
+      } catch (e) { console.warn('تعذر مزامنة صورة الدردشة', e); }
+      toast('تمت إزالة الصورة من ملف الحساب.');
+    } catch (error) {
+      console.error(error);
+      toast('تعذر إزالة الصورة؛ تحققي من اتصال Firebase.');
+    }
+  }
+
+  window.openEditProfile = window.openAccountManagement;
+  window.uploadProfilePic = function (input) {
+    if (input && input.files && input.files[0]) savePhoto(input.files[0]);
+    if (input) input.value = '';
+  };
+
+  window.addEventListener('load', function () {
+    installEntry();
+    var original = window.goToProfile;
+    if (typeof original === 'function' && !original.__accountManagerWrapped) {
+      var wrapped = function () {
+        var result = original.apply(this, arguments);
+        installEntry();
+        syncHeader();
+        return result;
+      };
+      wrapped.__accountManagerWrapped = true;
+      window.goToProfile = wrapped;
+    }
+  });
+})();
+
