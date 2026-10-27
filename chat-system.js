@@ -7,7 +7,27 @@
   var state = { mode: 'group', chatId: '', friend: null, messageUnsub: null, inboxUnsub: null, call: null, peer: null, localStream: null, remoteStream: null, callUnsub: null, candidateUnsub: null, profileAvatarLoadedFor: '', ownerClaimUid: '', ownerClaimValid: false, ownerClaimLoading: false, seenCalls: {}, candidateSeen: {}, candidateQueue: [], missedTimer: null, incomingCallId: '', mediaUrls: [] };
   var MAX_MEDIA_BYTES = 25 * 1024 * 1024;
   function me() { return window.currentUser || null; }
-  function myId() { var user = me(); return user && user.uid ? String(user.uid) : ''; }
+  function myId() {
+    try {
+      var authUser = firebase.auth && firebase.auth().currentUser;
+      if (window.CHAT_USE_AUTH_UID === true && authUser && authUser.uid) return String(authUser.uid);
+    } catch (_) {}
+    var user = me(); return user && user.uid ? String(user.uid) : '';
+  }
+  async function ensureChatAuth() {
+    var auth = firebase.auth();
+    var appUid = me() && me().uid ? String(me().uid) : '';
+    var boundAppUid = '';
+    try { boundAppUid = localStorage.getItem('ta3lemyChatBoundAppUid') || ''; } catch (_) {}
+    if (auth.currentUser && auth.currentUser.isAnonymous && appUid && boundAppUid && boundAppUid !== appUid) {
+      await auth.signOut();
+    }
+    if (!auth.currentUser) await auth.signInAnonymously();
+    if (appUid) {
+      try { localStorage.setItem('ta3lemyChatBoundAppUid', appUid); } catch (_) {}
+    }
+    return auth.currentUser;
+  }
   function hasAuthIdentity() { try { var authUser = firebase.auth && firebase.auth().currentUser; return !!(authUser && authUser.uid === myId()); } catch (_) { return false; } }
   function hasFirebaseSession() { try { return !!(firebase.auth && firebase.auth().currentUser); } catch (_) { return false; } }
   function hasSecureIdentity() { return window.CHAT_PRIVATE_ENABLED === true && hasAuthIdentity(); }
@@ -57,7 +77,7 @@
   }
   async function ensureMyPublicProfile() {
     var user = me(); if (!user || !user.uid || !hasAuthIdentity()) return null;
-    var ref = db.collection('public_profiles').doc(String(user.uid));
+    var ref = db.collection('public_profiles').doc(myId());
     try {
       var profile = await ref.get();
       var old = profile.exists ? profile.data() : {};
@@ -78,6 +98,7 @@
       content.querySelectorAll('[data-chat-tab]').forEach(function (button) { button.onclick = function () { content.querySelectorAll('[data-chat-tab]').forEach(function (x) { x.classList.remove('active'); }); button.classList.add('active'); renderHomeTab(button.getAttribute('data-chat-tab')); }; });
       document.getElementById('chatGroupOpen').onclick = window.openPublicChat;
     }
+    var callsTab = content.querySelector('[data-chat-tab="calls"]'); if (callsTab) callsTab.remove();
     return content;
   }
   async function renderHomeTab(tab) {
@@ -110,6 +131,7 @@
   }
   window.openMessages = async function () {
     if (!me()) return toast('سجّل الدخول أولًا');
+    try { await ensureChatAuth(); } catch (error) { console.error('Anonymous chat auth failed:', error); return toast('تعذر تهيئة دخول الدردشة. فعّلي Anonymous في Firebase Authentication.'); }
     injectStyle(); ensureHomeUI();
     if (window.screenHistory && window.currentScreen) window.screenHistory.push(window.currentScreen);
     if (window.showScreen) window.showScreen('messagesScreen');
@@ -117,7 +139,7 @@
     var securityNote = document.getElementById('chatSecurityNote'); if (securityNote) { securityNote.textContent = !hasAuthIdentity() ? 'الخاص وطلبات الصداقة والمكالمات تحتاج ربط الحساب بمصادقة Firebase الآمنة. يمكن فتح المجموعة، لكن إرسال الرسائل والمرفقات يتطلب تسجيل Firebase.' : 'تم توثيق الحساب؛ يظل الخاص متوقفًا حتى نشر ومراجعة قواعد Firestore وStorage.'; securityNote.style.display = hasSecureIdentity() ? 'none' : 'block'; }
     if (!state.homeTab) state.homeTab = 'chats';
     renderHomeTab(state.homeTab);
-    listenForIncomingCalls();
+    // المكالمات والمرفقات الخاصة مؤجلة؛ الرسائل النصية وطلبات الصداقة فقط في هذا الإصلاح المبسط.
   };
 
   function makeScreen(id, title) {
@@ -230,8 +252,11 @@
     try {
       var ids = sortIds(myId(), request.fromId); var names = {}; names[myId()] = me().name || 'عضو'; names[request.fromId] = request.fromName || 'عضو';
       var previousFriendship = await findPairDocument('friendships', ids[0], ids[1]);
-      await (previousFriendship ? previousFriendship.ref : db.collection('friendships').doc(friendshipId(ids[0], ids[1]))).set({ participants: ids, names: names, createdAt: timestamp() }, { merge: true });
-      await db.collection('friend_requests').doc(requestId).update({ status: 'accepted', acceptedAt: timestamp() });
+      var friendshipRef = previousFriendship ? previousFriendship.ref : db.collection('friendships').doc(friendshipId(ids[0], ids[1]));
+      var batch = db.batch();
+      batch.update(db.collection('friend_requests').doc(requestId), { status: 'accepted', acceptedAt: timestamp() });
+      batch.set(friendshipRef, { participants: ids, names: names, requestId: requestId, createdAt: timestamp() }, { merge: true });
+      await batch.commit();
       toast('تمت إضافة الصديق'); window.openFriendRequests();
     } catch (error) { console.error(error); toast('تعذر قبول الطلب'); }
   }
@@ -269,7 +294,7 @@
     if (right && !document.getElementById('chatCallActions')) {
       right.innerHTML = '<div class="chatx-chat-actions" id="chatCallActions"><button title="مكالمة صوتية" onclick="startChatCall(\'audio\')">📞</button><button title="مكالمة فيديو" onclick="startChatCall(\'video\')">📹</button></div>';
     }
-    var callActions = document.getElementById('chatCallActions'); if (callActions) callActions.style.display = isGroup() ? 'none' : 'flex';
+    var callActions = document.getElementById('chatCallActions'); if (callActions) callActions.style.display = 'none';
     attachComposer();
     if (window.screenHistory && window.currentScreen) window.screenHistory.push(window.currentScreen);
     if (window.showScreen) window.showScreen('chatScreen');
@@ -278,12 +303,17 @@
     state.messageUnsub = chatMessagesRef().orderBy('createdAt', 'asc').limit(150).onSnapshot(function (snap) { renderMessages(snap); }, function (error) { console.error(error); if (messageBox) messageBox.innerHTML = '<div class="empty-state">تعذر تحميل الرسائل.</div>'; });
   }
   function attachComposer() {
-    var inputBox = document.getElementById('chatInput'); var bar = inputBox && inputBox.parentElement; if (!bar || document.getElementById('chatMediaInput')) return;
+    var inputBox = document.getElementById('chatInput'); var bar = inputBox && inputBox.parentElement; if (!bar) return;
+    var emoji = bar.querySelector('button'); if (emoji) emoji.onclick = window.insertEmoji;
+    if (!isGroup()) {
+      ['chatMediaInput', 'chatAttachButton', 'chatRecordButton'].forEach(function (id) { var old = document.getElementById(id); if (old) old.remove(); });
+      return;
+    }
+    if (document.getElementById('chatMediaInput')) return;
     var file = document.createElement('input'); file.type = 'file'; file.id = 'chatMediaInput'; file.className = 'chatx-file'; file.accept = 'image/*,video/*,audio/*';
     file.onchange = function () { if (file.files && file.files[0]) sendChatMedia(file.files[0]); file.value = ''; };
-    var attach = document.createElement('button'); attach.type = 'button'; attach.textContent = '📎'; attach.title = 'إرسال صورة أو فيديو أو صوت'; attach.onclick = function () { file.click(); };
+    var attach = document.createElement('button'); attach.type = 'button'; attach.id = 'chatAttachButton'; attach.textContent = '📎'; attach.title = 'إرسال صورة أو فيديو أو صوت'; attach.onclick = function () { file.click(); };
     var record = document.createElement('button'); record.type = 'button'; record.id = 'chatRecordButton'; record.textContent = '🎙️'; record.title = 'تسجيل رسالة صوتية'; record.onclick = toggleVoiceRecording;
-    var emoji = bar.querySelector('button'); if (emoji) emoji.onclick = window.insertEmoji;
     bar.insertBefore(file, bar.firstChild); bar.insertBefore(attach, bar.firstChild); bar.insertBefore(record, bar.firstChild);
   }
   function renderMessages(snapshot) {
@@ -334,6 +364,7 @@
   };
   async function sendChatMedia(file) {
     if (!file || !state.chatId) return;
+    if (!isGroup()) return toast('المرفقات الخاصة مؤجلة في النسخة السريعة؛ أرسلي رسالة نصية الآن.');
     if (isGroup() && !hasFirebaseSession()) return toast('جلسة Firebase لم تجهز بعد؛ انتظر لحظات ثم أعد المحاولة.');
     if (file.size > MAX_MEDIA_BYTES) return toast('الحد الأقصى للمرفق 25 ميجابايت');
     var kind = file.type.indexOf('image/') === 0 ? 'image' : file.type.indexOf('video/') === 0 ? 'video' : file.type.indexOf('audio/') === 0 ? 'audio' : '';
@@ -644,6 +675,9 @@
     if (state.inboxUnsub) { try { state.inboxUnsub(); } catch (_) {} state.inboxUnsub = null; }
     if (state.call) await endCall(true);
     if (typeof priorLogout === 'function') await priorLogout.apply(this, arguments);
-    try { if (firebase.auth && firebase.auth().currentUser) await firebase.auth().signOut(); } catch (error) { console.warn(error); }
+    try {
+      var authUser = firebase.auth && firebase.auth().currentUser;
+      if (authUser && !authUser.isAnonymous) await firebase.auth().signOut();
+    } catch (error) { console.warn(error); }
   };
 })();
