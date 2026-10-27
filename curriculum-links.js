@@ -6,11 +6,6 @@
 (function () {
   'use strict';
 
-  var GRADE_PATHS = {
-    'اول': 'g7',
-    'ثاني': 'g8',
-    'ثالث': 'g9'
-  };
   var MINISTRY_LESSONS = 'https://lessons.moe.gov.eg/';
   var MINISTRY_BOOKS = 'https://studentbooks.moe.gov.eg/books/Books-Preparatory/';
   var AZHAR_BOOKS = 'https://mtrl.azhar.gov.eg/education/index.htm';
@@ -32,8 +27,11 @@
       return null;
     }
     if (stage !== 'prep') return null;
-    var normalized = normalizedArabic(grade).replace(/^ال/, '');
-    return GRADE_PATHS[normalized] || null;
+    var normalized = normalizedArabic(grade).replace(/^ال/, '').replace(/\s+/g, ' ').trim();
+    if (/^اول(?:\s|$)/.test(normalized)) return 'g7';
+    if (/^ثاني(?:\s|$)/.test(normalized)) return 'g8';
+    if (/^ثالث(?:\s|$)/.test(normalized)) return 'g9';
+    return null;
   }
 
   function officialCard(title, description, url, icon) {
@@ -77,15 +75,16 @@
     var list = document.getElementById('contentList');
     if (!gradePath || !list) return;
 
-    var semester = Number(termNumber) === 2 ? 't2' : 't1';
-    var lessonUrl = MINISTRY_LESSONS + gradePath + '/' + semester;
-    var gradeName = typeof currentGrade === 'undefined' ? '' : currentGrade;
+    var semester = Number(termNumber) === 2 ? 'الثاني' : 'الأول';
+    var lessonUrl = MINISTRY_LESSONS + gradePath;
+    var gradeNames = { g7: 'الأول الإعدادي', g8: 'الثاني الإعدادي', g9: 'الثالث الإعدادي' };
+    var gradeName = gradeNames[gradePath] || (typeof currentGrade === 'undefined' ? '' : currentGrade);
     var resources = document.createElement('div');
     resources.className = 'official-curriculum-resources';
     resources.setAttribute('dir', 'rtl');
     resources.appendChild(officialCard(
       'دروس الوزارة الرسمية',
-      'اختر المادة ثم استكشف دروس الصف ' + gradeName + ' • الترم ' + (semester === 't1' ? 'الأول' : 'الثاني'),
+      'اختر المادة والفصل من منصة الوزارة الرسمية • الصف ' + gradeName + ' • الترم ' + semester,
       lessonUrl,
       '📖'
     ));
@@ -116,19 +115,17 @@
       var stage = '';
       try { stage = typeof currentStage === 'undefined' ? '' : String(currentStage || ''); }
       catch (error) { return result; }
-      if (stage === 'azhar_sec') {
-        var list = document.getElementById('azharList');
-        if (list) {
-          var link = officialCard(
-            'الكتب الرسمية للأزهر الشريف 2026/2027',
-            'اختر الصف والمادة من ركن الطالب الرسمي',
-            AZHAR_BOOKS,
-            '🕌'
-          );
-          link.className = 'stage-item';
-          link.style.borderRight = '5px solid #C9A227';
-          list.appendChild(link);
-        }
+      var list = document.getElementById('azharList');
+      if (stage.indexOf('azhar_') === 0 && list) {
+        var link = officialCard(
+          'الكتب الرسمية للأزهر الشريف 2026/2027',
+          'الصف المحدد: ' + gradeName + ' • افتح ركن الطالب واختر المادة',
+          AZHAR_BOOKS,
+          '🕌'
+        );
+        link.className = 'stage-item';
+        link.style.borderRight = '5px solid #C9A227';
+        list.appendChild(link);
       }
       return result;
     };
