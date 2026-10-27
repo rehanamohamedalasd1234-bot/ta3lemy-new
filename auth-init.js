@@ -1,13 +1,11 @@
-// تفعيل المصادقة للمنصة
-window.addEventListener('load', function() {
-  if (window.firebase && firebase.auth) {
-    firebase.auth().onAuthStateChanged(function(user) {
-      if (!user) {
-        // تسجيل دخول مجهول للطلاب عشان يفتح الدردشة
-        firebase.auth().signInAnonymously().catch(function(error) {
-          console.log('Auth error:', error);
-        });
-      }
+// تهيئة جلسة Firebase المجهولة لاستخدام الدردشة.
+// لا نعيد تسجيل الدخول تلقائيًا بعد تسجيل الخروج حتى لا تتنافس جلسات anonymous.
+window.addEventListener('load', function () {
+  if (!window.firebase || typeof firebase.auth !== 'function') return;
+  var auth = firebase.auth();
+  if (!auth.currentUser) {
+    auth.signInAnonymously().catch(function (error) {
+      console.error('تعذر تهيئة مصادقة الدردشة:', error);
     });
   }
 });
