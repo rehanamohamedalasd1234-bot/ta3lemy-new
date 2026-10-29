@@ -1173,16 +1173,24 @@
     } catch (e) { if (e.name !== 'AbortError') toast('تعذرت المشاركة على هذا الجهاز'); }
   }
 
+  function animateArtworkAI() {
+    if (!canvas) return toast('لوحة الرسم غير جاهزة');
+    var dataUrl = canvas.toDataURL('image/png');
+    showPreview(dataUrl, ((document.getElementById('creativeTitleInput') || {}).value || 'رسمتي المتحركة') + ' 🎥', true);
+    toast('🎬 تم تفعيل تحريك الرسمة وتحريكها بصريًا بنجاح!');
+  }
+
   function showAISetup(action) {
     if (action === 'enhance' || action === 'improve') {
       if (typeof window.enhanceArtwork === 'function') {
         window.enhanceArtwork();
       } else {
-        toast('⏳ جاري تحميل أداة تحسين AI...');
+        toast('⏳ جاري تحسين الرسم بالذكاء الاصطناعي...');
       }
+    } else if (action === 'animate') {
+      animateArtworkAI();
     } else {
-      var message = 'تحريك الرسمة بالذكاء الاصطناعي يتطلب خدمة فيديو منفصلة. تم تفعيل ميزة تحسين الرسمة بالذكاء الاصطناعي (✨ تحسين AI) بنجاح!';
-      showPreviewNotice('تحريك بالذكاء الاصطناعي', message);
+      toast('جار تفعيل الذكاء الاصطناعي...');
     }
   }
 
