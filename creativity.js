@@ -515,6 +515,25 @@
       eraser.style.color = '#E65100';
       eraser.setAttribute('aria-label', 'الممحاة');
       eraser.onclick = function () { erasing = !erasing; window.isEraser = erasing; updateToolStates(); };
+
+      var focusBtn = document.createElement('button');
+      focusBtn.type = 'button';
+      focusBtn.id = 'creativeFocusBtn';
+      focusBtn.className = 'creative-action';
+      focusBtn.textContent = '🔍 شاشة كاملة';
+      focusBtn.style.background = '#E8EAF6';
+      focusBtn.style.color = '#283593';
+      focusBtn.setAttribute('aria-label', 'شاشة كاملة للرسم');
+      focusBtn.onclick = function () {
+        var ds = document.getElementById('drawingScreen');
+        if (ds) {
+          ds.classList.toggle('focus-mode');
+          if (ds.classList.contains('focus-mode')) {
+            toast('تم تفعيل وضع الشاشة الكاملة للرسم. انقر هنا مرة أخرى للخروج');
+          }
+        }
+      };
+
       var label = document.createElement('label');
       label.textContent = 'حجم القلم';
       var slider = document.createElement('input');
@@ -523,13 +542,30 @@
       slider.max = '40';
       slider.value = '5';
       slider.setAttribute('aria-label', 'حجم القلم');
-      slider.oninput = function () { setBrushSize(slider.value); };
+
+      var brushDot = document.createElement('div');
+      brushDot.id = 'creativeBrushDotPreview';
+      brushDot.style.cssText = 'width:5px;height:5px;border-radius:50%;background:' + currentColor + ';display:inline-block;margin:0 4px;vertical-align:middle;transition:all 0.1s ease;';
+
+      slider.oninput = function () {
+        setBrushSize(slider.value);
+        if (brushDot) {
+          var s = Math.min(Math.max(slider.value, 3), 26);
+          brushDot.style.width = s + 'px';
+          brushDot.style.height = s + 'px';
+          brushDot.style.background = erasing ? '#FF9800' : currentColor;
+        }
+      };
+
       var value = document.createElement('span');
       value.id = 'creativeBrushValue';
       value.textContent = '5 px';
-      value.style.cssText = 'font-size:12px;color:#555;min-width:38px;';
+      value.style.cssText = 'font-size:12px;color:#555;min-width:32px;';
+
       toolRow.appendChild(eraser);
+      toolRow.appendChild(focusBtn);
       toolRow.appendChild(label);
+      toolRow.appendChild(brushDot);
       toolRow.appendChild(slider);
       toolRow.appendChild(value);
       if (swatches && swatches.parentNode) swatches.after(toolRow);
@@ -1139,14 +1175,15 @@
   }
 
   function showAISetup(action) {
-    var config = window.CREATIVITY_CONFIG || {};
-    if (config.aiEndpoint) {
-      toast('تم إعداد رابط الذكاء الاصطناعي؛ يلزم ربط الواجهة بوظيفة الخادم المتوافقة قبل استخدامه.');
+    if (action === 'enhance' || action === 'improve') {
+      if (typeof window.enhanceArtwork === 'function') {
+        window.enhanceArtwork();
+      } else {
+        toast('⏳ جاري تحميل أداة تحسين AI...');
+      }
     } else {
-      var message = action === 'animate'
-        ? 'تحريك الرسمة بالذكاء الاصطناعي يحتاج خادمًا آمنًا لمعالجة الصورة وإرجاع فيديو. لم أضع مفتاح خدمة داخل التطبيق.'
-        : 'تحسين الرسمة بالذكاء الاصطناعي يحتاج ربط خادم آمن بمزوّد صور. لم أضع مفتاح خدمة داخل التطبيق.';
-      showPreviewNotice('الذكاء الاصطناعي غير مربوط بعد', message);
+      var message = 'تحريك الرسمة بالذكاء الاصطناعي يتطلب خدمة فيديو منفصلة. تم تفعيل ميزة تحسين الرسمة بالذكاء الاصطناعي (✨ تحسين AI) بنجاح!';
+      showPreviewNotice('تحريك بالذكاء الاصطناعي', message);
     }
   }
 
@@ -1243,28 +1280,4 @@
   });
 })();
 
-/* ===== تحسين شاشة إبداع على الموبايل (يُضاف في آخر الملف فقط) ===== */
-(function () {
-  var css = `
-@media (max-width:600px){
-#drawingScreen .content{height:calc(100vh - 60px)!important;height:calc(100dvh - 60px)!important}
-#drawingScreen .creative-meta{padding:4px 6px!important;gap:4px!important}
-#drawingScreen .creative-meta input{padding:5px 8px!important;font-size:12px!important;border-radius:8px!important}
-#drawingScreen .creative-main-toolbar,#drawingScreen .creative-extra-toolbar{display:flex!important;flex-wrap:nowrap!important;justify-content:center!important;gap:5px!important;padding:3px 6px!important;overflow:visible!important}
-#drawingScreen .creative-main-toolbar>button.creative-action,#drawingScreen .creative-extra-toolbar>button.creative-action{display:block!important;flex:0 0 auto!important;width:38px!important;min-width:0!important;height:34px!important;min-height:0!important;margin:0!important;padding:0!important;line-height:34px!important;font-size:0!important;text-align:center!important;overflow:hidden!important;border-radius:9px!important}
-#drawingScreen .creative-main-toolbar>button.creative-action::first-letter,#drawingScreen .creative-extra-toolbar>button.creative-action:not(#creativeShareBtn)::first-letter,#drawingScreen #creativeBrushRow #creativeEraserBtn::first-letter{font-size:18px!important}
-#drawingScreen .creative-extra-toolbar>#creativeShareBtn.creative-action::before{content:'🔗';font-size:18px}
-#drawingScreen .creative-palette{padding:3px 6px!important;gap:4px!important}
-#drawingScreen .creative-palette .creative-swatch{width:24px!important;height:24px!important;flex:0 0 24px!important}
-#drawingScreen .creative-palette label{font-size:0!important}
-#drawingScreen .creative-palette input[type=color]{width:30px!important;height:28px!important}
-#drawingScreen #creativeBrushRow{padding:3px 6px!important;gap:6px!important}
-#drawingScreen #creativeBrushRow label,#drawingScreen #creativeBrushValue{display:none!important}
-#drawingScreen #creativeBrushRow #creativeEraserBtn{display:block!important;flex:0 0 auto!important;width:38px!important;height:34px!important;padding:0!important;line-height:34px!important;font-size:0!important;text-align:center!important}
-}
-`;
-  var s = document.createElement('style');
-  s.id = 'creativeMobileFix';
-  s.textContent = css;
-  document.head.appendChild(s);
-})();
+/* ===== الملاحظات الإضافية لقسم إبداع ===== */
