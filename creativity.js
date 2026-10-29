@@ -1242,3 +1242,29 @@
     ensureOwnerReviewEntry();
   });
 })();
+
+/* ===== تحسين شاشة إبداع على الموبايل (يُضاف في آخر الملف فقط) ===== */
+(function () {
+  var css = `
+@media (max-width:600px){
+#drawingScreen .content{height:calc(100vh - 60px)!important;height:calc(100dvh - 60px)!important}
+#drawingScreen .creative-meta{padding:4px 6px!important;gap:4px!important}
+#drawingScreen .creative-meta input{padding:5px 8px!important;font-size:12px!important;border-radius:8px!important}
+#drawingScreen .creative-main-toolbar,#drawingScreen .creative-extra-toolbar{display:flex!important;flex-wrap:nowrap!important;justify-content:center!important;gap:5px!important;padding:3px 6px!important;overflow:visible!important}
+#drawingScreen .creative-main-toolbar>button.creative-action,#drawingScreen .creative-extra-toolbar>button.creative-action{display:block!important;flex:0 0 auto!important;width:38px!important;min-width:0!important;height:34px!important;min-height:0!important;margin:0!important;padding:0!important;line-height:34px!important;font-size:0!important;text-align:center!important;overflow:hidden!important;border-radius:9px!important}
+#drawingScreen .creative-main-toolbar>button.creative-action::first-letter,#drawingScreen .creative-extra-toolbar>button.creative-action:not(#creativeShareBtn)::first-letter,#drawingScreen #creativeBrushRow #creativeEraserBtn::first-letter{font-size:18px!important}
+#drawingScreen .creative-extra-toolbar>#creativeShareBtn.creative-action::before{content:'🔗';font-size:18px}
+#drawingScreen .creative-palette{padding:3px 6px!important;gap:4px!important}
+#drawingScreen .creative-palette .creative-swatch{width:24px!important;height:24px!important;flex:0 0 24px!important}
+#drawingScreen .creative-palette label{font-size:0!important}
+#drawingScreen .creative-palette input[type=color]{width:30px!important;height:28px!important}
+#drawingScreen #creativeBrushRow{padding:3px 6px!important;gap:6px!important}
+#drawingScreen #creativeBrushRow label,#drawingScreen #creativeBrushValue{display:none!important}
+#drawingScreen #creativeBrushRow #creativeEraserBtn{display:block!important;flex:0 0 auto!important;width:38px!important;height:34px!important;padding:0!important;line-height:34px!important;font-size:0!important;text-align:center!important}
+}
+`;
+  var s = document.createElement('style');
+  s.id = 'creativeMobileFix';
+  s.textContent = css;
+  document.head.appendChild(s);
+})();
