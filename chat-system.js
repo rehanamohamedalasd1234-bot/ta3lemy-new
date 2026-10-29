@@ -98,7 +98,6 @@
       content.querySelectorAll('[data-chat-tab]').forEach(function (button) { button.onclick = function () { content.querySelectorAll('[data-chat-tab]').forEach(function (x) { x.classList.remove('active'); }); button.classList.add('active'); renderHomeTab(button.getAttribute('data-chat-tab')); }; });
       document.getElementById('chatGroupOpen').onclick = window.openPublicChat;
     }
-    var callsTab = content.querySelector('[data-chat-tab="calls"]'); if (callsTab) callsTab.remove();
     return content;
   }
   async function renderHomeTab(tab) {
@@ -136,6 +135,7 @@
     if (window.screenHistory && window.currentScreen) window.screenHistory.push(window.currentScreen);
     if (window.showScreen) window.showScreen('messagesScreen');
     await ensureMyPublicProfile();
+    listenForIncomingCalls();
     var securityNote = document.getElementById('chatSecurityNote'); if (securityNote) { securityNote.textContent = !hasAuthIdentity() ? 'الخاص وطلبات الصداقة والمكالمات تحتاج ربط الحساب بمصادقة Firebase الآمنة. يمكن فتح المجموعة، لكن إرسال الرسائل والمرفقات يتطلب تسجيل Firebase.' : 'تم توثيق الحساب؛ يظل الخاص متوقفًا حتى نشر ومراجعة قواعد Firestore وStorage.'; securityNote.style.display = hasSecureIdentity() ? 'none' : 'block'; }
     if (!state.homeTab) state.homeTab = 'chats';
     renderHomeTab(state.homeTab);
@@ -294,7 +294,7 @@
     if (right && !document.getElementById('chatCallActions')) {
       right.innerHTML = '<div class="chatx-chat-actions" id="chatCallActions"><button title="مكالمة صوتية" onclick="startChatCall(\'audio\')">📞</button><button title="مكالمة فيديو" onclick="startChatCall(\'video\')">📹</button></div>';
     }
-    var callActions = document.getElementById('chatCallActions'); if (callActions) callActions.style.display = 'none';
+    var callActions = document.getElementById('chatCallActions'); if (callActions) callActions.style.display = isGroup() ? 'none' : 'flex';
     attachComposer();
     if (window.screenHistory && window.currentScreen) window.screenHistory.push(window.currentScreen);
     if (window.showScreen) window.showScreen('chatScreen');
