@@ -67,26 +67,26 @@
   }
 
   function teacherWorkKind(item) {
-    return ({ lesson: 'درس / شرح', explanation: 'شرح', exercise: 'تدريب', exam: 'امتحان', review: 'مراجعة', image: 'صورة تعليمية', video: 'فيديو' })[item.teacherContentType || item.type] || 'عمل تعليمي';
+    return ({ lesson: 'درس / شرح', explanation: 'شرح', exercise: 'تدريب', exam: 'امتحان', review: 'مراجعة', image: 'صورة تعليمية', video: 'فيديو', audio: 'تسجيل صوتي' })[item.teacherContentType || item.type] || 'عمل تعليمي';
   }
   function teacherWorkCard(doc) {
     var item = doc.data() || {};
     var content = typeof item.content === 'string' ? item.content : '';
-    var summary = content ? esc(content.substring(0, 70)) + (content.length > 70 ? '…' : '') : (item.video_url ? '🎥 فيديو' : item.image_url ? '🖼️ صورة' : 'افتح العمل للمشاهدة');
+    var summary = content ? esc(content.substring(0, 70)) + (content.length > 70 ? '…' : '') : (item.video_url ? '🎥 فيديو' : item.audio_url ? '🔊 صوت للاستماع' : item.image_url ? '🖼️ صورة' : 'افتح العمل للمشاهدة');
     return '<div class="content-item" onclick="viewContent(\'' + attr(doc.id) + '\')"><div class="content-item-icon">📚</div><div class="content-item-info"><div class="content-item-title">' + esc(item.title || 'بدون عنوان') + '</div><div class="content-item-sub">📌 ' + esc(teacherWorkKind(item)) + (summary ? ' • ' + summary : '') + '</div></div><div class="content-item-arrow">‹</div></div>';
   }
   function regularContentCard(doc, type) {
     var item = doc.data() || {};
     var teacher = item.teacherName ? ' • 👨‍🏫 ' + esc(item.teacherName) : '';
-    var kinds = { lesson: 'درس / شرح', explanation: 'شرح', exercise: 'تدريب', exam: 'امتحان', review: 'مراجعة', image: 'صورة تعليمية', video: 'فيديو' };
+    var kinds = { lesson: 'درس / شرح', explanation: 'شرح', exercise: 'تدريب', exam: 'امتحان', review: 'مراجعة', image: 'صورة تعليمية', video: 'فيديو', audio: 'تسجيل صوتي' };
     var workKind = type === 'teacher_explanation' && item.teacherContentType ? kinds[item.teacherContentType] || 'عمل تعليمي' : '';
     var content = typeof item.content === 'string' ? item.content : '';
-    var contentSummary = content ? esc(content.substring(0, 70)) + (content.length > 70 ? '…' : '') : (item.video_url ? '🎥 فيديو' : item.image_url ? '🖼️ صورة' : '');
+    var contentSummary = content ? esc(content.substring(0, 70)) + (content.length > 70 ? '…' : '') : (item.video_url ? '🎥 فيديو' : item.audio_url ? '🔊 صوت للاستماع' : item.image_url ? '🖼️ صورة' : '');
     var summary = (workKind ? '📌 ' + workKind + (contentSummary ? ' • ' : '') : '') + contentSummary;
     return '<div class="content-item" onclick="viewContent(\'' + attr(doc.id) + '\')"><div class="content-item-icon">📄</div><div class="content-item-info"><div class="content-item-title">' + esc(item.title || 'بدون عنوان') + '</div><div class="content-item-sub">' + summary + teacher + '</div></div><div class="content-item-arrow">‹</div></div>';
   }
   function teacherStageName(stage) {
-    return ({ primary: 'الابتدائية', prep: 'الإعدادية', sec: 'الثانوية', bakkalorya: 'البكالوريا' })[stage] || stage || 'مرحلة غير محددة';
+    return ({ primary: 'الابتدائية', prep: 'الإعدادية', sec: 'الثانوية', bakkalorya: 'البكالوريا', kindergarten_languages: 'رياض الأطفال لغات' })[stage] || stage || 'مرحلة غير محددة';
   }
   function teacherTermName(term) { return Number(term) === 2 ? 'الترم الثاني' : 'الترم الأول'; }
   function renderTeacherDirectory(docs) {
@@ -243,12 +243,19 @@
     var grade = selectFieldFromExisting('upGrade');
     var subject = selectFieldFromExisting('upSubject');
     if (!stage || !grade || !subject) return;
+    if (!Array.prototype.some.call(stage.options, function (option) { return option.value === 'kindergarten_languages'; })) {
+      var kindergartenOption = document.createElement('option');
+      kindergartenOption.value = 'kindergarten_languages';
+      kindergartenOption.textContent = 'رياض الأطفال لغات';
+      stage.appendChild(kindergartenOption);
+    }
     var gradeNames = function (stageId) {
       if (typeof stagesData !== 'undefined' && stagesData[stageId] && stagesData[stageId].grades) return stagesData[stageId].grades.slice();
       if (stageId === 'bakkalorya') return ['الأول', 'الثاني', 'الثالث'];
       return [];
     };
     var subjectNames = function (stageId) {
+      if (stageId === 'kindergarten_languages') return ['عربي', 'English', 'Maths'];
       if (stageId === 'bakkalorya') return ['اللغة العربية', 'اللغة الأجنبية الأولى', 'التاريخ', 'الرياضيات', 'العلوم المتكاملة', 'الفلسفة والمنطق', 'التربية الدينية', 'البرمجة والذكاء الاصطناعي', 'الأحياء', 'الكيمياء', 'الفيزياء', 'الاقتصاد', 'المحاسبة', 'الجغرافيا', 'علم النفس', 'الإحصاء'];
       if (typeof generalSubjects !== 'undefined' && generalSubjects.length) return generalSubjects.map(function (item) { return item.name; });
       return ['اللغة العربية', 'رياضيات', 'علوم', 'فيزياء', 'كيمياء', 'أحياء', 'إنجليزي', 'دراسات', 'تاريخ', 'جغرافيا', 'فلسفة ومنطق', 'تربية دينية', 'حاسب آلي', 'فنية'];
@@ -277,7 +284,7 @@
     if (!type) return;
     var wanted = [
       ['lesson', 'درس / شرح'], ['explanation', 'شرح'], ['exercise', 'تدريب'],
-      ['exam', 'امتحان'], ['review', 'مراجعة'], ['image', 'صورة تعليمية'], ['video', 'فيديو']
+      ['exam', 'امتحان'], ['review', 'مراجعة'], ['image', 'صورة تعليمية'], ['video', 'فيديو'], ['audio', 'تسجيل صوتي']
     ];
     if (type.getAttribute('data-teacher-options-ready') !== '1') {
       type.innerHTML = wanted.map(function (option) { return '<option value="' + option[0] + '">' + option[1] + '</option>'; }).join('');
@@ -305,6 +312,13 @@
       name.value = window.currentUser.name || '';
       name.setAttribute('data-prefilled', '1');
     }
+    if (!document.getElementById('upAudio')) {
+      var audioGroup = document.createElement('div');
+      audioGroup.className = 'form-group';
+      audioGroup.innerHTML = '<label class="form-label" for="upAudio">🔊 تسجيل صوتي للاستماع (اختياري)</label><input id="upAudio" class="form-input" type="file" accept="audio/*" style="padding:10px;">';
+      var submitButton = document.getElementById('upSubmitBtn');
+      if (submitButton && submitButton.parentNode) submitButton.parentNode.insertBefore(audioGroup, submitButton);
+    }
     ensureUploadCurriculumSelectors();
   }
 
@@ -321,15 +335,20 @@
     var term = Number(field('upTerm') || 1);
     var imageInput = document.getElementById('upImage');
     var videoInput = document.getElementById('upVideo');
+    var audioInput = document.getElementById('upAudio');
     var imageFile = imageInput && imageInput.files && imageInput.files[0];
     var videoFile = videoInput && videoInput.files && videoInput.files[0];
+    var audioFile = audioInput && audioInput.files && audioInput.files[0];
     var button = document.getElementById('upSubmitBtn');
     if (!teacherName || teacherName.length < 3 || !stage || !grade || !subject || !title) return toast('أكمل اسم الأستاذ والمرحلة والصف والمادة والعنوان');
-    if (!content && !imageFile && !videoFile) return toast('أضف شرحًا أو صورة أو فيديو واحدًا على الأقل');
+    if (!content && !imageFile && !videoFile && !audioFile) return toast('أضف شرحًا أو صورة أو فيديو أو تسجيلًا صوتيًا واحدًا على الأقل');
+    if (stage === 'kindergarten_languages' && (['KG1', 'KG2'].indexOf(grade) < 0 || ['عربي', 'English', 'Maths'].indexOf(subject) < 0)) return toast('اختر KG1 أو KG2 ومادة عربي أو English أو Maths');
+    if (audioFile && audioFile.size > 25 * 1024 * 1024) return toast('حجم التسجيل الصوتي يجب ألا يتجاوز 25 ميجابايت');
     if (button) { button.disabled = true; button.textContent = '⏳ جارٍ رفع العمل للمراجعة...'; }
     try {
       var imageUrl = null;
       var videoUrl = null;
+      var audioUrl = null;
       if (imageFile) {
         imageUrl = await window.uploadFile(imageFile, 'teacher_content');
         if (!imageUrl) throw new Error('فشل رفع الصورة');
@@ -338,16 +357,21 @@
         videoUrl = await window.uploadFile(videoFile, 'teacher_content');
         if (!videoUrl) throw new Error('فشل رفع الفيديو');
       }
+      if (audioFile) {
+        audioUrl = await window.uploadFile(audioFile, 'teacher_content');
+        if (!audioUrl) throw new Error('فشل رفع التسجيل الصوتي');
+      }
       await db.collection('teacher_uploads').add({
         teacherId: uid(), teacherName: teacherName, type: workType, stage: stage, grade: grade,
         subject: subject, term: term, title: title, content: content,
-        image_url: imageUrl, video_url: videoUrl, status: 'pending', createdAt: now(),
+        image_url: imageUrl, video_url: videoUrl, audio_url: audioUrl, status: 'pending', createdAt: now(),
         authUid: uid()
       });
       toast('تم إرسال العمل للمالك، وسيظهر للطلاب بعد الموافقة');
       ['upTitle', 'upContent'].forEach(function (id) { var element = document.getElementById(id); if (element) element.value = ''; });
       if (imageInput) imageInput.value = '';
       if (videoInput) videoInput.value = '';
+      if (audioInput) audioInput.value = '';
       if (button) { button.disabled = false; button.textContent = '📤 إرسال العمل للمراجعة'; }
       screenBack();
     } catch (error) {
@@ -604,7 +628,11 @@
     try {
       var snap = await db.collection('broadcasts').where('status', '==', 'live').get();
       var list = [];
-      snap.forEach(function (doc) { var item = Object.assign({ id: doc.id }, doc.data()); if (!item.endAt || Date.parse(item.endAt) > Date.now()) list.push(item); });
+      snap.forEach(function (doc) {
+        var item = Object.assign({ id: doc.id }, doc.data());
+        var isCurrentKindergartenClass = typeof currentStage === 'undefined' || currentStage !== 'kindergarten_languages' || (item.stage === 'kindergarten_languages' && item.grade === currentGrade);
+        if ((!item.endAt || Date.parse(item.endAt) > Date.now()) && isCurrentKindergartenClass) list.push(item);
+      });
       list.sort(function (a, b) { return String(b.createdAt || '').localeCompare(String(a.createdAt || '')); });
       if (!list.length) { body.innerHTML = '<div class="tw-empty">لا يوجد بث متاح الآن.</div>'; return; }
       body.innerHTML = '';
