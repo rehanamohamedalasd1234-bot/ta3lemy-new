@@ -139,7 +139,7 @@
     var securityNote = document.getElementById('chatSecurityNote'); if (securityNote) { securityNote.textContent = !hasAuthIdentity() ? 'الخاص وطلبات الصداقة والمكالمات تحتاج ربط الحساب بمصادقة Firebase الآمنة. يمكن فتح المجموعة، لكن إرسال الرسائل والمرفقات يتطلب تسجيل Firebase.' : 'تم توثيق الحساب؛ يظل الخاص متوقفًا حتى نشر ومراجعة قواعد Firestore وStorage.'; securityNote.style.display = hasSecureIdentity() ? 'none' : 'block'; }
     if (!state.homeTab) state.homeTab = 'chats';
     renderHomeTab(state.homeTab);
-    // المكالمات والمرفقات الخاصة مؤجلة؛ الرسائل النصية وطلبات الصداقة فقط في هذا الإصلاح المبسط.
+    listenForIncomingCalls();
   };
 
   function makeScreen(id, title) {
@@ -305,10 +305,7 @@
   function attachComposer() {
     var inputBox = document.getElementById('chatInput'); var bar = inputBox && inputBox.parentElement; if (!bar) return;
     var emoji = bar.querySelector('button'); if (emoji) emoji.onclick = window.insertEmoji;
-    if (!isGroup()) {
-      ['chatMediaInput', 'chatAttachButton', 'chatRecordButton'].forEach(function (id) { var old = document.getElementById(id); if (old) old.remove(); });
-      return;
-    }
+    // المرفقات متاحة في الدردشة الجماعية والخاصة، مع حماية Firebase Storage للخاص.
     if (document.getElementById('chatMediaInput')) return;
     var file = document.createElement('input'); file.type = 'file'; file.id = 'chatMediaInput'; file.className = 'chatx-file'; file.accept = 'image/*,video/*,audio/*';
     file.onchange = function () { if (file.files && file.files[0]) sendChatMedia(file.files[0]); file.value = ''; };
@@ -364,8 +361,7 @@
   };
   async function sendChatMedia(file) {
     if (!file || !state.chatId) return;
-    if (!isGroup()) return toast('المرفقات الخاصة مؤجلة في النسخة السريعة؛ أرسلي رسالة نصية الآن.');
-    if (isGroup() && !hasFirebaseSession()) return toast('جلسة Firebase لم تجهز بعد؛ انتظر لحظات ثم أعد المحاولة.');
+    if (!hasFirebaseSession()) return toast('جلسة Firebase لم تجهز بعد؛ انتظر لحظات ثم أعد المحاولة.');
     if (file.size > MAX_MEDIA_BYTES) return toast('الحد الأقصى للمرفق 25 ميجابايت');
     var kind = file.type.indexOf('image/') === 0 ? 'image' : file.type.indexOf('video/') === 0 ? 'video' : file.type.indexOf('audio/') === 0 ? 'audio' : '';
     if (!kind) return toast('الأنواع المتاحة: صورة أو فيديو أو ملف صوتي');
