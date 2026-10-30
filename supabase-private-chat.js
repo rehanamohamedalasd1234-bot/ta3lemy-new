@@ -15,7 +15,8 @@
     messageChannel: null, requestsChannel: null, callsInboxChannel: null,
     call: null, peer: null, localStream: null, remoteStream: null,
     callRowChannel: null, candidateChannel: null, candidateQueue: [], pendingCandidates: [],
-    missedTimer: null, disconnectTimer: null, recorder: null, recordingStream: null
+    missedTimer: null, disconnectTimer: null, recorder: null, recordingStream: null,
+    incomingCallId: '', incomingCallTimer: null
   };
   var maxMediaBytes = 25 * 1024 * 1024;
   var legacyOpenPublicChat = window.openPublicChat;
@@ -66,7 +67,7 @@
       [state.messageChannel, state.requestsChannel, state.callsInboxChannel, state.callRowChannel, state.candidateChannel].forEach(function (channel) {
         if (channel) { try { previousClient.removeChannel(channel); } catch (_) {} }
       });
-      clearTimeout(state.missedTimer); clearTimeout(state.disconnectTimer);
+      clearTimeout(state.missedTimer); clearTimeout(state.disconnectTimer); stopIncomingCallAlert();
       if (state.peer) { try { state.peer.close(); } catch (_) {} }
       if (state.localStream) state.localStream.getTracks().forEach(function (track) { track.stop(); });
       if (state.remoteStream) state.remoteStream.getTracks().forEach(function (track) { track.stop(); });
@@ -176,6 +177,7 @@
       '<button class="spc-tab" data-spc-tab="requests">📩 الطلبات</button>',
       '<button class="spc-tab" data-spc-tab="calls">📞 المكالمات</button></div>',
       '<button class="spc-btn spc-blue" id="spcGroupButton" style="width:100%;margin-bottom:12px">👥 افتح الدردشة الجماعية</button>',
+      '<button class="spc-btn spc-gray" id="spcCallAlertButton" style="width:100%;margin-bottom:12px">🔔 تفعيل تنبيهات المكالمات</button>',
       '<div id="spcHomeContent"><div class="empty-state">جارٍ التحميل…</div></div>'
     ].join('');
     content.querySelectorAll('[data-spc-tab]').forEach(function (button) {
@@ -183,6 +185,8 @@
     });
     var groupButton = document.getElementById('spcGroupButton');
     if (groupButton) groupButton.onclick = window.openPublicChat;
+    var callAlertButton = document.getElementById('spcCallAlertButton');
+    if (window.HafezCallAlerts) window.HafezCallAlerts.bindButton(callAlertButton);
     return content;
   }
   function refreshIdentityNote() {
@@ -428,9 +432,15 @@
     if (!state.callsInboxChannel) {
       var inboxUserId = state.user.id;
       state.callsInboxChannel = client.channel('spc-incoming-calls-' + state.user.id)
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_calls', filter: 'callee_id=eq.' + state.user.id }, function (payload) {
-          var call = payload && payload.new;
-          if (call && call.status === 'ringing') showIncomingCall(call);
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_calls', filter: 'callee_id=eq.' + state.user.id }, function (payload) {
+          var call = payload && (payload.new || payload.old);
+          if (!call) return;
+          if (payload.eventType === 'INSERT' && call.status === 'ringing') showIncomingCall(call);
+          if (payload.eventType === 'UPDATE' && call.status !== 'ringing') {
+            stopIncomingCallAlert(call.id);
+            var modal = document.getElementById('spcIncomingCall');
+            if (modal && modal.dataset.callId === call.id) modal.remove();
+          }
         }).subscribe(function (status) {
           if (status !== 'SUBSCRIBED') return;
           client.from('chat_calls').select('id,conversation_id,caller_id,callee_id,call_type,status,created_at')
@@ -446,6 +456,7 @@
   }
   window.openMessages = async function () {
     if (!appUser()) return toast('سجّل الدخول إلى المنصة أولًا.');
+    if (window.HafezCallAlerts) window.HafezCallAlerts.unlock();
     addChatStyles();
     makeHomeShell();
     state.mode = 'home';
@@ -795,13 +806,28 @@
     modal.querySelector('h2').textContent = memberLabel(handle);
     modal.querySelector('p').textContent = row.call_type === 'video' ? 'مكالمة فيديو واردة' : 'مكالمة صوتية واردة';
     document.body.appendChild(modal);
-    if (navigator.vibrate) navigator.vibrate([250, 200, 250]);
-    modal.querySelector('[data-accept]').onclick = function () { modal.remove(); acceptIncomingCall(row.id); };
+    state.incomingCallId = String(row.id);
+    if (window.HafezCallAlerts) window.HafezCallAlerts.start(row.id, memberLabel(handle));
+    if (state.incomingCallTimer) window.clearTimeout(state.incomingCallTimer);
+    state.incomingCallTimer = window.setTimeout(function () {
+      stopIncomingCallAlert(row.id);
+      var expiredModal = document.getElementById('spcIncomingCall');
+      if (expiredModal && expiredModal.dataset.callId === row.id) expiredModal.remove();
+    }, 45000);
+    modal.querySelector('[data-accept]').onclick = function () { stopIncomingCallAlert(row.id); modal.remove(); acceptIncomingCall(row.id); };
     modal.querySelector('[data-reject]').onclick = async function () {
+      stopIncomingCallAlert(row.id);
       modal.remove();
       var update = await client.from('chat_calls').update({ status: 'rejected' }).eq('id', row.id).eq('callee_id', state.user.id);
       if (update.error) console.warn(update.error);
     };
+  }
+  function stopIncomingCallAlert(callId) {
+    if (callId && state.incomingCallId && String(callId) !== state.incomingCallId) return;
+    if (state.incomingCallTimer) window.clearTimeout(state.incomingCallTimer);
+    state.incomingCallTimer = null;
+    state.incomingCallId = '';
+    if (window.HafezCallAlerts) window.HafezCallAlerts.stop(callId);
   }
   async function acceptIncomingCall(callId) {
     try {
@@ -827,6 +853,7 @@
     } catch (error) { reportError(error, error.message || 'تعذر قبول المكالمة.'); await finishCall(false); }
   }
   async function finishCall(updateServer) {
+    stopIncomingCallAlert();
     var active = state.call;
     if (!active) { var unused = document.getElementById('spcActiveCall'); if (unused) unused.remove(); return; }
     active.localEnding = true;
