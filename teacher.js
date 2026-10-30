@@ -19,7 +19,3 @@
     window.open('https://meet.jit.si/' + encodeURIComponent(roomId) + '#userInfo.displayName=%22' + encodeURIComponent(name) + '%22', '_blank');
   };
 })();
-// تشغيل الذكاء الاصطناعي
-var aiScript = document.createElement('script');
-aiScript.src = './gemini-fix.js';
-document.body.appendChild(aiScript);
