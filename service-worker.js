@@ -1,7 +1,7 @@
 // Service Worker for the Hafez educational platform.
 // Shell files are prefetched for offline launch; media is stored only when the user explicitly downloads it.
 const CACHE_PREFIX = 'ta3lemy-shell-';
-const CACHE_NAME = CACHE_PREFIX + '1.0.59';
+const CACHE_NAME = CACHE_PREFIX + '1.0.60';
 const MEDIA_CACHE_NAME = 'ta3lemy-media-v1';
 const APP_SHELL = [
   './', './index.html', './extras.js', './curriculum-display-fix.js', './offline-mode.js', './navigation-fix.js', './service-worker.js', './manifest.json', './version.json', './auth-init.js', './fix-canvas.css',
@@ -11,6 +11,7 @@ const APP_SHELL = [
   './math-grade8-term1.js', './computer-grade8-term1.js', './religion-grade8-term1.js', './art-grade8-term1.js',
   './grade9-term1-content.js', './continuous-assessment.js', './primary-official-only.js', './grade1-math-official.js', './primary-grade2-structure.js', './primary-grade2-detailed-content.json', './primary-grade3-structure.js', './primary-grade3-detailed-content.json', './primary-grade4-structure.js', './primary-grades456-detailed-content.json', './primary-grade5-structure.js', './primary-grade6-structure.js',
   './creativity-config.js', './creativity.js', './chat-config.js', './chat-system.js',
+  './supabase-chat-config.js', './supabase-private-chat.js',
   './admin-system.js', './kindergarten-languages.js', './icon-512.png'
 ];
 const EXTERNAL_SHELL = [
@@ -18,7 +19,8 @@ const EXTERNAL_SHELL = [
   'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js',
   'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js',
   'https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js',
-  'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js'
+  'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js',
+  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'
 ];
 const APP_SHELL_FALLBACK = new URL('./index.html', self.registration.scope).href;
 
@@ -100,7 +102,8 @@ self.addEventListener('fetch', (event) => {
 
   if (url.origin !== self.location.origin) {
     const isFirebaseSdk = url.hostname === 'www.gstatic.com' && /firebasejs\/10\.12\.0\//.test(url.pathname);
-    if (!isFirebaseSdk) return;
+    const isSupabaseSdk = url.hostname === 'cdn.jsdelivr.net' && url.pathname.startsWith('/npm/@supabase/supabase-js@2');
+    if (!isFirebaseSdk && !isSupabaseSdk) return;
     event.respondWith((async () => {
       const cache = await caches.open(CACHE_NAME);
       const cached = await cache.match(request.url);
