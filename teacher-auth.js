@@ -111,12 +111,19 @@
           account.displayName ||
           user.displayName ||
           email.split('@')[0],
+        displayName: account.displayName || account.display_name || account.name || user.displayName || email.split('@')[0],
         email: email,
         role: 'teacher',
-        points: Number(account.points || 0)
+        points: Number(account.points || 0),
+        photo_url: Object.prototype.hasOwnProperty.call(account, 'photo_url')
+          ? account.photo_url
+          : (account.photoURL || user.photoURL || '')
       };
 
       window.currentRole = 'teacher';
+      if (typeof window.syncPrivateChatProfile === 'function') {
+        window.syncPrivateChatProfile().catch(function (error) { console.warn('تعذر مزامنة ملف المعلم مع الدردشة', error); });
+      }
 
       try {
         localStorage.setItem('lastUser', JSON.stringify(window.currentUser));

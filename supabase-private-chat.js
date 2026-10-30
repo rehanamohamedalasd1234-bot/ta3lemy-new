@@ -1,5 +1,5 @@
 /* Private chat backend for Al-Ostad Hafez Educational Platform.
- * Independent Supabase Auth identity; random handles only; never uses a student's real name.
+ * Independent Supabase Auth identity; the private directory stores only the account display name and avatar.
  * All private data access is enforced by Supabase RLS and private Storage policies.
  */
 (function () {
@@ -46,7 +46,56 @@
     window.crypto.getRandomValues(bytes);
     return Array.prototype.map.call(bytes, function (byte) { return byte.toString(16).padStart(2, '0'); }).join('');
   }
-  function memberLabel(handle) { return 'عضو • ' + String(handle || '').slice(0, 6); }
+  function memberLabel(value) {
+    var name = value && typeof value === 'object' ? (value.display_name || value.name) : value;
+    return String(name || 'مستخدم').trim() || 'مستخدم';
+  }
+  function avatarSource(profile) {
+    var value = String(profile && profile.avatar_url || '').trim();
+    return /^https:\/\//i.test(value) && value.length <= 2048 ? value : '';
+  }
+  function accountProfileDetails() {
+    var account = appUser() || {};
+    var displayName = String(account.displayName || account.display_name || account.name || '')
+      .replace(/[\u0000-\u001f\u007f]/g, '').replace(/\s+/g, ' ').trim().slice(0, 80) || 'عضو';
+    var avatarKeys = ['photo_url', 'photoURL', 'avatar_url', 'avatarUrl'];
+    var hasAvatar = false;
+    var avatarValue = '';
+    for (var i = 0; i < avatarKeys.length; i++) {
+      if (Object.prototype.hasOwnProperty.call(account, avatarKeys[i])) {
+        hasAvatar = true;
+        avatarValue = account[avatarKeys[i]];
+        break;
+      }
+    }
+    var avatar = String(avatarValue || '').trim();
+    if (!/^https:\/\//i.test(avatar) || avatar.length > 2048) avatar = null;
+    return { display_name: displayName, avatar_url: avatar, has_avatar: hasAvatar };
+  }
+  async function hydrateAccountProfile() {
+    var account = appUser();
+    if (!account || !account.uid) return;
+    var hasName = !!String(account.displayName || account.display_name || '').trim();
+    var avatarKeys = ['photo_url', 'photoURL', 'avatar_url', 'avatarUrl'];
+    var hasAvatar = avatarKeys.some(function (key) { return Object.prototype.hasOwnProperty.call(account, key); });
+    if (hasName && hasAvatar) return;
+    try {
+      if (typeof db === 'undefined' || !db.collection) return;
+      var role = account.role || window.currentRole;
+      var collectionName = role === 'teacher' ? 'teacher_accounts' : 'users';
+      var snapshot = await db.collection(collectionName).doc(String(account.uid)).get();
+      if (!snapshot || !snapshot.exists) return;
+      var data = snapshot.data() || {};
+      if (!hasName) {
+        var savedName = data.displayName || data.display_name || data.name;
+        if (savedName) account.displayName = savedName;
+      }
+      if (!hasAvatar) {
+        if (Object.prototype.hasOwnProperty.call(data, 'photo_url')) account.photo_url = data.photo_url;
+        else if (Object.prototype.hasOwnProperty.call(data, 'photoURL')) account.photo_url = data.photoURL;
+      }
+    } catch (error) { console.warn('[private-chat] could not load the account avatar', error); }
+  }
   function reportError(error, fallback) {
     console.error('[private-chat]', error);
     if (error && (error.code === '42501' || error.code === 'PGRST301')) {
@@ -104,24 +153,31 @@
     if (!user || !user.id) throw new Error('تعذر إنشاء هوية الدردشة.');
     state.user = user;
 
-    var existing = await client.from('chat_profiles').select('id,handle').eq('id', user.id).maybeSingle();
+    await hydrateAccountProfile();
+    var details = accountProfileDetails();
+    var existing = await client.from('chat_profiles').select('id,handle,display_name,avatar_url').eq('id', user.id).maybeSingle();
     if (existing.error) throw existing.error;
     if (existing.data) {
-      state.profile = existing.data;
+      var profileUpdate = { display_name: details.display_name };
+      if (details.has_avatar) profileUpdate.avatar_url = details.avatar_url;
+      var updated = await client.from('chat_profiles').update(profileUpdate).eq('id', user.id)
+        .select('id,handle,display_name,avatar_url').single();
+      if (updated.error) throw updated.error;
+      state.profile = updated.data;
       return state.profile;
     }
     for (var attempt = 0; attempt < 5; attempt++) {
       var inserted = await client.from('chat_profiles')
-        .insert({ id: user.id, handle: randomHandle() })
-        .select('id,handle').single();
+        .insert({ id: user.id, handle: randomHandle(), display_name: details.display_name, avatar_url: details.avatar_url })
+        .select('id,handle,display_name,avatar_url').single();
       if (!inserted.error && inserted.data) {
         state.profile = inserted.data;
         return state.profile;
       }
       if (inserted.error && inserted.error.code === '23505') continue;
-      throw inserted.error || new Error('تعذر إنشاء رمز الدردشة.');
+      throw inserted.error || new Error('تعذر إنشاء ملف الحساب في الدردشة.');
     }
-    throw new Error('تعذر توليد رمز دردشة فريد؛ أعد المحاولة.');
+    throw new Error('تعذر إعداد حساب الدردشة؛ أعد المحاولة.');
   }
   function addChatStyles() {
     if (document.getElementById('supabasePrivateChatStyle')) return;
@@ -134,7 +190,7 @@
       '.spc-tab{border:0;border-radius:20px;background:#edf3ee;color:#31563a;padding:9px 12px;font:inherit;font-size:12px;font-weight:700;white-space:nowrap}',
       '.spc-tab.active{background:#2E7D32;color:#fff}',
       '.spc-card{background:#fff;border:1px solid #e6ece7;border-radius:14px;padding:12px;margin:0 0 9px;display:flex;align-items:center;gap:10px}',
-      '.spc-avatar{width:44px;height:44px;flex:0 0 44px;border-radius:50%;background:#e8f5e9;color:#2E7D32;display:flex;align-items:center;justify-content:center;font-size:21px}',
+      '.spc-avatar{width:44px;height:44px;flex:0 0 44px;border-radius:50%;background:#e8f5e9;color:#2E7D32;display:flex;align-items:center;justify-content:center;font-size:21px;overflow:hidden}.spc-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}',
       '.spc-info{flex:1;min-width:0}.spc-small{font-size:12px;color:#758078;margin-top:4px;overflow-wrap:anywhere}',
       '.spc-actions{display:flex;gap:6px;flex-wrap:wrap}.spc-btn{border:0;border-radius:9px;padding:9px 12px;font:inherit;font-size:12px;font-weight:700;cursor:pointer}',
       '.spc-green{background:#2E7D32;color:#fff}.spc-blue{background:#1976D2;color:#fff}.spc-red{background:#C62828;color:#fff}.spc-gray{background:#ecefec;color:#334438}',
@@ -192,16 +248,19 @@
   function refreshIdentityNote() {
     var note = document.getElementById('spcIdentityNote');
     if (!note || !state.profile) return;
-    note.innerHTML = 'هوية دردشة مستقلة عن حساب المنصة. شارك هذا الرمز مع صديقك فقط، ولا تكتب اسمك الكامل: <span class="spc-code">' + escapeHtml(state.profile.handle) + '</span> <button id="spcCopyCode" class="spc-btn spc-gray" type="button">نسخ الرمز</button><div style="font-size:11px;margin-top:5px">احفظ الرمز للتواصل؛ لكنه لا يستعيد الحساب إذا حُذفت بيانات التطبيق أو تغيّر الجهاز.</div>';
-    var copy = document.getElementById('spcCopyCode');
-    if (copy) copy.onclick = async function () {
-      try { await navigator.clipboard.writeText(state.profile.handle); toast('تم نسخ رمز الدردشة'); }
-      catch (_) { window.prompt('انسخ رمز الدردشة', state.profile.handle); }
-    };
+    note.textContent = 'حسابك ظاهر باسم: ' + memberLabel(state.profile) + ' — ابحث عن أصدقائك بالاسم أو اخترهم من القائمة.';
   }
-  function rowCard(icon, title, subtitle, actions) {
+  function rowCard(icon, title, subtitle, actions, photoUrl) {
     var row = document.createElement('div'); row.className = 'spc-card';
-    var avatar = document.createElement('div'); avatar.className = 'spc-avatar'; avatar.textContent = icon || '👤';
+    var avatar = document.createElement('div'); avatar.className = 'spc-avatar';
+    var fallback = icon || Array.from(String(title || 'مستخدم').trim())[0] || '👤';
+    var imageUrl = avatarSource({ avatar_url: photoUrl });
+    if (imageUrl) {
+      var image = document.createElement('img'); image.src = imageUrl; image.alt = title || 'صورة الحساب';
+      image.loading = 'lazy'; image.referrerPolicy = 'no-referrer';
+      image.onerror = function () { image.remove(); avatar.textContent = fallback; };
+      avatar.appendChild(image);
+    } else avatar.textContent = fallback;
     var info = document.createElement('div'); info.className = 'spc-info';
     var name = document.createElement('b'); name.textContent = title || 'مستخدم';
     var detail = document.createElement('div'); detail.className = 'spc-small'; detail.textContent = subtitle || '';
@@ -223,7 +282,7 @@
   async function profilesById(ids) {
     var unique = Array.from(new Set((ids || []).filter(Boolean)));
     if (!unique.length) return {};
-    var result = await client.from('chat_profiles').select('id,handle').in('id', unique);
+    var result = await client.from('chat_profiles').select('id,display_name,avatar_url').in('id', unique);
     if (result.error) throw result.error;
     var map = {};
     (result.data || []).forEach(function (profile) { map[profile.id] = profile; });
@@ -254,19 +313,19 @@
     if (result.error) throw result.error;
     var conversations = result.data || [];
     box.innerHTML = '';
-    var search = actionButton('➕ ابحث برمز صديق', 'spc-blue', function () { openHomeTab('friends'); });
+    var search = actionButton('➕ ابحث عن صديق بالاسم', 'spc-blue', function () { openHomeTab('friends'); });
     search.style.marginBottom = '10px'; box.appendChild(search);
     if (!conversations.length) {
       var empty = document.createElement('div'); empty.className = 'empty-state';
-      empty.innerHTML = '<div class="empty-state-icon">💬</div><p>لا توجد محادثات بعد.</p><p style="font-size:12px">اطلب رمز صديقك وأرسل له طلب صداقة.</p>';
+      empty.innerHTML = '<div class="empty-state-icon">💬</div><p>لا توجد محادثات بعد.</p><p style="font-size:12px">اختر صديقًا بالاسم من قسم الأصدقاء وأرسل له طلبًا.</p>';
       box.appendChild(empty); return;
     }
     var peers = await profilesById(conversations.map(peerIdFromConversation));
     conversations.forEach(function (conversation) {
       var peer = peers[peerIdFromConversation(conversation)] || {};
       var time = conversation.updated_at ? new Date(conversation.updated_at).toLocaleDateString('ar-EG') : '';
-      var open = actionButton('فتح', 'spc-green', function () { window.openChat(conversation.id, peer.id, peer.handle); });
-      box.appendChild(rowCard('💬', memberLabel(peer.handle), time ? 'آخر نشاط: ' + time : 'محادثة خاصة', open));
+      var open = actionButton('فتح', 'spc-green', function () { window.openChat(conversation.id, peer.id, peer); });
+      box.appendChild(rowCard('💬', memberLabel(peer), time ? 'آخر نشاط: ' + time : 'محادثة خاصة', open, peer.avatar_url));
     });
   }
   async function acceptedFriendRequests() {
@@ -280,55 +339,132 @@
   async function renderFriends(box) {
     box.innerHTML = '';
     var help = document.createElement('div'); help.className = 'spc-note';
-    help.textContent = 'ابحث بالرمز العشوائي الكامل المكوّن من 12 حرفًا/رقمًا. لا يوجد دليل بأسماء الطلاب.';
+    help.textContent = 'ابحث باسم صاحب الحساب أو اختره من القائمة. أصدقاؤك وطلباتك محفوظة؛ والحسابات القديمة تظهر بعد فتح أصحابها للمنصة مرة واحدة.';
     box.appendChild(help);
     var searchBar = document.createElement('div'); searchBar.className = 'spc-search';
-    var input = document.createElement('input'); input.type = 'text'; input.className = 'form-input'; input.maxLength = 12;
-    input.autocomplete = 'off'; input.autocapitalize = 'characters'; input.placeholder = 'رمز الصديق (12 خانة)';
-    var search = actionButton('بحث', 'spc-blue', function () { searchByHandle(input.value, results); });
-    searchBar.appendChild(input); searchBar.appendChild(search); box.appendChild(searchBar);
-    input.addEventListener('keydown', function (event) { if (event.key === 'Enter') searchByHandle(input.value, results); });
-    var results = document.createElement('div'); box.appendChild(results);
-    var divider = document.createElement('h3'); divider.textContent = 'أصدقائي'; box.appendChild(divider);
+    var input = document.createElement('input'); input.type = 'search'; input.className = 'form-input'; input.maxLength = 80;
+    input.autocomplete = 'off'; input.placeholder = 'ابحث باسم صاحب الحساب';
+    var clear = actionButton('مسح', 'spc-gray', function () { input.value = ''; updateDirectorySearch(); input.focus(); });
+    searchBar.appendChild(input); searchBar.appendChild(clear); box.appendChild(searchBar);
+
+    var friendsTitle = document.createElement('h3'); friendsTitle.textContent = 'أصدقائي'; box.appendChild(friendsTitle);
     var friendsBox = document.createElement('div'); box.appendChild(friendsBox);
-    var requests = await acceptedFriendRequests();
-    if (!requests.length) { friendsBox.innerHTML = '<div class="empty-state">لا توجد صداقات بعد.</div>'; return; }
-    var ids = requests.map(function (request) { return request.sender_id === state.user.id ? request.recipient_id : request.sender_id; });
-    var profiles = await profilesById(ids);
-    requests.forEach(function (request) {
-      var id = request.sender_id === state.user.id ? request.recipient_id : request.sender_id;
-      var profile = profiles[id] || {};
-      var message = actionButton('مراسلة', 'spc-green', function () { openConversationFor(id, profile.handle); });
-      friendsBox.appendChild(rowCard('👤', memberLabel(profile.handle), 'رمز: ' + (profile.handle || 'غير متاح'), message));
+    var suggestionsTitle = document.createElement('h3'); suggestionsTitle.textContent = 'اقتراحات صداقة'; suggestionsTitle.style.marginTop = '18px'; box.appendChild(suggestionsTitle);
+    var suggestionsBox = document.createElement('div'); box.appendChild(suggestionsBox);
+    var directoryTitle = document.createElement('h3'); directoryTitle.textContent = 'كل الحسابات'; directoryTitle.style.marginTop = '18px'; box.appendChild(directoryTitle);
+    var directoryBox = document.createElement('div'); box.appendChild(directoryBox);
+    var loadMoreButton = actionButton('عرض المزيد', 'spc-gray', function () { loadDirectoryPage(false); });
+    loadMoreButton.style.display = 'none'; box.appendChild(loadMoreButton);
+
+    var uid = state.user.id;
+    var requestResult = await client.from('chat_friend_requests')
+      .select('id,sender_id,recipient_id,status,created_at,updated_at')
+      .or('sender_id.eq.' + uid + ',recipient_id.eq.' + uid)
+      .order('updated_at', { ascending: false }).limit(1000);
+    if (requestResult.error) throw requestResult.error;
+
+    var directory = [];
+    var directoryOffset = 0;
+    var directoryQuery = '';
+    var directoryHasMore = false;
+    var directoryRequestToken = 0;
+    var relationships = {};
+    (requestResult.data || []).forEach(function (request) {
+      var otherId = request.sender_id === uid ? request.recipient_id : request.sender_id;
+      if (!relationships[otherId]) relationships[otherId] = request;
     });
-  }
-  async function searchByHandle(rawHandle, resultsBox) {
-    if (!resultsBox) return;
-    var handle = String(rawHandle || '').trim().toUpperCase();
-    if (!/^[A-HJ-NP-Z2-9]{12}$/.test(handle)) {
-      resultsBox.innerHTML = '<div class="spc-small">أدخل الرمز الكامل الصحيح (12 خانة).</div>'; return;
-    }
-    resultsBox.innerHTML = '<div class="spc-small">⏳ جارٍ البحث…</div>';
-    try {
-      var found = await client.rpc('chat_find_profile_by_handle', { p_handle: handle });
-      if (found.error) throw found.error;
-      var profile = found.data && found.data[0];
-      if (!profile) { resultsBox.innerHTML = '<div class="spc-small">لم نعثر على هذا الرمز. تأكد منه مع صديقك.</div>'; return; }
-      var own = profile.profile_id === state.user.id;
-      if (own) { resultsBox.innerHTML = '<div class="spc-small">هذا رمزك أنت.</div>'; return; }
-      var prior = await requestBetween(state.user.id, profile.profile_id);
-      var actions;
+    var friendIds = Array.from(new Set((requestResult.data || []).filter(function (request) {
+      return request.status === 'accepted';
+    }).map(function (request) { return request.sender_id === uid ? request.recipient_id : request.sender_id; })));
+    var friendProfiles = await profilesById(friendIds);
+    friendsBox.innerHTML = '';
+    if (!friendIds.length) friendsBox.innerHTML = '<div class="empty-state">لا توجد صداقات بعد. اختر حسابًا من الاقتراحات أو القائمة.</div>';
+    friendIds.forEach(function (id) {
+      var profile = friendProfiles[id] || { id: id, display_name: 'مستخدم' };
+      var message = actionButton('مراسلة', 'spc-green', function () { openConversationFor(id, profile); });
+      friendsBox.appendChild(rowCard('👤', memberLabel(profile), 'صديق', message, profile.avatar_url));
+    });
+
+    function accountAction(profile) {
+      var prior = relationships[profile.profile_id];
       if (prior && prior.status === 'accepted') {
-        actions = actionButton('مراسلة', 'spc-green', function () { openConversationFor(profile.profile_id, profile.handle); });
-      } else if (prior && prior.status === 'pending') {
-        actions = actionButton(prior.sender_id === state.user.id ? 'الطلب مُرسل' : 'لديك طلب منه', 'spc-gray', function () {});
-        actions.disabled = true;
-      } else {
-        actions = actionButton('إرسال طلب صداقة', 'spc-blue', function () { sendFriendRequest(profile); });
+        return actionButton('مراسلة', 'spc-green', function () { openConversationFor(profile.profile_id, profile); });
       }
-      resultsBox.innerHTML = '';
-      resultsBox.appendChild(rowCard('👤', memberLabel(profile.handle), 'رمز مطابق', actions));
-    } catch (error) { reportError(error, 'تعذر البحث الآن.'); }
+      if (prior && prior.status === 'pending') {
+        var pendingButton = actionButton(prior.sender_id === uid ? 'تم إرسال الطلب' : 'الطلبات الواردة', 'spc-gray', function () {
+          openHomeTab('requests');
+        });
+        if (prior.sender_id === uid) pendingButton.disabled = true;
+        return pendingButton;
+      }
+      return actionButton('إضافة صديق', 'spc-blue', function () { sendFriendRequest(profile); });
+    }
+    function appendAccounts(target, list, emptyText) {
+      target.innerHTML = '';
+      if (!list.length) { target.innerHTML = '<div class="spc-small">' + emptyText + '</div>'; return; }
+      list.forEach(function (profile) {
+        var relation = relationships[profile.profile_id];
+        var status = relation && relation.status === 'accepted' ? 'صديق'
+          : relation && relation.status === 'pending' ? (relation.sender_id === uid ? 'طلب صداقة مُرسل' : 'أرسل لك طلب صداقة')
+          : 'حساب على المنصة';
+        target.appendChild(rowCard('👤', memberLabel(profile), status, accountAction(profile), profile.avatar_url));
+      });
+    }
+    function renderSuggestions() {
+      var candidates = directory.filter(function (profile) { return !relationships[profile.profile_id]; });
+      for (var i = candidates.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temporary = candidates[i]; candidates[i] = candidates[j]; candidates[j] = temporary;
+      }
+      appendAccounts(suggestionsBox, candidates.slice(0, 8), 'ستظهر اقتراحات عند توافر حسابات أخرى.');
+    }
+    async function loadDirectoryPage(reset) {
+      if (reset) {
+        directoryQuery = String(input.value || '').trim();
+        directory = []; directoryOffset = 0; directoryHasMore = true;
+        directoryRequestToken++;
+        directoryBox.innerHTML = '<div class="spc-small">⏳ جارٍ تحميل الحسابات…</div>';
+      }
+      if (!directoryHasMore) return;
+      var token = directoryRequestToken;
+      loadMoreButton.disabled = true;
+      try {
+        var response = await client.rpc('chat_list_directory_page', {
+          p_query: directoryQuery, p_limit: 100, p_offset: directoryOffset
+        });
+        if (response.error) throw response.error;
+        if (token !== directoryRequestToken) return;
+        var page = (response.data || []).map(function (profile) {
+          return { profile_id: profile.profile_id, display_name: profile.display_name, avatar_url: profile.avatar_url };
+        });
+        directory = directory.concat(page);
+        directoryOffset += page.length;
+        directoryHasMore = page.length === 100;
+        appendAccounts(directoryBox, directory, directoryQuery
+          ? 'لا توجد حسابات بهذا الاسم.'
+          : 'ستظهر الحسابات القديمة هنا بعد فتح أصحابها المنصة مرة واحدة.');
+        loadMoreButton.style.display = directoryHasMore ? '' : 'none';
+        if (!directoryQuery) renderSuggestions();
+      } catch (error) {
+        if (token === directoryRequestToken) {
+          directoryBox.innerHTML = '<div class="spc-small">تعذر تحميل الحسابات؛ حاول مرة أخرى.</div>';
+          loadMoreButton.style.display = 'none';
+          reportError(error, 'تعذر تحميل الحسابات.');
+        }
+      } finally {
+        if (token === directoryRequestToken) loadMoreButton.disabled = false;
+      }
+    }
+    var searchTimer = null;
+    function updateDirectorySearch() {
+      var hasQuery = !!String(input.value || '').trim();
+      suggestionsTitle.style.display = hasQuery ? 'none' : '';
+      suggestionsBox.style.display = hasQuery ? 'none' : '';
+      if (searchTimer) window.clearTimeout(searchTimer);
+      searchTimer = window.setTimeout(function () { loadDirectoryPage(true); }, 250);
+    }
+    input.addEventListener('input', updateDirectorySearch);
+    await loadDirectoryPage(true);
   }
   async function requestBetween(userA, userB) {
     var first = await client.from('chat_friend_requests').select('id,sender_id,recipient_id,status')
@@ -349,7 +485,7 @@
         sender_id: state.user.id, recipient_id: profile.profile_id, status: 'pending'
       });
       if (result.error) throw result.error;
-      toast('تم إرسال طلب الصداقة إلى صاحب الرمز.');
+      toast('تم إرسال طلب الصداقة إلى صاحب الحساب.');
       openHomeTab('friends');
     } catch (error) { reportError(error, 'تعذر إرسال الطلب.'); }
   }
@@ -372,14 +508,14 @@
         actionButton('قبول', 'spc-green', function () { answerFriendRequest(request.id, 'accepted'); }),
         actionButton('رفض', 'spc-red', function () { answerFriendRequest(request.id, 'rejected'); })
       );
-      box.appendChild(rowCard('📩', memberLabel(profile.handle), 'رمز المرسل: ' + (profile.handle || 'غير متاح'), actions));
+      box.appendChild(rowCard('📩', memberLabel(profile), 'طلب صداقة وارد', actions, profile.avatar_url));
     });
     var outgoingTitle = document.createElement('h3'); outgoingTitle.textContent = 'طلبات أرسلتها'; outgoingTitle.style.marginTop = '18px'; box.appendChild(outgoingTitle);
     var outgoing = pending.filter(function (request) { return request.sender_id === uid; });
     if (!outgoing.length) { var noneOut = document.createElement('div'); noneOut.className = 'spc-small'; noneOut.textContent = 'لا توجد طلبات معلقة أرسلتها.'; box.appendChild(noneOut); }
     outgoing.forEach(function (request) {
       var profile = profiles[request.recipient_id] || {};
-      box.appendChild(rowCard('⏳', memberLabel(profile.handle), 'بانتظار قبول الطلب • ' + (profile.handle || ''), null));
+      box.appendChild(rowCard('⏳', memberLabel(profile), 'بانتظار قبول طلب الصداقة', null, profile.avatar_url));
     });
   }
   async function answerFriendRequest(requestId, status) {
@@ -391,11 +527,12 @@
       openHomeTab('requests');
     } catch (error) { reportError(error, 'تعذر تحديث طلب الصداقة.'); }
   }
-  async function openConversationFor(friendId, handle) {
+  async function openConversationFor(friendId, profile) {
     try {
       var result = await client.rpc('chat_open_conversation', { p_other_user: friendId });
       if (result.error) throw result.error;
-      await window.openChat(result.data, friendId, handle);
+      var friendProfile = profile && typeof profile === 'object' ? profile : { display_name: String(profile || 'مستخدم') };
+      await window.openChat(result.data, friendId, friendProfile);
     } catch (error) { reportError(error, 'لا يمكن فتح المحادثة قبل قبول طلب الصداقة.'); }
   }
   async function renderCallHistory(box) {
@@ -414,7 +551,7 @@
       var other = call.caller_id === uid ? call.callee_id : call.caller_id;
       var profile = peers[other] || {};
       var when = call.created_at ? new Date(call.created_at).toLocaleString('ar-EG') : '';
-      box.appendChild(rowCard(call.call_type === 'video' ? '📹' : '📞', memberLabel(profile.handle), (labels[call.status] || call.status) + (when ? ' • ' + when : ''), null));
+      box.appendChild(rowCard(call.call_type === 'video' ? '📹' : '📞', memberLabel(profile), (labels[call.status] || call.status) + (when ? ' • ' + when : ''), null, profile.avatar_url));
     });
   }
   function stopChannel(channel) {
@@ -481,15 +618,17 @@
     if (typeof legacyOpenPublicChat === 'function') return legacyOpenPublicChat.apply(this, arguments);
     toast('الدردشة الجماعية غير متاحة حاليًا.');
   };
-  window.openChat = async function (conversationId, friendId, handle) {
+  window.openChat = async function (conversationId, friendId, profile) {
     if (!conversationId || !friendId) return toast('بيانات المحادثة غير مكتملة.');
     addChatStyles();
     state.mode = 'private'; state.conversationId = conversationId;
-    state.friend = { id: friendId, handle: handle || '' };
+    state.friend = profile && typeof profile === 'object'
+      ? { id: friendId, display_name: memberLabel(profile), avatar_url: avatarSource(profile) }
+      : { id: friendId, display_name: memberLabel(profile), avatar_url: '' };
     var screen = document.getElementById('supabasePrivateChatScreen');
     if (!screen) screen = createPrivateChatScreen();
     var title = screen.querySelector('[data-spc-title]');
-    if (title) title.textContent = memberLabel(state.friend.handle);
+    if (title) title.textContent = memberLabel(state.friend.display_name);
     if (state.messageChannel) { stopChannel(state.messageChannel); state.messageChannel = null; }
     pushScreen('supabasePrivateChatScreen');
     await loadMessages();
@@ -539,7 +678,7 @@
       var mine = message.sender_id === state.user.id;
       var bubble = document.createElement('div'); bubble.className = 'spc-bubble ' + (mine ? 'mine' : 'other');
       var sender = document.createElement('div'); sender.style.fontSize = '11px'; sender.style.fontWeight = 'bold';
-      sender.textContent = mine ? 'أنت' : memberLabel(state.friend && state.friend.handle);
+      sender.textContent = mine ? 'أنت' : memberLabel(state.friend && state.friend.display_name);
       bubble.appendChild(sender);
       if (message.kind === 'text') {
         var body = document.createElement('div'); body.textContent = message.body || ''; bubble.appendChild(body);
@@ -653,17 +792,27 @@
     var rtc = window.CHAT_RTC_CONFIG || {};
     return Array.isArray(rtc.iceServers) && rtc.iceServers.length ? rtc : { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
   }
-  function showCallUi(type, handle) {
+  function showCallUi(type, profile) {
+    var callProfile = profile && typeof profile === 'object' ? profile : { display_name: profile };
     var previous = document.getElementById('spcActiveCall'); if (previous) previous.remove();
     var call = document.createElement('div'); call.id = 'spcActiveCall'; call.className = 'spc-call';
     call.innerHTML = '<div style="text-align:center;padding:8px"><b></b><div data-call-status style="font-size:13px;opacity:.85;margin-top:6px">جارٍ الاتصال…</div></div><div class="spc-call-stage"><video class="spc-remote-video" data-remote-video autoplay playsinline></video><audio data-remote-audio autoplay></audio><video class="spc-local-video" data-local-video autoplay playsinline muted></video><div data-audio-avatar style="position:absolute;font-size:64px;display:none">📞</div></div><div class="spc-call-controls"><button data-mute style="background:#456;color:#fff">🎙️</button><button data-camera style="background:#456;color:#fff">📹</button><button data-end style="background:#C62828;color:#fff">📵</button></div>';
-    call.querySelector('b').textContent = memberLabel(handle);
+    call.querySelector('b').textContent = memberLabel(callProfile);
     document.body.appendChild(call);
     var camera = call.querySelector('[data-camera]'); camera.style.display = type === 'video' ? '' : 'none';
     if (type === 'audio') {
       call.querySelector('[data-remote-video]').style.display = 'none';
       call.querySelector('[data-local-video]').style.display = 'none';
-      call.querySelector('[data-audio-avatar]').style.display = 'block';
+      var audioAvatar = call.querySelector('[data-audio-avatar]'); audioAvatar.style.display = 'block';
+      var photo = avatarSource(callProfile);
+      if (photo) {
+        audioAvatar.textContent = ''; audioAvatar.style.width = '112px'; audioAvatar.style.height = '112px';
+        audioAvatar.style.borderRadius = '50%'; audioAvatar.style.overflow = 'hidden'; audioAvatar.style.border = '3px solid #fff';
+        var image = document.createElement('img'); image.src = photo; image.alt = memberLabel(callProfile);
+        image.style.width = '100%'; image.style.height = '100%'; image.style.objectFit = 'cover';
+        image.referrerPolicy = 'no-referrer'; image.onerror = function () { image.remove(); audioAvatar.textContent = '📞'; };
+        audioAvatar.appendChild(image);
+      }
     }
     call.querySelector('[data-end]').onclick = function () { finishCall(true); };
     call.querySelector('[data-mute]').onclick = toggleMute;
@@ -758,7 +907,7 @@
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.RTCPeerConnection) throw new Error('المتصفح أو APK لا يدعم الكاميرا والميكروفون.');
       var stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: type === 'video' });
       var peer = createPeerConnection(); stream.getTracks().forEach(function (track) { peer.addTrack(track, stream); });
-      bindLocalStream(stream); showCallUi(type, state.friend.handle);
+      bindLocalStream(stream); showCallUi(type, state.friend);
       var offer = await peer.createOffer(); await peer.setLocalDescription(offer);
       var inserted = await client.from('chat_calls').insert({
         conversation_id: state.conversationId, caller_id: state.user.id, callee_id: state.friend.id,
@@ -798,16 +947,25 @@
       }
       return;
     }
-    var profile = await client.from('chat_profiles').select('id,handle').eq('id', row.caller_id).maybeSingle();
-    var handle = profile.data && profile.data.handle || 'مستخدم';
+    var profile = await client.from('chat_profiles').select('id,display_name,avatar_url').eq('id', row.caller_id).maybeSingle();
+    var callerProfile = profile.data || { display_name: 'مستخدم' };
+    var callerName = memberLabel(callerProfile);
     var modal = document.createElement('div'); modal.id = 'spcIncomingCall'; modal.className = 'spc-incoming';
     modal.dataset.callId = row.id;
     modal.innerHTML = '<div class="spc-incoming-card"><div class="spc-avatar">📞</div><h2></h2><p></p><div class="spc-actions" style="justify-content:center"><button class="spc-btn spc-green" data-accept>✅ قبول</button><button class="spc-btn spc-red" data-reject>❌ رفض</button></div></div>';
-    modal.querySelector('h2').textContent = memberLabel(handle);
+    modal.querySelector('h2').textContent = callerName;
     modal.querySelector('p').textContent = row.call_type === 'video' ? 'مكالمة فيديو واردة' : 'مكالمة صوتية واردة';
+    var callerAvatar = modal.querySelector('.spc-avatar');
+    var callerPhoto = avatarSource(callerProfile);
+    if (callerPhoto) {
+      callerAvatar.textContent = '';
+      var callerImage = document.createElement('img'); callerImage.src = callerPhoto; callerImage.alt = callerName;
+      callerImage.referrerPolicy = 'no-referrer'; callerImage.onerror = function () { callerImage.remove(); callerAvatar.textContent = '📞'; };
+      callerAvatar.appendChild(callerImage);
+    }
     document.body.appendChild(modal);
     state.incomingCallId = String(row.id);
-    if (window.HafezCallAlerts) window.HafezCallAlerts.start(row.id, memberLabel(handle));
+    if (window.HafezCallAlerts) window.HafezCallAlerts.start(row.id, callerName);
     if (state.incomingCallTimer) window.clearTimeout(state.incomingCallTimer);
     state.incomingCallTimer = window.setTimeout(function () {
       stopIncomingCallAlert(row.id);
@@ -838,10 +996,10 @@
       var row = result.data;
       if (row.status !== 'ringing') throw new Error('انتهت المكالمة أو لم تعد متاحة.');
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.RTCPeerConnection) throw new Error('المتصفح لا يدعم الكاميرا والميكروفون.');
-      var profile = await client.from('chat_profiles').select('id,handle').eq('id', row.caller_id).maybeSingle();
+      var profile = await client.from('chat_profiles').select('id,display_name,avatar_url').eq('id', row.caller_id).maybeSingle();
       state.call = { id: row.id, role: 'callee', type: row.call_type, localEnding: false };
       var stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: row.call_type === 'video' });
-      showCallUi(row.call_type, profile.data && profile.data.handle || 'مستخدم'); bindLocalStream(stream);
+      showCallUi(row.call_type, profile.data || { display_name: 'مستخدم' }); bindLocalStream(stream);
       var peer = createPeerConnection(); stream.getTracks().forEach(function (track) { peer.addTrack(track, stream); });
       subscribeCall(row.id, 'callee');
       await peer.setRemoteDescription(new RTCSessionDescription(row.offer));
@@ -889,6 +1047,28 @@
     if (state.mode === 'private') return sendPrivateMessage();
     if (typeof legacySendMessage === 'function') return legacySendMessage.apply(this, arguments);
   };
+  window.syncPrivateChatProfile = function () {
+    var account = appUser();
+    if (!account || !account.uid) return Promise.resolve(null);
+    return ensureIdentity();
+  };
+  function syncCurrentAccountProfile() {
+    var account = appUser();
+    if (!account || !account.uid || typeof window.syncPrivateChatProfile !== 'function') return;
+    window.syncPrivateChatProfile().catch(function (error) {
+      console.warn('[private-chat] account profile sync deferred', error);
+    });
+  }
+  var originalPlatformLogin = window.login;
+  if (typeof originalPlatformLogin === 'function') {
+    window.login = function () {
+      var result = originalPlatformLogin.apply(this, arguments);
+      Promise.resolve(result).then(syncCurrentAccountProfile).catch(function () {});
+      return result;
+    };
+  }
+  if (appUser()) window.setTimeout(syncCurrentAccountProfile, 0);
+  window.addEventListener('load', syncCurrentAccountProfile);
   var originalLogout = window.logout;
   window.logout = async function () {
     await finishCall(true);
