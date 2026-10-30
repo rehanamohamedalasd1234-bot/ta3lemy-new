@@ -761,7 +761,7 @@
         if (!state.call || state.call.id !== inserted.data.id) return;
         var current = await client.from('chat_calls').select('status').eq('id', inserted.data.id).maybeSingle();
         if (!current.error && current.data && current.data.status === 'ringing') {
-          await client.from('chat_calls').update({ status: 'missed', offer: null, answer: null }).eq('id', inserted.data.id);
+          await client.from('chat_calls').update({ status: 'missed' }).eq('id', inserted.data.id);
         }
       }, 45000);
       toast('جارٍ الاتصال…');
@@ -777,13 +777,13 @@
     if (!row || row.status !== 'ringing' || !state.user || row.callee_id !== state.user.id) return;
     if (Date.now() - Date.parse(row.created_at || Date.now()) > 60000) return;
     if (state.call) {
-      await client.from('chat_calls').update({ status: 'busy', offer: null, answer: null }).eq('id', row.id).eq('callee_id', state.user.id);
+      await client.from('chat_calls').update({ status: 'busy' }).eq('id', row.id).eq('callee_id', state.user.id);
       return;
     }
     var activeIncoming = document.getElementById('spcIncomingCall');
     if (activeIncoming) {
       if (activeIncoming.dataset.callId !== row.id) {
-        await client.from('chat_calls').update({ status: 'busy', offer: null, answer: null }).eq('id', row.id).eq('callee_id', state.user.id);
+        await client.from('chat_calls').update({ status: 'busy' }).eq('id', row.id).eq('callee_id', state.user.id);
       }
       return;
     }
@@ -799,7 +799,7 @@
     modal.querySelector('[data-accept]').onclick = function () { modal.remove(); acceptIncomingCall(row.id); };
     modal.querySelector('[data-reject]').onclick = async function () {
       modal.remove();
-      var update = await client.from('chat_calls').update({ status: 'rejected', offer: null, answer: null }).eq('id', row.id).eq('callee_id', state.user.id);
+      var update = await client.from('chat_calls').update({ status: 'rejected' }).eq('id', row.id).eq('callee_id', state.user.id);
       if (update.error) console.warn(update.error);
     };
   }
@@ -831,7 +831,7 @@
     if (!active) { var unused = document.getElementById('spcActiveCall'); if (unused) unused.remove(); return; }
     active.localEnding = true;
     if (updateServer && active.id) {
-      var update = await client.from('chat_calls').update({ status: 'ended', offer: null, answer: null }).eq('id', active.id);
+      var update = await client.from('chat_calls').update({ status: 'ended' }).eq('id', active.id);
       if (update.error) console.warn('[private-chat] could not mark call ended', update.error);
     }
     clearTimeout(state.missedTimer); clearTimeout(state.disconnectTimer);
