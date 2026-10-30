@@ -9,7 +9,7 @@ const APP_SHELL = [
   './math-grade7-term1.js',
   './religion-grade7-term1.js', './computer-grade7-term1.js', './art-grade7-term1.js',
   './math-grade8-term1.js', './computer-grade8-term1.js', './religion-grade8-term1.js', './art-grade8-term1.js',
-  './grade9-term1-content.js', './continuous-assessment.js', './primary-official-only.js', './grade1-math-official.js', './primary-grade2-structure.js', './primary-grade2-detailed-content.json', './primary-grade3-structure.js', './primary-grade3-detailed-content.json', './primary-grade4-structure.js', './primary-grades456-detailed-content.json', './primary-grade5-structure.js', './primary-grade6-structure.js',
+  './grade9-term1-content.js', './continuous-assessment.js', './primary-official-only.js', './grade1-math-official.js', './grade1-math-expanded.js', './primary-grade2-structure.js', './primary-grade2-detailed-content.json', './primary-grade3-structure.js', './primary-grade3-detailed-content.json', './primary-grade4-structure.js', './primary-grades456-detailed-content.json', './primary-grade5-structure.js', './primary-grade6-structure.js',
   './creativity-config.js', './creativity.js', './gemini-fix.js', './chat-config.js', './chat-system.js',
   './supabase-chat-config.js', './supabase-private-chat.js',
   './admin-system.js', './kindergarten-languages.js', './icon-512.png'
