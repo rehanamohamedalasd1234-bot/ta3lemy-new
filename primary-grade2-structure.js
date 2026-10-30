@@ -1,5 +1,5 @@
 /* الصف الثاني الابتدائي — طبقة ربط المواد بالمسار الموحد
-   تعتمد على primary-grade2-detailed-content.json ولا تستبدل مسارات الصف الأول أو الإعدادي. */
+   تعتمد على primary-grade2-detailed-content.json / window.PRIMARY_GRADE2_DETAILED_DATA ولا تستبدل مسارات الصف الأول أو الإعدادي. */
 (function(){'use strict';
   var oldOpenGrade=window.openGrade, oldOpenSubject=window.openSubject;
   var SOURCE='https://ellibrary.moe.gov.eg/Books/Books-Primary';
@@ -15,7 +15,12 @@
   function isGrade2(){return window.currentStage==='primary'&&window.currentGrade==='الثاني';}
   function screen(id){if(window.screenHistory)window.screenHistory.push(window.currentScreen);if(window.showScreen)window.showScreen(id);}
   function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
-  function loadData(){if(!dataPromise)dataPromise=fetch('./primary-grade2-detailed-content.json').then(function(r){if(!r.ok)throw Error('تعذر تحميل بيانات الصف الثاني');return r.json()});return dataPromise}
+  function loadData(){
+    if (window.PRIMARY_GRADE2_DETAILED_DATA && Array.isArray(window.PRIMARY_GRADE2_DETAILED_DATA)) {
+      return Promise.resolve(window.PRIMARY_GRADE2_DETAILED_DATA);
+    }
+    if(!dataPromise)dataPromise=fetch('./primary-grade2-detailed-content.json').then(function(r){if(!r.ok)throw Error('تعذر تحميل بيانات الصف الثاني');return r.json()});return dataPromise;
+  }
   function subjectsScreen(){
     var l=document.getElementById('subjectsList'),t=document.getElementById('subjectsTitle');
     if(t)t.textContent='الصف الثاني الابتدائي — المواد';
@@ -30,6 +35,6 @@
   }
   function openContent2(type,term){var l=document.getElementById('contentList'),title=document.getElementById('contentTitle'),head=document.getElementById('contentHeaderTitle'),sub=document.getElementById('contentHeaderSub');var labels={lessons:'📄 الدروس',exercises:'✏️ التدريبات',exams:'📝 الامتحانات',reviews:'🔁 المراجعات',videos:'🎥 الفيديوهات'};if(title)title.textContent=labels[type];if(head)head.textContent=window.currentSubject+' — الترم '+(term===1?'الأول':'الثاني');if(sub)sub.textContent='الصف الثاني الابتدائي';if(l)l.innerHTML='<div class="empty-state"><p>⏳ جاري تحميل المحتوى...</p></div>';screen('contentScreen');loadData().then(function(all){var rows=all.filter(function(x){return x.subject===window.currentSubject&&Number(x.term)===term&&(x.type===type||(type==='reviews'&&x.type==='exams'));});if(!rows.length){l.innerHTML='<div class="empty-state"><div class="empty-state-icon">📭</div><p>لا يوجد محتوى محفوظ لهذا القسم بعد.</p></div>';return}rows.sort(function(a,b){return (a.order||99)-(b.order||99)});l.innerHTML=rows.map(function(x,i){return '<button class="content-item" data-g2-item="'+i+'" style="width:100%;text-align:right;border:0"><div class="content-item-icon">'+(type==='exams'?'📝':type==='exercises'?'✏️':'📘')+'</div><div class="content-item-info"><div class="content-item-title">'+esc(x.title)+'</div><div class="content-item-sub">'+esc((x.content||'').slice(0,90))+'</div></div><div class="content-item-arrow">‹</div></button>'}).join('');document.querySelectorAll('[data-g2-item]').forEach(function(b){b.onclick=function(){view2(rows[Number(b.dataset.g2Item)])}})}).catch(function(){l.innerHTML='<div class="empty-state"><p>⚠️ تعذر تحميل بيانات الصف الثاني. تحقق من الاتصال ثم أعد المحاولة.</p></div>'})}
   function view2(x){var l=document.getElementById('contentList'),title=document.getElementById('contentTitle');if(title)title.textContent=x.title;l.innerHTML='<article class="lesson-body"><h2>'+esc(x.title)+'</h2>'+(x.image_url?'<img src="'+x.image_url+'" alt="صورة تعليمية" style="width:100%;border-radius:12px">':'')+'<div style="white-space:pre-line;line-height:2">'+esc(x.content||'')+'</div>'+(x.question?'<h3>سؤال التحقق</h3><p>'+esc(x.question)+'</p>':'')+(x.answer?'<details><summary>إظهار الإجابة النموذجية</summary><p>'+esc(x.answer)+'</p></details>':'')+'<button class="section-chip" id="g2Speak">🔊 استمع إلى الشرح</button>'+(x.sourceUrl?'<p><a href="'+x.sourceUrl+'" target="_blank">المصدر التعليمي</a></p>':'')+'</article>';var b=document.getElementById('g2Speak');if(b)b.onclick=function(){if('speechSynthesis' in window){speechSynthesis.cancel();var u=new SpeechSynthesisUtterance((x.title||'')+'. '+(x.content||''));u.lang='ar-EG';speechSynthesis.speak(u)}}}
-  window.openGrade=function(id,name){if(id==='primary'&&name==='الثاني'){window.currentStage='primary';window.currentGrade='الثاني';subjectsScreen();screen('subjectsScreen');return}return oldOpenGrade.apply(this,arguments)};
-  window.openSubject=function(id,name){if(isGrade2())return openSubject2(name||id);return oldOpenSubject.apply(this,arguments)};
+  window.openGrade=function(id,name){if(id==='primary'&&name==='الثاني'){window.currentStage='primary';window.currentGrade='الثاني';subjectsScreen();screen('subjectsScreen');return}if (typeof oldOpenGrade === "function") return oldOpenGrade.apply(this,arguments)};
+  window.openSubject=function(id,name){if(isGrade2())return openSubject2(name||id);if (typeof oldOpenSubject === "function") return oldOpenSubject.apply(this,arguments)};
 })();
