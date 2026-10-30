@@ -139,7 +139,6 @@
     var securityNote = document.getElementById('chatSecurityNote'); if (securityNote) { securityNote.textContent = !hasAuthIdentity() ? 'الخاص وطلبات الصداقة والمكالمات تحتاج ربط الحساب بمصادقة Firebase الآمنة. يمكن فتح المجموعة، لكن إرسال الرسائل والمرفقات يتطلب تسجيل Firebase.' : 'تم توثيق الحساب؛ يظل الخاص متوقفًا حتى نشر ومراجعة قواعد Firestore وStorage.'; securityNote.style.display = hasSecureIdentity() ? 'none' : 'block'; }
     if (!state.homeTab) state.homeTab = 'chats';
     renderHomeTab(state.homeTab);
-    listenForIncomingCalls();
   };
 
   function makeScreen(id, title) {
