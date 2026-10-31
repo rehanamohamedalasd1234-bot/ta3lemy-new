@@ -364,8 +364,12 @@
     var searchBar = document.createElement('div'); searchBar.className = 'spc-search';
     var input = document.createElement('input'); input.type = 'search'; input.className = 'form-input'; input.maxLength = 80;
     input.autocomplete = 'off'; input.placeholder = 'ابحث باسم صاحب الحساب';
-    var clear = actionButton('مسح', 'spc-gray', function () { input.value = ''; updateDirectorySearch(); input.focus(); });
-    searchBar.appendChild(input); searchBar.appendChild(clear); box.appendChild(searchBar);
+    var searchButton = actionButton('🔎 بحث', 'spc-blue', function () { updateDirectorySearch(); input.focus(); });
+    searchButton.setAttribute('aria-label', 'بحث عن صديق بالاسم');
+    input.addEventListener('keydown', function (event) {
+      if (event.key === 'Enter') { event.preventDefault(); updateDirectorySearch(); }
+    });
+    searchBar.appendChild(input); searchBar.appendChild(searchButton); box.appendChild(searchBar);
 
     var friendsTitle = document.createElement('h3'); friendsTitle.textContent = 'أصدقائي'; box.appendChild(friendsTitle);
     var friendsBox = document.createElement('div'); box.appendChild(friendsBox);
