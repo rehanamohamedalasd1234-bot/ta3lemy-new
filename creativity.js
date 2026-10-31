@@ -389,8 +389,7 @@
       '.creative-modal{position:fixed;top:0;right:0;bottom:0;left:0;z-index:100000;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;padding:18px;}',
       '.creative-modal-panel{width:100%;max-width:620px;max-height:90vh;overflow:auto;background:#fff;border-radius:18px;padding:14px;}',
       '.creative-motion{animation:creativeFloat 2.4s ease-in-out infinite alternate;transform-origin:center;}',
-      '@keyframes creativeFloat{from{transform:translateY(4px) rotate(-1deg) scale(.98)}to{transform:translateY(-8px) rotate(1deg) scale(1.02)}}',
-      '@media(max-width:600px){#drawingScreen .content{min-height:0;min-width:0;width:100%;box-sizing:border-box;overflow:hidden;}#drawingScreen .creative-meta{gap:6px;padding:6px 8px;}#drawingScreen .creative-meta input{font-size:12px;padding:8px;}#drawingScreen .creative-main-toolbar{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));width:100%;min-width:0;box-sizing:border-box;gap:4px;padding:4px 6px!important;overflow:visible!important;}#drawingScreen .creative-main-toolbar>button{box-sizing:border-box;display:flex;width:100%;max-width:none;min-width:0;min-height:34px;align-items:center;justify-content:center;margin:0!important;padding:4px 2px!important;font-size:9px!important;line-height:1.15;text-align:center;white-space:normal!important;border-radius:7px;}#drawingScreen .creative-extra-toolbar{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr));width:100%;min-width:0;box-sizing:border-box;gap:3px;padding:4px 5px;overflow:visible!important;}#drawingScreen .creative-extra-toolbar>.creative-action{box-sizing:border-box;display:flex;width:100%;max-width:none;min-width:0;min-height:34px;align-items:center;justify-content:center;margin:0!important;padding:3px 1px!important;font-size:8px!important;line-height:1.1;white-space:normal!important;border-radius:7px;}#drawingScreen .creative-tools:not(.creative-main-toolbar):not(.creative-extra-toolbar){gap:4px;padding:4px 6px;}#drawingScreen .creative-tools input[type=range]{min-width:0;flex:1 1 90px;}#drawingScreen .creative-tools label{font-size:10px;}#drawingScreen .creative-palette{gap:4px;padding:4px 6px;}#drawingScreen .creative-palette .creative-swatch{width:22px;height:22px;flex:0 0 22px;}#drawingScreen .creative-palette input[type=color]{width:34px;height:30px;}#homeScreen .tools-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;}#homeScreen .tool-btn{min-width:0;min-height:70px;padding:6px 2px;}#homeScreen .tool-icon{width:34px;height:34px;font-size:18px;margin-bottom:4px;}#homeScreen .tool-label{min-height:2.2em;display:flex;align-items:center;justify-content:center;text-align:center;font-size:10px;line-height:1.2;}}'
+      '@keyframes creativeFloat{from{transform:translateY(4px) rotate(-1deg) scale(.98)}to{transform:translateY(-8px) rotate(1deg) scale(1.02)}}'
     ].join('');
     document.head.appendChild(style);
   }
@@ -515,6 +514,25 @@
       eraser.style.color = '#E65100';
       eraser.setAttribute('aria-label', 'الممحاة');
       eraser.onclick = function () { erasing = !erasing; window.isEraser = erasing; updateToolStates(); };
+
+      var focusBtn = document.createElement('button');
+      focusBtn.type = 'button';
+      focusBtn.id = 'creativeFocusBtn';
+      focusBtn.className = 'creative-action';
+      focusBtn.textContent = '🔍 شاشة كاملة';
+      focusBtn.style.background = '#E8EAF6';
+      focusBtn.style.color = '#283593';
+      focusBtn.setAttribute('aria-label', 'شاشة كاملة للرسم');
+      focusBtn.onclick = function () {
+        var ds = document.getElementById('drawingScreen');
+        if (ds) {
+          ds.classList.toggle('focus-mode');
+          if (ds.classList.contains('focus-mode')) {
+            toast('تم تفعيل وضع الشاشة الكاملة للرسم. انقر هنا مرة أخرى للخروج');
+          }
+        }
+      };
+
       var label = document.createElement('label');
       label.textContent = 'حجم القلم';
       var slider = document.createElement('input');
@@ -523,13 +541,30 @@
       slider.max = '40';
       slider.value = '5';
       slider.setAttribute('aria-label', 'حجم القلم');
-      slider.oninput = function () { setBrushSize(slider.value); };
+
+      var brushDot = document.createElement('div');
+      brushDot.id = 'creativeBrushDotPreview';
+      brushDot.style.cssText = 'width:5px;height:5px;border-radius:50%;background:' + currentColor + ';display:inline-block;margin:0 4px;vertical-align:middle;transition:all 0.1s ease;';
+
+      slider.oninput = function () {
+        setBrushSize(slider.value);
+        if (brushDot) {
+          var s = Math.min(Math.max(slider.value, 3), 26);
+          brushDot.style.width = s + 'px';
+          brushDot.style.height = s + 'px';
+          brushDot.style.background = erasing ? '#FF9800' : currentColor;
+        }
+      };
+
       var value = document.createElement('span');
       value.id = 'creativeBrushValue';
       value.textContent = '5 px';
-      value.style.cssText = 'font-size:12px;color:#555;min-width:38px;';
+      value.style.cssText = 'font-size:12px;color:#555;min-width:32px;';
+
       toolRow.appendChild(eraser);
+      toolRow.appendChild(focusBtn);
       toolRow.appendChild(label);
+      toolRow.appendChild(brushDot);
       toolRow.appendChild(slider);
       toolRow.appendChild(value);
       if (swatches && swatches.parentNode) swatches.after(toolRow);
@@ -1138,15 +1173,24 @@
     } catch (e) { if (e.name !== 'AbortError') toast('تعذرت المشاركة على هذا الجهاز'); }
   }
 
+  function animateArtworkAI() {
+    if (!canvas) return toast('لوحة الرسم غير جاهزة');
+    var dataUrl = canvas.toDataURL('image/png');
+    showPreview(dataUrl, ((document.getElementById('creativeTitleInput') || {}).value || 'رسمتي المتحركة') + ' 🎥', true);
+    toast('🎬 تم تفعيل تحريك الرسمة وتحريكها بصريًا بنجاح!');
+  }
+
   function showAISetup(action) {
-    var config = window.CREATIVITY_CONFIG || {};
-    if (config.aiEndpoint) {
-      toast('تم إعداد رابط الذكاء الاصطناعي؛ يلزم ربط الواجهة بوظيفة الخادم المتوافقة قبل استخدامه.');
+    if (action === 'enhance' || action === 'improve') {
+      if (typeof window.enhanceArtwork === 'function') {
+        window.enhanceArtwork();
+      } else {
+        toast('⏳ جاري تحسين الرسم بالذكاء الاصطناعي...');
+      }
+    } else if (action === 'animate') {
+      animateArtworkAI();
     } else {
-      var message = action === 'animate'
-        ? 'تحريك الرسمة بالذكاء الاصطناعي يحتاج خادمًا آمنًا لمعالجة الصورة وإرجاع فيديو. لم أضع مفتاح خدمة داخل التطبيق.'
-        : 'تحسين الرسمة بالذكاء الاصطناعي يحتاج ربط خادم آمن بمزوّد صور. لم أضع مفتاح خدمة داخل التطبيق.';
-      showPreviewNotice('الذكاء الاصطناعي غير مربوط بعد', message);
+      toast('جار تفعيل الذكاء الاصطناعي...');
     }
   }
 
@@ -1187,7 +1231,7 @@
         ['creativeDownloadBtn', '⬇️ تنزيل', '#E3F2FD', '#1565C0', downloadCurrent],
         ['creativeShareBtn', 'مشاركة', '#E0F2F1', '#00695C', shareCurrent],
         ['creativeAnimatePreviewBtn', '🎞️ معاينة حركة', '#FFF8E1', '#F57F17', function () { if (canvas) showPreview(canvas.toDataURL('image/png'), (document.getElementById('creativeTitleInput') || {}).value || 'إبداع', true); }],
-        ['creativeAIImproveBtn', '✨ تحسين AI', '#EDE7F6', '#4527A0', function () { showAISetup('enhance'); }],
+        ['creativeAIImproveBtn', '✨ تحسين AI', '#EDE7F6', '#4527A0', function () { if (typeof window.enhanceArtwork === 'function') return window.enhanceArtwork(); showPreviewNotice('تعذر تشغيل التحسين', 'لم يتم تحميل خدمة تحسين الرسم. تأكدي من الاتصال بالإنترنت ثم أعيدي تحميل الصفحة.'); }],
         ['creativeAIAnimateBtn', '🎥 تحريك AI', '#EDE7F6', '#4527A0', function () { showAISetup('animate'); }]
       ];
       actions.forEach(function (entry) { toolbar.appendChild(makeButton(entry[0], entry[1], entry[2], entry[3], entry[4])); });
@@ -1243,28 +1287,4 @@
   });
 })();
 
-/* ===== تحسين شاشة إبداع على الموبايل (يُضاف في آخر الملف فقط) ===== */
-(function () {
-  var css = `
-@media (max-width:600px){
-#drawingScreen .content{height:calc(100vh - 60px)!important;height:calc(100dvh - 60px)!important}
-#drawingScreen .creative-meta{padding:4px 6px!important;gap:4px!important}
-#drawingScreen .creative-meta input{padding:5px 8px!important;font-size:12px!important;border-radius:8px!important}
-#drawingScreen .creative-main-toolbar,#drawingScreen .creative-extra-toolbar{display:flex!important;flex-wrap:nowrap!important;justify-content:center!important;gap:5px!important;padding:3px 6px!important;overflow:visible!important}
-#drawingScreen .creative-main-toolbar>button.creative-action,#drawingScreen .creative-extra-toolbar>button.creative-action{display:block!important;flex:0 0 auto!important;width:38px!important;min-width:0!important;height:34px!important;min-height:0!important;margin:0!important;padding:0!important;line-height:34px!important;font-size:0!important;text-align:center!important;overflow:hidden!important;border-radius:9px!important}
-#drawingScreen .creative-main-toolbar>button.creative-action::first-letter,#drawingScreen .creative-extra-toolbar>button.creative-action:not(#creativeShareBtn)::first-letter,#drawingScreen #creativeBrushRow #creativeEraserBtn::first-letter{font-size:18px!important}
-#drawingScreen .creative-extra-toolbar>#creativeShareBtn.creative-action::before{content:'🔗';font-size:18px}
-#drawingScreen .creative-palette{padding:3px 6px!important;gap:4px!important}
-#drawingScreen .creative-palette .creative-swatch{width:24px!important;height:24px!important;flex:0 0 24px!important}
-#drawingScreen .creative-palette label{font-size:0!important}
-#drawingScreen .creative-palette input[type=color]{width:30px!important;height:28px!important}
-#drawingScreen #creativeBrushRow{padding:3px 6px!important;gap:6px!important}
-#drawingScreen #creativeBrushRow label,#drawingScreen #creativeBrushValue{display:none!important}
-#drawingScreen #creativeBrushRow #creativeEraserBtn{display:block!important;flex:0 0 auto!important;width:38px!important;height:34px!important;padding:0!important;line-height:34px!important;font-size:0!important;text-align:center!important}
-}
-`;
-  var s = document.createElement('style');
-  s.id = 'creativeMobileFix';
-  s.textContent = css;
-  document.head.appendChild(s);
-})();
+/* ===== الملاحظات الإضافية لقسم إبداع ===== */

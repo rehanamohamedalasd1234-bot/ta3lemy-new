@@ -73,150 +73,136 @@
 }
 
 @media (max-width: 600px) {
+  /* شريط رأس الصفحة المتناسق النحيف */
+  #drawingScreen > .top-bar {
+    padding: 6px 12px !important;
+    min-height: 48px !important;
+    height: 48px !important;
+  }
+
+  /* خافض حشو المدخلات العلوية لاسم اللوحة والوصف */
   #drawingScreen .creative-meta {
-    gap: 6px;
-    padding: 6px 8px;
+    display: flex !important;
+    gap: 6px !important;
+    padding: 4px 8px !important;
+    background: #ffffff !important;
+    border-bottom: 1px solid #e0e0e0 !important;
   }
 
   #drawingScreen .creative-meta input {
-    font-size: 12px;
-    padding: 8px;
+    font-size: 11px !important;
+    padding: 3px 8px !important;
+    height: 28px !important;
+    border: 1px solid #e0e0e0 !important;
+    border-radius: 6px !important;
   }
 
-  #drawingScreen .creative-main-toolbar {
-    display: grid !important;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    width: 100%;
-    min-width: 0;
-    gap: 4px !important;
-    padding: 4px 6px !important;
-    overflow: hidden !important;
-  }
-
-  #drawingScreen .creative-main-toolbar > button {
-    display: flex;
-    box-sizing: border-box;
-    width: 100%;
-    max-width: none;
-    min-width: 0 !important;
-    min-height: 34px !important;
-    align-items: center;
-    justify-content: center;
-    margin: 0 !important;
-    padding: 4px 2px !important;
-    font-size: 10px !important;
-    line-height: 1.15 !important;
-    text-align: center;
-    white-space: normal !important;
-    border-radius: 7px !important;
-  }
-
+  /* تحويل أشرطة الأدوات العلوية والسفلية لأشرطة أفقية انسيابية قابلة للتمرير */
+  #drawingScreen .creative-main-toolbar,
   #drawingScreen .creative-extra-toolbar {
-    display: grid !important;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    width: 100%;
-    min-width: 0;
-    gap: 3px !important;
-    padding: 4px 5px !important;
-    overflow: hidden !important;
-  }
-
-  #drawingScreen .creative-extra-toolbar > .creative-action {
-    display: flex;
-    box-sizing: border-box;
-    width: 100%;
-    max-width: none;
-    min-width: 0 !important;
-    min-height: 32px !important;
-    align-items: center;
-    justify-content: center;
-    margin: 0 !important;
-    padding: 3px 1px !important;
-    font-size: 9px !important;
-    line-height: 1.1 !important;
-    white-space: normal !important;
-    border-radius: 7px !important;
-  }
-
-  #drawingScreen .creative-tools:not(.creative-main-toolbar):not(.creative-extra-toolbar) {
-    gap: 4px !important;
-    padding: 4px 6px !important;
-    flex-wrap: wrap;
-  }
-
-  #drawingScreen .creative-tools input[type="range"] {
-    min-width: 0 !important;
-    flex: 1 1 90px;
-  }
-
-  #drawingScreen .creative-tools label {
-    font-size: 10px;
-  }
-
-  #drawingScreen .creative-palette {
-    gap: 4px !important;
-    padding: 4px 6px !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    justify-content: flex-start !important;
+    align-items: center !important;
+    width: 100% !important;
+    gap: 6px !important;
+    padding: 4px 8px !important;
     overflow-x: auto !important;
-    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch !important;
+    background: #ffffff !important;
+    border-bottom: 1px solid #f0f0f0 !important;
+    scrollbar-width: none !important;
+  }
+
+  #drawingScreen .creative-main-toolbar::-webkit-scrollbar,
+  #drawingScreen .creative-extra-toolbar::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  #drawingScreen .creative-main-toolbar > button.creative-action,
+  #drawingScreen .creative-extra-toolbar > button.creative-action {
+    display: inline-flex !important;
+    flex: 0 0 auto !important;
+    min-width: unset !important;
+    width: auto !important;
+    height: 32px !important;
+    padding: 0 10px !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    align-items: center !important;
+    justify-content: center !important;
+    white-space: nowrap !important;
+    line-height: normal !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06) !important;
+  }
+
+  /* أداة التحكم بحجم الفرشاة والممحاة */
+  #drawingScreen #creativeBrushRow {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 4px 8px !important;
+    background: #fafafa !important;
+    border-bottom: 1px solid #eaeaea !important;
+  }
+
+  #drawingScreen #creativeBrushRow label,
+  #drawingScreen #creativeBrushValue {
+    font-size: 11px !important;
+    margin: 0 !important;
+  }
+
+  #drawingScreen #creativeBrushRow input[type="range"] {
+    flex: 1 1 auto !important;
+    height: 4px !important;
+  }
+
+  /* شريط لوحة الألوان */
+  #drawingScreen .creative-palette {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 4px 8px !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    background: #ffffff !important;
+    border-bottom: 1px solid #e5eee5 !important;
+    scrollbar-width: none !important;
+  }
+
+  #drawingScreen .creative-palette::-webkit-scrollbar {
+    display: none !important;
   }
 
   #drawingScreen .creative-palette .creative-swatch {
-    flex: 0 0 22px !important;
-    width: 22px !important;
-    height: 22px !important;
+    flex: 0 0 26px !important;
+    width: 26px !important;
+    height: 26px !important;
+    border-radius: 50% !important;
   }
 
   #drawingScreen .creative-palette input[type="color"] {
-    width: 34px !important;
-    height: 30px !important;
-  }
-
-  /* استهداف صفوف الأدوات الموجودة فعليًا في HTML، لا أسماء فئات غير مستخدمة. */
-  #drawingScreen .content > div:nth-child(1) {
-    gap: 3px !important;
-    padding: 4px 5px !important;
-  }
-
-  #drawingScreen .content > div:nth-child(1) > button {
-    flex: 0 0 auto;
-    min-height: 28px !important;
-    padding: 4px 6px !important;
-    border-radius: 7px !important;
-    font-size: 10px !important;
-    line-height: 1.1 !important;
-  }
-
-  #drawingScreen .content > div:nth-child(2) {
-    gap: 4px !important;
-    padding: 4px 5px !important;
-  }
-
-  #drawingScreen .content > div:nth-child(2) > button {
-    flex: 0 0 auto;
-    width: 26px !important;
-    height: 26px !important;
-    min-width: 26px !important;
-    padding: 0 !important;
-    border-width: 2px !important;
-    font-size: 14px !important;
-  }
-
-  #drawingScreen .content > div:nth-child(2) > button[onclick^="drawingSetColor"] {
-    width: 24px !important;
-    height: 24px !important;
-    min-width: 24px !important;
-  }
-
-  #drawingScreen .content > div:nth-child(2) > button[onclick^="drawingSetSize"] {
     width: 28px !important;
     height: 28px !important;
-    min-width: 28px !important;
-    border-radius: 8px !important;
+    padding: 0 !important;
+    border: none !important;
+    border-radius: 50% !important;
   }
 
-  #drawingScreen .content > div:nth-child(3) {
+  /* تكبير مساحة الرسم Canvas لتأخذ الارتفاع المتبقي بالكامل */
+  #drawingScreen .content > div:last-child {
     flex: 1 1 0 !important;
     min-height: 0 !important;
+    height: 100% !important;
+  }
+
+  /* وضع التركيز الشامل لإخفاء الأشرطة بلمسة واحدة */
+  #drawingScreen.focus-mode .creative-meta,
+  #drawingScreen.focus-mode .creative-main-toolbar,
+  #drawingScreen.focus-mode .creative-extra-toolbar,
+  #drawingScreen.focus-mode .top-bar {
+    display: none !important;
   }
 
   #homeScreen .tools-grid {

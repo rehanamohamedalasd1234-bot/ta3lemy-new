@@ -1,5 +1,8 @@
-const ENHANCE_WORKER_URL =
+window.ENHANCE_WORKER_URL =
+  window.ENHANCE_WORKER_URL ||
   "https://ta3lemy-enhance.ta3lemy-hafez-free.workers.dev/enhance";
+
+var ENHANCE_WORKER_URL = window.ENHANCE_WORKER_URL;
 
 window.enhanceArtwork = async function enhanceArtwork() {
   const canvas = document.getElementById("fullDrawingCanvas");
@@ -36,7 +39,13 @@ window.enhanceArtwork = async function enhanceArtwork() {
       })
     });
 
-    const result = await response.json();
+    const responseText = await response.text();
+    let result;
+    try {
+      result = responseText ? JSON.parse(responseText) : {};
+    } catch (_) {
+      result = { error: responseText.slice(0, 300) || "استجابة غير مفهومة من الخادم." };
+    }
 
     if (!response.ok) {
       throw new Error(result.error || `فشل الطلب (${response.status})`);
@@ -100,7 +109,10 @@ window.enhanceArtwork = async function enhanceArtwork() {
     console.error("Artwork enhancement error:", error);
 
     if (typeof showToast === "function") {
-      showToast("تعذر تحسين الرسم: " + (error.message || "خطأ غير معروف"));
+      const detail = error instanceof TypeError
+        ? "تعذر الاتصال بخادم التحسين؛ تحققي من إعدادات CORS ورابط Worker."
+        : (error.message || "خطأ غير معروف");
+      showToast("تعذر تحسين الرسم: " + detail);
     }
   }
 };

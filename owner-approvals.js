@@ -8,7 +8,10 @@
   function esc(value) { return String(value == null ? '' : value).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); }
   function safeUrl(value) { var url = String(value || ''); return /^https?:\/\//i.test(url) ? esc(url) : ''; }
   function label(type) {
-    return ({ lesson: 'درس / شرح', explanation: 'شرح', exercise: 'تدريب', exam: 'امتحان', review: 'مراجعة', image: 'صورة تعليمية', video: 'فيديو' })[type] || 'عمل تعليمي';
+    return ({ lesson: 'درس / شرح', explanation: 'شرح', exercise: 'تدريب', exam: 'امتحان', review: 'مراجعة', image: 'صورة تعليمية', video: 'فيديو', audio: 'تسجيل صوتي' })[type] || 'عمل تعليمي';
+  }
+  function stageLabel(stage) {
+    return ({ primary: 'الابتدائية', prep: 'الإعدادية', sec: 'الثانوية', bakkalorya: 'البكالوريا', kindergarten_languages: 'رياض الأطفال لغات' })[stage] || stage || '—';
   }
   function ensureScreen() {
     var screen = document.getElementById('ownerApprovalsScreen');
@@ -28,18 +31,20 @@
     return '<div style="display:flex;gap:8px;margin:0 0 14px"><button onclick="loadOwnerApprovals(\'pending\')" style="flex:1;border:0;border-radius:10px;padding:11px 6px;font:inherit;font-weight:700;' + pendingStyle + '">⏳ بانتظار الموافقة</button><button onclick="loadOwnerApprovals(\'approved\')" style="flex:1;border:0;border-radius:10px;padding:11px 6px;font:inherit;font-weight:700;' + approvedStyle + '">📚 المنشور للطلاب</button></div><div style="font-size:12px;color:#68756d;margin:0 0 12px">' + (tab === 'pending' ? 'اعتمد العمل لينتقل إلى شرح الأستاذ، أو ارفضه.' : 'الأعمال هنا منشورة داخل المنهج ويمكنك إزالتها من العرض للطلاب.') + (typeof count === 'number' ? ' • العدد: ' + count : '') + '</div>';
   }
   function details(item) {
-    return '👨‍🏫 ' + esc(item.teacherName || 'معلم') + '<br>📚 ' + esc(item.stage || '—') + ' • الصف ' + esc(item.grade || '—') + ' • ' + esc(item.subject || '—') + ' • الترم ' + esc(item.term || '—');
+    return '👨‍🏫 ' + esc(item.teacherName || 'معلم') + '<br>📚 ' + esc(stageLabel(item.stage)) + ' • الصف ' + esc(item.grade || '—') + ' • ' + esc(item.subject || '—') + ' • الترم ' + esc(item.term || '—');
   }
   function renderPendingCard(doc) {
     var item = doc.data() || {};
     var image = safeUrl(item.image_url || item.imageUrl);
     var video = safeUrl(item.video_url || item.videoUrl);
+    var audio = safeUrl(item.audio_url || item.audioUrl);
     var html = '<article style="background:#fff;border-radius:14px;padding:14px;margin:0 0 12px;border-right:5px solid #E59A18;box-shadow:0 2px 8px rgba(0,0,0,.06)">';
     html += '<div style="font-size:12px;color:#8a6500;font-weight:700">⏳ بانتظار قرار المالك • ' + esc(label(item.type)) + '</div><h3 style="margin:7px 0;color:#252525">' + esc(item.title || 'بدون عنوان') + '</h3>';
     html += '<div style="font-size:12px;line-height:1.9;color:#555">' + details(item) + '</div>';
     if (item.content) html += '<div style="margin:10px 0;padding:10px;background:#F7F9F7;border-radius:8px;white-space:pre-wrap;line-height:1.8">' + esc(item.content) + '</div>';
     if (image) html += '<img src="' + image + '" alt="معاينة الصورة" style="display:block;width:100%;max-height:280px;object-fit:contain;margin:8px 0;border-radius:10px">';
     if (video) html += '<video controls playsinline src="' + video + '" style="display:block;width:100%;max-height:280px;margin:8px 0;border-radius:10px"></video>';
+    if (audio) html += '<audio controls preload="metadata" src="' + audio + '" style="display:block;width:100%;margin:8px 0"></audio>';
     html += '<div style="display:flex;gap:8px;margin-top:12px"><button onclick="approveTeacherUpload(\'' + esc(doc.id) + '\')" style="flex:1;background:#2E7D32;color:#fff;border:0;padding:11px 7px;border-radius:9px;font-weight:bold">✅ موافقة ونشر في شرح الأستاذ</button><button onclick="rejectTeacherUpload(\'' + esc(doc.id) + '\')" style="background:#C62828;color:#fff;border:0;padding:11px 12px;border-radius:9px;font-weight:bold">❌ رفض</button></div></article>';
     return html;
   }
@@ -101,7 +106,7 @@
         term: Number(item.term) || 1, type: 'teacher_explanation',
         teacherContentType: item.type || 'lesson', teacherName: item.teacherName || '',
         teacherId: item.teacherId || item.authUid || '', image_url: item.image_url || item.imageUrl || null,
-        video_url: item.video_url || item.videoUrl || null,
+        video_url: item.video_url || item.videoUrl || null, audio_url: item.audio_url || item.audioUrl || null,
         created_at: item.createdAt || new Date().toISOString(), approved_at: new Date().toISOString(), sourceUploadId: id
       }, { merge: true });
       batch.update(uploadRef, { status: 'approved', lessonId: lessonRef.id, approvedAt: new Date().toISOString(), approvedBy: window.currentUser && window.currentUser.uid || '' });
