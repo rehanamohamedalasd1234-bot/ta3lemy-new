@@ -1231,7 +1231,7 @@
         ['creativeDownloadBtn', '⬇️ تنزيل', '#E3F2FD', '#1565C0', downloadCurrent],
         ['creativeShareBtn', 'مشاركة', '#E0F2F1', '#00695C', shareCurrent],
         ['creativeAnimatePreviewBtn', '🎞️ معاينة حركة', '#FFF8E1', '#F57F17', function () { if (canvas) showPreview(canvas.toDataURL('image/png'), (document.getElementById('creativeTitleInput') || {}).value || 'إبداع', true); }],
-        ['creativeAIImproveBtn', '✨ تحسين AI', '#EDE7F6', '#4527A0', function () { showAISetup('enhance'); }],
+        ['creativeAIImproveBtn', '✨ تحسين AI', '#EDE7F6', '#4527A0', function () { if (typeof window.enhanceArtwork === 'function') return window.enhanceArtwork(); showPreviewNotice('تعذر تشغيل التحسين', 'لم يتم تحميل خدمة تحسين الرسم. تأكدي من الاتصال بالإنترنت ثم أعيدي تحميل الصفحة.'); }],
         ['creativeAIAnimateBtn', '🎥 تحريك AI', '#EDE7F6', '#4527A0', function () { showAISetup('animate'); }]
       ];
       actions.forEach(function (entry) { toolbar.appendChild(makeButton(entry[0], entry[1], entry[2], entry[3], entry[4])); });

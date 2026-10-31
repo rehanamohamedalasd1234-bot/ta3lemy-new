@@ -1,5 +1,5 @@
 // offline-sw.js — Service Worker للعمل بدون إنترنت
-const CACHE = 'hafez-offline-v1';
+const CACHE = 'hafez-offline-v2';
 
 // ═══ Install ═══
 self.addEventListener('install', e => {

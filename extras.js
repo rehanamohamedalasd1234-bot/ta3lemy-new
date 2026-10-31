@@ -185,6 +185,11 @@
     }
   };
 
+  function syncChatProfileAfterPlatformLogin() {
+    if (typeof window.syncPrivateChatProfile !== 'function') return;
+    window.syncPrivateChatProfile().catch(function (error) { console.warn('تعذر مزامنة ملف الدردشة', error); });
+  }
+
   window.loginStudentWithBackend = async function(username, password){
     if (!window.firebase || !firebase.functions || !firebase.auth) return false;
     var callable;
@@ -222,10 +227,11 @@
         await firebase.auth().signOut();
         throw new Error('معرّف الحساب لم يتطابق مع الجلسة الآمنة.');
       }
-      window.currentUser = {name: reply.name || username, uid: String(reply.uid), points: Number(reply.points || 0)};
+      window.currentUser = {name: reply.name || username, displayName: reply.displayName || reply.display_name || reply.name || username, uid: String(reply.uid), points: Number(reply.points || 0)};
       window.currentRole = 'student';
+      syncChatProfileAfterPlatformLogin();
       window.saveRememberedStudentLogin(username, password);
-      try { localStorage.setItem('lastUser', JSON.stringify({name: window.currentUser.name, uid: window.currentUser.uid, role: 'student', points: window.currentUser.points})); } catch (e) {}
+      try { localStorage.setItem('lastUser', JSON.stringify({name: window.currentUser.name, displayName: window.currentUser.displayName, uid: window.currentUser.uid, role: 'student', points: window.currentUser.points})); } catch (e) {}
       if (typeof window.logLogin === 'function') await window.logLogin(username, 'student', true, 'custom auth');
       if (reply.isNew && reply.recoveryCode && typeof window.showRecoveryCode === 'function') window.showRecoveryCode(reply.recoveryCode, window.currentUser.name);
       if (typeof showToast === 'function') showToast(reply.isNew ? 'تم إنشاء الحساب وربطه بتسجيل Firebase الآمن.' : 'تم تسجيل الدخول الآمن.');
@@ -291,7 +297,7 @@
                 if(typeof showToast === 'function') showToast('تسجيل المعلم أو المالك يتطلب تحققًا آمنًا عبر الإنترنت');
                 return;
               }
-              window.currentUser = {name: uname, uid: su.uid, points: su.points || 0};
+              window.currentUser = {name: uname, displayName: su.displayName || su.name || uname, uid: su.uid, points: su.points || 0};
               window.currentRole = 'student';
               if(typeof showToast === 'function') showToast('📴 دخول offline');
               if(typeof showScreen === 'function') setTimeout(function(){ showScreen('homeScreen'); }, 400);
@@ -311,10 +317,12 @@
           }
           try {
             await origLogin.apply(this, arguments);
+            syncChatProfileAfterPlatformLogin();
             await window.logLogin(uname, 'owner', true, '');
             if(window.currentUser) {
               localStorage.setItem('lastUser', JSON.stringify({
                 name: window.currentUser.name,
+                displayName: window.currentUser.displayName || window.currentUser.name,
                 uid: window.currentUser.uid,
                 role: 'owner',
                 points: window.currentUser.points || 0
@@ -355,10 +363,11 @@
               lastLogin: new Date().toISOString()
             });
             
-            window.currentUser = {name: uname, uid: uid, points: 0};
+            window.currentUser = {name: uname, displayName: uname, uid: uid, points: 0};
+            syncChatProfileAfterPlatformLogin();
             window.saveRememberedStudentLogin(uname, pwd);
             localStorage.setItem('lastUser', JSON.stringify({
-              name: uname, uid: uid, role: window.currentRole, points: 0
+              name: uname, displayName: uname, uid: uid, role: window.currentRole, points: 0
             }));
             
             await window.logLogin(uname, window.currentRole, true, 'new account');
@@ -398,10 +407,17 @@
             if(typeof showToast === 'function') showToast('✅ تم تسجيل الجهاز');
           }
           
-          window.currentUser = {name: uname, uid: uid2, points: user.points || 0};
+          window.currentUser = {
+            name: uname,
+            displayName: user.displayName || user.display_name || user.name || uname,
+            uid: uid2,
+            points: user.points || 0,
+            photo_url: user.photo_url || user.photoURL || ''
+          };
+          syncChatProfileAfterPlatformLogin();
           window.saveRememberedStudentLogin(uname, pwd);
           localStorage.setItem('lastUser', JSON.stringify({
-            name: uname, uid: uid2, role: user.role || window.currentRole, points: user.points || 0
+            name: uname, displayName: window.currentUser.displayName, uid: uid2, role: user.role || window.currentRole, points: user.points || 0
           }));
           
           await fs.collection('users').doc(uid2).update({lastLogin: new Date().toISOString()});
@@ -2887,6 +2903,7 @@ console.log('✅ extras.js loaded');
       document.getElementById('accountDisplayName').value = displayName();
       if (photo) photo.src = safePhoto(u.photo_url) || defaultPhoto(displayName());
       syncHeader();
+      syncChatProfileAfterPlatformLogin();
     } catch (error) {
       console.error(error);
       toast('تعذر تحميل بيانات الحساب.');
@@ -2902,6 +2919,12 @@ console.log('✅ extras.js loaded');
     try {
       await doc().set({ displayName: name, updatedAt: new Date().toISOString() }, { merge: true });
       user().displayName = name;
+      try {
+        var lastUser = JSON.parse(localStorage.getItem('lastUser') || '{}');
+        lastUser.displayName = name;
+        localStorage.setItem('lastUser', JSON.stringify(lastUser));
+      } catch (_) {}
+      syncChatProfileAfterPlatformLogin();
       var profileName = document.getElementById('profileName');
       if (profileName) profileName.textContent = name;
       if (!user().photo_url) document.getElementById('accountManagerPhoto').src = defaultPhoto(name);
@@ -2924,6 +2947,9 @@ console.log('✅ extras.js loaded');
       if (!url) throw new Error('رابط الصورة غير صالح');
       await doc().set({ photo_url: url, updatedAt: new Date().toISOString() }, { merge: true });
       user().photo_url = url;
+      if (typeof window.syncPrivateChatProfile === 'function') {
+        window.syncPrivateChatProfile().catch(function (error) { console.warn('تعذر مزامنة صورة الدردشة', error); });
+      }
       if (teacher() && firebase.auth && firebase.auth().currentUser &&
           firebase.auth().currentUser.uid === String(user().uid)) {
         await firebase.auth().currentUser.updateProfile({ photoURL: url }).catch(function () {});
@@ -2949,6 +2975,9 @@ console.log('✅ extras.js loaded');
     try {
       await doc().set({ photo_url: '', updatedAt: new Date().toISOString() }, { merge: true });
       user().photo_url = '';
+      if (typeof window.syncPrivateChatProfile === 'function') {
+        window.syncPrivateChatProfile().catch(function (error) { console.warn('تعذر حذف صورة الدردشة', error); });
+      }
       if (teacher() && firebase.auth && firebase.auth().currentUser &&
           firebase.auth().currentUser.uid === String(user().uid)) {
         await firebase.auth().currentUser.updateProfile({ photoURL: null }).catch(function () {});
@@ -2990,4 +3019,3 @@ console.log('✅ extras.js loaded');
     }
   });
 })();
-

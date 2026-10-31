@@ -1,17 +1,33 @@
 // Service Worker for the Hafez educational platform.
 // Shell files are prefetched for offline launch; media is stored only when the user explicitly downloads it.
 const CACHE_PREFIX = 'ta3lemy-shell-';
-const CACHE_NAME = CACHE_PREFIX + '1.0.61';
+const CACHE_NAME = CACHE_PREFIX + '1.0.67';
 const MEDIA_CACHE_NAME = 'ta3lemy-media-v1';
 const APP_SHELL = [
   './', './index.html', './extras.js', './curriculum-display-fix.js', './offline-mode.js', './navigation-fix.js', './service-worker.js', './manifest.json', './version.json', './auth-init.js', './fix-canvas.css',
-  './primary-official-only.js', './grade1-math-official.js', './grade1-religion-official.js', './primary-grade2-structure.js', './primary-grade3-structure.js', './primary-grade4-structure.js', './primary-grade5-structure.js', './primary-grade6-structure.js',
-  './gemini-fix.js', './curriculum-links.js', './secondary-grade1-content.js', './grade9-term1-content.js', './continuous-assessment.js',
-  './science-grade7-term1.js', './social-grade7-term1.js', './social-grade8-term1.js', './science-grade8-term1.js', './social-grade9-term1.js',
-  './math-grade7-term1.js', './arabic-grade7-term1.js', './arabic-grade8-term1.js', './english-grade7-term1.js', './english-grade8-term1.js',
-  './english-grade9-term1.js', './math-grade8-term1.js', './computer-grade8-term1.js', './religion-grade8-term1.js', './art-grade8-term1.js',
-  './religion-grade7-term1.js', './computer-grade7-term1.js', './art-grade7-term1.js'
+  './teacher-auth.js', './teacher.js', './owner-approvals.js', './teacher-workflow.js', './curriculum-links.js', './science-grade7-term1.js', './social-grade7-term1.js', './social-grade8-term1.js', './science-grade8-term1.js', './social-grade9-term1.js', './arabic-grade7-term1.js', './arabic-grade8-term1.js', './english-grade7-term1.js', './english-grade8-term1.js', './english-grade9-term1.js',
+  './math-grade7-term1.js',
+  './religion-grade7-term1.js', './computer-grade7-term1.js', './art-grade7-term1.js',
+  './math-grade8-term1.js', './computer-grade8-term1.js', './religion-grade8-term1.js', './art-grade8-term1.js',
+  './grade9-term1-content.js', './continuous-assessment.js', './primary-official-only.js', './grade1-math-expanded.js', './primary-grade2-structure.js', './primary-grade2-detailed-content.json', './primary-grade3-structure.js', './primary-grade3-detailed-content.json', './primary-grade4-structure.js', './primary-grades456-detailed-content.json', './primary-grade5-structure.js', './primary-grade6-structure.js',
+  './creativity-config.js', './creativity.js', './gemini-fix.js', './chat-config.js', './chat-system.js',
+  './supabase-chat-config.js', './supabase-call-alerts.js', './supabase-private-chat.js',
+  './admin-system.js', './kindergarten-languages.js', './icon-512.png'
 ];
+const EXTERNAL_SHELL = [
+  'https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js',
+  'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js',
+  'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js',
+  'https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js',
+  'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js',
+  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'
+];
+const APP_SHELL_FALLBACK = new URL('./index.html', self.registration.scope).href;
+
+function isMediaRequest(request, url) {
+  if (request.destination === 'audio' || request.destination === 'video' || request.destination === 'image') return true;
+  return /\.(mp3|m4a|aac|wav|ogg|mp4|m4v|webm|mov|jpg|jpeg|png|gif|webp|avif|pdf)(?:$|[?#])/i.test(url.href);
+}
 
 self.addEventListener('install', event => {
   event.waitUntil(
@@ -51,16 +67,17 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Media files: cache-first if downloaded, else network
-  if (url.pathname.match(/\.(mp4|mp3|pdf|png|jpg|jpeg|svg|webp)$/i)) {
-    event.respondWith(
-      caches.match(event.request).then(cached => {
-        if (cached) return cached;
-        return fetch(event.request).catch(() => {
-          return new Response('محتوى غير متوفر بدون إنترنت', { status: 503, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
-        });
-      })
-    );
+  if (url.origin !== self.location.origin) {
+    const isFirebaseSdk = url.hostname === 'www.gstatic.com' && /firebasejs\/10\.12\.0\//.test(url.pathname);
+    const isSupabaseSdk = url.hostname === 'cdn.jsdelivr.net' && url.pathname.startsWith('/npm/@supabase/supabase-js@2');
+    if (!isFirebaseSdk && !isSupabaseSdk) return;
+    event.respondWith((async () => {
+      const cache = await caches.open(CACHE_NAME);
+      const cached = await cache.match(request.url);
+      if (cached) return cached;
+      try { return await fetch(request); }
+      catch (error) { return new Response('', { status: 503, statusText: 'Offline SDK Not Found' }); }
+    })());
     return;
   }
 
