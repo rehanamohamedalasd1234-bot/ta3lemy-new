@@ -1,5 +1,8 @@
-const ENHANCE_WORKER_URL =
+window.ENHANCE_WORKER_URL =
+  window.ENHANCE_WORKER_URL ||
   "https://ta3lemy-enhance.ta3lemy-hafez-free.workers.dev/enhance";
+
+var ENHANCE_WORKER_URL = window.ENHANCE_WORKER_URL;
 
 window.enhanceArtwork = async function enhanceArtwork() {
   const canvas = document.getElementById("fullDrawingCanvas");

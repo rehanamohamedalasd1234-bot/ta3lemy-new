@@ -2,7 +2,7 @@
 window.CREATIVITY_CONFIG = Object.freeze({
   appCheckSiteKey: '',
   functionsRegion: 'us-central1',
-  aiEndpoint: '', // رابط HTTPS لخادم موثوق؛ لا تضع مفتاح المزود هنا
+  aiEndpoint: 'https://ta3lemy-enhance.ta3lemy-hafez-free.workers.dev/enhance',
   cloudinaryCloudName: 'bt4sro3h',
   cloudinaryUploadPreset: '',
   maxImageBytes: 1200000
