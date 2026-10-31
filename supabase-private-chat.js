@@ -189,6 +189,7 @@
       '.spc-tabs{display:flex;gap:7px;overflow:auto;padding:3px 0 12px}',
       '.spc-tab{border:0;border-radius:20px;background:#edf3ee;color:#31563a;padding:9px 12px;font:inherit;font-size:12px;font-weight:700;white-space:nowrap}',
       '.spc-tab.active{background:#2E7D32;color:#fff}',
+      '.spc-home-exit{border:0;border-radius:9px;background:#fff;color:#2E7D32;padding:8px 10px;font:inherit;font-size:12px;font-weight:800;white-space:nowrap;cursor:pointer;min-height:38px}',
       '.spc-card{background:#fff;border:1px solid #e6ece7;border-radius:14px;padding:12px;margin:0 0 9px;display:flex;align-items:center;gap:10px}',
       '.spc-avatar{width:44px;height:44px;flex:0 0 44px;border-radius:50%;background:#e8f5e9;color:#2E7D32;display:flex;align-items:center;justify-content:center;font-size:21px;overflow:hidden}.spc-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}',
       '.spc-info{flex:1;min-width:0}.spc-small{font-size:12px;color:#758078;margin-top:4px;overflow-wrap:anywhere}',
@@ -218,6 +219,24 @@
     if (window.screenHistory && window.currentScreen && window.currentScreen !== id) window.screenHistory.push(window.currentScreen);
     if (typeof window.showScreen === 'function') window.showScreen(id);
   }
+  function returnToAppHome() {
+    if (state.messageChannel) { stopChannel(state.messageChannel); state.messageChannel = null; }
+    state.mode = 'home'; state.conversationId = ''; state.friend = null;
+    if (typeof window.showScreen === 'function') window.showScreen('homeScreen');
+    if (Array.isArray(window.screenHistory)) window.screenHistory.length = 0;
+  }
+  function ensureHomeButton(screen) {
+    if (!screen) return;
+    var topBar = screen.querySelector('.top-bar');
+    if (!topBar || topBar.querySelector('[data-spc-home]')) return;
+    var button = document.createElement('button');
+    button.type = 'button'; button.className = 'spc-home-exit';
+    button.setAttribute('data-spc-home', 'true');
+    button.setAttribute('aria-label', 'العودة إلى الشاشة الرئيسية');
+    button.title = 'العودة إلى الشاشة الرئيسية'; button.textContent = 'الرئيسية';
+    button.addEventListener('click', returnToAppHome);
+    topBar.appendChild(button);
+  }
   function currentHomeContent() {
     var screen = document.getElementById('messagesScreen');
     return screen && screen.querySelector('.content');
@@ -225,6 +244,7 @@
   function makeHomeShell() {
     var content = currentHomeContent();
     if (!content) return null;
+    ensureHomeButton(document.getElementById('messagesScreen'));
     content.innerHTML = [
       '<div id="spcIdentityNote" class="spc-note">جارٍ تجهيز هوية الدردشة…</div>',
       '<div class="spc-tabs" role="tablist">',
@@ -643,6 +663,7 @@
     document.body.appendChild(screen);
     screen.querySelector('[data-spc-back]').onclick = closePrivateChat;
     screen.querySelector('[data-call-audio]').onclick = function () { window.startChatCall('audio'); };
+    ensureHomeButton(screen);
     screen.querySelector('[data-call-video]').onclick = function () { window.startChatCall('video'); };
     var file = document.getElementById('spcFileInput');
     document.getElementById('spcAttach').onclick = function () { file.click(); };
@@ -657,7 +678,13 @@
   function closePrivateChat() {
     if (state.messageChannel) { stopChannel(state.messageChannel); state.messageChannel = null; }
     state.mode = 'home'; state.conversationId = ''; state.friend = null;
-    if (typeof window.showScreen === 'function') window.showScreen('messagesScreen');
+    if (!Array.isArray(window.screenHistory)) window.screenHistory = [];
+    var history = window.screenHistory;
+    var current = window.currentScreen;
+    while (history.length && history[history.length - 1] === current) history.pop();
+    if (history[history.length - 1] !== 'messagesScreen') history.push('messagesScreen');
+    if (typeof window.goBack === 'function') window.goBack();
+    else if (typeof window.showScreen === 'function') window.showScreen('messagesScreen');
   }
   async function loadMessages() {
     if (!client || !state.conversationId) return;
