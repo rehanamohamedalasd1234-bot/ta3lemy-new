@@ -9,8 +9,8 @@ const APP_SHELL = [
   './math-grade7-term1.js',
   './religion-grade7-term1.js', './computer-grade7-term1.js', './art-grade7-term1.js',
   './math-grade8-term1.js', './computer-grade8-term1.js', './religion-grade8-term1.js', './art-grade8-term1.js',
-  './grade9-term1-content.js', './continuous-assessment.js', './primary-official-only.js', './grade1-math-expanded.js', './primary-grade2-structure.js', './primary-grade2-detailed-content.json', './primary-grade3-structure.js', './primary-grade3-detailed-content.json', './primary-grade4-structure.js', './primary-grades456-detailed-content.json', './primary-grade5-structure.js', './primary-grade6-structure.js',
-  './creativity-config.js', './creativity.js', './gemini-fix.js', './chat-config.js', './chat-system.js',
+  './grade9-term1-content.js', './continuous-assessment.js', './primary-official-only.js', './grade1-math-expanded.js', './primary-grade2-data.js', './primary-grade2-structure.js', './primary-grade2-detailed-content.json', './primary-grade3-structure.js', './primary-grade3-detailed-content.json', './primary-grade4-structure.js', './primary-grades456-detailed-content.json', './primary-grade5-structure.js', './primary-grade6-structure.js',
+  './creativity-config.js', './creativity.js', './educational-games.js', './gemini-fix.js', './chat-config.js', './chat-system.js',
   './supabase-chat-config.js', './supabase-call-alerts.js', './supabase-private-chat.js',
   './admin-system.js', './kindergarten-languages.js', './kg1-arabic-structure.js', './kg1-arabic-2026-2027-t1.json', './kg1-english-structure.js', './kg1-english-2026-2027-t1.json', './icon-512.png'
 ];
