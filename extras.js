@@ -101,13 +101,175 @@
     };
   };
   
+  // ═══ تسجيل الطالب عبر Firebase Custom Token مع الحفاظ على UID القديم ═══
+  var REMEMBERED_STUDENT_LOGIN_KEY = 'hafez_remembered_student_login_v1';
+  function getRememberedStudentLogin() {
+    try {
+      var saved = localStorage.getItem(REMEMBERED_STUDENT_LOGIN_KEY);
+      if (!saved) return null;
+      var record = JSON.parse(saved);
+      if (!record || typeof record.username !== 'string' || typeof record.password !== 'string' || !record.username || !record.password) {
+        localStorage.removeItem(REMEMBERED_STUDENT_LOGIN_KEY);
+        return null;
+      }
+      return record;
+    } catch (e) { return null; }
+  }
+  function updateRememberStudentVisibility() {
+    var wrapper = document.getElementById('rememberStudentLoginWrap');
+    if (wrapper) wrapper.style.display = (!window.currentRole || window.currentRole === 'student') ? 'block' : 'none';
+  }
+  function ensureRememberStudentLoginUI() {
+    var username = document.getElementById('usernameInput');
+    var password = document.getElementById('passwordInput');
+    if (!username || !password || document.getElementById('rememberStudentLoginWrap')) return;
+    username.setAttribute('autocomplete', 'username');
+    password.setAttribute('autocomplete', 'current-password');
+    var wrapper = document.createElement('div');
+    wrapper.id = 'rememberStudentLoginWrap';
+    wrapper.style.cssText = 'margin:-4px 0 16px;padding:10px 12px;border:1px solid #dfe8df;border-radius:12px;background:#f7fbf7;';
+    var label = document.createElement('label');
+    label.style.cssText = 'display:flex;align-items:center;gap:9px;font-size:14px;font-weight:700;color:#344034;cursor:pointer;';
+    var checkbox = document.createElement('input');
+    checkbox.id = 'rememberStudentLogin';
+    checkbox.type = 'checkbox';
+    checkbox.style.cssText = 'width:18px;height:18px;margin:0;accent-color:#2E7D32;';
+    checkbox.checked = !!getRememberedStudentLogin();
+    var caption = document.createElement('span');
+    caption.textContent = 'تذكر اسم الحساب وكلمة المرور على هذا الجهاز';
+    label.appendChild(checkbox);
+    label.appendChild(caption);
+    var help = document.createElement('div');
+    help.textContent = 'يحفظ كلمة المرور محليًا على هذا الجهاز؛ لا تفعّل الخيار على جهاز مشترك.';
+    help.style.cssText = 'margin:5px 27px 0 0;font-size:11px;line-height:1.6;color:#687568;';
+    wrapper.appendChild(label);
+    wrapper.appendChild(help);
+    var fieldGroup = password.parentNode;
+    if (fieldGroup && fieldGroup.parentNode) fieldGroup.parentNode.insertBefore(wrapper, fieldGroup.nextSibling);
+    checkbox.addEventListener('change', function () {
+      if (!checkbox.checked) {
+        try { localStorage.removeItem(REMEMBERED_STUDENT_LOGIN_KEY); } catch (e) {}
+      }
+    });
+    var roleSelector = document.querySelector('#loginScreen .role-selector');
+    if (roleSelector) roleSelector.addEventListener('click', function () {
+      setTimeout(function () {
+        updateRememberStudentVisibility();
+        if (window.currentRole === 'student') window.restoreRememberedStudentLogin();
+      }, 0);
+    });
+    window.restoreRememberedStudentLogin();
+  }
+  window.restoreRememberedStudentLogin = function () {
+    var username = document.getElementById('usernameInput');
+    var password = document.getElementById('passwordInput');
+    var checkbox = document.getElementById('rememberStudentLogin');
+    var record = getRememberedStudentLogin();
+    if (checkbox) checkbox.checked = !!record;
+    if (record && (!window.currentRole || window.currentRole === 'student')) {
+      if (username && !username.value) username.value = record.username;
+      if (password && !password.value) password.value = record.password;
+    }
+    updateRememberStudentVisibility();
+  };
+  window.saveRememberedStudentLogin = function (username, password) {
+    var checkbox = document.getElementById('rememberStudentLogin');
+    if (window.currentRole !== 'student' || !checkbox || !checkbox.checked) {
+      try { localStorage.removeItem(REMEMBERED_STUDENT_LOGIN_KEY); } catch (e) {}
+      return;
+    }
+    try {
+      localStorage.setItem(REMEMBERED_STUDENT_LOGIN_KEY, JSON.stringify({username: String(username || ''), password: String(password || '')}));
+    } catch (e) {
+      if (typeof showToast === 'function') showToast('تعذر حفظ بيانات الدخول على هذا الجهاز.');
+    }
+  };
+
+  function syncChatProfileAfterPlatformLogin() {
+    if (typeof window.syncPrivateChatProfile !== 'function') return;
+    window.syncPrivateChatProfile().catch(function (error) { console.warn('تعذر مزامنة ملف الدردشة', error); });
+  }
+
+  window.loginStudentWithBackend = async function(username, password){
+    if (!window.firebase || !firebase.functions || !firebase.auth) return false;
+    var callable;
+    try { callable = firebase.app().functions('us-central1').httpsCallable('loginLegacyStudent'); }
+    catch (e) { return false; }
+    var deviceId = window.getDeviceId();
+    var reply;
+    async function invoke(recoveryCode){
+      var result = await callable({username: username, password: password, deviceId: deviceId, recoveryCode: recoveryCode || ''});
+      return result && result.data || {};
+    }
+    try {
+      reply = await invoke('');
+      if (reply.needsRecovery) {
+        var recoveryCode = window.prompt('🔐 جهاز جديد! أدخل كود الاستعادة المحفوظ للحساب:');
+        if (recoveryCode === null) return true;
+        reply = await invoke(recoveryCode.trim());
+      }
+    } catch (error) {
+      var code = String(error && error.code || '');
+      if (code === 'functions/not-found' || code === 'functions/unavailable' || code === 'functions/deadline-exceeded') {
+        if (typeof showToast === 'function') showToast('تسجيل الدخول الآمن غير متاح الآن؛ سنستخدم الدخول الحالي مؤقتًا، والخاص يظل مغلقًا.');
+        return false;
+      }
+      if (typeof showToast === 'function') showToast(error && error.message || 'تعذر التحقق من الحساب. حاول مرة أخرى.');
+      return true;
+    }
+    if (!reply || !reply.customToken || !reply.uid) {
+      if (typeof showToast === 'function') showToast('استجابة تسجيل الدخول الآمن غير مكتملة.');
+      return true;
+    }
+    try {
+      var credential = await firebase.auth().signInWithCustomToken(reply.customToken);
+      if (!credential.user || credential.user.uid !== String(reply.uid)) {
+        await firebase.auth().signOut();
+        throw new Error('معرّف الحساب لم يتطابق مع الجلسة الآمنة.');
+      }
+      window.currentUser = {name: reply.name || username, displayName: reply.displayName || reply.display_name || reply.name || username, uid: String(reply.uid), points: Number(reply.points || 0)};
+      window.currentRole = 'student';
+      syncChatProfileAfterPlatformLogin();
+      window.saveRememberedStudentLogin(username, password);
+      try { localStorage.setItem('lastUser', JSON.stringify({name: window.currentUser.name, displayName: window.currentUser.displayName, uid: window.currentUser.uid, role: 'student', points: window.currentUser.points})); } catch (e) {}
+      if (typeof window.logLogin === 'function') await window.logLogin(username, 'student', true, 'custom auth');
+      if (reply.isNew && reply.recoveryCode && typeof window.showRecoveryCode === 'function') window.showRecoveryCode(reply.recoveryCode, window.currentUser.name);
+      if (typeof showToast === 'function') showToast(reply.isNew ? 'تم إنشاء الحساب وربطه بتسجيل Firebase الآمن.' : 'تم تسجيل الدخول الآمن.');
+      if (typeof showScreen === 'function') setTimeout(function(){ showScreen('homeScreen'); }, reply.isNew ? 1800 : 600);
+      return true;
+    } catch (error) {
+      console.error('Firebase custom-token sign-in failed', error);
+      if (typeof showToast === 'function') showToast('تم التحقق من كلمة المرور لكن تعذر فتح جلسة Firebase. أعد المحاولة لاحقًا.');
+      return true;
+    }
+  };
+
   // ═══ 7. Login Override ═══
   window.addEventListener('load', function(){
+    ensureRememberStudentLoginUI();
+    var originalShowScreen = window.showScreen;
+    if (typeof originalShowScreen === 'function' && !originalShowScreen.__rememberStudentLoginWrapped) {
+      var wrappedShowScreen = function (screenId) {
+        var result = originalShowScreen.apply(this, arguments);
+        if (screenId === 'loginScreen') window.restoreRememberedStudentLogin();
+        return result;
+      };
+      wrappedShowScreen.__rememberStudentLoginWrapped = true;
+      window.showScreen = wrappedShowScreen;
+    }
     setTimeout(function(){
       if(typeof window.login !== 'function') return;
       var origLogin = window.login;
       
       window.login = async function(){
+        // لا نسمح للمعلم باستخدام مسار الاسم/كلمة المرور أو حفظ الدور محليًا.
+        if (window.currentRole === 'teacher') {
+          if (typeof window.teacherPhoneLogin !== 'function') {
+            if (typeof showToast === 'function') showToast('تسجيل الهاتف الآمن غير جاهز؛ حدّث الصفحة');
+            return;
+          }
+          return window.teacherPhoneLogin();
+        }
         var unameEl = document.getElementById('usernameInput');
         var pwdEl = document.getElementById('passwordInput');
         var ownerCodeEl = document.getElementById('ownerCodeInput');
@@ -176,9 +338,11 @@
               lastLogin: new Date().toISOString()
             });
             
-            window.currentUser = {name: uname, uid: uid, points: 0};
+            window.currentUser = {name: uname, displayName: uname, uid: uid, points: 0};
+            syncChatProfileAfterPlatformLogin();
+            window.saveRememberedStudentLogin(uname, pwd);
             localStorage.setItem('lastUser', JSON.stringify({
-              name: uname, uid: uid, role: window.currentRole, points: 0
+              name: uname, displayName: uname, uid: uid, role: window.currentRole, points: 0
             }));
             if (window.currentRole === 'student' && typeof window.activatePrivateChatSession === 'function') {
               await window.activatePrivateChatSession(uid, pwd);
@@ -221,9 +385,17 @@
             if(typeof showToast === 'function') showToast('✅ تم تسجيل الجهاز');
           }
           
-          window.currentUser = {name: uname, uid: uid2, points: user.points || 0};
+          window.currentUser = {
+            name: uname,
+            displayName: user.displayName || user.display_name || user.name || uname,
+            uid: uid2,
+            points: user.points || 0,
+            photo_url: user.photo_url || user.photoURL || ''
+          };
+          syncChatProfileAfterPlatformLogin();
+          window.saveRememberedStudentLogin(uname, pwd);
           localStorage.setItem('lastUser', JSON.stringify({
-            name: uname, uid: uid2, role: user.role || window.currentRole, points: user.points || 0
+            name: uname, displayName: window.currentUser.displayName, uid: uid2, role: user.role || window.currentRole, points: user.points || 0
           }));
           if (user.role === 'student' && typeof window.activatePrivateChatSession === 'function') {
             await window.activatePrivateChatSession(uid2, pwd);
@@ -548,49 +720,7 @@ window.addEventListener('load', function(){
   }, 3000);
 });
 console.log('✅ Quick Menu loaded');
-// ═══ زر التحميل للعمل بدون نت ═══
-window.downloadAllOffline = async function(){
-  if(!navigator.onLine){ if(typeof showToast === 'function') showToast('⚠️ محتاج نت'); return; }
-  if(typeof showToast === 'function') showToast('⏳ جاري التحميل...');
-  try {
-    var fs = firebase.firestore();
-    var ls = await fs.collection('lessons').get();
-    var lessons = [];
-    ls.forEach(function(d){ lessons.push(Object.assign({id: d.id}, d.data())); });
-    localStorage.setItem('offline_lessons', JSON.stringify(lessons));
-    if(typeof showToast === 'function') showToast('✅ الدروس: ' + lessons.length);
-    
-    var r = await fetch('https://api.alquran.cloud/v1/quran/quran-uthmani');
-    var j = await r.json();
-    var quran = {};
-    j.data.surahs.forEach(function(s){
-      quran[s.number] = {name: s.name, ayahs: s.ayahs.map(function(a){return {num: a.numberInSurah, text: a.text};})};
-    });
-    localStorage.setItem('offline_quran_full', JSON.stringify(quran));
-    if(typeof showToast === 'function') showToast('✅ القرآن: ' + j.data.surahs.length + ' سورة');
-    
-    if(typeof showToast === 'function') showToast('🎉 تم التحميل الكامل!');
-  } catch(e){
-    console.error(e);
-    if(typeof showToast === 'function') showToast('❌ فشل');
-  }
-};
 
-window.addEventListener('load', function(){
-  setTimeout(function(){
-    var home = document.getElementById('homeScreen');
-    if(!home || document.getElementById('offlineBtn')) return;
-    var content = home.querySelector('.content');
-    if(!content) return;
-    var btn = document.createElement('div');
-    btn.id = 'offlineBtn';
-    btn.style.cssText = 'margin:20px 16px;padding:18px;background:linear-gradient(135deg,#1976D2,#0D47A1);color:#fff;border-radius:16px;text-align:center;cursor:pointer;font-weight:bold;';
-    btn.innerHTML = '<div style="font-size:28px;">📥</div><div style="margin-top:8px;font-size:15px;">تحميل المنصة بدون نت</div><div style="font-size:12px;opacity:.9;margin-top:4px;">(يحتاج نت — مرة واحدة)</div>';
-    btn.onclick = function(){ window.downloadAllOffline(); };
-    content.insertBefore(btn, content.firstChild);
-  }, 3000);
-});
-console.log('✅ Offline Button loaded');
 // ═══ الأخبار والمقالات ═══
 window.openNews = async function(){
   if(!window.currentUser) return;
@@ -726,49 +856,7 @@ window.addEventListener('load', function(){
     console.log('✅ Chat bar fixed');
   }, 3000);
 });
-// ═══ زر التحميل للعمل بدون نت ═══
-window.downloadAllOffline = async function(){
-  if(!navigator.onLine){ if(typeof showToast === 'function') showToast('⚠️ محتاج نت'); return; }
-  if(typeof showToast === 'function') showToast('⏳ جاري التحميل...');
-  try {
-    var fs = firebase.firestore();
-    var ls = await fs.collection('lessons').get();
-    var lessons = [];
-    ls.forEach(function(d){ lessons.push(Object.assign({id: d.id}, d.data())); });
-    localStorage.setItem('offline_lessons', JSON.stringify(lessons));
-    if(typeof showToast === 'function') showToast('✅ الدروس: ' + lessons.length);
-    
-    var r = await fetch('https://api.alquran.cloud/v1/quran/quran-uthmani');
-    var j = await r.json();
-    var quran = {};
-    j.data.surahs.forEach(function(s){
-      quran[s.number] = {name: s.name, ayahs: s.ayahs.map(function(a){return {num: a.numberInSurah, text: a.text};})};
-    });
-    localStorage.setItem('offline_quran_full', JSON.stringify(quran));
-    if(typeof showToast === 'function') showToast('✅ القرآن: ' + j.data.surahs.length + ' سورة');
-    
-    if(typeof showToast === 'function') showToast('🎉 تم التحميل الكامل!');
-  } catch(e){
-    console.error(e);
-    if(typeof showToast === 'function') showToast('❌ فشل');
-  }
-};
 
-window.addEventListener('load', function(){
-  setTimeout(function(){
-    var home = document.getElementById('homeScreen');
-    if(!home || document.getElementById('offlineBtn')) return;
-    var content = home.querySelector('.content');
-    if(!content) return;
-    var btn = document.createElement('div');
-    btn.id = 'offlineBtn';
-    btn.style.cssText = 'margin:20px 16px;padding:18px;background:linear-gradient(135deg,#1976D2,#0D47A1);color:#fff;border-radius:16px;text-align:center;cursor:pointer;font-weight:bold;';
-    btn.innerHTML = '<div style="font-size:28px;">📥</div><div style="margin-top:8px;font-size:15px;">تحميل المنصة بدون نت</div><div style="font-size:12px;opacity:.9;margin-top:4px;">(يحتاج نت — مرة واحدة)</div>';
-    btn.onclick = function(){ window.downloadAllOffline(); };
-    content.insertBefore(btn, content.firstChild);
-  }, 3000);
-});
-console.log('✅ Offline Button loaded');
 // ═══ حذف ملف من محطتي الإذاعية ═══
 window.deleteMyStationAudio = async function(id){
   if(!window.currentUser) return;
@@ -834,8 +922,9 @@ window.openMultiplication = function(){
   
   html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;">';
   var colors = ['#FF6B6B','#4ECDC4','#45B7D1','#FFA07A','#98D8C8','#F7DC6F','#BB8FCE','#85C1E2','#F8B195','#C06C84'];
+  var arabicDigits = function(value){ return String(value).replace(/[0-9]/g, function(d){ return '٠١٢٣٤٥٦٧٨٩'[d]; }); };
   for(var i = 1; i <= 10; i++){
-    html += '<button onclick="showTable(' + i + ')" style="padding:24px 8px;background:' + colors[i-1] + ';color:#fff;border:none;border-radius:20px;font-family:inherit;font-size:28px;font-weight:bold;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.15);">×' + i + '</button>';
+    html += '<button onclick="showTable(' + i + ')" style="padding:24px 8px;background:' + colors[i-1] + ';color:#fff;border:none;border-radius:20px;font-family:inherit;font-size:28px;font-weight:bold;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.15);">×' + arabicDigits(i) + '</button>';
   }
   html += '</div>';
   
@@ -850,13 +939,14 @@ window.openMultiplication = function(){
 window.showTable = function(num){
   var c = document.getElementById('multResult');
   if(!c) return;
-  var html = '<div style="text-align:center;font-size:22px;font-weight:bold;color:#E65100;margin-bottom:16px;">جدول الـ ' + num + '</div>';
+  var arabicDigits = function(value){ return String(value).replace(/[0-9]/g, function(d){ return '٠١٢٣٤٥٦٧٨٩'[d]; }); };
+  var html = '<div style="text-align:center;font-size:22px;font-weight:bold;color:#E65100;margin-bottom:16px;">جدول الـ ' + arabicDigits(num) + '</div>';
   html += '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;">';
   for(var i = 1; i <= 10; i++){
     var result = num * i;
     html += '<div onclick="speakText(\'' + num + ' في ' + i + ' يساوي ' + result + '\')" style="background:linear-gradient(135deg,#FFF3E0,#FFE0B2);padding:14px;border-radius:14px;text-align:center;cursor:pointer;border:2px solid #FFB74D;">';
-    html += '<div style="font-size:18px;font-weight:bold;color:#E65100;">' + num + ' × ' + i + '</div>';
-    html += '<div style="font-size:24px;font-weight:bold;color:#BF360C;margin-top:4px;">= ' + result + '</div>';
+    html += '<div style="font-size:18px;font-weight:bold;color:#E65100;">' + arabicDigits(num) + ' × ' + arabicDigits(i) + '</div>';
+    html += '<div style="font-size:24px;font-weight:bold;color:#BF360C;margin-top:4px;">= ' + arabicDigits(result) + '</div>';
     html += '</div>';
   }
   html += '</div>';
@@ -1682,21 +1772,16 @@ console.log('✅ Exercises UI loaded');
 })();
 // ═══ تحديث إجباري للتطبيق عشان يقرأ الكود الجديد ═══
 (function(){
-  var currentVersion = '1.0.2'; // غير الرقم ده كل مرة تعدل
+  var currentVersion = '1.0.10'; // غيّر الرقم ده مع كل تحديث منشور
   var savedVersion = localStorage.getItem('app_version');
   if(savedVersion !== currentVersion){
     localStorage.setItem('app_version', currentVersion);
-    if('caches' in window){
-      caches.keys().then(function(names){
-        for(var i = 0; i < names.length; i++){ caches.delete(names[i]); }
-      });
-    }
     if('serviceWorker' in navigator){
       navigator.serviceWorker.getRegistrations().then(function(regs){
-        for(var i = 0; i < regs.length; i++){ regs[i].unregister(); }
+        regs.forEach(function(reg){ reg.update().catch(function(){}); });
       });
     }
-    setTimeout(function(){ location.reload(true); }, 500);
+    if(savedVersion){ setTimeout(function(){ location.reload(); }, 1200); }
   }
 })();
 // ═══════════════════════════════════════════════════════
@@ -1946,52 +2031,98 @@ console.log('✅ Exercises UI loaded');
   console.log('✅ Full News System loaded');
 })();
 // ═══════════════════════════════════════════════════════
-// 📥 إرجاع زرار التحميل بدون نت
+// 📥 تنزيل محتوى التطبيق للاستخدام دون إنترنت
+// ═══════════════════════════════════════════════════════
+(function(){
+  var MEDIA_CACHE_NAME='ta3lemy-media-v1';
+  window.offlineMediaIsCached=async function(url){
+    if(!url||!('caches' in window))return false;
+    try{var cache=await caches.open(MEDIA_CACHE_NAME);return !!(await cache.match(url));}catch(e){return false;}
+  };
+  window.cacheOfflineMediaUrl=async function(url){
+    if(!url||!('caches' in window))return false;
+    try{
+      var cache=await caches.open(MEDIA_CACHE_NAME);
+      if(await cache.match(url))return true;
+      var response;
+      try{response=await fetch(url,{mode:'cors',credentials:'omit'});}catch(corsError){response=await fetch(url,{mode:'no-cors',credentials:'omit'});}
+      if(!response||(!response.ok&&response.type!=='opaque'))return false;
+      await cache.put(url,response.clone());
+      return true;
+    }catch(e){console.warn('تعذر حفظ الوسيط دون اتصال:',url,e);return false;}
+  };
+  window.downloadQuranSurahOffline=async function(surahNumber,reciter,surahData){
+    if(!navigator.onLine){if(typeof showToast==='function')showToast('⚠️ اتصل بالإنترنت لتنزيل صوت السورة');return;}
+    var surah=surahData||window.currentSurahData;
+    if(!surah||Number(surah.number)!==Number(surahNumber)){if(typeof showToast==='function')showToast('⚠️ افتح السورة أولًا');return;}
+    var reader=reciter||window.currentReciter||'ar.alafasy',saved=0,failed=0;
+    for(var i=0;i<surah.ayahs.length;i++){
+      var ayah=surah.ayahs[i],url='https://cdn.islamic.network/quran/audio/128/'+reader+'/'+ayah.number+'.mp3';
+      if(await window.cacheOfflineMediaUrl(url))saved++;else failed++;
+      if((i+1)%12===0||i===surah.ayahs.length-1){if(typeof showToast==='function')showToast('⏳ تنزيل صوت السورة: '+(i+1)+'/'+surah.ayahs.length);}
+    }
+    if(typeof showToast==='function')showToast('✅ حُفظ صوت '+surah.name+': '+saved+' آية'+(failed?' • تعذر '+failed:''));
+  };
+  function mediaUrlsFromLesson(item){
+    var keys=['image_url','imageUrl','video_url','videoUrl','audio_url','audioUrl','file_url','fileUrl','media_url','mediaUrl','attachment_url','attachmentUrl'];
+    return keys.map(function(k){return item&&item[k];}).filter(function(u){return typeof u==='string'&&/^https?:\/\//i.test(u);});
+  }
+  window.downloadAllOffline=async function(){
+    if(!navigator.onLine){if(typeof showToast==='function')showToast('⚠️ اتصل بالإنترنت أولًا لبدء تنزيل المحتوى');return;}
+    if(typeof showToast==='function')showToast('⏳ بدء تنزيل المحتوى للعمل دون إنترنت...');
+    var report={lessons:0,quran:0,station:0,mediaSaved:0,mediaFailed:0};
+    try{
+      var lessonSnap=await firebase.firestore().collection('lessons').get(),lessons=[];
+      lessonSnap.forEach(function(doc){lessons.push(Object.assign({id:doc.id},doc.data()));});
+      localStorage.setItem('offline_lessons',JSON.stringify(lessons));report.lessons=lessons.length;
+      var lessonMedia=[];lessons.forEach(function(item){lessonMedia=lessonMedia.concat(mediaUrlsFromLesson(item));});
+      var lessonUnique=Array.from(new Set(lessonMedia));
+      for(var li=0;li<lessonUnique.length;li++){
+        if(await window.cacheOfflineMediaUrl(lessonUnique[li]))report.mediaSaved++;else report.mediaFailed++;
+        if((li+1)%4===0||li===lessonUnique.length-1){if(typeof showToast==='function')showToast('⏳ تنزيل وسائط المنهج: '+(li+1)+'/'+lessonUnique.length);}
+      }
+      if(typeof showToast==='function')showToast('✅ حُفظت بيانات '+report.lessons+' درسًا وملفات الوسائط');
+    }catch(e){console.error('تعذر تنزيل الدروس:',e);report.mediaFailed++;if(typeof showToast==='function')showToast('⚠️ تعذر تنزيل بعض الدروس أو وسائطها');}
+    try{
+      var response=await fetch('https://api.alquran.cloud/v1/quran/quran-uthmani');
+      if(!response.ok)throw new Error('Quran API '+response.status);
+      var payload=await response.json();if(!payload.data||!payload.data.surahs)throw new Error('بيانات القرآن غير مكتملة');
+      var quran={},surahIndex=payload.data.surahs.map(function(s){
+        quran[s.number]={name:s.name,revelationType:s.revelationType,ayahs:s.ayahs.map(function(a){return {number:a.number,numberInSurah:a.numberInSurah,num:a.numberInSurah,text:a.text};})};
+        return {number:s.number,name:s.name,englishName:s.englishName,numberOfAyahs:s.numberOfAyahs,revelationType:s.revelationType};
+      });
+      localStorage.setItem('offline_quran_full',JSON.stringify(quran));
+      localStorage.setItem('ta3lemy_surahs',JSON.stringify(surahIndex));
+      report.quran=surahIndex.length;
+    }catch(e){console.error('تعذر تنزيل القرآن:',e);if(typeof showToast==='function')showToast('⚠️ لم يكتمل تنزيل نص القرآن');}
+    try{
+      var stationSnap=await firebase.firestore().collection('station').orderBy('created_at','desc').get(),stations=[];
+      stationSnap.forEach(function(doc){stations.push(Object.assign({id:doc.id},doc.data()));});
+      localStorage.setItem('offline_station_items',JSON.stringify(stations));report.station=stations.length;
+      for(var si=0;si<stations.length;si++){
+        var station=stations[si];if(station.url){if(await window.cacheOfflineMediaUrl(station.url))report.mediaSaved++;else report.mediaFailed++;}
+        if(typeof showToast==='function'&&stations.length>0)showToast('⏳ تنزيل ملفات محطتي: '+(si+1)+'/'+stations.length);
+      }
+    }catch(e){console.error('تعذر تنزيل محطة المستخدم:',e);if(typeof showToast==='function')showToast('⚠️ تعذر تنزيل بيانات محطة المستخدم');}
+    try{localStorage.setItem('offline_downloaded_at',new Date().toISOString());}catch(e){}
+    var summary='اكتمل التنزيل: '+report.lessons+' درسًا، '+report.quran+' سورة نصية، '+report.station+' ملف محطة، '+report.mediaSaved+' ملف وسائط محفوظ';
+    if(report.mediaFailed)summary+='، '+report.mediaFailed+' تعذر تنزيلها';
+    if(typeof showToast==='function')showToast(summary);
+    console.log('Offline download report:',report);
+  };
+  window.addEventListener('load',function(){
+    setTimeout(function(){
+      var toolsGrid=document.querySelector('#homeScreen .tools-grid');
+      if(!toolsGrid||document.getElementById('offlineBtnInGrid'))return;
+      var btn=document.createElement('div');btn.id='offlineBtnInGrid';btn.className='tool-btn';
+      btn.innerHTML='<div class="tool-icon" style="background:#1976D215;color:#1976D2;font-size:22px;">📥</div><div class="tool-label">تحميل محتوى التطبيق ليعمل بدون نت</div>';
+      btn.onclick=function(){window.downloadAllOffline();};toolsGrid.appendChild(btn);
+    },4500);
+  });
+  console.log('✅ Offline content download loaded');
+})();
 // ═══════════════════════════════════════════════════════
 
-(function(){
-  window.downloadAllOffline = async function(){
-    if(!navigator.onLine){ if(typeof showToast === 'function') showToast('⚠️ محتاج نت'); return; }
-    if(typeof showToast === 'function') showToast('⏳ جاري التحميل...');
-    try {
-      var fs = firebase.firestore();
-      var ls = await fs.collection('lessons').get();
-      var lessons = [];
-      ls.forEach(function(d){ lessons.push(Object.assign({id: d.id}, d.data())); });
-      localStorage.setItem('offline_lessons', JSON.stringify(lessons));
-      if(typeof showToast === 'function') showToast('✅ الدروس: ' + lessons.length);
-      
-      var r = await fetch('https://api.alquran.cloud/v1/quran/quran-uthmani');
-      var j = await r.json();
-      var quran = {};
-      j.data.surahs.forEach(function(s){
-        quran[s.number] = {name: s.name, ayahs: s.ayahs.map(function(a){return {num: a.numberInSurah, text: a.text};})};
-      });
-      localStorage.setItem('offline_quran_full', JSON.stringify(quran));
-      if(typeof showToast === 'function') showToast('✅ القرآن: ' + j.data.surahs.length + ' سورة');
-      if(typeof showToast === 'function') showToast('🎉 تم التحميل الكامل!');
-    } catch(e){
-      console.error(e);
-      if(typeof showToast === 'function') showToast('❌ فشل');
-    }
-  };
-
-  window.addEventListener('load', function(){
-    setTimeout(function(){
-      var toolsGrid = document.querySelector('#homeScreen .tools-grid');
-      if(!toolsGrid || document.getElementById('offlineBtnInGrid')) return;
-      
-      var btn = document.createElement('div');
-      btn.id = 'offlineBtnInGrid';
-      btn.className = 'tool-btn';
-      btn.innerHTML = '<div class="tool-icon" style="background:#1976D215;color:#1976D2;font-size:22px;">📥</div><div class="tool-label">تحميل</div>';
-      btn.onclick = function(){ window.downloadAllOffline(); };
-      toolsGrid.appendChild(btn);
-    }, 4500);
-  });
-
-  console.log('✅ Offline Button Restored');
-})();
 // ═══════════════════════════════════════════════════════
 // 😊 الإيموشن والإعجابات (للتعليقات والدردشة)
 // ═══════════════════════════════════════════════════════
@@ -2183,4 +2314,213 @@ console.log('✅ Exercises UI loaded');
 })();
 console.log('✅ extras.js loaded');
   
+})();
+/* إدارة حسابي: أضيفي هذا المقطع في آخر extras.js. */
+(function () {
+  'use strict';
+  function user() { return window.currentUser || null; }
+  function role() { return window.currentRole || (user() && user().role) || 'student'; }
+  function teacher() { return role() === 'teacher'; }
+  function db() { return firebase.firestore(); }
+  function toast(message) { if (typeof window.showToast === 'function') window.showToast(message); else alert(message); }
+  function displayName() { var u = user() || {}; return u.displayName || u.name || 'مستخدم'; }
+  function defaultPhoto(name) { return 'https://ui-avatars.com/api/?name=' + encodeURIComponent(name || 'مستخدم') + '&background=2E7D32&color=fff&size=200'; }
+  function safePhoto(url) { return /^https:\/\//i.test(String(url || '')) ? String(url) : ''; }
+  function doc() { if (!user() || !user().uid) throw new Error('لا يوجد حساب مسجل'); return db().collection(teacher() ? 'teacher_accounts' : 'users').doc(String(user().uid)); }
+  function roleName() { return role() === 'teacher' ? 'معلم' : role() === 'parent' ? 'ولي أمر' : role() === 'owner' ? 'المالك' : 'طالب'; }
+
+  function syncHeader() {
+    if (!user()) return;
+    var profile = document.getElementById('profileScreen');
+    var card = profile && profile.querySelector('.content > div');
+    var avatar = card && card.firstElementChild;
+    if (avatar) {
+      var img = document.getElementById('accountHeaderPhoto');
+      if (!img) {
+        img = document.createElement('img');
+        img.id = 'accountHeaderPhoto';
+        img.alt = 'صورة الحساب';
+        img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%';
+        avatar.replaceChildren(img);
+      }
+      img.src = safePhoto(user().photo_url || user().photoURL) || defaultPhoto(displayName());
+      img.onerror = function () { this.onerror = null; this.src = defaultPhoto(displayName()); };
+    }
+    var label = document.getElementById('profileName');
+    if (label) label.textContent = displayName();
+  }
+
+  function installEntry() {
+    var content = document.querySelector('#profileScreen .content');
+    if (!content || document.getElementById('accountManagementEntry')) return;
+    var title = Array.from(content.querySelectorAll('.section-title')).find(function (el) {
+      return el.textContent.indexOf('الإعدادات') >= 0;
+    });
+    var entry = document.createElement('div');
+    entry.id = 'accountManagementEntry';
+    entry.className = 'menu-item';
+    entry.innerHTML = '<span style="font-size:26px">⚙️</span><span style="flex:1;font-weight:700">إدارة حسابي</span><span style="color:#999;font-size:24px">‹</span>';
+    entry.onclick = window.openAccountManagement;
+    if (title && title.parentNode) title.parentNode.insertBefore(entry, title.nextSibling);
+    else content.appendChild(entry);
+  }
+
+  window.openAccountManagement = async function () {
+    if (!user()) return toast('سجّلي الدخول أولًا.');
+    var screen = document.getElementById('accountManagementScreen');
+    if (!screen) {
+      screen = document.createElement('div');
+      screen.id = 'accountManagementScreen';
+      screen.className = 'screen';
+      document.body.appendChild(screen);
+    }
+    screen.innerHTML = '<div class="top-bar"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>⚙️ إدارة حسابي</span></div><div style="width:42px"></div></div><div class="content"><div style="max-width:560px;margin:auto"><div style="background:#fff;border-radius:16px;padding:20px;text-align:center;margin-bottom:14px"><img id="accountManagerPhoto" alt="صورة الحساب" style="width:112px;height:112px;border-radius:50%;object-fit:cover;border:3px solid #e8f5e9"><div id="accountManagerRole" style="font-weight:700;margin:10px 0 4px"></div><div id="accountManagerLogin" style="font-size:12px;color:#68736b"></div><input id="accountManagerPhotoInput" type="file" accept="image/*" style="display:none"><div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:14px"><button class="btn-primary" id="accountChoosePhoto" type="button">📷 رفع أو تغيير الصورة</button><button class="btn-primary" id="accountRemovePhoto" type="button" style="background:#ffebee;color:#c62828">🗑️ إزالة الصورة</button></div><small style="display:block;color:#68736b;margin-top:10px">JPG أو PNG حتى 5 ميجابايت. إزالة الصورة لا تحذف النسخة الأصلية من Cloudinary.</small></div><div style="background:#fff;border-radius:16px;padding:18px"><label class="form-label" for="accountDisplayName">الاسم الظاهر</label><input id="accountDisplayName" class="form-input" type="text" maxlength="50"><small style="display:block;color:#68736b;margin:7px 0 12px">تغيير الاسم الظاهر لا يغيّر اسم الدخول أو كلمة المرور.</small><button class="btn-primary" id="accountSaveName" type="button">💾 حفظ الاسم</button></div></div></div>';
+    if (window.screenHistory && window.currentScreen) window.screenHistory.push(window.currentScreen);
+    if (typeof window.showScreen === 'function') window.showScreen('accountManagementScreen');
+
+    document.getElementById('accountManagerRole').textContent = roleName();
+    document.getElementById('accountManagerLogin').textContent =
+      user().email ? 'البريد: ' + user().email : 'اسم الدخول: ' + (user().name || '');
+    document.getElementById('accountDisplayName').value = displayName();
+
+    document.getElementById('accountChoosePhoto').onclick = function () {
+      document.getElementById('accountManagerPhotoInput').click();
+    };
+    document.getElementById('accountManagerPhotoInput').onchange = function () {
+      if (this.files && this.files[0]) savePhoto(this.files[0]);
+      this.value = '';
+    };
+    document.getElementById('accountRemovePhoto').onclick = removePhoto;
+    document.getElementById('accountSaveName').onclick = saveName;
+    await loadSettings();
+  };
+
+  async function loadSettings() {
+    var u = user();
+    var photo = document.getElementById('accountManagerPhoto');
+    if (photo) photo.src = safePhoto(u.photo_url || u.photoURL) || defaultPhoto(displayName());
+    try {
+      var snap = await doc().get();
+      if (!snap.exists) return;
+      var data = snap.data() || {};
+      u.displayName = data.displayName || u.displayName || data.name || u.name;
+      u.photo_url = data.photo_url || data.photoURL || u.photo_url || '';
+      document.getElementById('accountDisplayName').value = displayName();
+      if (photo) photo.src = safePhoto(u.photo_url) || defaultPhoto(displayName());
+      syncHeader();
+      syncChatProfileAfterPlatformLogin();
+    } catch (error) {
+      console.error(error);
+      toast('تعذر تحميل بيانات الحساب.');
+    }
+  }
+
+  async function saveName() {
+    var input = document.getElementById('accountDisplayName');
+    var name = input && input.value.trim();
+    if (!name || name.length < 2 || name.length > 50) {
+      return toast('اكتبي اسمًا من حرفين إلى 50 حرفًا.');
+    }
+    try {
+      await doc().set({ displayName: name, updatedAt: new Date().toISOString() }, { merge: true });
+      user().displayName = name;
+      try {
+        var lastUser = JSON.parse(localStorage.getItem('lastUser') || '{}');
+        lastUser.displayName = name;
+        localStorage.setItem('lastUser', JSON.stringify(lastUser));
+      } catch (_) {}
+      syncChatProfileAfterPlatformLogin();
+      var profileName = document.getElementById('profileName');
+      if (profileName) profileName.textContent = name;
+      if (!user().photo_url) document.getElementById('accountManagerPhoto').src = defaultPhoto(name);
+      syncHeader();
+      toast('تم حفظ الاسم الظاهر دون تغيير بيانات الدخول.');
+    } catch (error) {
+      console.error(error);
+      toast('تعذر حفظ الاسم؛ تحققي من اتصال Firebase.');
+    }
+  }
+
+  async function savePhoto(file) {
+    if (!file || !/^image\//i.test(file.type) || file.size > 5 * 1024 * 1024) {
+      return toast('اختاري صورة صالحة لا تتجاوز 5 ميجابايت.');
+    }
+    try {
+      if (typeof window.uploadFile !== 'function') throw new Error('رفع الصور غير جاهز');
+      toast('جارٍ رفع الصورة...');
+      var url = safePhoto(await window.uploadFile(file, 'users/avatars'));
+      if (!url) throw new Error('رابط الصورة غير صالح');
+      await doc().set({ photo_url: url, updatedAt: new Date().toISOString() }, { merge: true });
+      user().photo_url = url;
+      if (typeof window.syncPrivateChatProfile === 'function') {
+        window.syncPrivateChatProfile().catch(function (error) { console.warn('تعذر مزامنة صورة الدردشة', error); });
+      }
+      if (teacher() && firebase.auth && firebase.auth().currentUser &&
+          firebase.auth().currentUser.uid === String(user().uid)) {
+        await firebase.auth().currentUser.updateProfile({ photoURL: url }).catch(function () {});
+      }
+      document.getElementById('accountManagerPhoto').src = url;
+      syncHeader();
+      try {
+        var auth = firebase.auth && firebase.auth().currentUser;
+        if (auth) await db().collection('public_profiles').doc(auth.uid).set({
+          avatarURL: url, displayName: displayName(), role: role(),
+          updatedAt: new Date().toISOString()
+        }, { merge: true });
+      } catch (e) { console.warn('تعذر مزامنة صورة الدردشة', e); }
+      toast('تم تحديث صورة الحساب.');
+    } catch (error) {
+      console.error(error);
+      toast('تعذر رفع الصورة؛ تحققي من Cloudinary.');
+    }
+  }
+
+  async function removePhoto() {
+    if (!confirm('إزالة الصورة من حسابك؟ لن تُحذف النسخة المخزنة لدى Cloudinary.')) return;
+    try {
+      await doc().set({ photo_url: '', updatedAt: new Date().toISOString() }, { merge: true });
+      user().photo_url = '';
+      if (typeof window.syncPrivateChatProfile === 'function') {
+        window.syncPrivateChatProfile().catch(function (error) { console.warn('تعذر حذف صورة الدردشة', error); });
+      }
+      if (teacher() && firebase.auth && firebase.auth().currentUser &&
+          firebase.auth().currentUser.uid === String(user().uid)) {
+        await firebase.auth().currentUser.updateProfile({ photoURL: null }).catch(function () {});
+      }
+      var photo = defaultPhoto(displayName());
+      document.getElementById('accountManagerPhoto').src = photo;
+      syncHeader();
+      try {
+        var auth = firebase.auth && firebase.auth().currentUser;
+        if (auth) await db().collection('public_profiles').doc(auth.uid).set({
+          avatarURL: '', updatedAt: new Date().toISOString()
+        }, { merge: true });
+      } catch (e) { console.warn('تعذر مزامنة صورة الدردشة', e); }
+      toast('تمت إزالة الصورة من ملف الحساب.');
+    } catch (error) {
+      console.error(error);
+      toast('تعذر إزالة الصورة؛ تحققي من اتصال Firebase.');
+    }
+  }
+
+  window.openEditProfile = window.openAccountManagement;
+  window.uploadProfilePic = function (input) {
+    if (input && input.files && input.files[0]) savePhoto(input.files[0]);
+    if (input) input.value = '';
+  };
+
+  window.addEventListener('load', function () {
+    installEntry();
+    var original = window.goToProfile;
+    if (typeof original === 'function' && !original.__accountManagerWrapped) {
+      var wrapped = function () {
+        var result = original.apply(this, arguments);
+        installEntry();
+        syncHeader();
+        return result;
+      };
+      wrapped.__accountManagerWrapped = true;
+      window.goToProfile = wrapped;
+    }
+  });
 })();

@@ -1,6 +1,7 @@
 /* واجهة قسم «إبداع» — تستخدم ألوان المنصة الحالية. */
 #drawingScreen .content {
   display: flex !important;
+  flex: 1 1 0 !important;
   flex-direction: column !important;
   height: calc(100vh - 60px) !important;
   min-height: 0 !important;
