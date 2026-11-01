@@ -1,0 +1,47 @@
+// مقتطف للمراجعة والدمج داخل قواعد Firestore الحالية فقط.
+// لا تستبدل به ملف القواعد الحالي، ولا تضف قاعدة deny بجانب allow أوسع؛
+// قواعد Firestore تسمح بالطلب إذا سمحت أي قاعدة مطابقة.
+// واجهة الطالب والمعلم تتعامل مع هذه المجموعات عبر Cloud Functions فقط.
+match /teacher_applications/{applicationId} {
+  allow read, write: if false;
+}
+match /teacher_uploads/{uploadId} {
+  allow read, write: if false;
+}
+match /teacher_grades/{gradeId} {
+  allow read, write: if false;
+}
+
+match /broadcast_rooms/{roomId} {
+  allow read, write: if false;
+}
+match /broadcast_join_requests/{requestId} {
+  allow read, write: if false;
+}
+match /broadcast_capacity/{capacityId} {
+  allow read, write: if false;
+}
+match /broadcast_control/{controlId} {
+  allow read, write: if false;
+}
+
+match /private_conversations/{conversationId} {
+  allow read, write: if false;
+  match /items/{messageId} {
+    allow read, write: if false;
+  }
+}
+match /private_chat_auth_limits/{limitId} {
+  allow read, write: if false;
+}
+match /private_chat_send_limits/{limitId} {
+  allow read, write: if false;
+}
+
+// المسار القديم للدردشة الخاصة؛ أوقف القراءة المباشرة بعد نقل الواجهة إلى Cloud Functions.
+match /messages/{conversationId} {
+  allow read, write: if false;
+  match /msgs/{messageId} {
+    allow read, write: if false;
+  }
+}

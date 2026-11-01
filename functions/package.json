@@ -1,12 +1,16 @@
 {
-  "name": "ta3lemy-auth-functions",
+  "name": "ta3lemy-creativity-functions",
   "private": true,
+  "main": "index.js",
   "engines": {
     "node": "20"
   },
-  "main": "index.js",
+  "scripts": {
+    "lint": "node --check index.js && node --check teacher-portal.js && node --check live-rooms.js && node --check private-chat.js"
+  },
   "dependencies": {
     "firebase-admin": "^13.0.0",
-    "firebase-functions": "^6.0.0"
+    "firebase-functions": "^6.0.1",
+    "livekit-server-sdk": "^2.19.1"
   }
 }

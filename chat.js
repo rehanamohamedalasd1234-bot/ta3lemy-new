@@ -11,6 +11,10 @@
     if(!inp) return;
     var txt = inp.value.trim();
     if(!txt || !window.currentChatId || !window.currentUser) return;
+    if(window.currentChatId !== 'public_chat'){
+      if(typeof showToast === 'function') showToast('استخدم صندوق الرسائل لتبادل الرسائل الخاصة بأمان.');
+      return;
+    }
     
     try {
       var fs = firebase.firestore();
@@ -77,6 +81,7 @@
   // ═══ 3. حذف رسالة ═══
   window.deleteMsg = async function(msgId){
     if(window.currentRole !== 'owner' && window.currentRole !== 'teacher') return;
+    if(window.currentChatId !== 'public_chat') return;
     if(!confirm('حذف الرسالة؟')) return;
     try {
       var fs = firebase.firestore();
@@ -177,3 +182,11 @@
 
   console.log('✅ Pro Chat System Loaded');
 })();
+    if(window.currentChatId !== 'public_chat'){
+      if(typeof showToast === 'function') showToast('الوسائط غير مفعلة في المحادثة الخاصة حفاظًا على الخصوصية.');
+      return;
+    }
+    if(chatId !== 'public_chat'){
+      if(typeof showToast === 'function') showToast('المحادثات الخاصة تُفتح من صندوق الرسائل الآمن.');
+      return;
+    }
