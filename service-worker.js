@@ -1,7 +1,7 @@
 // Service Worker for the Hafez educational platform.
 // Shell files are prefetched for offline launch; media is stored only when the user explicitly downloads it.
 const CACHE_PREFIX = 'ta3lemy-shell-';
-const CACHE_NAME = CACHE_PREFIX + '1.0.72';
+const CACHE_NAME = CACHE_PREFIX + '1.0.74';
 const MEDIA_CACHE_NAME = 'ta3lemy-media-v1';
 const APP_SHELL = [
   './', './index.html', './extras.js', './curriculum-display-fix.js', './offline-mode.js', './navigation-fix.js', './service-worker.js', './manifest.json', './version.json', './auth-init.js', './fix-canvas.css',
@@ -11,9 +11,10 @@ const APP_SHELL = [
   './math-grade8-term1.js', './computer-grade8-term1.js', './religion-grade8-term1.js', './art-grade8-term1.js',
   './grade9-term1-content.js', './continuous-assessment.js', './primary-official-only.js', './grade1-math-expanded.js', './primary-grade2-data.js', './primary-grade2-structure.js', './primary-grade2-detailed-content.json', './primary-grade3-structure.js', './primary-grade3-detailed-content.json', './primary-grade4-structure.js', './primary-grades456-detailed-content.json', './primary-grade5-structure.js', './primary-grade6-structure.js',
   './creativity-config.js', './creativity.js', './educational-games.js', './gemini-fix.js', './chat-config.js', './chat-system.js',
-  './supabase-chat-config.js', './supabase-call-alerts.js', './supabase-private-chat.js',
+  './supabase-chat-config.js', './supabase-call-alerts.js', './supabase-private-chat.js', './feedback-system.js',
   './admin-system.js', './kindergarten-languages.js', './kg1-arabic-structure.js', './kg1-arabic-2026-2027-t1.json', './kg1-english-structure.js', './kg1-english-2026-2027-t1.json', './kg2-english-structure.js', './kg2-english-2026-2027-t1.json', './icon-512.png'
 ];
+const APP_SHELL_PATHS = new Set(APP_SHELL.map(file => new URL(file, self.registration.scope).pathname));
 const EXTERNAL_SHELL = [
   'https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js',
   'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js',
@@ -30,9 +31,18 @@ function isMediaRequest(request, url) {
 }
 
 self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)).then(() => self.skipWaiting())
-  );
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    await cache.addAll(APP_SHELL);
+    await Promise.all(EXTERNAL_SHELL.map(async asset => {
+      const request = new Request(asset, { mode: 'cors', credentials: 'omit' });
+      try {
+        const response = await fetch(request);
+        if (response.ok || response.type === 'opaque') await cache.put(request, response.clone());
+      } catch (_) { /* Keep installation available even if an external CDN is temporarily down. */ }
+    }));
+    await self.skipWaiting();
+  })());
 });
 
 self.addEventListener('activate', event => {
@@ -51,8 +61,8 @@ self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
 
-  // Serve app shell files from cache first, then update in background
-  if (APP_SHELL.some(f => url.pathname.endsWith(f.replace('./', '')))) {
+  // Serve exact app-shell paths from cache first, then update in background
+  if (url.origin === self.location.origin && APP_SHELL_PATHS.has(url.pathname)) {
     event.respondWith(
       caches.match(event.request).then(cached => {
         const fetchPromise = fetch(event.request).then(networkResponse => {
@@ -73,10 +83,16 @@ self.addEventListener('fetch', event => {
     if (!isFirebaseSdk && !isSupabaseSdk) return;
     event.respondWith((async () => {
       const cache = await caches.open(CACHE_NAME);
-      const cached = await cache.match(request.url);
-      if (cached) return cached;
-      try { return await fetch(request); }
-      catch (error) { return new Response('', { status: 503, statusText: 'Offline SDK Not Found' }); }
+      const cached = await cache.match(event.request);
+      try {
+        const response = await fetch(event.request);
+        if (response.ok || response.type === 'opaque') {
+          try { await cache.put(event.request, response.clone()); } catch (_) {}
+        }
+        return response;
+      } catch (error) {
+        return cached || new Response('', { status: 503, statusText: 'Offline SDK Not Found' });
+      }
     })());
     return;
   }
