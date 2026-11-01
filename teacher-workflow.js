@@ -72,7 +72,7 @@
   function teacherWorkCard(doc) {
     var item = doc.data() || {};
     var content = typeof item.content === 'string' ? item.content : '';
-    var summary = content ? esc(content.substring(0, 70)) + (content.length > 70 ? '…' : '') : (item.video_url ? '🎥 فيديو' : item.audio_url ? '🔊 صوت للاستماع' : item.image_url ? '🖼️ صورة' : 'افتح العمل للمشاهدة');
+    var summary = content ? esc(content.substring(0, 70)) + (content.length > 70 ? '…' : '') : (item.pdf_url ? '📕 ملف PDF' : item.video_url ? '🎥 فيديو' : item.audio_url ? '🔊 صوت للاستماع' : item.image_url ? '🖼️ صورة' : 'افتح العمل للمشاهدة');
     return '<div class="content-item" onclick="viewContent(\'' + attr(doc.id) + '\')"><div class="content-item-icon">📚</div><div class="content-item-info"><div class="content-item-title">' + esc(item.title || 'بدون عنوان') + '</div><div class="content-item-sub">📌 ' + esc(teacherWorkKind(item)) + (summary ? ' • ' + summary : '') + '</div></div><div class="content-item-arrow">‹</div></div>';
   }
   function regularContentCard(doc, type) {
@@ -81,7 +81,7 @@
     var kinds = { lesson: 'درس / شرح', explanation: 'شرح', exercise: 'تدريب', exam: 'امتحان', review: 'مراجعة', image: 'صورة تعليمية', video: 'فيديو', audio: 'تسجيل صوتي' };
     var workKind = type === 'teacher_explanation' && item.teacherContentType ? kinds[item.teacherContentType] || 'عمل تعليمي' : '';
     var content = typeof item.content === 'string' ? item.content : '';
-    var contentSummary = content ? esc(content.substring(0, 70)) + (content.length > 70 ? '…' : '') : (item.video_url ? '🎥 فيديو' : item.audio_url ? '🔊 صوت للاستماع' : item.image_url ? '🖼️ صورة' : '');
+    var contentSummary = content ? esc(content.substring(0, 70)) + (content.length > 70 ? '…' : '') : (item.pdf_url ? '📕 ملف PDF' : item.video_url ? '🎥 فيديو' : item.audio_url ? '🔊 صوت للاستماع' : item.image_url ? '🖼️ صورة' : '');
     var summary = (workKind ? '📌 ' + workKind + (contentSummary ? ' • ' : '') : '') + contentSummary;
     return '<div class="content-item" onclick="viewContent(\'' + attr(doc.id) + '\')"><div class="content-item-icon">📄</div><div class="content-item-info"><div class="content-item-title">' + esc(item.title || 'بدون عنوان') + '</div><div class="content-item-sub">' + summary + teacher + '</div></div><div class="content-item-arrow">‹</div></div>';
   }
@@ -319,6 +319,13 @@
       var submitButton = document.getElementById('upSubmitBtn');
       if (submitButton && submitButton.parentNode) submitButton.parentNode.insertBefore(audioGroup, submitButton);
     }
+    if (!document.getElementById('upPdf')) {
+      var pdfGroup = document.createElement('div');
+      pdfGroup.className = 'form-group';
+      pdfGroup.innerHTML = '<label class="form-label" for="upPdf">📕 ملف PDF تعليمي (اختياري)</label><input id="upPdf" class="form-input" type="file" accept=".pdf,application/pdf" style="padding:10px;"><small style="display:block;margin-top:5px;color:#68756d;line-height:1.7">اختر ملف PDF لا يزيد حجمه على 10 ميجابايت. سيظهر للطلاب بعد موافقة المالك.</small>';
+      var submitButton = document.getElementById('upSubmitBtn');
+      if (submitButton && submitButton.parentNode) submitButton.parentNode.insertBefore(pdfGroup, submitButton);
+    }
     ensureUploadCurriculumSelectors();
   }
 
@@ -336,19 +343,24 @@
     var imageInput = document.getElementById('upImage');
     var videoInput = document.getElementById('upVideo');
     var audioInput = document.getElementById('upAudio');
+    var pdfInput = document.getElementById('upPdf');
     var imageFile = imageInput && imageInput.files && imageInput.files[0];
     var videoFile = videoInput && videoInput.files && videoInput.files[0];
     var audioFile = audioInput && audioInput.files && audioInput.files[0];
+    var pdfFile = pdfInput && pdfInput.files && pdfInput.files[0];
     var button = document.getElementById('upSubmitBtn');
     if (!teacherName || teacherName.length < 3 || !stage || !grade || !subject || !title) return toast('أكمل اسم الأستاذ والمرحلة والصف والمادة والعنوان');
-    if (!content && !imageFile && !videoFile && !audioFile) return toast('أضف شرحًا أو صورة أو فيديو أو تسجيلًا صوتيًا واحدًا على الأقل');
+    if (!content && !imageFile && !videoFile && !audioFile && !pdfFile) return toast('أضف شرحًا أو صورة أو فيديو أو تسجيلًا صوتيًا أو ملف PDF واحدًا على الأقل');
     if (stage === 'kindergarten_languages' && (['KG1', 'KG2'].indexOf(grade) < 0 || ['عربي', 'English', 'Maths'].indexOf(subject) < 0)) return toast('اختر KG1 أو KG2 ومادة عربي أو English أو Maths');
     if (audioFile && audioFile.size > 25 * 1024 * 1024) return toast('حجم التسجيل الصوتي يجب ألا يتجاوز 25 ميجابايت');
+    if (pdfFile && !/\.pdf$/i.test(pdfFile.name || '')) return toast('اختر ملفًا بامتداد PDF');
+    if (pdfFile && pdfFile.size > 10 * 1024 * 1024) return toast('حجم ملف PDF يجب ألا يتجاوز 10 ميجابايت على الخطة المجانية');
     if (button) { button.disabled = true; button.textContent = '⏳ جارٍ رفع العمل للمراجعة...'; }
     try {
       var imageUrl = null;
       var videoUrl = null;
       var audioUrl = null;
+      var pdfUrl = null;
       if (imageFile) {
         imageUrl = await window.uploadFile(imageFile, 'teacher_content');
         if (!imageUrl) throw new Error('فشل رفع الصورة');
@@ -361,10 +373,16 @@
         audioUrl = await window.uploadFile(audioFile, 'teacher_content');
         if (!audioUrl) throw new Error('فشل رفع التسجيل الصوتي');
       }
+      if (pdfFile) {
+        pdfUrl = await window.uploadFile(pdfFile, 'teacher_content');
+        if (!pdfUrl) throw new Error('فشل رفع ملف PDF. تحقق من إعدادات Cloudinary أو اتصال الإنترنت');
+      }
       await db.collection('teacher_uploads').add({
         teacherId: uid(), teacherName: teacherName, type: workType, stage: stage, grade: grade,
         subject: subject, term: term, title: title, content: content,
-        image_url: imageUrl, video_url: videoUrl, audio_url: audioUrl, status: 'pending', createdAt: now(),
+        image_url: imageUrl, video_url: videoUrl, audio_url: audioUrl, pdf_url: pdfUrl,
+        pdf_name: pdfFile ? pdfFile.name : '', pdf_size: pdfFile ? pdfFile.size : 0,
+        status: 'pending', createdAt: now(),
         authUid: uid()
       });
       toast('تم إرسال العمل للمالك، وسيظهر للطلاب بعد الموافقة');
@@ -372,6 +390,7 @@
       if (imageInput) imageInput.value = '';
       if (videoInput) videoInput.value = '';
       if (audioInput) audioInput.value = '';
+      if (pdfInput) pdfInput.value = '';
       if (button) { button.disabled = false; button.textContent = '📤 إرسال العمل للمراجعة'; }
       screenBack();
     } catch (error) {

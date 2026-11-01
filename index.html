@@ -142,7 +142,21 @@ const generalSubjects=[{id:'arabic',name:'اللغة العربية',icon:'📖'
 const azharSubjects=[{id:'quran_t',name:'القرآن والتفسير',icon:'📖'},{id:'hadith',name:'الحديث الشريف',icon:'📜'},{id:'fiqh',name:'الفقه',icon:'⚖️'},{id:'aqeeda',name:'العقيدة',icon:'🕌'},{id:'seera',name:'السيرة النبوية',icon:'🌟'},{id:'nahw',name:'النحو',icon:'📝'},{id:'sarf',name:'الصرف والبلاغة',icon:'📚'}];
 const bakkaloryaTracks=[{id:'medical',name:'الطب وعلوم الحياة',icon:'🩺',color:'#E53935',desc:'فيزياء أو رياضيات + أحياء + كيمياء'},{id:'engineering',name:'الهندسة وعلوم الحاسب',icon:'⚙️',color:'#1976D2',desc:'كيمياء أو برمجة + رياضيات + فيزياء'},{id:'business',name:'الأعمال',icon:'💼',color:'#F9A825',desc:'محاسبة أو إدارة + رياضيات + اقتصاد'},{id:'arts',name:'الآداب والفنون',icon:'🎨',color:'#7B1FA2',desc:'علم نفس أو لغة + جغرافيا + إحصاء'}];
 const radioStations=[{name:'إذاعة القرآن الكريم - مصر',url:'https://n0d.radiojar.com/8s5u5tpdtwzuv'},{name:'إذاعة القرآن الكريم - السعودية',url:'https://Qurango.net/radio/tarateel'},{name:'إذاعة السنة النبوية',url:'https://n0d.radiojar.com/0tpy1h0kxtzuv'},{name:'إذاعة تفسير القرآن',url:'https://Qurango.net/radio/tafseer'},{name:'إذاعة القرآن الكريم - الكويت',url:'https://Qurango.net/radio/mishary_alafasy'}];
-async function uploadFile(file,folder){if(!file)return null;try{showToast('⏳ جاري الرفع...');const fd=new FormData();fd.append('file',file);fd.append('upload_preset',UPLOAD_PRESET);if(folder)fd.append('folder',folder);const r=await fetch('https://api.cloudinary.com/v1_1/'+CLOUD_NAME+'/auto/upload',{method:'POST',body:fd});if(!r.ok)throw new Error('Upload failed');const d=await r.json();if(!d.secure_url)throw new Error('No URL');showToast('✅ تم الرفع');return d.secure_url;}catch(e){console.error(e);showToast('❌ فشل الرفع');return null;}}
+async function uploadFile(file,folder){
+  if(!file)return null;
+  const isPdf=file.type==='application/pdf'||/\.pdf$/i.test(file.name||'');
+  if(isPdf&&file.size>10*1024*1024){showToast('❌ حجم ملف PDF يجب ألا يتجاوز 10 ميجابايت');return null;}
+  try{
+    showToast('⏳ جاري الرفع...');
+    const fd=new FormData();fd.append('file',file);fd.append('upload_preset',UPLOAD_PRESET);if(folder)fd.append('folder',folder);
+    const resourceType=isPdf?'image':'auto';
+    const r=await fetch('https://api.cloudinary.com/v1_1/'+CLOUD_NAME+'/'+resourceType+'/upload',{method:'POST',body:fd});
+    const d=await r.json().catch(function(){return {};});
+    if(!r.ok)throw new Error(d.error&&d.error.message||'Upload failed');
+    if(!d.secure_url)throw new Error('No URL');
+    showToast('✅ تم الرفع');return d.secure_url;
+  }catch(e){console.error(e);showToast('❌ فشل الرفع'+(e&&e.message?': '+e.message:''));return null;}
+}
 function openEducation(){const l=document.getElementById('stagesList');l.innerHTML=Object.keys(stagesData).map(k=>{const s=stagesData[k];return'<div class="stage-item" onclick="openStage(\''+k+'\')"><div class="stage-icon">'+s.icon+'</div><div class="stage-info"><div class="stage-name">'+s.name+'</div><div class="stage-sub">'+s.grades.length+' صفوف</div></div><div class="stage-arrow">‹</div></div>';}).join('');screenHistory.push(currentScreen);showScreen('educationScreen');}
 function openStage(id){currentStage=id;const s=stagesData[id];document.getElementById('gradesTitle').textContent=s.name;const l=document.getElementById('gradesList');l.innerHTML=s.grades.map(g=>'<div class="stage-item" onclick="openGrade(\''+id+'\',\''+g+'\')"><div class="stage-icon" style="background:#E8F5E9;">🎓</div><div class="stage-info"><div class="stage-name">الصف '+g+'</div><div class="stage-sub">اضغط لعرض المواد</div></div><div class="stage-arrow">‹</div></div>').join('');screenHistory.push(currentScreen);showScreen('gradesScreen');}
 function openGrade(id,name){currentGrade=name;document.getElementById('subjectsTitle').textContent='الصف '+name;const l=document.getElementById('subjectsList');l.innerHTML=generalSubjects.map(s=>'<div class="subject-card" onclick="openSubject(\''+s.id+'\',\''+s.name+'\')"><div class="subject-icon" style="background:'+s.color+'20;color:'+s.color+';">'+s.icon+'</div><div class="subject-name">'+s.name+'</div></div>').join('');screenHistory.push(currentScreen);showScreen('subjectsScreen');}
@@ -176,6 +190,16 @@ function inAppVideoMarkup(rawUrl){
     return '<div style="margin-top:16px;"><video controls playsinline preload="metadata" aria-label="فيديو شرح داخل التطبيق" style="display:block;width:100%;max-height:70vh;border-radius:12px;background:#111;"><source src="'+src+'">متصفحك لا يدعم تشغيل الفيديو.</video><div style="margin-top:6px;color:#607D8B;font-size:13px;">يُشغّل الفيديو هنا داخل المنصة.</div></div>';
   }catch(error){return unavailable;}
 }
+function pdfAttachmentMarkup(rawUrl,rawName){
+  if(!rawUrl)return '';
+  try{
+    var url=new URL(String(rawUrl),window.location.href);
+    if(url.protocol!=='https:'||url.hostname!=='res.cloudinary.com'||!/\/image\/upload\//i.test(url.pathname))return '<div style="margin-top:16px;padding:12px;border-radius:10px;background:#FFF3E0;color:#7A4B00;line-height:1.8;">📕 ملف PDF مرفق، لكن رابطه غير آمن أو غير صالح للعرض.</div>';
+    var src=url.href.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'%3C').replace(/>/g,'%3E');
+    var name=String(rawName||'ملف تعليمي PDF').replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});
+    return '<section style="margin-top:18px;padding:12px;border:1px solid #f0d7c5;border-radius:12px;background:#fffaf6"><div style="font-weight:700;color:#8A3B12;margin-bottom:9px">📕 '+name+'</div><a href="'+src+'" target="_blank" rel="noopener noreferrer" style="display:inline-block;background:#8A3B12;color:#fff;padding:10px 14px;border-radius:9px;text-decoration:none;font-weight:700">فتح أو تنزيل ملف PDF</a><iframe src="'+src+'#toolbar=1&navpanes=0" title="'+name+'" loading="lazy" style="display:block;width:100%;height:65vh;min-height:360px;margin-top:12px;border:1px solid #e6ded8;border-radius:8px;background:#fff"></iframe><div style="margin-top:7px;font-size:12px;line-height:1.7;color:#68756d">يتطلب عرض الملف اتصالًا بالإنترنت. للاستخدام دون اتصال، افتحه ثم نزّله من عارض PDF في المتصفح.</div></section>';
+  }catch(error){return '<div style="margin-top:16px;padding:12px;border-radius:10px;background:#FFF3E0;color:#7A4B00;">تعذر فتح ملف PDF المرفق.</div>';}
+}
 async function viewContent(id){
   try{
     let it=null;
@@ -186,6 +210,7 @@ async function viewContent(id){
     let h='<h2 style="color:#2E7D32;margin-bottom:16px;">'+(it.title||'')+'</h2>';
     if(it.image_url)h+='<img src="'+it.image_url+'">';
     if(it.content)h+='<div style="line-height:2;font-size:15px;white-space:pre-wrap;">'+it.content+'</div>';
+    if(it.pdf_url||it.pdfUrl)h+=pdfAttachmentMarkup(it.pdf_url||it.pdfUrl,it.pdf_name||it.pdfName);
     if(it.video_url)h+=inAppVideoMarkup(it.video_url);else if(it.video_search)h+=inAppVideoMarkup('');
     if(it.question){h+='<div style="margin-top:20px;background:#E8F5E9;border-radius:14px;padding:16px;"><div style="font-weight:bold;color:#2E7D32;margin-bottom:8px;">📝 سؤال:</div><div style="font-size:15px;line-height:1.8;white-space:pre-wrap;">'+it.question+'</div><button onclick="toggleAnswer(this)" style="background:#2E7D32;color:#fff;border:none;padding:10px 20px;border-radius:10px;font-family:inherit;font-weight:bold;margin-top:12px;cursor:pointer;">👁️ إظهار الإجابة</button><div class="answer-box"><div style="font-weight:bold;color:#2E7D32;margin-bottom:6px;">✅ الإجابة:</div><div style="line-height:1.8;white-space:pre-wrap;">'+(it.answer||'')+'</div></div><div style="margin-top:16px;"><div style="font-weight:bold;color:#2E7D32;margin-bottom:8px;">✍️ اكتب إجابتك:</div><textarea class="student-answer" id="studentAnswer" placeholder="اكتب إجابتك هنا..."></textarea><button onclick="saveStudentAnswer(\''+String(id).replace(/'/g,'')+'\')" style="background:#1976D2;color:#fff;border:none;padding:10px 20px;border-radius:10px;font-family:inherit;font-weight:bold;margin-top:8px;cursor:pointer;">💾 حفظ إجابتي</button></div></div>';}
     document.getElementById('viewerBody').innerHTML=h;screenHistory.push(currentScreen);showScreen('viewerScreen');
@@ -567,13 +592,41 @@ async function deletePublicMsg(id) {
         showToast('🗑️ تم حذف الرسالة');
     } catch(e) { console.error(e); }
 }
-async function uploadFile(file,folder){if(!file)return null;try{showToast('⏳ جاري الرفع...');const fd=new FormData();fd.append('file',file);fd.append('upload_preset',UPLOAD_PRESET);if(folder)fd.append('folder',folder);const r=await fetch('https://api.cloudinary.com/v1_1/'+CLOUD_NAME+'/auto/upload',{method:'POST',body:fd});if(!r.ok)throw new Error('Upload failed');const d=await r.json();if(!d.secure_url)throw new Error('No URL');showToast('✅ تم الرفع');return d.secure_url;}catch(e){console.error(e);showToast('❌ فشل الرفع');return null;}}
+async function uploadFile(file,folder){
+  if(!file)return null;
+  const isPdf=file.type==='application/pdf'||/\.pdf$/i.test(file.name||'');
+  if(isPdf&&file.size>10*1024*1024){showToast('❌ حجم ملف PDF يجب ألا يتجاوز 10 ميجابايت');return null;}
+  try{
+    showToast('⏳ جاري الرفع...');
+    const fd=new FormData();fd.append('file',file);fd.append('upload_preset',UPLOAD_PRESET);if(folder)fd.append('folder',folder);
+    const resourceType=isPdf?'image':'auto';
+    const r=await fetch('https://api.cloudinary.com/v1_1/'+CLOUD_NAME+'/'+resourceType+'/upload',{method:'POST',body:fd});
+    const d=await r.json().catch(function(){return {};});
+    if(!r.ok)throw new Error(d.error&&d.error.message||'Upload failed');
+    if(!d.secure_url)throw new Error('No URL');
+    showToast('✅ تم الرفع');return d.secure_url;
+  }catch(e){console.error(e);showToast('❌ فشل الرفع'+(e&&e.message?': '+e.message:''));return null;}
+}
 function openEducation(){const l=document.getElementById('stagesList');l.innerHTML=Object.keys(stagesData).map(k=>{const s=stagesData[k];return'<div class="stage-item" onclick="openStage(\''+k+'\')"><div class="stage-icon">'+s.icon+'</div><div class="stage-info"><div class="stage-name">'+s.name+'</div><div class="stage-sub">'+s.grades.length+' صفوف</div></div><div class="stage-arrow">‹</div></div>';}).join('');screenHistory.push(currentScreen);showScreen('educationScreen');}
 function openStage(id){currentStage=id;const s=stagesData[id];document.getElementById('gradesTitle').textContent=s.name;const l=document.getElementById('gradesList');l.innerHTML=s.grades.map(g=>'<div class="stage-item" onclick="openGrade(\''+id+'\',\''+g+'\')"><div class="stage-icon" style="background:#E8F5E9;">🎓</div><div class="stage-info"><div class="stage-name">الصف '+g+'</div><div class="stage-sub">اضغط لعرض المواد</div></div><div class="stage-arrow">‹</div></div>').join('');screenHistory.push(currentScreen);showScreen('gradesScreen');}
 function openGrade(id,name){currentGrade=name;document.getElementById('subjectsTitle').textContent='الصف '+name;const l=document.getElementById('subjectsList');l.innerHTML=generalSubjects.map(s=>'<div class="subject-card" onclick="openSubject(\''+s.id+'\',\''+s.name+'\')"><div class="subject-icon" style="background:'+s.color+'20;color:'+s.color+';">'+s.icon+'</div><div class="subject-name">'+s.name+'</div></div>').join('');screenHistory.push(currentScreen);showScreen('subjectsScreen');}
 function openSubject(id,name){currentSubject=name;document.getElementById('termsTitle').textContent=name;document.getElementById('termsHeader').textContent=name+' - '+(currentGrade||'');renderTerms();screenHistory.push(currentScreen);showScreen('termsScreen');}
 function renderTerms(){const l=document.getElementById('termsList');const terms=[{num:1,name:'الترم الأول',icon:'📘'},{num:2,name:'الترم الثاني',icon:'📙'}];l.innerHTML=terms.map(t=>'<div class="term-card '+(t.num===2?'term-2':'')+'"><div class="term-header"><div class="term-icon">'+t.icon+'</div><div class="term-title">'+t.name+'</div><div class="term-count">منهج كامل</div></div><div class="term-sections"><div class="section-chip" onclick="openContent(\'lessons\','+t.num+',\''+t.name+'\')">📄 الدروس</div><div class="section-chip" onclick="openContent(\'exercises\','+t.num+',\''+t.name+'\')">✏️ تدريبات</div><div class="section-chip" onclick="openContent(\'exams\','+t.num+',\''+t.name+'\')">📝 امتحانات</div><div class="section-chip" onclick="openContent(\'reviews\','+t.num+',\''+t.name+'\')">🔁 مراجعات</div><div class="section-chip" onclick="openContent(\'videos\','+t.num+',\''+t.name+'\')">🎥 فيديوهات</div></div></div>').join('');}
-async function uploadFile(file,folder){if(!file)return null;try{showToast('⏳ جاري الرفع...');const fd=new FormData();fd.append('file',file);fd.append('upload_preset',UPLOAD_PRESET);if(folder)fd.append('folder',folder);const r=await fetch('https://api.cloudinary.com/v1_1/'+CLOUD_NAME+'/auto/upload',{method:'POST',body:fd});if(!r.ok)throw new Error('Upload failed');const d=await r.json();if(!d.secure_url)throw new Error('No URL');showToast('✅ تم الرفع');return d.secure_url;}catch(e){console.error(e);showToast('❌ فشل الرفع');return null;}}
+async function uploadFile(file,folder){
+  if(!file)return null;
+  const isPdf=file.type==='application/pdf'||/\.pdf$/i.test(file.name||'');
+  if(isPdf&&file.size>10*1024*1024){showToast('❌ حجم ملف PDF يجب ألا يتجاوز 10 ميجابايت');return null;}
+  try{
+    showToast('⏳ جاري الرفع...');
+    const fd=new FormData();fd.append('file',file);fd.append('upload_preset',UPLOAD_PRESET);if(folder)fd.append('folder',folder);
+    const resourceType=isPdf?'image':'auto';
+    const r=await fetch('https://api.cloudinary.com/v1_1/'+CLOUD_NAME+'/'+resourceType+'/upload',{method:'POST',body:fd});
+    const d=await r.json().catch(function(){return {};});
+    if(!r.ok)throw new Error(d.error&&d.error.message||'Upload failed');
+    if(!d.secure_url)throw new Error('No URL');
+    showToast('✅ تم الرفع');return d.secure_url;
+  }catch(e){console.error(e);showToast('❌ فشل الرفع'+(e&&e.message?': '+e.message:''));return null;}
+}
 function openEducation(){const l=document.getElementById('stagesList');l.innerHTML=Object.keys(stagesData).map(k=>{const s=stagesData[k];return'<div class="stage-item" onclick="openStage(\''+k+'\')"><div class="stage-icon">'+s.icon+'</div><div class="stage-info"><div class="stage-name">'+s.name+'</div><div class="stage-sub">'+s.grades.length+' صفوف</div></div><div class="stage-arrow">‹</div></div>';}).join('');screenHistory.push(currentScreen);showScreen('educationScreen');}
 function openStage(id){currentStage=id;const s=stagesData[id];document.getElementById('gradesTitle').textContent=s.name;const l=document.getElementById('gradesList');l.innerHTML=s.grades.map(g=>'<div class="stage-item" onclick="openGrade(\''+id+'\',\''+g+'\')"><div class="stage-icon" style="background:#E8F5E9;">🎓</div><div class="stage-info"><div class="stage-name">الصف '+g+'</div><div class="stage-sub">اضغط لعرض المواد</div></div><div class="stage-arrow">‹</div></div>').join('');screenHistory.push(currentScreen);showScreen('gradesScreen');}
 function openGrade(id,name){currentGrade=name;document.getElementById('subjectsTitle').textContent='الصف '+name;const l=document.getElementById('subjectsList');l.innerHTML=generalSubjects.map(s=>'<div class="subject-card" onclick="openSubject(\''+s.id+'\',\''+s.name+'\')"><div class="subject-icon" style="background:'+s.color+'20;color:'+s.color+';">'+s.icon+'</div><div class="subject-name">'+s.name+'</div></div>').join('');screenHistory.push(currentScreen);showScreen('subjectsScreen');}
