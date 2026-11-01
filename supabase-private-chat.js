@@ -13,7 +13,6 @@
   var state = {
     mode: 'home', user: null, profile: null, homeTab: 'chats', conversationId: '', friend: null,
     messageChannel: null, requestsChannel: null, callsInboxChannel: null,
-    inboxMessagesChannel: null, inboxRefreshTimer: null,
     call: null, peer: null, localStream: null, remoteStream: null,
     callRowChannel: null, candidateChannel: null, candidateQueue: [], pendingCandidates: [],
     missedTimer: null, disconnectTimer: null, recorder: null, recordingStream: null,
@@ -114,15 +113,14 @@
     var nextScope = 'hafez-chat-' + encodeURIComponent(scope);
     if (client && clientScope !== nextScope) {
       var previousClient = client;
-      [state.messageChannel, state.requestsChannel, state.callsInboxChannel, state.inboxMessagesChannel, state.callRowChannel, state.candidateChannel].forEach(function (channel) {
+      [state.messageChannel, state.requestsChannel, state.callsInboxChannel, state.callRowChannel, state.candidateChannel].forEach(function (channel) {
         if (channel) { try { previousClient.removeChannel(channel); } catch (_) {} }
       });
-      clearTimeout(state.missedTimer); clearTimeout(state.disconnectTimer); clearTimeout(state.inboxRefreshTimer); stopIncomingCallAlert();
+      clearTimeout(state.missedTimer); clearTimeout(state.disconnectTimer); stopIncomingCallAlert();
       if (state.peer) { try { state.peer.close(); } catch (_) {} }
       if (state.localStream) state.localStream.getTracks().forEach(function (track) { track.stop(); });
       if (state.remoteStream) state.remoteStream.getTracks().forEach(function (track) { track.stop(); });
       state.messageChannel = null; state.requestsChannel = null; state.callsInboxChannel = null;
-      state.inboxMessagesChannel = null; state.inboxRefreshTimer = null;
       state.callRowChannel = null; state.candidateChannel = null; state.call = null; state.peer = null;
       state.localStream = null; state.remoteStream = null; state.user = null; state.profile = null;
       state.conversationId = ''; state.friend = null; state.pendingCandidates = []; state.candidateQueue = [];
@@ -192,7 +190,6 @@
       '.spc-tab{border:0;border-radius:20px;background:#edf3ee;color:#31563a;padding:9px 12px;font:inherit;font-size:12px;font-weight:700;white-space:nowrap}',
       '.spc-tab.active{background:#2E7D32;color:#fff}',
       '.spc-home-exit{border:0;border-radius:9px;background:#fff;color:#2E7D32;padding:8px 10px;font:inherit;font-size:12px;font-weight:800;white-space:nowrap;cursor:pointer;min-height:38px}',
-      '.spc-unread-badge{display:inline-flex;align-items:center;justify-content:center;min-width:21px;height:21px;padding:0 6px;margin-inline-start:8px;border-radius:999px;background:#C62828;color:#fff;font-size:11px;font-weight:800;vertical-align:middle;box-sizing:border-box}',
       '.spc-card{background:#fff;border:1px solid #e6ece7;border-radius:14px;padding:12px;margin:0 0 9px;display:flex;align-items:center;gap:10px}',
       '.spc-avatar{width:44px;height:44px;flex:0 0 44px;border-radius:50%;background:#e8f5e9;color:#2E7D32;display:flex;align-items:center;justify-content:center;font-size:21px;overflow:hidden}.spc-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}',
       '.spc-info{flex:1;min-width:0}.spc-small{font-size:12px;color:#758078;margin-top:4px;overflow-wrap:anywhere}',
@@ -273,7 +270,7 @@
     if (!note || !state.profile) return;
     note.textContent = 'حسابك ظاهر باسم: ' + memberLabel(state.profile) + ' — ابحث عن أصدقائك بالاسم أو اخترهم من القائمة.';
   }
-  function rowCard(icon, title, subtitle, actions, photoUrl, unreadCount) {
+  function rowCard(icon, title, subtitle, actions, photoUrl) {
     var row = document.createElement('div'); row.className = 'spc-card';
     var avatar = document.createElement('div'); avatar.className = 'spc-avatar';
     var fallback = icon || Array.from(String(title || 'مستخدم').trim())[0] || '👤';
@@ -287,13 +284,6 @@
     var info = document.createElement('div'); info.className = 'spc-info';
     var name = document.createElement('b'); name.textContent = title || 'مستخدم';
     var detail = document.createElement('div'); detail.className = 'spc-small'; detail.textContent = subtitle || '';
-    if (Number(unreadCount) > 0) {
-      var badge = document.createElement('span'); badge.className = 'spc-unread-badge';
-      badge.textContent = Number(unreadCount) > 99 ? '99+' : String(Number(unreadCount));
-      badge.title = Number(unreadCount) + ' رسالة غير مقروءة';
-      badge.setAttribute('aria-label', Number(unreadCount) + ' رسالة غير مقروءة');
-      detail.appendChild(badge);
-    }
     info.appendChild(name); info.appendChild(detail); row.appendChild(avatar); row.appendChild(info);
     if (actions) row.appendChild(actions);
     return row;
@@ -308,64 +298,6 @@
   }
   function peerIdFromConversation(conversation) {
     return conversation.user_low === state.user.id ? conversation.user_high : conversation.user_low;
-  }
-  function readChatReadMarkers() {
-    if (!state.user) return {};
-    try {
-      var parsed = JSON.parse(window.localStorage.getItem('ta3lemy_spc_read_v1_' + state.user.id) || '{}');
-      return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
-    } catch (_) { return {}; }
-  }
-  function saveChatReadMarkers(markers) {
-    if (!state.user) return;
-    try { window.localStorage.setItem('ta3lemy_spc_read_v1_' + state.user.id, JSON.stringify(markers)); }
-    catch (_) { /* Keep chat usable if device storage is unavailable. */ }
-  }
-  function markConversationReadLocally(conversationId, timestamp) {
-    if (!state.user || !conversationId) return;
-    var candidate = Date.parse(timestamp || '');
-    if (!Number.isFinite(candidate)) return;
-    var markers = readChatReadMarkers();
-    var current = Date.parse(markers[conversationId] || '');
-    if (Number.isFinite(current) && current >= candidate) return;
-    markers[conversationId] = new Date(candidate).toISOString();
-    saveChatReadMarkers(markers);
-  }
-  function buildInboxSummaries(conversations, messages, markers, userId) {
-    var summaries = Object.create(null);
-    (conversations || []).forEach(function (conversation) {
-      summaries[conversation.id] = { latest: null, unreadCount: 0 };
-    });
-    (messages || []).forEach(function (message) {
-      var summary = summaries[message.conversation_id];
-      if (!summary) return;
-      var created = Date.parse(message.created_at || '');
-      var latestCreated = summary.latest ? Date.parse(summary.latest.created_at || '') : NaN;
-      if (!summary.latest || (Number.isFinite(created) && (!Number.isFinite(latestCreated) || created > latestCreated))) {
-        summary.latest = message;
-      }
-      var readAt = Date.parse(markers[message.conversation_id] || '');
-      if (message.sender_id !== userId && Number.isFinite(created) && Number.isFinite(readAt) && created > readAt) {
-        summary.unreadCount++;
-      }
-    });
-    return summaries;
-  }
-  function inboxMessagePreview(message) {
-    if (!message) return '';
-    if (message.kind === 'image') return '📷 صورة';
-    if (message.kind === 'video') return '🎥 فيديو';
-    if (message.kind === 'audio') return '🎙️ رسالة صوتية';
-    var text = String(message.body || '').replace(/\s+/g, ' ').trim();
-    return text.length > 72 ? text.slice(0, 69) + '…' : text;
-  }
-  function inboxMessageTime(timestamp) {
-    if (!timestamp) return '';
-    var date = new Date(timestamp);
-    if (Number.isNaN(date.getTime())) return '';
-    return date.toDateString() === new Date().toDateString()
-      ? date.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
-      : date.toLocaleDateString('ar-EG');
   }
   async function profilesById(ids) {
     var unique = Array.from(new Set((ids || []).filter(Boolean)));
@@ -408,36 +340,12 @@
       empty.innerHTML = '<div class="empty-state-icon">💬</div><p>لا توجد محادثات بعد.</p><p style="font-size:12px">اختر صديقًا بالاسم من قسم الأصدقاء وأرسل له طلبًا.</p>';
       box.appendChild(empty); return;
     }
-    var markers = readChatReadMarkers();
-    var markersChanged = false;
-    conversations.forEach(function (conversation) {
-      if (!markers[conversation.id]) {
-        markers[conversation.id] = conversation.updated_at || new Date().toISOString();
-        markersChanged = true;
-      }
-    });
-    if (markersChanged) saveChatReadMarkers(markers);
-    var messageQuery = client.from('chat_messages').select('conversation_id,sender_id,body,kind,created_at')
-      .in('conversation_id', conversations.map(function (conversation) { return conversation.id; }))
-      .order('created_at', { ascending: false }).limit(1000);
-    var queryResults = await Promise.all([
-      profilesById(conversations.map(peerIdFromConversation)),
-      Promise.resolve(messageQuery).catch(function (error) { return { data: [], error: error }; })
-    ]);
-    var peers = queryResults[0];
-    var messageResult = queryResults[1];
-    if (messageResult.error) console.warn('[private-chat] could not load inbox previews', messageResult.error);
-    var summaries = buildInboxSummaries(conversations, messageResult.error ? [] : (messageResult.data || []), markers, uid);
+    var peers = await profilesById(conversations.map(peerIdFromConversation));
     conversations.forEach(function (conversation) {
       var peer = peers[peerIdFromConversation(conversation)] || {};
-      var summary = summaries[conversation.id] || { latest: null, unreadCount: 0 };
-      var preview = inboxMessagePreview(summary.latest);
-      if (preview && summary.latest.sender_id === uid) preview = 'أنت: ' + preview;
-      var time = inboxMessageTime(summary.latest ? summary.latest.created_at : conversation.updated_at);
-      var subtitle = preview ? 'آخر رسالة: ' + preview + (time ? ' • ' + time : '')
-        : (time ? 'آخر نشاط: ' + time : 'محادثة خاصة');
+      var time = conversation.updated_at ? new Date(conversation.updated_at).toLocaleDateString('ar-EG') : '';
       var open = actionButton('فتح', 'spc-green', function () { window.openChat(conversation.id, peer.id, peer); });
-      box.appendChild(rowCard('💬', memberLabel(peer), subtitle, open, peer.avatar_url, summary.unreadCount));
+      box.appendChild(rowCard('💬', memberLabel(peer), time ? 'آخر نشاط: ' + time : 'محادثة خاصة', open, peer.avatar_url));
     });
   }
   async function acceptedFriendRequests() {
@@ -676,19 +584,6 @@
   }
   function listenForInbox() {
     if (!client || !state.user) return;
-    if (!state.inboxMessagesChannel) {
-      var inboxUserId = state.user.id;
-      state.inboxMessagesChannel = client.channel('spc-inbox-messages-' + inboxUserId)
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages', filter: 'sender_id=neq.' + inboxUserId }, function (payload) {
-          var message = payload && payload.new;
-          if (!message || !state.user || state.user.id !== inboxUserId || state.mode !== 'home' || state.homeTab !== 'chats') return;
-          if (state.inboxRefreshTimer) window.clearTimeout(state.inboxRefreshTimer);
-          state.inboxRefreshTimer = window.setTimeout(function () {
-            state.inboxRefreshTimer = null;
-            if (state.user && state.user.id === inboxUserId && state.mode === 'home' && state.homeTab === 'chats') openHomeTab('chats');
-          }, 450);
-        }).subscribe();
-    }
     if (!state.requestsChannel) {
       state.requestsChannel = client.channel('spc-requests-' + state.user.id)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_friend_requests', filter: 'recipient_id=eq.' + state.user.id }, function () {
@@ -794,7 +689,6 @@
     if (history[history.length - 1] !== 'messagesScreen') history.push('messagesScreen');
     if (typeof window.goBack === 'function') window.goBack();
     else if (typeof window.showScreen === 'function') window.showScreen('messagesScreen');
-    if (state.homeTab === 'chats') openHomeTab('chats');
   }
   async function loadMessages() {
     if (!client || !state.conversationId) return;
@@ -806,9 +700,6 @@
       .order('created_at', { ascending: false }).limit(150);
     if (result.error) { reportError(result.error, 'تعذر تحميل الرسائل.'); return; }
     var messages = (result.data || []).reverse();
-    if (state.mode === 'private' && state.conversationId && window.currentScreen === 'supabasePrivateChatScreen' && messages.length) {
-      markConversationReadLocally(state.conversationId, messages[messages.length - 1].created_at);
-    }
     box.innerHTML = '';
     if (!messages.length) {
       var empty = document.createElement('div'); empty.className = 'empty-state'; empty.textContent = 'لا توجد رسائل بعد؛ ابدأ المحادثة.'; box.appendChild(empty); return;
@@ -1212,9 +1103,8 @@
   var originalLogout = window.logout;
   window.logout = async function () {
     await finishCall(true);
-    stopChannel(state.messageChannel); stopChannel(state.requestsChannel); stopChannel(state.callsInboxChannel); stopChannel(state.inboxMessagesChannel);
-    if (state.inboxRefreshTimer) window.clearTimeout(state.inboxRefreshTimer);
-    state.messageChannel = null; state.requestsChannel = null; state.callsInboxChannel = null; state.inboxMessagesChannel = null; state.inboxRefreshTimer = null;
+    stopChannel(state.messageChannel); stopChannel(state.requestsChannel); stopChannel(state.callsInboxChannel);
+    state.messageChannel = null; state.requestsChannel = null; state.callsInboxChannel = null;
     state.mode = 'home'; state.conversationId = ''; state.friend = null;
     if (typeof originalLogout === 'function') return originalLogout.apply(this, arguments);
     if (typeof legacyLogout === 'function') return legacyLogout.apply(this, arguments);
