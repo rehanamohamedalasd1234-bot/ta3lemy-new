@@ -11,7 +11,7 @@
     return ({ lesson: 'درس / شرح', explanation: 'شرح', exercise: 'تدريب', exam: 'امتحان', review: 'مراجعة', image: 'صورة تعليمية', video: 'فيديو', audio: 'تسجيل صوتي' })[type] || 'عمل تعليمي';
   }
   function stageLabel(stage) {
-    return ({ primary: 'الابتدائية', prep: 'الإعدادية', sec: 'الثانوية', bakkalorya: 'البكالوريا', kindergarten_languages: 'رياض الأطفال لغات' })[stage] || stage || '—';
+    return ({ primary: 'الابتدائية', prep: 'الإعدادية', sec: 'الثانوية', bakkalorya: 'البكالوريا', kindergarten_languages: 'رياض الأطفال لغات', azhar_primary: 'الابتدائية الأزهرية', azhar_prep: 'الإعدادية الأزهرية', azhar_sec: 'الثانوية الأزهرية' })[stage] || stage || '—';
   }
   function ensureScreen() {
     var screen = document.getElementById('ownerApprovalsScreen');
@@ -31,7 +31,11 @@
     return '<div style="display:flex;gap:8px;margin:0 0 14px"><button onclick="loadOwnerApprovals(\'pending\')" style="flex:1;border:0;border-radius:10px;padding:11px 6px;font:inherit;font-weight:700;' + pendingStyle + '">⏳ بانتظار الموافقة</button><button onclick="loadOwnerApprovals(\'approved\')" style="flex:1;border:0;border-radius:10px;padding:11px 6px;font:inherit;font-weight:700;' + approvedStyle + '">📚 المنشور للطلاب</button></div><div style="font-size:12px;color:#68756d;margin:0 0 12px">' + (tab === 'pending' ? 'اعتمد العمل لينتقل إلى شرح الأستاذ، أو ارفضه.' : 'الأعمال هنا منشورة داخل المنهج ويمكنك إزالتها من العرض للطلاب.') + (typeof count === 'number' ? ' • العدد: ' + count : '') + '</div>';
   }
   function details(item) {
-    return '👨‍🏫 ' + esc(item.teacherName || 'معلم') + '<br>📚 ' + esc(stageLabel(item.stage)) + ' • الصف ' + esc(item.grade || '—') + ' • ' + esc(item.subject || '—') + ' • الترم ' + esc(item.term || '—');
+    var curriculum = [];
+    if (item.curriculumGroup) curriculum.push(item.curriculumGroup);
+    if (item.curriculumSubgroup && item.curriculumSubgroup !== item.curriculumGroup) curriculum.push(item.curriculumSubgroup);
+    if (item.branch) curriculum.push(item.branch);
+    return '👨‍🏫 ' + esc(item.teacherName || 'معلم') + '<br>📚 ' + esc(stageLabel(item.stage)) + ' • الصف ' + esc(item.grade || '—') + ' • ' + esc(item.subjectLabel || item.subject || '—') + (curriculum.length ? ' • ' + esc(curriculum.join(' • ')) : '') + ' • الترم ' + esc(item.term || '—');
   }
   function renderPendingCard(doc) {
     var item = doc.data() || {};
@@ -53,7 +57,7 @@
   function renderApprovedCard(doc) {
     var item = doc.data() || {};
     var lessonId = item.lessonId || ('teacher_' + doc.id);
-    var location = 'الرئيسية ← أيقونة شرح الأستاذ ← ' + (item.teacherName || 'المعلم') + ' ← ' + (item.stage || 'المرحلة') + ' ← الصف ' + (item.grade || '—') + ' ← ' + (item.subject || '—') + ' ← الترم ' + (item.term || '—');
+    var location = 'الرئيسية ← أيقونة شرح الأستاذ ← ' + (item.teacherName || 'المعلم') + ' ← ' + stageLabel(item.stage) + ' ← الصف ' + (item.grade || '—') + ' ← ' + (item.subjectLabel || item.subject || '—') + (item.branch ? ' ← ' + item.branch : '') + ' ← الترم ' + (item.term || '—');
     var pdf = safeUrl(item.pdf_url || item.pdfUrl);
     var html = '<article style="background:#fff;border-radius:14px;padding:14px;margin:0 0 12px;border-right:5px solid #2E7D32;box-shadow:0 2px 8px rgba(0,0,0,.06)"><div style="font-size:12px;color:#2E7D32;font-weight:700">✅ منشور للطلاب • ' + esc(label(item.type)) + '</div><h3 style="margin:7px 0">' + esc(item.title || 'بدون عنوان') + '</h3><div style="font-size:12px;line-height:1.9;color:#555">' + details(item) + '</div><div style="margin-top:8px;padding:9px;border-radius:8px;background:#E8F5E9;font-size:12px;line-height:1.8;color:#245b35">مكان ظهوره: ' + esc(location) + '</div>';
     if (pdf) html += '<a href="' + pdf + '" target="_blank" rel="noopener noreferrer" style="display:block;margin-top:10px;padding:12px;border-radius:10px;background:#FFF3E0;color:#8A3B12;text-decoration:none;font-weight:700">📕 فتح ملف PDF: ' + esc(item.pdf_name || item.pdfName || 'ملف تعليمي') + '</a>';
@@ -108,7 +112,9 @@
       var batch = store.batch();
       batch.set(lessonRef, {
         title: item.title || 'شرح الأستاذ', content: item.content || '',
-        subject: item.subject || '', grade: item.grade || '', stage: item.stage || '',
+        subject: item.subject || '', subjectLabel: item.subjectLabel || item.subject || '',
+        curriculumGroup: item.curriculumGroup || '', curriculumSubgroup: item.curriculumSubgroup || '', branch: item.branch || '',
+        curriculumId: item.curriculumId || '', grade: item.grade || '', stage: item.stage || '',
         term: Number(item.term) || 1, type: 'teacher_explanation',
         teacherContentType: item.type || 'lesson', teacherName: item.teacherName || '',
         teacherId: item.teacherId || item.authUid || '', image_url: item.image_url || item.imageUrl || null,
