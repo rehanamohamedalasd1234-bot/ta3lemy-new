@@ -12,7 +12,7 @@ const APP_SHELL = [
   './grade9-term1-content.js', './continuous-assessment.js', './primary-official-only.js', './grade1-math-expanded.js', './grade1-religion-official.js', './primary-grade2-data.js', './primary-grade2-structure.js', './primary-grade2-detailed-content.json', './primary-grade3-structure.js', './primary-grade3-detailed-content.json', './primary-grade4-structure.js', './primary-grades456-detailed-content.json', './primary-grade5-structure.js', './primary-grade6-structure.js',
   './secondary-grade1-content.js', './creativity-config.js', './creativity.js', './educational-games.js', './gemini-fix.js', './chat-config.js', './chat-system.js',
   './supabase-chat-config.js', './supabase-call-alerts.js', './supabase-private-chat.js',
-  './admin-system.js', './kindergarten-languages.js', './kg1-arabic-structure.js', './kg1-arabic-2026-2027-t1.json', './kg1-english-structure.js', './kg1-english-2026-2027-t1.json', './icon-512.png'
+  './admin-system.js', './kindergarten-languages.js', './kg1-arabic-structure.js', './kg1-arabic-2026-2027-t1.json', './kg1-english-structure.js', './kg1-english-2026-2027-t1.json', './icon-192.png', './icon-512.png'
 ];
 const EXTERNAL_SHELL = [
   'https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js',
