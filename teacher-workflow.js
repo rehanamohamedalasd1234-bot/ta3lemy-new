@@ -72,8 +72,9 @@
   function teacherWorkCard(doc) {
     var item = doc.data() || {};
     var content = typeof item.content === 'string' ? item.content : '';
-    var summary = content ? esc(content.substring(0, 70)) + (content.length > 70 ? '…' : '') : (item.video_url ? '🎥 فيديو' : item.audio_url ? '🔊 صوت للاستماع' : item.image_url ? '🖼️ صورة' : 'افتح العمل للمشاهدة');
-    return '<div class="content-item" onclick="viewContent(\'' + attr(doc.id) + '\')"><div class="content-item-icon">📚</div><div class="content-item-info"><div class="content-item-title">' + esc(item.title || 'بدون عنوان') + '</div><div class="content-item-sub">📌 ' + esc(teacherWorkKind(item)) + (summary ? ' • ' + summary : '') + '</div></div><div class="content-item-arrow">‹</div></div>';
+    var summary = content ? esc(content.substring(0, 70)) + (content.length > 70 ? '…' : '') : (item.pdf_url ? '📕 ملف PDF' : item.video_url ? '🎥 فيديو' : item.audio_url ? '🔊 صوت للاستماع' : item.image_url ? '🖼️ صورة' : 'افتح العمل للمشاهدة');
+    var curriculumDetail = item.branch ? ' • ' + esc(item.branch) : '';
+    return '<div class="content-item" onclick="viewContent(\'' + attr(doc.id) + '\')"><div class="content-item-icon">📚</div><div class="content-item-info"><div class="content-item-title">' + esc(item.title || 'بدون عنوان') + '</div><div class="content-item-sub">📌 ' + esc(teacherWorkKind(item)) + curriculumDetail + (summary ? ' • ' + summary : '') + '</div></div><div class="content-item-arrow">‹</div></div>';
   }
   function regularContentCard(doc, type) {
     var item = doc.data() || {};
@@ -81,12 +82,21 @@
     var kinds = { lesson: 'درس / شرح', explanation: 'شرح', exercise: 'تدريب', exam: 'امتحان', review: 'مراجعة', image: 'صورة تعليمية', video: 'فيديو', audio: 'تسجيل صوتي' };
     var workKind = type === 'teacher_explanation' && item.teacherContentType ? kinds[item.teacherContentType] || 'عمل تعليمي' : '';
     var content = typeof item.content === 'string' ? item.content : '';
-    var contentSummary = content ? esc(content.substring(0, 70)) + (content.length > 70 ? '…' : '') : (item.video_url ? '🎥 فيديو' : item.audio_url ? '🔊 صوت للاستماع' : item.image_url ? '🖼️ صورة' : '');
-    var summary = (workKind ? '📌 ' + workKind + (contentSummary ? ' • ' : '') : '') + contentSummary;
+    var contentSummary = content ? esc(content.substring(0, 70)) + (content.length > 70 ? '…' : '') : (item.pdf_url ? '📕 ملف PDF' : item.video_url ? '🎥 فيديو' : item.audio_url ? '🔊 صوت للاستماع' : item.image_url ? '🖼️ صورة' : '');
+    var branchSummary = item.branch ? ' • ' + esc(item.branch) : '';
+    var summary = (workKind ? '📌 ' + workKind + (contentSummary ? ' • ' : '') : '') + contentSummary + branchSummary;
     return '<div class="content-item" onclick="viewContent(\'' + attr(doc.id) + '\')"><div class="content-item-icon">📄</div><div class="content-item-info"><div class="content-item-title">' + esc(item.title || 'بدون عنوان') + '</div><div class="content-item-sub">' + summary + teacher + '</div></div><div class="content-item-arrow">‹</div></div>';
   }
   function teacherStageName(stage) {
-    return ({ primary: 'الابتدائية', prep: 'الإعدادية', sec: 'الثانوية', bakkalorya: 'البكالوريا', kindergarten_languages: 'رياض الأطفال لغات' })[stage] || stage || 'مرحلة غير محددة';
+    return ({ primary: 'الابتدائية', prep: 'الإعدادية', sec: 'الثانوية', bakkalorya: 'البكالوريا', kindergarten_languages: 'رياض الأطفال لغات', azhar_primary: 'الابتدائية الأزهرية', azhar_prep: 'الإعدادية الأزهرية', azhar_sec: 'الثانوية الأزهرية' })[stage] || stage || 'مرحلة غير محددة';
+  }
+  function teacherSubjectName(item) { return item.subjectLabel || item.subject || '—'; }
+  function teacherCurriculumDetail(item) {
+    var details = [];
+    if (item.curriculumGroup) details.push(item.curriculumGroup);
+    if (item.curriculumSubgroup && item.curriculumSubgroup !== item.curriculumGroup) details.push(item.curriculumSubgroup);
+    if (item.branch) details.push(item.branch);
+    return details.join(' • ');
   }
   function teacherTermName(term) { return Number(term) === 2 ? 'الترم الثاني' : 'الترم الأول'; }
   function renderTeacherDirectory(docs) {
@@ -114,7 +124,7 @@
       var scopes = [];
       group.docs.forEach(function (doc) {
         var item = doc.data() || {};
-        var scope = teacherStageName(item.stage) + ' • الصف ' + (item.grade || '—') + ' • ' + (item.subject || '—');
+        var scope = teacherStageName(item.stage) + ' • الصف ' + (item.grade || '—') + ' • ' + teacherSubjectName(item) + (teacherCurriculumDetail(item) ? ' • ' + teacherCurriculumDetail(item) : '');
         if (scopes.indexOf(scope) < 0) scopes.push(scope);
       });
       var summary = scopes.slice(0, 2).join(' | ') + (scopes.length > 2 ? ' | +' + (scopes.length - 2) : '');
@@ -163,9 +173,10 @@
     var scopes = [];
     group.docs.forEach(function (doc) {
       var item = doc.data() || {};
-      var key = [item.stage || '', item.grade || '', item.subject || '', item.term || 1].join('|');
+      var key = [item.stage || '', item.grade || '', item.curriculumGroup || '', item.curriculumSubgroup || '', item.subject || '', item.branch || '', item.term || 1].join('|');
       if (!scopesByKey[key]) {
-        scopesByKey[key] = { title: teacherStageName(item.stage) + ' • الصف ' + (item.grade || '—') + ' • ' + (item.subject || '—') + ' • ' + teacherTermName(item.term), docs: [] };
+        var curriculumDetail = teacherCurriculumDetail(item);
+        scopesByKey[key] = { title: teacherStageName(item.stage) + ' • الصف ' + (item.grade || '—') + ' • ' + teacherSubjectName(item) + (curriculumDetail ? ' • ' + curriculumDetail : '') + ' • ' + teacherTermName(item.term), docs: [] };
         scopes.push(scopesByKey[key]);
       }
       scopesByKey[key].docs.push(doc);
@@ -200,7 +211,8 @@
     var subtitle = document.getElementById('contentHeaderSub');
     var list = document.getElementById('contentList');
     if (titleNode) titleNode.textContent = title;
-    if (header) header.textContent = (currentSubject || '') + ' - ' + (termName || '');
+    var displaySubject = String(currentStage || '').indexOf('azhar_') === 0 && window.currentAzharCourseLabel ? window.currentAzharCourseLabel : currentSubject;
+    if (header) header.textContent = (displaySubject || '') + ' - ' + (termName || '');
     if (subtitle) subtitle.textContent = title;
     if (window.screenHistory && window.currentScreen) window.screenHistory.push(window.currentScreen);
     if (typeof window.showScreen === 'function') window.showScreen('contentScreen');
@@ -238,6 +250,43 @@
     values.forEach(function (value) { var option = document.createElement('option'); option.value = value; option.textContent = value; select.appendChild(option); });
     if (values.indexOf(previousValue) >= 0) select.value = previousValue;
   }
+  function ensureUploadSelectAfter(anchorId, id, labelText) {
+    var existing = document.getElementById(id);
+    if (existing) return existing;
+    var anchor = document.getElementById(anchorId);
+    if (!anchor || !anchor.parentNode) return null;
+    var group = document.createElement('div');
+    group.className = 'form-group';
+    group.id = id + 'Group';
+    var label = document.createElement('label');
+    label.className = 'form-label';
+    label.htmlFor = id;
+    label.textContent = labelText;
+    var select = document.createElement('select');
+    select.id = id;
+    select.className = 'form-input';
+    select.setAttribute('aria-label', labelText);
+    group.appendChild(label);
+    group.appendChild(select);
+    var form = anchor.parentNode.parentNode;
+    if (!form) return null;
+    form.insertBefore(group, anchor.parentNode.nextSibling);
+    return select;
+  }
+  function setUploadObjectOptions(select, items, placeholder, previousValue, valueKey, labelKey) {
+    select.innerHTML = '';
+    var first = document.createElement('option');
+    first.value = '';
+    first.textContent = placeholder;
+    select.appendChild(first);
+    items.forEach(function (item) {
+      var option = document.createElement('option');
+      option.value = item[valueKey];
+      option.textContent = item[labelKey];
+      select.appendChild(option);
+    });
+    if (items.some(function (item) { return item[valueKey] === previousValue; })) select.value = previousValue;
+  }
   function ensureUploadCurriculumSelectors() {
     var stage = document.getElementById('upStage');
     var grade = selectFieldFromExisting('upGrade');
@@ -249,7 +298,28 @@
       kindergartenOption.textContent = 'رياض الأطفال لغات';
       stage.appendChild(kindergartenOption);
     }
+    var azharStages = [
+      { value: 'azhar_primary', label: 'ابتدائي أزهري' },
+      { value: 'azhar_prep', label: 'إعدادي أزهري' },
+      { value: 'azhar_sec', label: 'ثانوي أزهري' }
+    ];
+    azharStages.forEach(function (item) {
+      if (Array.prototype.some.call(stage.options, function (option) { return option.value === item.value; })) return;
+      var option = document.createElement('option');
+      option.value = item.value;
+      option.textContent = item.label;
+      stage.appendChild(option);
+    });
+    var subjectGroup = ensureUploadSelectAfter('upGrade', 'upSubjectGroup', 'مجموعة المنهج الأزهرى');
+    var branch = ensureUploadSelectAfter('upSubject', 'upBranch', 'الفرع / التخصص');
+    var subjectGroupWrapper = document.getElementById('upSubjectGroupGroup');
+    var branchWrapper = document.getElementById('upBranchGroup');
+    var subjectLabel = subject.parentNode && subject.parentNode.querySelector('label');
+    var stageLabel = stage.parentNode && stage.parentNode.querySelector('label');
+    if (subjectLabel) subjectLabel.textContent = 'المادة';
+    if (stageLabel) stageLabel.textContent = 'المرحلة / النظام التعليمي';
     var gradeNames = function (stageId) {
+      if (window.AZHAR_CURRICULUM && window.AZHAR_CURRICULUM.isAzharStage(stageId)) return window.AZHAR_CURRICULUM.getStage(stageId).grades.slice();
       if (typeof stagesData !== 'undefined' && stagesData[stageId] && stagesData[stageId].grades) return stagesData[stageId].grades.slice();
       if (stageId === 'bakkalorya') return ['الأول', 'الثاني', 'الثالث'];
       return [];
@@ -260,22 +330,63 @@
       if (typeof generalSubjects !== 'undefined' && generalSubjects.length) return generalSubjects.map(function (item) { return item.name; });
       return ['اللغة العربية', 'رياضيات', 'علوم', 'فيزياء', 'كيمياء', 'أحياء', 'إنجليزي', 'دراسات', 'تاريخ', 'جغرافيا', 'فلسفة ومنطق', 'تربية دينية', 'حاسب آلي', 'فنية'];
     };
+    function populateAzharBranches(force) {
+      if (!branch || !window.AZHAR_CURRICULUM || !window.AZHAR_CURRICULUM.isAzharStage(stage.value)) return;
+      var selectedCourse = window.AZHAR_CURRICULUM.getCourse(stage.value, subject.value);
+      var branches = selectedCourse ? selectedCourse.branches : [];
+      var previousBranch = force ? '' : branch.value;
+      setUploadSelectOptions(branch, branches, branches.length ? 'اختر الفرع / التخصص' : 'لا يوجد فرع إضافي', previousBranch);
+      if (branchWrapper) branchWrapper.style.display = branches.length ? '' : 'none';
+      branch.required = !!branches.length;
+    }
+    function populateAzharSubjects(force) {
+      var curriculum = window.AZHAR_CURRICULUM;
+      if (!curriculum || !curriculum.isAzharStage(stage.value) || !subjectGroup) return;
+      var previousSubject = force ? '' : subject.value;
+      var courses = curriculum.getCourses(stage.value, grade.value, subjectGroup.value);
+      setUploadObjectOptions(subject, courses, 'اختر المادة من المنهج', previousSubject, 'id', 'name');
+      populateAzharBranches(force);
+    }
     function populate(force) {
       var stageId = stage.value;
+      var azhar = !!(window.AZHAR_CURRICULUM && window.AZHAR_CURRICULUM.isAzharStage(stageId));
+      if (subjectGroupWrapper) subjectGroupWrapper.style.display = azhar ? '' : 'none';
+      if (!azhar && branchWrapper) branchWrapper.style.display = 'none';
       if (force || grade.getAttribute('data-curriculum-stage') !== stageId) {
-        var previousGrade = grade.value;
+        var previousGrade = force ? '' : grade.value;
         setUploadSelectOptions(grade, gradeNames(stageId), 'اختر الصف من المنهج', previousGrade);
         grade.setAttribute('data-curriculum-stage', stageId);
       }
-      if (force || subject.getAttribute('data-curriculum-stage') !== stageId) {
-        var previousSubject = subject.value;
+      if (azhar && subjectGroup) {
+        var curriculumStage = window.AZHAR_CURRICULUM.getStage(stageId);
+        var previousGroup = force ? '' : subjectGroup.value;
+        setUploadObjectOptions(subjectGroup, curriculumStage.groups, 'اختر مجموعة المواد', previousGroup, 'name', 'name');
+        subjectGroup.setAttribute('data-curriculum-stage', stageId);
+        subject.setAttribute('data-curriculum-stage', stageId);
+        populateAzharSubjects(force);
+      } else if (force || subject.getAttribute('data-curriculum-stage') !== stageId) {
+        var previousSubject = force ? '' : subject.value;
         setUploadSelectOptions(subject, subjectNames(stageId), 'اختر المادة من المنهج', previousSubject);
         subject.setAttribute('data-curriculum-stage', stageId);
+        if (subjectGroup) subjectGroup.value = '';
+        if (branch) { branch.value = ''; branch.required = false; }
       }
     }
     if (stage.getAttribute('data-curriculum-bound') !== '1') {
       stage.setAttribute('data-curriculum-bound', '1');
       stage.addEventListener('change', function () { populate(true); });
+    }
+    if (grade.getAttribute('data-azhar-bound') !== '1') {
+      grade.setAttribute('data-azhar-bound', '1');
+      grade.addEventListener('change', function () { populateAzharSubjects(true); });
+    }
+    if (subjectGroup && subjectGroup.getAttribute('data-azhar-bound') !== '1') {
+      subjectGroup.setAttribute('data-azhar-bound', '1');
+      subjectGroup.addEventListener('change', function () { populateAzharSubjects(true); });
+    }
+    if (subject.getAttribute('data-azhar-bound') !== '1') {
+      subject.setAttribute('data-azhar-bound', '1');
+      subject.addEventListener('change', function () { populateAzharBranches(true); });
     }
     populate(false);
   }
@@ -303,7 +414,7 @@
       if (stage && stage.parentElement) stage.parentElement.after(termGroup);
       var hint = document.createElement('p');
       hint.style.cssText = 'font-size:12px;color:#617568;line-height:1.8;margin:-4px 0 12px;';
-      hint.textContent = 'مكان الرفع: لوحة المعلم ← رفع درس أو تدريب أو امتحان أو مراجعة. اختر المرحلة والصف والمادة والترم من القوائم المطابقة للمنهج. ينتظر العمل موافقة المالك، ثم يظهر للطلاب في الرئيسية ← أيقونة شرح الأستاذ ← بطاقة المعلم، وتكون أعماله مرتبة حسب المرحلة والصف والمادة والترم.';
+      hint.textContent = 'اختر المرحلة والصف من القوائم. وعند اختيار مرحلة أزهرية، اختر مجموعة المواد والمادة والفرع أو المذهب المطابق للمنهج. ينتظر العمل موافقة المالك، ثم يظهر للطلاب في شرح الأستاذ مرتبًا حسب المرحلة والصف والمادة والفرع والترم.';
       var button = document.getElementById('upSubmitBtn');
       if (button) button.parentNode.insertBefore(hint, button);
     }
@@ -319,6 +430,13 @@
       var submitButton = document.getElementById('upSubmitBtn');
       if (submitButton && submitButton.parentNode) submitButton.parentNode.insertBefore(audioGroup, submitButton);
     }
+    if (!document.getElementById('upPdf')) {
+      var pdfGroup = document.createElement('div');
+      pdfGroup.className = 'form-group';
+      pdfGroup.innerHTML = '<label class="form-label" for="upPdf">📕 ملف PDF تعليمي (اختياري)</label><input id="upPdf" class="form-input" type="file" accept=".pdf,application/pdf" style="padding:10px;"><small style="display:block;margin-top:5px;color:#68756d;line-height:1.7">اختر ملف PDF لا يزيد حجمه على 10 ميجابايت. سيظهر للطلاب بعد موافقة المالك.</small>';
+      var submitButton = document.getElementById('upSubmitBtn');
+      if (submitButton && submitButton.parentNode) submitButton.parentNode.insertBefore(pdfGroup, submitButton);
+    }
     ensureUploadCurriculumSelectors();
   }
 
@@ -328,7 +446,16 @@
     var workType = field('upType');
     var stage = field('upStage');
     var grade = field('upGrade');
-    var subject = field('upSubject');
+    var selectedSubject = field('upSubject');
+    var subjectGroup = field('upSubjectGroup');
+    var branch = field('upBranch');
+    var curriculum = window.AZHAR_CURRICULUM;
+    var isAzhar = !!(curriculum && curriculum.isAzharStage(stage));
+    var azharCourse = isAzhar ? curriculum.getCourse(stage, selectedSubject) : null;
+    var subject = azharCourse ? azharCourse.subject : selectedSubject;
+    var subjectLabel = azharCourse ? azharCourse.name : subject;
+    var curriculumGroup = azharCourse ? azharCourse.group : '';
+    var curriculumSubgroup = azharCourse ? azharCourse.subgroup : '';
     var title = field('upTitle');
     var content = field('upContent');
     var teacherName = field('upTeacherName') || (window.currentUser.name || '');
@@ -336,19 +463,28 @@
     var imageInput = document.getElementById('upImage');
     var videoInput = document.getElementById('upVideo');
     var audioInput = document.getElementById('upAudio');
+    var pdfInput = document.getElementById('upPdf');
     var imageFile = imageInput && imageInput.files && imageInput.files[0];
     var videoFile = videoInput && videoInput.files && videoInput.files[0];
     var audioFile = audioInput && audioInput.files && audioInput.files[0];
+    var pdfFile = pdfInput && pdfInput.files && pdfInput.files[0];
     var button = document.getElementById('upSubmitBtn');
     if (!teacherName || teacherName.length < 3 || !stage || !grade || !subject || !title) return toast('أكمل اسم الأستاذ والمرحلة والصف والمادة والعنوان');
-    if (!content && !imageFile && !videoFile && !audioFile) return toast('أضف شرحًا أو صورة أو فيديو أو تسجيلًا صوتيًا واحدًا على الأقل');
+    if (isAzhar) {
+      if (!azharCourse || azharCourse.group !== subjectGroup || azharCourse.grades.length && azharCourse.grades.indexOf(grade) < 0) return toast('اختر المرحلة والصف ومجموعة المادة الصحيحة من قوائم الأزهر');
+      if (azharCourse.branches.length && azharCourse.branches.indexOf(branch) < 0) return toast('اختر الفرع أو المذهب من القائمة');
+    }
+    if (!content && !imageFile && !videoFile && !audioFile && !pdfFile) return toast('أضف شرحًا أو صورة أو فيديو أو تسجيلًا صوتيًا أو ملف PDF واحدًا على الأقل');
     if (stage === 'kindergarten_languages' && (['KG1', 'KG2'].indexOf(grade) < 0 || ['عربي', 'English', 'Maths'].indexOf(subject) < 0)) return toast('اختر KG1 أو KG2 ومادة عربي أو English أو Maths');
     if (audioFile && audioFile.size > 25 * 1024 * 1024) return toast('حجم التسجيل الصوتي يجب ألا يتجاوز 25 ميجابايت');
+    if (pdfFile && !/\.pdf$/i.test(pdfFile.name || '')) return toast('اختر ملفًا بامتداد PDF');
+    if (pdfFile && pdfFile.size > 10 * 1024 * 1024) return toast('حجم ملف PDF يجب ألا يتجاوز 10 ميجابايت على الخطة المجانية');
     if (button) { button.disabled = true; button.textContent = '⏳ جارٍ رفع العمل للمراجعة...'; }
     try {
       var imageUrl = null;
       var videoUrl = null;
       var audioUrl = null;
+      var pdfUrl = null;
       if (imageFile) {
         imageUrl = await window.uploadFile(imageFile, 'teacher_content');
         if (!imageUrl) throw new Error('فشل رفع الصورة');
@@ -361,10 +497,18 @@
         audioUrl = await window.uploadFile(audioFile, 'teacher_content');
         if (!audioUrl) throw new Error('فشل رفع التسجيل الصوتي');
       }
+      if (pdfFile) {
+        pdfUrl = await window.uploadFile(pdfFile, 'teacher_content');
+        if (!pdfUrl) throw new Error('فشل رفع ملف PDF. تحقق من إعدادات Cloudinary أو اتصال الإنترنت');
+      }
       await db.collection('teacher_uploads').add({
         teacherId: uid(), teacherName: teacherName, type: workType, stage: stage, grade: grade,
-        subject: subject, term: term, title: title, content: content,
-        image_url: imageUrl, video_url: videoUrl, audio_url: audioUrl, status: 'pending', createdAt: now(),
+        subject: subject, subjectLabel: subjectLabel, curriculumGroup: curriculumGroup,
+        curriculumSubgroup: curriculumSubgroup, branch: isAzhar ? branch : '',
+        curriculumId: azharCourse ? azharCourse.id : '', term: term, title: title, content: content,
+        image_url: imageUrl, video_url: videoUrl, audio_url: audioUrl, pdf_url: pdfUrl,
+        pdf_name: pdfFile ? pdfFile.name : '', pdf_size: pdfFile ? pdfFile.size : 0,
+        status: 'pending', createdAt: now(),
         authUid: uid()
       });
       toast('تم إرسال العمل للمالك، وسيظهر للطلاب بعد الموافقة');
@@ -372,6 +516,7 @@
       if (imageInput) imageInput.value = '';
       if (videoInput) videoInput.value = '';
       if (audioInput) audioInput.value = '';
+      if (pdfInput) pdfInput.value = '';
       if (button) { button.disabled = false; button.textContent = '📤 إرسال العمل للمراجعة'; }
       screenBack();
     } catch (error) {
@@ -478,7 +623,9 @@
       if (!uploads.length) html += '<div class="tw-empty">لم ترفع محتوى بعد.</div>';
       uploads.sort(function (a, b) { return String(b.createdAt || '').localeCompare(String(a.createdAt || '')); }).forEach(function (item) {
         var status = item.status === 'approved' ? '✅ معتمد — يظهر في أيقونة شرح الأستاذ المستقلة' : item.status === 'rejected' ? '❌ مرفوض' : '⏳ عند المالك للمراجعة';
-        html += '<div class="tw-card"><div class="tw-title">' + esc(item.title) + '</div><div class="tw-meta">' + esc(item.subject) + ' • ' + esc(item.grade) + ' • ' + status + '</div></div>';
+        var uploadSubject = teacherSubjectName(item);
+        var uploadCurriculum = teacherCurriculumDetail(item);
+        html += '<div class="tw-card"><div class="tw-title">' + esc(item.title) + '</div><div class="tw-meta">' + esc(teacherStageName(item.stage)) + ' • الصف ' + esc(item.grade) + ' • ' + esc(uploadSubject) + (uploadCurriculum ? ' • ' + esc(uploadCurriculum) : '') + ' • ' + status + '</div></div>';
       });
       body.innerHTML = html;
     } catch (error) {
@@ -796,6 +943,13 @@
   };
   function ensureOwnerEntries() { ensureOwnerPanelEntry(); }
   function repairUploadScreen() { if (document.getElementById('teacherUploadScreen')) ensureUploadForm(); }
+  var openUploadBeforeCurriculum = window.openTeacherUpload;
+  window.openTeacherUpload = function () {
+    if (!isTeacher()) return toast('يلزم الدخول بحساب معلم معتمد');
+    ensureUploadForm();
+    if (typeof openUploadBeforeCurriculum === 'function') return openUploadBeforeCurriculum.apply(this, arguments);
+    enterScreen('teacherUploadScreen');
+  };
   function initialize() {
     styleOnce(); ensureBroadcastRequestScreen(); repairUploadScreen();
     window.ensureTeacherDirectoryEntry(); window.ensureTeacherEntry(); ensureOwnerEntries();

@@ -1,33 +1,20 @@
 {
   "name": "منصة الأستاذ حافظ التعليمية",
   "short_name": "منصة حافظ",
-  "description": "منصة الأستاذ حافظ التعليمية الشاملة لجميع المراحل الدراسية من رياض الأطفال حتى الثانوية العامة، تشمل المناهج الرسمية والشروحات والامتحانات التفاعلية وألعاب التعلم الذكي.",
-  "start_url": "./index.html",
-  "scope": "./",
-  "id": "/ta3lemy-new/",
+  "start_url": "/ta3lemy-new/",
   "display": "standalone",
-  "orientation": "portrait-primary",
   "background_color": "#2E7D32",
   "theme_color": "#2E7D32",
-  "lang": "ar",
-  "dir": "rtl",
-  "categories": [
-    "education",
-    "books",
-    "kids"
-  ],
   "icons": [
-    {
-      "src": "icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
     {
       "src": "icon-512.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "192x192",
+      "type": "image/png"
     }
   ]
 }

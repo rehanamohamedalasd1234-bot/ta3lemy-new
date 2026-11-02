@@ -875,6 +875,264 @@
   // ==========================================
   // --- Main Hub Screen ---
   // ==========================================
+
+  // ==========================================
+  // --- 4. Funny & Cheerful Quiz Game (لعبة الفرفشة والضحك والذكاء) ---
+  // ==========================================
+  var FUNNY_QUESTIONS = [
+    {
+      q: "ما هو الشيء الذي كلما أخذت منه كَبُر وزاد حجمه؟ 😂",
+      options: ["الحفرة 🕳️", "كيس الشيبسي 🍟", "الواجب المدرسي 📝", "رصيد باقة النت 📱"],
+      correct: 0,
+      reactionCorrect: "يا لعيب! بالظبط كده، الحفرة تكبر لما تحفر أكتر! ذكاء فطري خارق 😂👏",
+      reactionWrong: "يا عم لااا! ركّز معايا.. الإجابة الصح هي الحفرة! 🕳️ كل ما تحفر تاخد منها تكبر!"
+    },
+    {
+      q: "أستاذ النحو سأل تلميذه: لماذا سميت اللغة العربية بلغة الضاد؟ فأجاب التلميذ: ...؟",
+      options: ["عشان هي الحرف الوحيد اللي مش موجود في اللغات التانية 🌟", "عشان بنضاد النوم وقت المذاكرة 😴", "عشان بنضارب مع الامتحان 🥊", "عشان مستر حافظ حكالنا كدة 👑"],
+      correct: 0,
+      reactionCorrect: "عاش بطل العربية الفصيح! حرف الضاد ميز لغتنا الجميلة بين كل لغات العالم 🏆",
+      reactionWrong: "ضحكتني والله! 😂 بس الإجابة الصح إن حرف الضاد لا يوجد في أي لغة أخرى على وجه الأرض!"
+    },
+    {
+      q: "ما هو الباب الذي يستحيل أن تفتحه مهما حاولت حتى لو معك مفتاح سحري؟",
+      options: ["الباب المفتوح أصلًا! 🚪😂", "باب المدرسة الصبح 🏫", "باب الثلاجة بنص الليل 🍔", "باب الامتحان المقفول 🔒"],
+      correct: 0,
+      reactionCorrect: "ههههههه أيوة كده! مفتوح أصلًا هتفتحه إزاي تاني؟! مخك شغال وعالي العال! 🧠⚡",
+      reactionWrong: "فكرت كتير ليه؟! الباب المفتوح أصلًا مش محتاج يتفتح يا بطل! 🚪🤣"
+    },
+    {
+      q: "عالم فيزياء وقعت عليه تفاحة فاكتشف الجاذبية، لو وقعت عليك بطيخة ماذا تكتشف؟ 🍉",
+      options: ["أكتشف المستشفى فورًا وغرزتين في الرأس! 🚑🤕", "أكتشف نظرية العصير الطازج 🍹", "أكتشف سر الجاذبية المائية 🌊", "أكتشف أن البطيخ صيفي 🍉"],
+      correct: 0,
+      reactionCorrect: "ههههههه برافو! دي مش عايزة فيزياء دي عايزة إسعاف مباشر! 😂🚑",
+      reactionWrong: "جاذبية إيه بس؟! دي بطيخة يا هندسة هتدخلنا الطوارئ علطول! 🍉🤣"
+    },
+    {
+      q: "شيء يمر من فوق الماء دون أن يبتل، ويمشي في شوارع المدينة دون أن يتعب؟",
+      options: ["الظل 👤☀️", "سمكة لابسة كوتشي 🐟", "طائر النورس 🕊️", "الطيارة الورق 🪁"],
+      correct: 0,
+      reactionCorrect: "إيه النباهة دي! الظل طبعاً.. ذكاء وابتسامة وفرفشة! 🌟😄",
+      reactionWrong: "سمكة بكوتشي إيه بس؟! 😂 ده الظل يا فنان.. يمشي فوق المية وفي كل حتة وما يتبلش!"
+    },
+    {
+      q: "ما هو الشيء الذي يملك أسناناً كثيرة ولكنه لا يعض أحداً أبداً؟",
+      options: ["المشط 🪮", "المنشار الرياضي 🪚", "التمساح الكسلان 🐊", "طقم أسنان جدي 👴"],
+      correct: 0,
+      reactionCorrect: "الله عليك! المشط بيسرح شعرك ويضحك لك من غير ما يعض! 🪮✨",
+      reactionWrong: "التمساح مابيسميش يا غالي! 😂 الإجابة هي المشط!"
+    },
+    {
+      q: "سأل المعلم: ما حاصل ضرب صفر في مليون؟ فأجاب الطالب الذكي: ...؟",
+      options: ["صفر مدور وكبير زي رغيف الفينو! 🥖😂", "مليون ونصف 💸", "رقم سري للواي فاي 📶", "عشرة جنيه مكافأة 💵"],
+      correct: 0,
+      reactionCorrect: "صح يا عبقري! أي حاجة تضرب في الصفر تصفر وتبقى كحكة بسكر! 🍩👏",
+      reactionWrong: "الصفر يبلع المليون ويبقوا صفر يا صديقي! 🍩😂"
+    },
+    {
+      q: "لماذا نشرب الشاي ولا نأكله؟ ☕😋",
+      options: ["لأننا لا نستطيع مضغه بالأسنان! 😂", "لأن الكوباية ساخنة 🔥", "لأن النعناع بيزغزغ 🌿", "عشان مستر حافظ بيحبه في الخمسينة 🫖"],
+      correct: 0,
+      reactionCorrect: "ههههههه منطق لا غبار عليه! هتمضغ الشاي إزاي يا فنان؟! ☕🤣",
+      reactionWrong: "يا راجل هتمضغ مية سخنة إزاي؟! بنشربه عشان مش بنعرف نمضغه! ☕😂"
+    },
+    {
+      q: "ما هو الشيء الذي إذا لمسته صرخ بأعلى صوته؟ 🔔",
+      options: ["جرس الباب 🔔", "المنبه الصباحي ⏰", "أخوك الصغير لما تاخد شاحنه 👶⚡", "كل ما سبق صحيح وبشدة! 🤣"],
+      correct: 3,
+      reactionCorrect: "ههههههههههه بالضبط! وأخوك الصغير بالذات بيفجر سارينة إنذار! 👶🚨🤣",
+      reactionWrong: "كلهم بيصرخوا والله وبالذات الصغير لما تلمس حاجته! 🤣"
+    },
+    {
+      q: "أيهما أثقل: كيلو حديد أم كيلو قطن؟ ⚖️",
+      options: ["متساويان تماماً (كيلو = كيلو)! ⚖️", "كيلو الحديد أثقل 🧱", "كيلو القطن أثقل ☁️", "حسب سرعة الرياح 🌬️"],
+      correct: 0,
+      reactionCorrect: "فخ قديم وما وقعتش فيه يا عبقري! كيلو وكيلو متساويين في الوزن! 🧠💪",
+      reactionWrong: "وقعت في الفخ القديم! 😂 كيلو هنا وكيلو هنا يعني الاتنين قد بعض بالظبط!"
+    }
+  ];
+
+  var humorCurrentIndex = 0;
+  var humorScore = 0;
+  var humorSmiles = 0;
+
+  function startHumorGame() {
+    humorCurrentIndex = 0;
+    humorScore = 0;
+    humorSmiles = 0;
+    playSound('correct');
+
+    var container = document.getElementById('gamesContent');
+    if (!container) return;
+
+    renderHumorGameLayout(container);
+    showHumorQuestion(container);
+  }
+
+  function renderHumorGameLayout(container) {
+    container.innerHTML =
+      '<div id="humorGameWrapper" style="font-family:inherit;direction:rtl;max-width:680px;margin:0 auto;position:relative;">' +
+        // Top Header
+        '<div style="background:linear-gradient(135deg,#FFF9C4,#FFE082);border-radius:20px;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 4px 15px rgba(255,160,0,0.18);margin-bottom:16px;border:2px solid #FFCA28;">' +
+          '<div style="display:flex;align-items:center;gap:10px;">' +
+            '<span style="font-size:32px;">🎭</span>' +
+            '<div>' +
+              '<h3 style="margin:0;color:#E65100;font-size:17px;font-weight:bold;">تحدي الضحك والفرفشة والذكاء</h3>' +
+              '<div style="font-size:12px;color:#795548;">فوازير وطرائف ترسم البسمة وتنمي الذكاء! 😄</div>' +
+            '</div>' +
+          '</div>' +
+          '<div style="display:flex;align-items:center;gap:8px;">' +
+            '<span id="humorSmileBadge" style="background:#fff;color:#E65100;font-weight:bold;font-size:13px;padding:6px 12px;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,0.08);border:1px solid #FFE082;">😊 0 ابتسامة</span>' +
+            '<button id="btnExitHumor" style="background:#ECEFF1;color:#455A64;border:none;padding:6px 14px;border-radius:10px;font-size:13px;font-weight:bold;cursor:pointer;">خروج ✕</button>' +
+          '</div>' +
+        '</div>' +
+
+        // Card Container
+        '<div id="humorQuestionCard" style="background:#fff;border-radius:22px;padding:22px;box-shadow:0 6px 20px rgba(0,0,0,0.07);border:2px solid #FFF176;min-height:300px;display:flex;flex-direction:column;justify-content:space-between;">' +
+        '</div>' +
+      '</div>';
+
+    document.getElementById('btnExitHumor').onclick = function() {
+      renderGamesHub();
+    };
+  }
+
+  function showHumorQuestion(container) {
+    var card = document.getElementById('humorQuestionCard');
+    if (!card) return;
+
+    if (humorCurrentIndex >= FUNNY_QUESTIONS.length) {
+      showHumorGameEnd(card);
+      return;
+    }
+
+    var item = FUNNY_QUESTIONS[humorCurrentIndex];
+    var qNum = humorCurrentIndex + 1;
+    var total = FUNNY_QUESTIONS.length;
+
+    var html =
+      '<div>' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">' +
+          '<span style="background:#FFF8E1;color:#F57F17;padding:4px 12px;border-radius:12px;font-size:12px;font-weight:bold;border:1px solid #FFE082;">طُرفة وذكاء ' + qNum + ' من ' + total + ' 🎪</span>' +
+          '<span style="font-size:22px;">😂✨</span>' +
+        '</div>' +
+
+        '<div style="background:linear-gradient(135deg,#FFFDE7,#FFF9C4);border-radius:16px;padding:18px;border:2px dashed #FBC02D;margin-bottom:18px;text-align:center;">' +
+          '<div style="font-size:18px;font-weight:bold;color:#263238;line-height:1.7;">' + item.q + '</div>' +
+        '</div>' +
+
+        '<div id="humorOptionsGrid" style="display:grid;grid-template-columns:1fr;gap:10px;">';
+
+    item.options.forEach(function(opt, optIdx) {
+      html +=
+        '<button class="humor-opt-btn" data-index="' + optIdx + '" style="background:#FAFAFA;border:2px solid #E0E0E0;border-radius:14px;padding:14px 16px;text-align:right;font-size:15px;font-weight:600;color:#37474F;cursor:pointer;display:flex;align-items:center;gap:10px;transition:all 0.2s ease;">' +
+          '<span style="width:28px;height:28px;background:#EEEEEE;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;color:#616161;">' + (optIdx + 1) + '</span>' +
+          '<span style="flex:1;">' + opt + '</span>' +
+        '</button>';
+    });
+
+    html +=
+        '</div>' +
+      '</div>' +
+
+      '<div id="humorFeedbackArea" style="margin-top:16px;display:none;"></div>';
+
+    card.innerHTML = html;
+
+    var optButtons = card.querySelectorAll('.humor-opt-btn');
+    optButtons.forEach(function(btn) {
+      btn.onclick = function() {
+        var chosen = parseInt(btn.getAttribute('data-index'), 10);
+        handleHumorAnswer(chosen, item, card);
+      };
+    });
+  }
+
+  function handleHumorAnswer(chosen, item, card) {
+    var optButtons = card.querySelectorAll('.humor-opt-btn');
+    optButtons.forEach(function(b) {
+      b.disabled = true;
+      b.style.cursor = 'default';
+    });
+
+    var isCorrect = chosen === item.correct;
+    var feedbackArea = document.getElementById('humorFeedbackArea');
+    if (!feedbackArea) return;
+
+    if (isCorrect) {
+      humorScore += 10;
+      humorSmiles += 1;
+      awardPoints(15);
+      playSound('correct');
+      optButtons[chosen].style.background = '#E8F5E9';
+      optButtons[chosen].style.borderColor = '#4CAF50';
+      optButtons[chosen].style.color = '#1B5E20';
+    } else {
+      playSound('wrong');
+      optButtons[chosen].style.background = '#FFEBEE';
+      optButtons[chosen].style.borderColor = '#EF5350';
+      optButtons[chosen].style.color = '#B71C1C';
+      if (optButtons[item.correct]) {
+        optButtons[item.correct].style.background = '#E8F5E9';
+        optButtons[item.correct].style.borderColor = '#4CAF50';
+      }
+    }
+
+    var smileEl = document.getElementById('humorSmileBadge');
+    if (smileEl) {
+      smileEl.textContent = '😊 ' + humorSmiles + ' ابتسامة';
+    }
+
+    var feedbackHtml =
+      '<div style="background:' + (isCorrect ? '#E8F5E9' : '#FFF3E0') + ';border:2px solid ' + (isCorrect ? '#81C784' : '#FFB74D') + ';border-radius:16px;padding:16px;margin-bottom:14px;display:flex;align-items:center;gap:12px;">' +
+        '<div style="font-size:36px;">' + (isCorrect ? '🤣👏' : '😅❤️') + '</div>' +
+        '<div style="flex:1;">' +
+          '<div style="font-weight:bold;font-size:15px;color:' + (isCorrect ? '#2E7D32' : '#E65100') + ';margin-bottom:4px;">' +
+            (isCorrect ? 'ضحكة وتألق من الآخر! 🌟' : 'حلوة ومضحكة.. بس اتعلمنا سرها! 😄') +
+          '</div>' +
+          '<div style="font-size:13px;line-height:1.6;color:#37474F;">' +
+            (isCorrect ? item.reactionCorrect : item.reactionWrong) +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      '<button id="btnNextHumor" style="width:100%;background:linear-gradient(135deg,#FF9800,#F57C00);color:#fff;border:none;padding:14px;border-radius:14px;font-size:16px;font-weight:bold;cursor:pointer;box-shadow:0 4px 12px rgba(245,124,0,0.25);display:flex;align-items:center;justify-content:center;gap:8px;">' +
+        '<span>الضحكة اللي بعدها 🚀😄</span>' +
+      '</button>';
+
+    feedbackArea.innerHTML = feedbackHtml;
+    feedbackArea.style.display = 'block';
+
+    document.getElementById('btnNextHumor').onclick = function() {
+      humorCurrentIndex++;
+      showHumorQuestion(card);
+    };
+  }
+
+  function showHumorGameEnd(card) {
+    playSound('win');
+    awardPoints(50);
+    card.innerHTML =
+      '<div style="text-align:center;padding:20px 10px;">' +
+        '<div style="font-size:64px;margin-bottom:10px;">👑🤣🎉</div>' +
+        '<h2 style="color:#E65100;font-size:24px;margin:0 0 10px 0;">يا سكر المنصة! دمك خفيف وذكائك عالي!</h2>' +
+        '<p style="color:#5D4037;font-size:15px;line-height:1.8;margin:0 0 20px 0;">' +
+          'أتممت كل الفوازير والطرائف المضحكة وحصدت <strong>' + humorSmiles + ' ابتسامة</strong> من 10!<br>' +
+          'هدية مستر حافظ ليك: ابتسامة تدوم و <strong>+50 نقطة تميز</strong> تضاف لنقاطك في المنصة! 🌟' +
+        '</p>' +
+        '<div style="display:flex;gap:12px;justify-content:center;">' +
+          '<button id="btnReplayHumor" style="background:#FF9800;color:#fff;border:none;padding:12px 24px;border-radius:14px;font-weight:bold;cursor:pointer;font-size:15px;">🔄 العب واضحك تاني</button>' +
+          '<button id="btnBackToHub" style="background:#ECEFF1;color:#455A64;border:none;padding:12px 24px;border-radius:14px;font-weight:bold;cursor:pointer;font-size:15px;">واحة الألعاب 🎮</button>' +
+        '</div>' +
+      '</div>';
+
+    document.getElementById('btnReplayHumor').onclick = function() {
+      startHumorGame();
+    };
+    document.getElementById('btnBackToHub').onclick = function() {
+      renderGamesHub();
+    };
+  }
+
   function renderGamesHub() {
     var screenEl = document.getElementById('gamesScreen');
     if (!screenEl) return;
@@ -891,8 +1149,23 @@
 
       '<div style="display:flex;flex-direction:column;gap:15px;">' +
 
+        // Card 0: Funny & Humor Game (New addition to bring smiles)
+        '<div style="background:linear-gradient(135deg,#FFF9C4 0%,#FFF176 100%);border-radius:20px;padding:24px 20px 20px 20px;box-shadow:0 4px 16px rgba(251,192,45,0.28);border:2px solid #FBC02D;display:flex;flex-direction:column;gap:14px;position:relative;overflow:hidden;" id="cardHumorGame">' +
+          '<div style="position:absolute;top:12px;left:12px;background:#C2185B;color:#fff;font-size:11px;font-weight:bold;padding:4px 10px;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,0.15);z-index:2;">😂 ضحك وفرفشة وذكاء</div>' +
+          '<div style="display:flex;align-items:center;gap:14px;">' +
+            '<div style="width:60px;height:60px;background:#FFEE58;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:36px;box-shadow:0 4px 10px rgba(251,192,45,0.25);">🎭</div>' +
+            '<div style="flex:1;">' +
+              '<h3 style="margin:0 0 4px 0;color:#BF360C;font-size:18px;font-weight:bold;">تحدي الضحك والفرفشة والذكاء</h3>' +
+              '<p style="margin:0;color:#5D4037;font-size:13px;line-height:1.5;">فوازير مضحكة وطرائف ذكية ترسم البسمة على وجهك وتختبر نباهتك مع مستر حافظ! 😄</p>' +
+            '</div>' +
+          '</div>' +
+          '<button id="btnStartHumor" style="background:linear-gradient(135deg,#FF7043,#D84315);color:#fff;border:none;padding:12px 18px;border-radius:14px;font-weight:bold;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 12px rgba(216,67,21,0.3);">' +
+            '<span>😂 العب واضحك وفرفش الآن</span>' +
+          '</button>' +
+        '</div>' +
+
         // Card 1: School Bus Adventure (Featured Star Game)
-        '<div style="background:linear-gradient(135deg,#FFFDE7 0%,#FFF8E1 100%);border-radius:20px;padding:20px;box-shadow:0 4px 16px rgba(255,179,0,0.22);border:2px solid #FFD54F;display:flex;flex-direction:column;gap:14px;position:relative;overflow:hidden;" id="cardBusGame">' +
+        '<div style="background:linear-gradient(135deg,#FFFDE7 0%,#FFF8E1 100%);border-radius:20px;padding:24px 20px 20px 20px;box-shadow:0 4px 16px rgba(255,179,0,0.22);border:2px solid #FFD54F;display:flex;flex-direction:column;gap:14px;position:relative;overflow:hidden;" id="cardBusGame">' +
           '<div style="position:absolute;top:10px;left:10px;background:#E65100;color:#fff;font-size:11px;font-weight:bold;padding:3px 10px;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,0.15);">✨ لعبة مميزة جديدة</div>' +
           '<div style="display:flex;align-items:center;gap:14px;">' +
             '<div style="width:60px;height:60px;background:#FFE082;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:34px;box-shadow:0 4px 10px rgba(255,160,0,0.2);">🚌</div>' +
@@ -934,6 +1207,7 @@
 
       '</div>';
 
+    var bHumor = document.getElementById('btnStartHumor'); if (bHumor) bHumor.onclick = function() { startHumorGame(); };
     document.getElementById('btnStartBus').onclick = function() { startBusGame(); };
     document.getElementById('btnMathLvl1').onclick = function() { startMathGame(1); };
     document.getElementById('btnMathLvl2').onclick = function() { startMathGame(2); };
@@ -955,4 +1229,5 @@
   window.startMathGame = startMathGame;
   window.startMemoryGame = startMemoryGame;
   window.startBusGame = startBusGame;
+  window.startHumorGame = startHumorGame;
 })();
