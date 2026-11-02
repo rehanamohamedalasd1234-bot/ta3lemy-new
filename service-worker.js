@@ -1,7 +1,7 @@
 // Service Worker for the Hafez educational platform.
 // Shell files are prefetched for offline launch; media is stored only when the user explicitly downloads it.
 const CACHE_PREFIX = 'ta3lemy-shell-';
-const CACHE_NAME = CACHE_PREFIX + '1.0.72';
+const CACHE_NAME = CACHE_PREFIX + '1.0.73';
 const MEDIA_CACHE_NAME = 'ta3lemy-media-v1';
 const APP_SHELL = [
   './', './index.html', './extras.js', './curriculum-display-fix.js', './offline-mode.js', './navigation-fix.js', './service-worker.js', './manifest.json', './version.json', './auth-init.js', './fix-canvas.css',
@@ -10,7 +10,7 @@ const APP_SHELL = [
   './religion-grade7-term1.js', './computer-grade7-term1.js', './art-grade7-term1.js',
   './math-grade8-term1.js', './computer-grade8-term1.js', './religion-grade8-term1.js', './art-grade8-term1.js',
   './grade9-term1-content.js', './continuous-assessment.js', './primary-official-only.js', './grade1-math-expanded.js', './grade1-religion-official.js', './primary-grade2-data.js', './primary-grade2-structure.js', './primary-grade2-detailed-content.json', './primary-grade3-structure.js', './primary-grade3-detailed-content.json', './primary-grade4-structure.js', './primary-grades456-detailed-content.json', './primary-grade5-structure.js', './primary-grade6-structure.js',
-  './creativity-config.js', './creativity.js', './educational-games.js', './gemini-fix.js', './chat-config.js', './chat-system.js',
+  './secondary-grade1-content.js', './creativity-config.js', './creativity.js', './educational-games.js', './gemini-fix.js', './chat-config.js', './chat-system.js',
   './supabase-chat-config.js', './supabase-call-alerts.js', './supabase-private-chat.js',
   './admin-system.js', './kindergarten-languages.js', './kg1-arabic-structure.js', './kg1-arabic-2026-2027-t1.json', './kg1-english-structure.js', './kg1-english-2026-2027-t1.json', './icon-512.png'
 ];
