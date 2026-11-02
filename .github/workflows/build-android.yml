@@ -35,9 +35,11 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-36 build-tools;36.0.0'
 
       - name: Install Android SDK platform
-        run: sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"
+        run: sdkmanager --licenses > /dev/null || true
 
       - name: Install JavaScript dependencies
         run: npm ci
