@@ -6,7 +6,7 @@
   "description": "منصة الأستاذ حافظ التعليمية - Android wrapper",
   "scripts": {
     "sync:web": "node scripts/sync-web.cjs",
-    "cap:copy": "npm run sync:web && cap copy android",
+    "cap:copy": "npm run sync:web && cap sync android",
     "cap:open": "cap open android",
     "android:build": "npm run cap:copy && cd android && ./gradlew assembleDebug",
     "android:release": "npm run cap:copy && cd android && ./gradlew assembleRelease"
