@@ -46,7 +46,7 @@
 
 <div id="bakkaloryaTracksScreen" class="screen"><div class="top-bar" style="background:linear-gradient(135deg,#7B1FA2,#9C27B0);"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>اختر المسار</span></div><div style="width:42px;"></div></div><div class="content"><div class="content-header" style="background:linear-gradient(135deg,#7B1FA2,#9C27B0);"><div class="content-header-title">🎯 المسارات الأربعة</div><div class="content-header-sub">اختر المسار المناسب لك</div></div><div id="bakkaloryaTracksList"></div></div></div>
 
-<div id="azharScreen" class="screen"><div class="top-bar" style="background:linear-gradient(135deg,#C9A227,#E6C75E);"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>🕌 الأزهر</span></div><div style="width:42px;"></div></div><div class="content"><div class="section-title">المواد الشرعية</div><div id="azharList"></div></div></div>
+<div id="azharScreen" class="screen"><div class="top-bar" style="background:linear-gradient(135deg,#C9A227,#E6C75E);"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>🕌 الأزهر</span></div><div style="width:42px;"></div></div><div class="content"><div class="section-title">المواد الشرعية واللغة العربية بفروعها</div><div id="azharList"></div></div></div>
 
 <div id="quranScreen" class="screen"><div class="top-bar" style="background:linear-gradient(135deg,#00695C,#26A69A);"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>📖 القرآن</span></div><div style="width:42px;"></div></div><div class="content"><div class="search-box"><span>🔍</span><input type="text" placeholder="ابحث عن سورة..." oninput="filterSurahs(this.value)"></div><div id="surahsList"></div></div></div>
 
@@ -877,6 +877,7 @@ if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.s
 <script src="./teacher-auth.js"></script>
 <script src="./teacher.js"></script>
 <script src="./owner-approvals.js"></script>
+<script src="./azhar-curriculum.js"></script>
 <script src="./teacher-workflow.js"></script>
 <script src="./creativity-config.js"></script>
 <script src="./creativity.js"></script>
