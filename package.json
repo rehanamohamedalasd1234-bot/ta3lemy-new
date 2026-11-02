@@ -1,0 +1,22 @@
+{
+  "name": "ta3lemy-new",
+  "version": "1.0.77",
+  "private": true,
+  "type": "module",
+  "description": "منصة الأستاذ حافظ التعليمية - Android wrapper",
+  "scripts": {
+    "sync:web": "node scripts/sync-web.cjs",
+    "cap:copy": "npm run sync:web && cap copy android",
+    "cap:open": "cap open android",
+    "android:build": "npm run cap:copy && cd android && ./gradlew assembleDebug",
+    "android:release": "npm run cap:copy && cd android && ./gradlew assembleRelease"
+  },
+  "dependencies": {
+    "@capacitor/android": "latest",
+    "@capacitor/core": "latest"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "latest",
+    "typescript": "^7.0.2"
+  }
+}
