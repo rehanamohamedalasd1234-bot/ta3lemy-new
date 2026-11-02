@@ -1755,7 +1755,7 @@ console.log('✅ Exercises UI loaded');
         {id: 'pomoBtn', icon: '⏱️', label: 'المؤقت', bg: '#1976D2', action: function(){ window.openPomodoro(); }},
         {id: 'multBtn', icon: '🔢', label: 'الضرب', bg: '#FF6B6B', action: function(){ window.openMultiplication(); }},
         {id: 'broadcastBtn', icon: '🔴', label: 'البث', bg: '#D32F2F', action: function(){ window.openBroadcast(); }},
-        {id: 'exerciseBtn', icon: '🎯', label: 'التدريبات', bg: '#00897B', action: function(){ window.openExercises(); }},
+
         {id: 'quickMenu', icon: '⚡', label: 'قائمة', bg: '#F9A825', action: function(){ 
             var choice = prompt('⚡ اختر:\n\n1. مؤقت الدراسة\n2. الأخبار والمقالات\n3. نقاطي\n4. المفضلة\n5. ملاحظاتي\n6. تسجيل الخروج');
             if(choice === '1') window.openPomodoro();
