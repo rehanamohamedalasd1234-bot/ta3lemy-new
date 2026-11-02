@@ -1,7 +1,7 @@
 // Service Worker for the Hafez educational platform.
 // Shell files are prefetched for offline launch; media is stored only when the user explicitly downloads it.
 const CACHE_PREFIX = 'ta3lemy-shell-';
-const CACHE_NAME = CACHE_PREFIX + '1.0.46';
+const CACHE_NAME = CACHE_PREFIX + '1.0.47';
 const MEDIA_CACHE_NAME = 'ta3lemy-media-v1';
 const APP_SHELL = [
   './', './index.html', './extras.js', './service-worker.js', './manifest.json', './version.json', './auth-init.js', './fix-canvas.css',
@@ -10,6 +10,7 @@ const APP_SHELL = [
   './religion-grade7-term1.js', './computer-grade7-term1.js', './art-grade7-term1.js',
   './math-grade8-term1.js', './computer-grade8-term1.js', './religion-grade8-term1.js', './art-grade8-term1.js',
   './grade9-term1-content.js',
+  './primary-official-only.js', './grade1-math-official.js',
   './creativity-config.js', './creativity.js', './chat-config.js', './chat-system.js',
   './admin-system.js', './azhar-all-content.js', './azhar-aqeeda-content.js',
   './azhar-fiqh-lessons.js', './azhar-hadith-content.js', './azhar-nahw-content.js',
