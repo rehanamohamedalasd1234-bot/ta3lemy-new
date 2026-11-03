@@ -16,6 +16,13 @@
   var maxVideoBytes = 25 * 1024 * 1024;
   var maxTextLength = 3000;
   var maxCommentLength = 1000;
+  var reactionOptions = [
+    { key: 'like', emoji: '👍', label: 'إعجاب' },
+    { key: 'love', emoji: '❤️', label: 'أحببته' },
+    { key: 'laugh', emoji: '😂', label: 'مضحك' },
+    { key: 'wow', emoji: '😮', label: 'مدهش' },
+    { key: 'clap', emoji: '👏', label: 'أحسنت' }
+  ];
 
   function appUser() { return window.currentUser || null; }
   function appUid() {
@@ -186,15 +193,24 @@
       (role() === 'owner' && moderationKey ? '<button type="button" data-social-delete-comment="' + escapeHtml(comment.id) + '" title="حذف التعليق" style="background:none;border:0;color:#C62828;cursor:pointer;flex-shrink:0;">✕</button>' : '') +
       '</div>';
   }
-  function renderPost(post, comments, isPending) {
+  function renderPost(post, comments, isPending, reactionSummary) {
     var postId = escapeHtml(post.id);
     var caption = post.content ? '<div style="line-height:1.75;color:#263238;white-space:pre-wrap;overflow-wrap:anywhere;margin-top:10px;">' + escapeHtml(post.content) + '</div>' : '';
     var commentHtml = (comments || []).map(function (comment) { return renderComment(comment, postId); }).join('');
+    var reactionHtml = '';
+    if (!isPending) {
+      var counts = reactionSummary && reactionSummary.counts || {};
+      var mine = reactionSummary && reactionSummary.mine || '';
+      reactionHtml = '<div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:12px;" aria-label="التفاعلات">' + reactionOptions.map(function (item) {
+        var active = mine === item.key;
+        return '<button type="button" data-social-reaction-post="' + postId + '" data-social-reaction="' + item.key + '" aria-label="' + item.label + '" aria-pressed="' + (active ? 'true' : 'false') + '" title="' + item.label + '" style="border:1px solid ' + (active ? '#1976D2' : '#DCE3E9') + ';border-radius:20px;padding:6px 10px;background:' + (active ? '#E3F2FD' : '#fff') + ';color:#29445A;font-weight:700;cursor:pointer;">' + item.emoji + ' <span>' + Number(counts[item.key] || 0) + '</span></button>';
+      }).join('') + '</div>';
+    }
     return '<article style="background:#fff;border-radius:17px;padding:16px;margin-bottom:15px;box-shadow:0 3px 14px rgba(25,70,110,.08);">' +
       '<div style="display:flex;justify-content:space-between;gap:10px;align-items:center;">' +
         '<div><b style="color:#174A7C;">👤 ' + escapeHtml(post.author_name || 'عضو') + '</b></div>' +
         '<time style="font-size:11px;color:#90A4AE;white-space:nowrap;">' + escapeHtml(dateLabel(post.created_at)) + '</time>' +
-      '</div>' + caption + renderMedia(post) +
+      '</div>' + caption + renderMedia(post) + reactionHtml +
       (isPending ? '<div style="margin-top:12px;padding:8px 10px;background:#FFF8E1;color:#795548;border-radius:9px;font-size:12px;">⏳ منشورك قيد مراجعة المالك ولن يظهر للآخرين بعد.</div>' : '') +
       '<section style="border-top:1px solid #EEF1F4;margin-top:13px;padding-top:10px;">' +
         '<div style="font-weight:700;color:#607D8B;font-size:13px;margin-bottom:5px;">💬 التعليقات</div>' +
@@ -217,6 +233,7 @@
     if (postsResult.error) throw postsResult.error;
     var posts = postsResult.data || [];
     var comments = [];
+    var reactions = [];
     var ownPending = [];
     var ownPendingError = null;
     if (authUser && authUser.id) {
@@ -234,8 +251,13 @@
         .order('created_at', { ascending: true }).limit(300);
       if (commentResult.error) throw commentResult.error;
       comments = commentResult.data || [];
+      var reactionResult = await supa.rpc('social_reaction_summary', {
+        p_post_ids: posts.map(function (post) { return post.id; })
+      });
+      if (reactionResult.error) throw reactionResult.error;
+      reactions = Array.isArray(reactionResult.data) ? reactionResult.data : [];
     }
-    return { posts: posts, comments: comments, ownPending: ownPending, ownPendingError: ownPendingError };
+    return { posts: posts, comments: comments, reactions: reactions, ownPending: ownPending, ownPendingError: ownPendingError };
   }
   async function refreshNews() {
     var c = document.getElementById('newsContent');
@@ -252,10 +274,12 @@
     var c = document.getElementById('newsContent');
     if (!c) return;
     var commentsByPost = {};
+    var reactionsByPost = {};
     (data.comments || []).forEach(function (comment) {
       if (!commentsByPost[comment.post_id]) commentsByPost[comment.post_id] = [];
       commentsByPost[comment.post_id].push(comment);
     });
+    (data.reactions || []).forEach(function (item) { reactionsByPost[item.post_id] = item; });
     var html = '<div style="max-width:820px;margin:0 auto;padding:4px 0 28px;">';
     html += '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px;"><div style="font-weight:800;color:#174A7C;font-size:18px;">أخبار مجتمع تعليمي</div><button type="button" id="socialRefreshBtn" style="border:0;background:#EAF3FF;color:#1565C0;padding:8px 11px;border-radius:10px;font-weight:700;">تحديث</button></div>';
     if (role() === 'owner') html += ownerPanelMarkup();
@@ -270,7 +294,7 @@
     if (!data.posts.length) {
       html += '<div style="background:#fff;text-align:center;border-radius:16px;padding:28px 16px;color:#607D8B;box-shadow:0 3px 12px rgba(0,0,0,.05);"><div style="font-size:34px;">📰</div><p style="margin:8px 0 4px;font-weight:700;">لا توجد منشورات منشورة بعد</p><p style="font-size:13px;margin:0;">كوني أول من يشارك شيئًا مفيدًا؛ سيظهر المنشور بعد موافقة المالك.</p></div>';
     } else {
-      data.posts.forEach(function (post) { html += renderPost(post, commentsByPost[post.id] || [], false); });
+      data.posts.forEach(function (post) { html += renderPost(post, commentsByPost[post.id] || [], false, reactionsByPost[post.id]); });
     }
     html += '</div>';
     c.innerHTML = html;
@@ -278,6 +302,11 @@
     if (refresh) refresh.onclick = refreshNews;
     c.querySelectorAll('[data-social-comment]').forEach(function (button) {
       button.addEventListener('click', function () { window.addComment(button.getAttribute('data-social-comment')); });
+    });
+    c.querySelectorAll('[data-social-reaction-post]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        window.toggleSocialReaction(button.getAttribute('data-social-reaction-post'), button.getAttribute('data-social-reaction'));
+      });
     });
     c.querySelectorAll('[data-social-delete-comment]').forEach(function (button) {
       button.addEventListener('click', function () {
@@ -383,6 +412,29 @@
     } catch (error) {
       console.error('[social-news] comment failed', error);
       toast('❌ تعذر إضافة التعليق؛ قد يكون المنشور غير متاح أو يحتاج تحديثًا.');
+    }
+  };
+  window.toggleSocialReaction = async function (postId, reaction) {
+    if (!postId || !reactionOptions.some(function (item) { return item.key === reaction; })) {
+      toast('اختاري تفاعلًا صالحًا.');
+      return;
+    }
+    var buttons = Array.prototype.slice.call(document.querySelectorAll('[data-social-reaction-post]')).filter(function (button) {
+      return button.getAttribute('data-social-reaction-post') === postId;
+    });
+    buttons.forEach(function (button) { button.disabled = true; });
+    try {
+      await ensureIdentity();
+      var result = await ensureClient().rpc('social_toggle_reaction', {
+        p_post_id: postId,
+        p_reaction: reaction
+      });
+      if (result.error) throw result.error;
+      await refreshNews();
+    } catch (error) {
+      console.error('[social-news] reaction failed', error);
+      buttons.forEach(function (button) { button.disabled = false; });
+      toast('تعذر تسجيل التفاعل؛ تأكدي من الاتصال ثم حاولي مرة أخرى.');
     }
   };
   window.loadComments = async function () { return refreshNews(); };
