@@ -59,11 +59,11 @@
   function subjects() {
     var list = document.getElementById('subjectsList'), title = document.getElementById('subjectsTitle');
     if (title) title.textContent = 'الصف الأول الابتدائي — المواد';
-    var subjects = [['arabic','📖','اللغة العربية','الترم الأول • منهج الكتاب المرفق',true],['math','🔢','الرياضيات','الترم الأول • منهج الكتاب المرفق',true]];
+    var subjects = [['arabic','📖','اللغة العربية','الترم الأول • منهج الكتاب المرفق',true],['math','🔢','الرياضيات','الترم الأول • منهج الكتاب المرفق',true],['islamic','🕌','التربية الإسلامية','الفصل الدراسي الأول • منهج الكتاب المرفق',true]];
     var html = '<div style="background:linear-gradient(135deg,#E8F5E9,#E3F2FD);border-radius:22px;padding:20px;margin-bottom:16px;text-align:center;box-shadow:0 5px 18px #1565c015"><div style="font-size:50px">🎒📚</div><h2 style="color:#1565C0;margin:8px 0">مواد الصف الأول الابتدائي</h2><p style="line-height:1.9;margin:0;color:#455A64">اختر المادة، ثم ابدأ رحلة التعلم بالشرح والتدريب والتقييم.</p></div><div class="subjects-grid">';
     html += subjects.map(function (x) { return '<button class="subject-card" data-primary-subject="' + esc(x[2]) + '" style="border:2px solid ' + (x[4] ? '#1565C0' : '#ddd') + ';background:#fff;padding:16px;' + (x[4] ? '' : 'opacity:.78') + '"><div class="subject-icon" style="background:' + (x[4] ? '#E3F2FD' : '#F5F5F5') + ';color:' + (x[4] ? '#1565C0' : '#777') + '">' + x[1] + '</div><div class="subject-name">' + x[2] + '<br><small>' + x[3] + '</small></div></button>'; }).join('') + '</div><div style="margin-top:16px;text-align:center"><a href="' + SOURCE + '" target="_blank" rel="noopener" style="color:#1565C0;font-weight:bold">📚 فتح كتب الوزارة الرسمية</a></div>';
     setList(list, html);
-    document.querySelectorAll('[data-primary-subject]').forEach(function (button) { button.onclick = function () { var name = button.getAttribute('data-primary-subject'); window.currentSubject = name; if (name === 'اللغة العربية') openArabic(); else if (name === 'الرياضيات' && window.openGrade1Math) window.openGrade1Math(); else showNotice(name); }; });
+    document.querySelectorAll('[data-primary-subject]').forEach(function (button) { button.onclick = function () { var name = button.getAttribute('data-primary-subject'); window.currentSubject = name; if (name === 'اللغة العربية') openArabic(); else if (name === 'الرياضيات' && window.openGrade1Math) window.openGrade1Math(); else if (name === 'التربية الإسلامية' && window.openGrade1Islamic) window.openGrade1Islamic(); else showNotice(name); }; });
   }
   function showNotice(name) { var t = document.getElementById('termsTitle'), h = document.getElementById('termsHeader'), l = document.getElementById('termsList'); if (t) t.textContent = name; if (h) h.textContent = 'الصف الأول — ' + name; if (l) l.innerHTML = '<div class="lesson-body"><h2>' + esc(name) + '</h2><p>هذه المادة موضوعة داخل مسار الصف الأول. المحتوى التفاعلي الكامل لها سيضاف في تحديث مستقل.</p><a class="btn-primary" href="' + SOURCE + '" target="_blank">فتح كتب الوزارة</a></div>'; go('termsScreen'); }
   function openArabic() {
@@ -95,7 +95,7 @@
   var oldOpenGrade = window.openGrade;
   window.openGrade = function (id, name) { if (id === 'primary' && name === 'الأول') { window.currentStage = 'primary'; window.currentGrade = 'الأول'; subjects(); go('subjectsScreen'); return; } return oldOpenGrade.apply(this, arguments); };
   var oldOpenSubject = window.openSubject;
-  window.openSubject = function (id, name) { if (window.currentStage === 'primary' && window.currentGrade === 'الأول' && (name === 'اللغة العربية' || name === 'العربية')) { openArabic(); return; } return oldOpenSubject.apply(this, arguments); };
+  window.openSubject = function (id, name) { if (window.currentStage === 'primary' && window.currentGrade === 'الأول' && (name === 'اللغة العربية' || name === 'العربية')) { openArabic(); return; } if (window.currentStage === 'primary' && window.currentGrade === 'الأول' && name === 'التربية الإسلامية' && window.openGrade1Islamic) { window.openGrade1Islamic(); return; } return oldOpenSubject.apply(this, arguments); };
   window.openPrimaryArabicCurriculum = openArabic;
   window.PRIMARY_GRADE1_ARABIC = { units: units.length, letters: LETTERS.length, items: Object.keys(byKey).length, source: BOOK };
 })();
