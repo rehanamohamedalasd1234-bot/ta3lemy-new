@@ -175,9 +175,45 @@
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <button type="button" data-social-admin-status="pending" style="border:0;border-radius:9px;padding:9px 12px;background:#1565C0;color:white;font-weight:700;">طلبات جديدة</button>
           <button type="button" data-social-admin-status="approved" style="border:0;border-radius:9px;padding:9px 12px;background:#fff;color:#1565C0;font-weight:700;">المنشورات المنشورة</button>
+          <button type="button" id="socialStatsBtn" style="border:0;border-radius:9px;padding:9px 12px;background:#E8F5E9;color:#2E7D32;font-weight:700;">📊 إحصائيات الموجز</button>
         </div>
         <div id="socialAdminQueue" style="margin-top:12px;"></div>
+        <div id="socialAdminStats" style="margin-top:12px;"></div>
       </section>`;
+  }
+  function renderAdminStats(data) {
+    var container = document.getElementById('socialAdminStats');
+    if (!container) return;
+    var cards = [
+      ['منشورات منشورة', data.approved_posts],
+      ['بانتظار المراجعة', data.pending_posts],
+      ['التعليقات', data.total_comments],
+      ['الردود', data.total_replies],
+      ['التفاعلات', data.total_reactions]
+    ];
+    var html = '<div style="background:#fff;border:1px solid #DCE7F2;border-radius:12px;padding:12px;"><div style="font-weight:800;color:#174A7C;margin-bottom:9px;">ملخص الموجز</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(105px,1fr));gap:7px;">';
+    cards.forEach(function (item) {
+      html += '<div style="background:#F5F8FB;border-radius:9px;padding:9px;text-align:center;"><div style="font-size:18px;font-weight:800;color:#1565C0;">' + Number(item[1] || 0) + '</div><div style="font-size:11px;color:#607D8B;">' + escapeHtml(item[0]) + '</div></div>';
+    });
+    html += '</div><div style="font-weight:800;color:#174A7C;margin:13px 0 6px;">الأكثر تفاعلًا (التفاعلات + التعليقات والردود)</div>';
+    var top = Array.isArray(data.top_posts) ? data.top_posts : [];
+    if (!top.length) html += '<div style="font-size:12px;color:#78909C;">لا توجد منشورات منشورة بعد.</div>';
+    else {
+      html += '<ol style="margin:0;padding-right:22px;">';
+      top.forEach(function (post) {
+        var excerpt = String(post.preview || 'منشور وسائط').slice(0, 120);
+        html += '<li style="padding:6px 0;color:#455A64;font-size:12px;"><button type="button" data-social-jump-post="' + escapeHtml(post.id) + '" style="border:0;background:transparent;color:#1565C0;font-family:inherit;text-align:right;cursor:pointer;">' + escapeHtml(excerpt) + '</button><div>⭐ ' + Number(post.engagement || 0) + ' تفاعل · ' + Number(post.reaction_count || 0) + ' رمز · ' + Number(post.comment_count || 0) + ' تعليق/رد</div></li>';
+      });
+      html += '</ol>';
+    }
+    container.innerHTML = html + '</div>';
+    container.querySelectorAll('[data-social-jump-post]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        var post = document.getElementById('socialPost-' + button.getAttribute('data-social-jump-post'));
+        if (post && post.scrollIntoView) post.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        else toast('المنشور غير ظاهر في الصفحة الحالية؛ حدّثي الموجز لعرضه.');
+      });
+    });
   }
   function renderMedia(post) {
     var image = safeCloudinaryUrl(post.image_url, 'image');
@@ -187,16 +223,26 @@
     if (video) html += '<video controls preload="metadata" src="' + escapeHtml(video) + '" style="display:block;width:100%;max-height:520px;background:#111;border-radius:12px;margin-top:12px;"></video>';
     return html;
   }
-  function renderComment(comment, postId) {
-    return '<div style="background:#F5F7FA;border-radius:10px;padding:9px 11px;margin:7px 0;display:flex;justify-content:space-between;gap:8px;align-items:flex-start;">' +
-      '<div style="min-width:0;overflow-wrap:anywhere;"><b style="color:#1565C0;font-size:12px;">' + escapeHtml(comment.author_name || 'عضو') + '</b><div style="font-size:13px;line-height:1.6;margin-top:3px;white-space:pre-wrap;">' + escapeHtml(comment.content) + '</div></div>' +
-      (role() === 'owner' && moderationKey ? '<button type="button" data-social-delete-comment="' + escapeHtml(comment.id) + '" title="حذف التعليق" style="background:none;border:0;color:#C62828;cursor:pointer;flex-shrink:0;">✕</button>' : '') +
+  function renderComment(comment, postId, repliesByComment, isReply) {
+    var commentId = escapeHtml(comment.id);
+    var replyMarkup = '';
+    if (!isReply) {
+      var replies = repliesByComment[comment.id] || [];
+      replyMarkup = '<div style="margin:5px 0 0 14px;border-right:2px solid #D8E7F5;padding-right:10px;">' +
+        replies.map(function (reply) { return renderComment(reply, postId, repliesByComment, true); }).join('') +
+        '<button type="button" data-social-reply="' + commentId + '" style="border:0;background:transparent;color:#1976D2;font-family:inherit;font-weight:700;padding:6px 0;cursor:pointer;">↩ رد</button>' +
+        '<div id="socialReplyForm-' + commentId + '" style="display:none;gap:6px;margin:4px 0 8px;"><input type="text" id="socialReplyInput-' + commentId + '" maxlength="1000" placeholder="اكتب ردًا..." style="flex:1;min-width:0;padding:9px;border:1px solid #DCE3E9;border-radius:9px;font-family:inherit;"><button type="button" data-social-send-reply="' + commentId + '" style="background:#1976D2;color:#fff;border:0;padding:8px 12px;border-radius:9px;font-weight:700;">إرسال</button></div>' +
+        '</div>';
+    }
+    return '<div style="background:' + (isReply ? '#F8FAFC' : '#F5F7FA') + ';border-radius:10px;padding:9px 11px;margin:7px 0;display:flex;justify-content:space-between;gap:8px;align-items:flex-start;">' +
+      '<div style="min-width:0;flex:1;overflow-wrap:anywhere;"><b style="color:#1565C0;font-size:12px;">' + escapeHtml(comment.author_name || 'عضو') + '</b><div style="font-size:13px;line-height:1.6;margin-top:3px;white-space:pre-wrap;">' + escapeHtml(comment.content) + '</div>' +
+      (role() === 'owner' && moderationKey ? '<button type="button" data-social-delete-comment="' + commentId + '" title="حذف التعليق" style="background:none;border:0;color:#C62828;cursor:pointer;padding:5px 0;">حذف</button>' : '') + replyMarkup + '</div>' +
       '</div>';
   }
-  function renderPost(post, comments, isPending, reactionSummary) {
+  function renderPost(post, comments, isPending, reactionSummary, repliesByComment) {
     var postId = escapeHtml(post.id);
     var caption = post.content ? '<div style="line-height:1.75;color:#263238;white-space:pre-wrap;overflow-wrap:anywhere;margin-top:10px;">' + escapeHtml(post.content) + '</div>' : '';
-    var commentHtml = (comments || []).map(function (comment) { return renderComment(comment, postId); }).join('');
+    var commentHtml = (comments || []).map(function (comment) { return renderComment(comment, postId, repliesByComment || {}, false); }).join('');
     var reactionHtml = '';
     if (!isPending) {
       var counts = reactionSummary && reactionSummary.counts || {};
@@ -206,7 +252,7 @@
         return '<button type="button" data-social-reaction-post="' + postId + '" data-social-reaction="' + item.key + '" aria-label="' + item.label + '" aria-pressed="' + (active ? 'true' : 'false') + '" title="' + item.label + '" style="border:1px solid ' + (active ? '#1976D2' : '#DCE3E9') + ';border-radius:20px;padding:6px 10px;background:' + (active ? '#E3F2FD' : '#fff') + ';color:#29445A;font-weight:700;cursor:pointer;">' + item.emoji + ' <span>' + Number(counts[item.key] || 0) + '</span></button>';
       }).join('') + '</div>';
     }
-    return '<article style="background:#fff;border-radius:17px;padding:16px;margin-bottom:15px;box-shadow:0 3px 14px rgba(25,70,110,.08);">' +
+    return '<article id="socialPost-' + postId + '" style="background:#fff;border-radius:17px;padding:16px;margin-bottom:15px;box-shadow:0 3px 14px rgba(25,70,110,.08);">' +
       '<div style="display:flex;justify-content:space-between;gap:10px;align-items:center;">' +
         '<div><b style="color:#174A7C;">👤 ' + escapeHtml(post.author_name || 'عضو') + '</b></div>' +
         '<time style="font-size:11px;color:#90A4AE;white-space:nowrap;">' + escapeHtml(dateLabel(post.created_at)) + '</time>' +
@@ -224,6 +270,21 @@
       (post.content ? '<div style="margin-top:5px;white-space:pre-wrap;overflow-wrap:anywhere;">' + escapeHtml(post.content.slice(0,220)) + (post.content.length > 220 ? '…' : '') + '</div>' : '') + renderMedia(post) +
       '</div>';
   }
+  function renderNotifications(items) {
+    var notifications = items || [];
+    var unread = notifications.filter(function (item) { return !item.is_read; }).length;
+    var html = '<section style="background:#F1F8FF;border:1px solid #D7E8F8;border-radius:15px;padding:12px;margin-bottom:14px;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;"><div style="font-weight:800;color:#174A7C;">🔔 إشعاراتك' + (unread ? ' <span style="background:#E53935;color:white;border-radius:12px;padding:2px 8px;font-size:11px;">' + unread + ' جديدة</span>' : '') + '</div>' +
+      (unread ? '<button type="button" data-social-mark-notifications style="border:0;background:#fff;color:#1565C0;border-radius:8px;padding:7px 9px;font-weight:700;">تعليم الكل كمقروء</button>' : '') + '</div>';
+    if (!notifications.length) {
+      html += '<div style="font-size:12px;color:#607D8B;margin-top:8px;">لا توجد إشعارات جديدة.</div>';
+    } else {
+      notifications.forEach(function (item) {
+        html += '<div style="background:' + (item.is_read ? '#fff' : '#EAF3FF') + ';border-radius:10px;padding:9px 10px;margin-top:8px;font-size:13px;line-height:1.55;"><span>' + escapeHtml(item.message || 'لديك إشعار جديد.') + '</span><div style="font-size:11px;color:#78909C;margin-top:3px;">' + escapeHtml(dateLabel(item.created_at)) + '</div></div>';
+      });
+    }
+    return html + '</section>';
+  }
   async function fetchFeed() {
     var supa = ensureClient();
     await ensureIdentity();
@@ -236,6 +297,10 @@
     var reactions = [];
     var ownPending = [];
     var ownPendingError = null;
+    var notificationResult = await supa.from('social_notifications')
+      .select('id,post_id,kind,message,is_read,created_at')
+      .eq('recipient_id', authUser.id).order('created_at', { ascending: false }).limit(20);
+    if (notificationResult.error) throw notificationResult.error;
     if (authUser && authUser.id) {
       var pendingResult = await supa.from('social_posts')
         .select('id,author_name,author_role,content,image_url,video_url,status,created_at')
@@ -246,7 +311,7 @@
     }
     if (posts.length) {
       var commentResult = await supa.from('social_comments')
-        .select('id,post_id,author_name,author_role,content,created_at')
+        .select('id,post_id,parent_comment_id,author_name,author_role,content,created_at')
         .in('post_id', posts.map(function (post) { return post.id; }))
         .order('created_at', { ascending: true }).limit(300);
       if (commentResult.error) throw commentResult.error;
@@ -257,7 +322,7 @@
       if (reactionResult.error) throw reactionResult.error;
       reactions = Array.isArray(reactionResult.data) ? reactionResult.data : [];
     }
-    return { posts: posts, comments: comments, reactions: reactions, ownPending: ownPending, ownPendingError: ownPendingError };
+    return { posts: posts, comments: comments, reactions: reactions, notifications: notificationResult.data || [], ownPending: ownPending, ownPendingError: ownPendingError };
   }
   async function refreshNews() {
     var c = document.getElementById('newsContent');
@@ -274,15 +339,22 @@
     var c = document.getElementById('newsContent');
     if (!c) return;
     var commentsByPost = {};
+    var repliesByComment = {};
     var reactionsByPost = {};
     (data.comments || []).forEach(function (comment) {
-      if (!commentsByPost[comment.post_id]) commentsByPost[comment.post_id] = [];
-      commentsByPost[comment.post_id].push(comment);
+      if (comment.parent_comment_id) {
+        if (!repliesByComment[comment.parent_comment_id]) repliesByComment[comment.parent_comment_id] = [];
+        repliesByComment[comment.parent_comment_id].push(comment);
+      } else {
+        if (!commentsByPost[comment.post_id]) commentsByPost[comment.post_id] = [];
+        commentsByPost[comment.post_id].push(comment);
+      }
     });
     (data.reactions || []).forEach(function (item) { reactionsByPost[item.post_id] = item; });
     var html = '<div style="max-width:820px;margin:0 auto;padding:4px 0 28px;">';
     html += '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px;"><div style="font-weight:800;color:#174A7C;font-size:18px;">أخبار مجتمع تعليمي</div><button type="button" id="socialRefreshBtn" style="border:0;background:#EAF3FF;color:#1565C0;padding:8px 11px;border-radius:10px;font-weight:700;">تحديث</button></div>';
     if (role() === 'owner') html += ownerPanelMarkup();
+    html += renderNotifications(data.notifications);
     if (data.ownPending && data.ownPending.length) {
       html += '<section style="background:#FFF9E8;border-radius:15px;padding:13px;margin-bottom:16px;"><div style="font-weight:800;color:#795548;">منشوراتك قيد المراجعة (' + data.ownPending.length + ')</div>';
       data.ownPending.forEach(function (post) { html += pendingSummary(post); });
@@ -294,7 +366,7 @@
     if (!data.posts.length) {
       html += '<div style="background:#fff;text-align:center;border-radius:16px;padding:28px 16px;color:#607D8B;box-shadow:0 3px 12px rgba(0,0,0,.05);"><div style="font-size:34px;">📰</div><p style="margin:8px 0 4px;font-weight:700;">لا توجد منشورات منشورة بعد</p><p style="font-size:13px;margin:0;">كوني أول من يشارك شيئًا مفيدًا؛ سيظهر المنشور بعد موافقة المالك.</p></div>';
     } else {
-      data.posts.forEach(function (post) { html += renderPost(post, commentsByPost[post.id] || [], false, reactionsByPost[post.id]); });
+      data.posts.forEach(function (post) { html += renderPost(post, commentsByPost[post.id] || [], false, reactionsByPost[post.id], repliesByComment); });
     }
     html += '</div>';
     c.innerHTML = html;
@@ -302,6 +374,22 @@
     if (refresh) refresh.onclick = refreshNews;
     c.querySelectorAll('[data-social-comment]').forEach(function (button) {
       button.addEventListener('click', function () { window.addComment(button.getAttribute('data-social-comment')); });
+    });
+    c.querySelectorAll('[data-social-reply]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        var form = document.getElementById('socialReplyForm-' + button.getAttribute('data-social-reply'));
+        if (form) { form.style.display = form.style.display === 'flex' ? 'none' : 'flex'; }
+      });
+    });
+    c.querySelectorAll('[data-social-send-reply]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        var container = button.closest('[id^="commentsList-"]');
+        var postId = container ? container.id.substring('commentsList-'.length) : '';
+        window.addSocialReply(postId, button.getAttribute('data-social-send-reply'));
+      });
+    });
+    c.querySelectorAll('[data-social-mark-notifications]').forEach(function (button) {
+      button.addEventListener('click', window.markSocialNotificationsRead);
     });
     c.querySelectorAll('[data-social-reaction-post]').forEach(function (button) {
       button.addEventListener('click', function () {
@@ -319,6 +407,8 @@
     c.querySelectorAll('[data-social-admin-status]').forEach(function (button) {
       button.addEventListener('click', function () { loadAdminPosts(button.getAttribute('data-social-admin-status')); });
     });
+    var statsButton = document.getElementById('socialStatsBtn');
+    if (statsButton) statsButton.addEventListener('click', loadAdminStats);
     if (role() === 'owner' && moderationKey) loadAdminPosts(adminStatus, false);
   }
   window.openNews = async function () {
@@ -414,6 +504,41 @@
       toast('❌ تعذر إضافة التعليق؛ قد يكون المنشور غير متاح أو يحتاج تحديثًا.');
     }
   };
+  window.addSocialReply = async function (postId, parentCommentId) {
+    var input = document.getElementById('socialReplyInput-' + parentCommentId);
+    var content = String(input && input.value || '').trim();
+    if (!content || content.length > maxCommentLength) { toast('اكتب ردًا من 1 إلى 1000 حرف.'); return; }
+    try {
+      await ensureIdentity();
+      var result = await ensureClient().from('social_comments').insert({
+        post_id: postId,
+        parent_comment_id: parentCommentId,
+        author_id: authUser.id,
+        app_user_id: appUid(),
+        author_name: displayName(),
+        author_role: role(),
+        content: content
+      });
+      if (result.error) throw result.error;
+      toast('✅ تم إضافة الرد.');
+      await refreshNews();
+    } catch (error) {
+      console.error('[social-news] reply failed', error);
+      toast('تعذر إضافة الرد؛ تأكد من أن التعليق على منشور معتمد.');
+    }
+  };
+  window.markSocialNotificationsRead = async function () {
+    try {
+      await ensureIdentity();
+      var result = await ensureClient().from('social_notifications')
+        .update({ is_read: true }).eq('recipient_id', authUser.id).eq('is_read', false);
+      if (result.error) throw result.error;
+      await refreshNews();
+    } catch (error) {
+      console.error('[social-news] notification update failed', error);
+      toast('تعذر تحديث الإشعارات؛ حاولي مرة أخرى.');
+    }
+  };
   window.toggleSocialReaction = async function (postId, reaction) {
     if (!postId || !reactionOptions.some(function (item) { return item.key === reaction; })) {
       toast('اختاري تفاعلًا صالحًا.');
@@ -458,6 +583,24 @@
       moderationKey = '';
       if (input) input.value = '';
       toast('تعذر التحقق من مفتاح الإدارة أو تحميل المنشورات. استخدمي مفتاح قسم الاقتراحات والشكاوى نفسه.');
+    }
+  }
+  async function loadAdminStats() {
+    if (role() !== 'owner') { toast('الإحصائيات للمالك فقط.'); return; }
+    var input = document.getElementById('socialAdminKey');
+    var key = String(input && input.value || moderationKey).trim();
+    if (!key) { toast('أدخلي مفتاح إدارة الاقتراحات والشكاوى أولًا.'); if (input) input.focus(); return; }
+    try {
+      await ensureIdentity();
+      var result = await ensureClient().rpc('social_admin_stats', { p_admin_key: key });
+      if (result.error) throw result.error;
+      moderationKey = key;
+      if (input) input.value = '';
+      renderAdminStats(result.data || {});
+    } catch (error) {
+      console.error('[social-news] stats failed', error);
+      if (input) input.value = '';
+      toast('تعذر تحميل الإحصائيات. تحققي من مفتاح المالك والاتصال.');
     }
   }
   function renderAdminQueue() {
