@@ -18,7 +18,7 @@
     var subjects = [
       ['quran_t', 'القرآن الكريم والتفسير', '📖'], ['hadith', 'الحديث الشريف', '📜'], ['fiqh', 'الفقه', '⚖️'],
       ['aqeeda', 'أصول الدين (العقيدة)', '🕌'], ['seera', 'السيرة النبوية', '🌟'], ['nahw', 'النحو والصرف', '📝'],
-      ['balagha', 'البلاغة العربية', '📚'], ['arabic', 'اللغة العربية', '📖'], ['english', 'اللغة الإنجليزية', '🇬🇧'],
+      ['balagha', 'البلاغة العربية', '📚'], ['tawhid', 'التوحيد', '🕌'], ['arabic', 'اللغة العربية', '📖'], ['english', 'اللغة الإنجليزية', '🇬🇧'],
       ['history', 'التاريخ', '📜'], ['geo', 'الجغرافيا', '🗺️'], ['math', 'الرياضيات', '🔢']
     ];
     list.innerHTML = subjects.map(function (s) { return '<div class="azhar-subject-item" data-az3-subject="' + s[0] + '" style="border-right-color:#C9A227"><div style="font-size:30px">' + s[2] + '</div><div class="stage-info"><div class="stage-name">' + s[1] + '</div></div><div class="stage-arrow" style="color:#C9A227">‹</div></div>'; }).join('');
