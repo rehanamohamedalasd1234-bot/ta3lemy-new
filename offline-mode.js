@@ -32,6 +32,7 @@
     saveRecords(all.slice(-8));
   }
   async function offlineLogin(form) {
+    if (form.role === 'owner') return notify('دخول المالك واعتماد المنشورات يحتاجان اتصالًا بالإنترنت وتحقق Google.');
     if (!form.username || !form.password) return notify('أدخل اسم الحساب وكلمة المرور اللذين استخدمتهما على هذا الجهاز من قبل.');
     var record = readRecords().find(function (r) { return r.role === form.role && r.username === normalize(form.username); });
     if (!record) return notify('هذا الحساب لم يُجهّز للعمل دون إنترنت على هذا الجهاز. سجّلي الدخول به مرة واحدة أثناء الاتصال أولًا.');
@@ -93,6 +94,10 @@
     var original = window.login;
     window.login = async function () {
       var form = getInputs();
+      if (form.role === 'owner') {
+        if (!navigator.onLine) return notify('دخول المالك واعتماد المنشورات يحتاجان اتصالًا بالإنترنت.');
+        return original.apply(this, arguments);
+      }
       if (!navigator.onLine) return offlineLogin(form);
       var beforeUser = window.currentUser;
       try { var result = await original.apply(this, arguments); } catch (error) { console.error(error); }

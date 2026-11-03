@@ -7,6 +7,11 @@ window.addEventListener('load', function() {
     var origLogin = window.login;
     
     window.login = async function() {
+      if (window.currentRole === 'owner') {
+        if (typeof window.ownerGoogleLogin === 'function') return window.ownerGoogleLogin();
+        if(typeof showToast === 'function') showToast('تسجيل دخول المالك غير جاهز؛ حدّثي الصفحة.');
+        return;
+      }
       var u = document.getElementById('usernameInput').value.trim();
       var p = document.getElementById('passwordInput').value;
       
@@ -16,17 +21,6 @@ window.addEventListener('load', function() {
       }
       if (p.length < 4) {
         if(typeof showToast === 'function') showToast('⚠️ كلمة المرور قصيرة');
-        return;
-      }
-
-      // لو الحساب مالك
-      if (window.currentRole === 'owner') {
-        var c = document.getElementById('ownerCodeInput');
-        if (c && c.value !== '135790') {
-          if(typeof showToast === 'function') showToast('🔐 كود المالك خطأ');
-          return;
-        }
-        if (origLogin) return origLogin();
         return;
       }
 

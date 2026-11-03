@@ -1,6 +1,6 @@
 /* Ta3lemy social news feed.
- * Posts remain pending until a server-side RPC validates the existing owner admin key.
- * Supabase anonymous Auth sessions are scoped per Ta3lemy UID; see the security note in the release.
+ * Owner moderation is verified server-side from a Firebase Google ID token.
+ * Supabase anonymous Auth sessions are scoped per Ta3lemy UID.
  */
 (function () {
   'use strict';
@@ -9,9 +9,11 @@
   var client = null;
   var clientScope = '';
   var authUser = null;
-  var moderationKey = '';
   var adminStatus = 'pending';
   var adminPosts = [];
+  var ownerEmail = 'hafezzaza98@gmail.com';
+  var ownerAuthAppName = 'ta3lemy-owner-google-auth';
+  var ownerAuthObserved = false;
   var maxImageBytes = 10 * 1024 * 1024;
   var maxVideoBytes = 25 * 1024 * 1024;
   var maxTextLength = 3000;
@@ -25,6 +27,100 @@
   ];
 
   function appUser() { return window.currentUser || null; }
+  function ownerFirebaseAuth() {
+    if (!window.firebase || typeof window.firebase.auth !== 'function') throw new Error('تعذر تحميل تسجيل Google.');
+    var app;
+    try { app = window.firebase.app(ownerAuthAppName); }
+    catch (_) { app = window.firebase.initializeApp(window.firebase.app().options, ownerAuthAppName); }
+    var auth = window.firebase.auth(app);
+    if (!ownerAuthObserved) {
+      ownerAuthObserved = true;
+      auth.onAuthStateChanged(function (user) {
+        var isOwner = !!(user && String(user.email || '').toLowerCase() === ownerEmail);
+        var forget = document.getElementById('ownerGoogleForget');
+        if (forget) forget.style.display = isOwner ? 'inline-block' : 'none';
+        var status = document.getElementById('socialOwnerGoogleStatus');
+        if (status && role() === 'owner') status.textContent = isOwner ? '✅ جلسة المالك محفوظة: ' + user.email : 'يلزم تسجيل دخول المالك بحساب Google.';
+      });
+    }
+    return auth;
+  }
+  function waitForOwnerAuthState(auth) {
+    return new Promise(function (resolve) {
+      var unsubscribe = auth.onAuthStateChanged(function () {
+        if (unsubscribe) unsubscribe();
+        resolve();
+      }, function () { resolve(); });
+    });
+  }
+  async function ownerApiRequest(action, fields) {
+    var auth = ownerFirebaseAuth();
+    var user = auth.currentUser;
+    if (!user || String(user.email || '').toLowerCase() !== ownerEmail) throw new Error('سجّلي دخول المالك بحساب Google المعتمد.');
+    var token = await user.getIdToken(true);
+    var base = String(config.url || '').replace(/\/$/, '');
+    var response = await fetch(base + '/functions/v1/social-owner-moderation', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': config.publishableKey, 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify(Object.assign({ action: action }, fields || {}))
+    });
+    var body;
+    try { body = await response.json(); } catch (_) { body = {}; }
+    if (!response.ok || !body.ok) throw new Error(body.error || 'تعذر التحقق من حساب المالك.');
+    return body.data;
+  }
+  window.ownerGoogleSavedEmail = function () {
+    try { var user = ownerFirebaseAuth().currentUser; return user && String(user.email || '').toLowerCase() === ownerEmail ? user.email : ''; }
+    catch (_) { return ''; }
+  };
+  window.ownerGoogleLogin = async function () {
+    try {
+      if (!navigator.onLine) throw new Error('يلزم الاتصال بالإنترنت لتسجيل دخول المالك.');
+      var auth = ownerFirebaseAuth();
+      await auth.setPersistence(window.firebase.auth.Auth.Persistence.LOCAL);
+      await waitForOwnerAuthState(auth);
+      var user = auth.currentUser;
+      if (!user || String(user.email || '').toLowerCase() !== ownerEmail) {
+        var provider = new window.firebase.auth.GoogleAuthProvider();
+        provider.setCustomParameters({ prompt: 'select_account', login_hint: ownerEmail });
+        var result = await auth.signInWithPopup(provider);
+        user = result.user;
+      }
+      if (!user || String(user.email || '').toLowerCase() !== ownerEmail || !user.emailVerified) {
+        await auth.signOut();
+        throw new Error('اختاري حساب Google المصرح للمالك: ' + ownerEmail);
+      }
+      await ownerApiRequest('verify');
+      window.currentUser = { name: user.displayName || ownerEmail, email: ownerEmail, role: 'owner', uid: user.uid, points: 0 };
+      window.currentRole = 'owner';
+      if (Array.isArray(window.screenHistory)) window.screenHistory.length = 0;
+      if (typeof window.showScreen === 'function') window.showScreen('homeScreen');
+      toast('✅ تم التحقق من حساب المالك. افتحي «أخبار فيسبوك» للموافقة على المنشورات.');
+    } catch (error) {
+      console.error('[social-news] owner Google login failed', error);
+      var code = error && error.code || '';
+      var message = error && error.message || '';
+      if (code === 'auth/operation-not-allowed') message = 'يلزم تفعيل Google مرة واحدة في Firebase Authentication.';
+      else if (code === 'auth/unauthorized-domain') message = 'أضيفي نطاق GitHub Pages إلى النطاقات المصرح بها في Firebase Authentication.';
+      else if (code === 'auth/popup-blocked') message = 'اسمحي بالنوافذ المنبثقة ثم حاولي مرة أخرى.';
+      toast(message || 'تعذر تسجيل دخول المالك؛ حاولي مرة أخرى.');
+    }
+  };
+  window.ownerGoogleSignOutFromDevice = async function () {
+    try {
+      await ownerFirebaseAuth().signOut();
+      window.currentUser = null;
+      window.currentRole = 'student';
+      if (Array.isArray(window.screenHistory)) window.screenHistory.length = 0;
+      var forget = document.getElementById('ownerGoogleForget');
+      if (forget) forget.style.display = 'none';
+      if (typeof window.showScreen === 'function') window.showScreen('loginScreen');
+      toast('تمت إزالة جلسة المالك من هذا الجهاز.');
+    } catch (error) {
+      console.error('[social-news] owner sign-out failed', error);
+      toast('تعذر إزالة جلسة Google المحفوظة.');
+    }
+  };
   function appUid() {
     var user = appUser();
     return user && user.uid ? String(user.uid) : '';
@@ -85,7 +181,6 @@
       });
       clientScope = nextScope;
       authUser = null;
-      moderationKey = '';
       adminPosts = [];
     }
     return client;
@@ -170,12 +265,13 @@
     return `
       <section style="background:#EAF3FF;border:1px solid #C7DDF8;border-radius:16px;padding:14px;margin-bottom:16px;">
         <div style="font-weight:800;color:#174A7C;font-size:16px;margin-bottom:6px;">🛡️ مراجعة المنشورات — للمالك</div>
-        <div style="font-size:12px;color:#455A64;line-height:1.7;margin-bottom:9px;">أدخلي مفتاح إدارة الاقتراحات والشكاوى نفسه. لا نُظهر أي منشور قبل اعتماده من الخادم.</div>
-        <input id="socialAdminKey" type="password" maxlength="200" autocomplete="off" placeholder="مفتاح الإدارة" style="width:100%;box-sizing:border-box;padding:11px;border:1px solid #B0BEC5;border-radius:10px;margin-bottom:8px;">
+        <div style="font-size:12px;color:#455A64;line-height:1.7;margin-bottom:9px;">الحساب موثّق عبر Google. اضغطي زر القرار مباشرةً؛ لا يوجد مفتاح إدارة مطلوب هنا.</div>
+        <div id="socialOwnerGoogleStatus" style="font-size:12px;color:#2E7D32;margin-bottom:9px;">التحقق من جلسة المالك…</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <button type="button" data-social-admin-status="pending" style="border:0;border-radius:9px;padding:9px 12px;background:#1565C0;color:white;font-weight:700;">طلبات جديدة</button>
           <button type="button" data-social-admin-status="approved" style="border:0;border-radius:9px;padding:9px 12px;background:#fff;color:#1565C0;font-weight:700;">المنشورات المنشورة</button>
           <button type="button" id="socialStatsBtn" style="border:0;border-radius:9px;padding:9px 12px;background:#E8F5E9;color:#2E7D32;font-weight:700;">📊 إحصائيات الموجز</button>
+          <button type="button" id="socialOwnerSignOutBtn" style="border:0;border-radius:9px;padding:9px 12px;background:#FFEBEE;color:#B71C1C;font-weight:700;">إزالة حساب المالك من هذا الجهاز</button>
         </div>
         <div id="socialAdminQueue" style="margin-top:12px;"></div>
         <div id="socialAdminStats" style="margin-top:12px;"></div>
@@ -236,7 +332,7 @@
     }
     return '<div style="background:' + (isReply ? '#F8FAFC' : '#F5F7FA') + ';border-radius:10px;padding:9px 11px;margin:7px 0;display:flex;justify-content:space-between;gap:8px;align-items:flex-start;">' +
       '<div style="min-width:0;flex:1;overflow-wrap:anywhere;"><b style="color:#1565C0;font-size:12px;">' + escapeHtml(comment.author_name || 'عضو') + '</b><div style="font-size:13px;line-height:1.6;margin-top:3px;white-space:pre-wrap;">' + escapeHtml(comment.content) + '</div>' +
-      (role() === 'owner' && moderationKey ? '<button type="button" data-social-delete-comment="' + commentId + '" title="حذف التعليق" style="background:none;border:0;color:#C62828;cursor:pointer;padding:5px 0;">حذف</button>' : '') + replyMarkup + '</div>' +
+      (role() === 'owner' ? '<button type="button" data-social-delete-comment="' + commentId + '" title="حذف التعليق" style="background:none;border:0;color:#C62828;cursor:pointer;padding:5px 0;">حذف</button>' : '') + replyMarkup + '</div>' +
       '</div>';
   }
   function renderPost(post, comments, isPending, reactionSummary, repliesByComment) {
@@ -409,7 +505,12 @@
     });
     var statsButton = document.getElementById('socialStatsBtn');
     if (statsButton) statsButton.addEventListener('click', loadAdminStats);
-    if (role() === 'owner' && moderationKey) loadAdminPosts(adminStatus, false);
+    var signOutButton = document.getElementById('socialOwnerSignOutBtn');
+    if (signOutButton) signOutButton.addEventListener('click', window.ownerGoogleSignOutFromDevice);
+    var status = document.getElementById('socialOwnerGoogleStatus');
+    var savedOwnerEmail = window.ownerGoogleSavedEmail();
+    if (status) status.textContent = savedOwnerEmail ? '✅ جلسة المالك محفوظة: ' + savedOwnerEmail : 'يلزم تسجيل دخول المالك بحساب Google من شاشة الدخول.';
+    if (role() === 'owner' && savedOwnerEmail) loadAdminPosts(adminStatus, false);
   }
   window.openNews = async function () {
     if (!appUid()) { toast('سجّلي الدخول إلى المنصة أولًا.'); return; }
@@ -565,42 +666,26 @@
   window.loadComments = async function () { return refreshNews(); };
   async function loadAdminPosts(status, useInput) {
     if (role() !== 'owner') { toast('هذه القائمة للمالك فقط.'); return; }
-    var input = document.getElementById('socialAdminKey');
-    var key = useInput === false ? moderationKey : String(input && input.value || moderationKey).trim();
-    if (!key) { toast('أدخلي مفتاح إدارة الاقتراحات والشكاوى.'); if (input) input.focus(); return; }
     try {
-      await ensureIdentity();
-      var result = await ensureClient().rpc('social_admin_list', { p_admin_key: key, p_status: status || 'pending' });
-      if (result.error) throw result.error;
-      moderationKey = key;
+      var result = await ownerApiRequest('list', { status: status || 'pending' });
       adminStatus = status || 'pending';
-      adminPosts = Array.isArray(result.data) ? result.data : [];
+      adminPosts = Array.isArray(result) ? result : [];
       renderAdminQueue();
-      if (input) input.value = '';
-      if (useInput !== false) await refreshNews();
     } catch (error) {
       console.error('[social-news] admin list failed', error);
-      moderationKey = '';
-      if (input) input.value = '';
-      toast('تعذر التحقق من مفتاح الإدارة أو تحميل المنشورات. استخدمي مفتاح قسم الاقتراحات والشكاوى نفسه.');
+      adminPosts = [];
+      renderAdminQueue();
+      toast(error.message || 'تعذر التحقق من حساب المالك أو تحميل المنشورات.');
     }
   }
   async function loadAdminStats() {
     if (role() !== 'owner') { toast('الإحصائيات للمالك فقط.'); return; }
-    var input = document.getElementById('socialAdminKey');
-    var key = String(input && input.value || moderationKey).trim();
-    if (!key) { toast('أدخلي مفتاح إدارة الاقتراحات والشكاوى أولًا.'); if (input) input.focus(); return; }
     try {
-      await ensureIdentity();
-      var result = await ensureClient().rpc('social_admin_stats', { p_admin_key: key });
-      if (result.error) throw result.error;
-      moderationKey = key;
-      if (input) input.value = '';
-      renderAdminStats(result.data || {});
+      var result = await ownerApiRequest('stats');
+      renderAdminStats(result || {});
     } catch (error) {
       console.error('[social-news] stats failed', error);
-      if (input) input.value = '';
-      toast('تعذر تحميل الإحصائيات. تحققي من مفتاح المالك والاتصال.');
+      toast(error.message || 'تعذر تحميل الإحصائيات. تحققي من جلسة Google والاتصال.');
     }
   }
   function renderAdminQueue() {
@@ -614,8 +699,10 @@
       var actions = '<button type="button" data-social-edit-post="' + escapeHtml(post.id) + '" style="border:0;border-radius:8px;padding:8px 10px;background:#E3F2FD;color:#1565C0;font-weight:700;">تعديل النص</button>';
       if (post.status === 'pending') {
         actions += '<button type="button" data-social-approve-post="' + escapeHtml(post.id) + '" style="border:0;border-radius:8px;padding:8px 10px;background:#2E7D32;color:white;font-weight:700;">موافقة ونشر</button>';
+        actions += '<button type="button" data-social-reject-post="' + escapeHtml(post.id) + '" style="border:0;border-radius:8px;padding:8px 10px;background:#FFF3E0;color:#BF360C;font-weight:700;">رفض</button>';
+      } else {
+        actions += '<button type="button" data-social-delete-post="' + escapeHtml(post.id) + '" style="border:0;border-radius:8px;padding:8px 10px;background:#FFEBEE;color:#C62828;font-weight:700;">حذف</button>';
       }
-      actions += '<button type="button" data-social-delete-post="' + escapeHtml(post.id) + '" style="border:0;border-radius:8px;padding:8px 10px;background:#FFEBEE;color:#C62828;font-weight:700;">حذف</button>';
       return '<article style="background:#fff;border-radius:12px;padding:12px;margin-top:10px;border:1px solid #DCE7F2;">' +
         '<div style="font-size:12px;color:#546E7A;margin-bottom:6px;">' + escapeHtml(post.author_name || 'عضو') + ' · الدور المعلن: ' + escapeHtml(roleLabel(post.author_role)) + ' · ' + escapeHtml(dateLabel(post.created_at)) + '</div>' +
         (post.content ? '<div style="white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.65;">' + escapeHtml(post.content) + '</div>' : '') + renderMedia(post) +
@@ -636,16 +723,14 @@
   }
   async function editPost(postId) {
     var post = adminPosts.find(function (item) { return String(item.id) === String(postId); });
-    if (!post || !moderationKey) return;
+    if (!post) return;
     var text = window.prompt('عدّلي نص المنشور. اتركيه فارغًا إذا كان يحتوي على صورة أو فيديو:', post.content || '');
     if (text === null) return;
     if (text.length > maxTextLength) { toast('النص أطول من 3000 حرف.'); return; }
     try {
-      var result = await ensureClient().rpc('social_admin_edit', {
-        p_admin_key: moderationKey, p_post_id: postId, p_content: text
-      });
-      if (result.error) throw result.error;
+      await ownerApiRequest('edit', { post_id: postId, content: text });
       toast('✅ تم تعديل المنشور.');
+      await loadAdminPosts(adminStatus, false);
       await refreshNews();
     } catch (error) {
       console.error('[social-news] edit failed', error);
@@ -653,15 +738,11 @@
     }
   }
   async function decidePost(postId, action) {
-    if (!moderationKey) { toast('أدخلي مفتاح إدارة المالك أولًا.'); return; }
-    var prompts = { approve: 'نشر هذا المنشور بعد مراجعته؟', reject: 'رفض المنشور؟ لن يظهر للآخرين.', delete: 'حذف المنشور وتعليقاته نهائيًا؟' };
-    if (!window.confirm(prompts[action] || 'متابعة الإجراء؟')) return;
+    if (action === 'delete' && !window.confirm('حذف المنشور وتعليقاته نهائيًا؟')) return;
     try {
-      var result = await ensureClient().rpc('social_admin_decide', {
-        p_admin_key: moderationKey, p_post_id: postId, p_action: action
-      });
-      if (result.error) throw result.error;
+      await ownerApiRequest('decide', { post_id: postId, decision: action });
       toast(action === 'approve' ? '✅ تم اعتماد المنشور ونشره.' : action === 'reject' ? 'تم رفض المنشور.' : 'تم حذف المنشور.');
+      await loadAdminPosts(adminStatus, false);
       await refreshNews();
     } catch (error) {
       console.error('[social-news] moderation failed', error);
@@ -670,13 +751,10 @@
   }
   window.deleteNews = function (postId) { return decidePost(postId, 'delete'); };
   window.deleteComment = async function (postId, commentId) {
-    if (role() !== 'owner' || !moderationKey) { toast('افتحي قائمة مراجعة المالك أولًا.'); return; }
+    if (role() !== 'owner') { toast('حذف التعليق للمالك فقط.'); return; }
     if (!window.confirm('حذف هذا التعليق؟')) return;
     try {
-      var result = await ensureClient().rpc('social_admin_delete_comment', {
-        p_admin_key: moderationKey, p_comment_id: commentId
-      });
-      if (result.error) throw result.error;
+      await ownerApiRequest('delete_comment', { comment_id: commentId });
       toast('تم حذف التعليق.');
       await refreshNews();
     } catch (error) {
@@ -684,14 +762,11 @@
       toast('تعذر حذف التعليق.');
     }
   };
-  function clearOwnerKeyOnLogout() {
+  function resetOwnerModerationOnLogout() {
     var previousLogout = window.logout;
     if (typeof previousLogout !== 'function' || previousLogout.__socialNewsWrapped) return;
     var wrapped = function () {
-      moderationKey = '';
       adminPosts = [];
-      var input = document.getElementById('socialAdminKey');
-      if (input) input.value = '';
       return previousLogout.apply(this, arguments);
     };
     wrapped.__socialNewsWrapped = true;
@@ -701,7 +776,7 @@
   ensureNewsScreen();
   ensureComposerScreen();
   updateEntryLabels();
-  clearOwnerKeyOnLogout();
+  resetOwnerModerationOnLogout();
   window.addEventListener('load', function () { setTimeout(updateEntryLabels, 900); });
   console.log('✅ Facebook-style social news feed loaded');
 })();
