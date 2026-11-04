@@ -8,8 +8,7 @@ window.addEventListener('load', function() {
     
     window.login = async function() {
       if (window.currentRole === 'owner') {
-        if (typeof window.ownerGoogleLogin === 'function') return window.ownerGoogleLogin();
-        if(typeof showToast === 'function') showToast('تسجيل دخول المالك غير جاهز؛ حدّثي الصفحة.');
+        if (origLogin) return origLogin.apply(this, arguments);
         return;
       }
       var u = document.getElementById('usernameInput').value.trim();

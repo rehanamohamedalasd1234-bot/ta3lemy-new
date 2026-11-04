@@ -1,13 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { createRemoteJWKSet, jwtVerify } from "npm:jose@5.10.0";
 
-const FIREBASE_PROJECT_ID = "ta3lemt-hafez";
 const OWNER_EMAIL = "hafezzaza98@gmail.com";
 const ALLOWED_ORIGIN = "https://rehanamohamedalasd1234-bot.github.io";
-const ISSUER = `https://securetoken.google.com/${FIREBASE_PROJECT_ID}`;
-const FIREBASE_JWKS = createRemoteJWKSet(
-  new URL("https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com"),
-);
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
@@ -29,7 +23,7 @@ function getAdminClient() {
   const secretMap = Deno.env.get("SUPABASE_SECRET_KEYS");
   let secretKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
   if (!secretKey && secretMap) {
-    try { secretKey = String(JSON.parse(secretMap).default || ""); } catch (_) { /* handled below */ }
+    try { secretKey = String(JSON.parse(secretMap).default || ""); } catch (_) { /* checked below */ }
   }
   if (!url || !secretKey) throw new Error("Server configuration unavailable");
   return createClient(url, secretKey, {
@@ -37,37 +31,20 @@ function getAdminClient() {
   });
 }
 
-async function verifyOwnerToken(request: Request) {
+async function verifyOwnerToken(request: Request, admin: ReturnType<typeof getAdminClient>) {
   const authorization = request.headers.get("authorization") || "";
   const match = authorization.match(/^Bearer\s+(.+)$/i);
   if (!match) throw new Response("Unauthorized", { status: 401 });
 
-  let verified;
-  try {
-    verified = await jwtVerify(match[1], FIREBASE_JWKS, {
-      issuer: ISSUER,
-      audience: FIREBASE_PROJECT_ID,
-      algorithms: ["RS256"],
-    });
-  } catch (_) {
-    throw new Response("Unauthorized", { status: 401 });
-  }
-  const { payload, protectedHeader } = verified;
-  const firebaseClaims = payload.firebase && typeof payload.firebase === "object"
-    ? payload.firebase as Record<string, unknown>
-    : {};
-  const email = typeof payload.email === "string" ? payload.email.trim().toLowerCase() : "";
-  const authTime = Number(payload.auth_time || 0);
-  const now = Math.floor(Date.now() / 1000);
+  const { data, error } = await admin.auth.getUser(match[1]);
+  if (error || !data.user) throw new Response("Unauthorized", { status: 401 });
 
-  if (!protectedHeader.kid || typeof payload.sub !== "string" || !payload.sub || payload.sub.length > 128) {
-    throw new Response("Unauthorized", { status: 401 });
-  }
-  if (email !== OWNER_EMAIL || payload.email_verified !== true || firebaseClaims.sign_in_provider !== "google.com") {
+  const user = data.user;
+  const email = String(user.email || "").trim().toLowerCase();
+  if (email !== OWNER_EMAIL || !user.email_confirmed_at) {
     throw new Response("Forbidden", { status: 403 });
   }
-  if (!authTime || authTime > now + 30) throw new Response("Unauthorized", { status: 401 });
-  return { uid: payload.sub, email };
+  return { id: user.id, email };
 }
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -82,17 +59,18 @@ Deno.serve(async (request: Request) => {
   if (request.method !== "POST") return jsonResponse(405, { error: "Method not allowed" });
 
   try {
-    const owner = await verifyOwnerToken(request);
     const text = await request.text();
     if (text.length > 12000) return jsonResponse(413, { error: "Request too large" });
     let input: Record<string, unknown>;
     try { input = JSON.parse(text); } catch (_) { return jsonResponse(400, { error: "Invalid JSON" }); }
+
+    const admin = getAdminClient();
+    const owner = await verifyOwnerToken(request, admin);
     const action = String(input.action || "");
     if (action === "verify") {
       return jsonResponse(200, { ok: true, data: { email: owner.email } });
     }
 
-    const admin = getAdminClient();
     let result;
     if (action === "list") {
       const status = input.status === "approved" ? "approved" : "pending";
@@ -129,7 +107,7 @@ Deno.serve(async (request: Request) => {
   } catch (error) {
     if (error instanceof Response) {
       const status = error.status;
-      return jsonResponse(status, { error: status === 403 ? "هذا الحساب غير مخوّل لإدارة المنشورات." : "جلسة Google غير صالحة؛ سجّلي الدخول مجددًا." });
+      return jsonResponse(status, { error: status === 403 ? "هذا البريد غير مخوّل لإدارة المنشورات." : "جلسة المالك غير صالحة؛ سجّلي الدخول مجددًا." });
     }
     console.error("Owner moderation request failed", error instanceof Error ? error.message : "unknown error");
     return jsonResponse(500, { error: "تعذر الاتصال بخدمة مراجعة المالك." });

@@ -270,19 +270,13 @@
           }
           return window.teacherPhoneLogin();
         }
-        if (window.currentRole === 'owner') {
-          if (typeof window.ownerGoogleLogin !== 'function') {
-            if (typeof showToast === 'function') showToast('تسجيل دخول المالك غير جاهز؛ حدّثي الصفحة.');
-            return;
-          }
-          if (typeof origLogin === 'function') return origLogin.apply(this, arguments);
-          return window.ownerGoogleLogin();
-        }
         var unameEl = document.getElementById('usernameInput');
         var pwdEl = document.getElementById('passwordInput');
+        var ownerCodeEl = document.getElementById('ownerCodeInput');
         
         var uname = unameEl ? unameEl.value.trim() : '';
         var pwd = pwdEl ? pwdEl.value : '';
+        var ownerCode = ownerCodeEl ? ownerCodeEl.value : '';
         
         if (!uname || uname.length < 3) {
           if(typeof showToast === 'function') showToast('⚠️ اسم المستخدم 3 أحرف على الأقل');
@@ -290,6 +284,29 @@
         }
         if (pwd.length < 4) {
           if(typeof showToast === 'function') showToast('⚠️ كلمة المرور 4 أحرف على الأقل');
+          return;
+        }
+
+        if (window.currentRole === 'owner') {
+          if (ownerCode !== '135790') {
+            await window.logLogin(uname, 'owner', false, 'owner code wrong');
+            if(typeof showToast === 'function') showToast('🔐 كود المالك خطأ');
+            return;
+          }
+          try {
+            await origLogin.apply(this, arguments);
+            syncChatProfileAfterPlatformLogin();
+            await window.logLogin(uname, 'owner', true, '');
+            if(window.currentUser) {
+              localStorage.setItem('lastUser', JSON.stringify({
+                name: window.currentUser.name,
+                displayName: window.currentUser.displayName || window.currentUser.name,
+                uid: window.currentUser.uid,
+                role: 'owner',
+                points: window.currentUser.points || 0
+              }));
+            }
+          } catch(e){ console.error(e); }
           return;
         }
         
