@@ -1,7 +1,7 @@
 // Service Worker for the Hafez educational platform.
 // Shell files are prefetched for offline launch; media is stored only when the user explicitly downloads it.
 const CACHE_PREFIX = 'ta3lemy-shell-';
-const CACHE_NAME = CACHE_PREFIX + '1.0.89';
+const CACHE_NAME = CACHE_PREFIX + '1.0.90';
 const MEDIA_CACHE_NAME = 'ta3lemy-media-v1';
 const APP_SHELL = [
   './', './index.html', './extras.js', './curriculum-display-fix.js', './offline-mode.js', './navigation-fix.js', './service-worker.js', './manifest.json', './version.json', './auth-init.js', './fix-canvas.css',
@@ -14,6 +14,7 @@ const APP_SHELL = [
   './supabase-chat-config.js', './supabase-call-alerts.js', './supabase-private-chat.js', './feedback-system.js', './social-news.js',
   './admin-system.js', './kindergarten-languages.js', './kg1-arabic-structure.js', './kg1-arabic-2026-2027-t1.json', './kg1-english-structure.js', './kg1-english-2026-2027-t1.json', './kg2-english-structure.js', './kg2-english-2026-2027-t1.json', './azhar-sec3-balagha-structure.js', './azhar-sec3-balagha-content.json', './azhar-sec3-tawhid-structure.js', './azhar-sec3-tawhid-content.json', './azhar-sec3-tafsir-structure.js', './azhar-sec3-ibn-aqil-structure.js', './azhar-sec3-adab-structure.js', './azhar-sec3-mock-exams.js', './azhar-sec3-fiqh-maliki-structure.js', './azhar-sec3-fiqh-maliki-content.json', './azhar-sec3-fiqh-shafii-structure.js', './azhar-sec3-fiqh-shafii-content.json', './icon-512.png'
 ];
+APP_SHELL.push('./azhar-sec3-reading-insha-structure.js');
 const APP_SHELL_PATHS = new Set(APP_SHELL.map(file => new URL(file, self.registration.scope).pathname));
 const EXTERNAL_SHELL = [
   'https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js',

@@ -10,7 +10,7 @@
   var PREP_GRADES = ['الأول الإعدادي', 'الثاني الإعدادي', 'الثالث الإعدادي'];
   var SECONDARY_GRADES = ['الأول الثانوي', 'الثاني الثانوي', 'الثالث الثانوي'];
 
-  function course(id, subject, name, branches, grades, detail, subgroup) {
+  function course(id, subject, name, branches, grades, detail, subgroup, branchCourseIds) {
     return {
       id: id,
       subject: subject,
@@ -18,7 +18,8 @@
       branches: branches || [],
       grades: grades || [],
       detail: detail || '',
-      subgroup: subgroup || ''
+      subgroup: subgroup || '',
+      branchCourseIds: branchCourseIds || {}
     };
   }
 
@@ -75,23 +76,37 @@
         {
           name: 'المواد الشرعية',
           courses: [
-            course('sec-quran', 'القرآن الكريم والتفسير', 'القرآن الكريم', ['القرآن الكريم'], null, 'القرآن الكريم'),
-            course('sec-tafsir', 'القرآن الكريم والتفسير', 'التفسير وعلومه', ['التفسير وعلومه'], null, 'التفسير وعلومه'),
-            course('sec-hadith', 'الحديث الشريف', 'الحديث وعلومه', ['الحديث وعلومه'], null, 'الحديث وعلومه'),
-            course('sec-tawheed', 'أصول الدين (العقيدة)', 'التوحيد (العقيدة)', [], null, 'العقيدة والتوحيد'),
-            course('sec-fiqh', 'الفقه', 'الفقه', MADHHABS, null, 'اختر المذهب المعتمد'),
+            course('sec-quran', 'القرآن الكريم والتفسير', 'القرآن الكريم', [], null, 'القرآن الكريم'),
+            course('sec-tafsir', 'التفسير', 'التفسير وعلومه', [], null, 'التفسير وعلومه', 'أصول الدين'),
+            course('sec-hadith', 'الحديث الشريف', 'الحديث وعلومه', [], null, 'الحديث وعلومه'),
+            course('sec-tawheed', 'التوحيد', 'التوحيد (العقيدة)', [], null, 'العقيدة والتوحيد', 'أصول الدين'),
+            course('sec-fiqh', 'الفقه', 'الفقه', MADHHABS, null, 'اختر المذهب المعتمد', '', {
+              'المذهب الشافعي': 'fiqh_shafii',
+              'المذهب المالكي': 'fiqh_maliki'
+            }),
+            course('sec-seera', 'السيرة النبوية', 'السيرة النبوية', [], ['الثالث الثانوي'], 'السيرة النبوية'),
             course('sec-inheritance', 'الميراث', 'الميراث', [], ['الثاني الثانوي', 'الثالث الثانوي'], 'يظهر في الصفوف المتقدمة حسب الخطة الدراسية')
           ]
         },
         {
           name: 'مواد اللغة العربية',
           courses: [
-            course('sec-nahw', 'النحو والصرف', 'النحو', ['النحو'], null, 'النحو'),
-            course('sec-sarf', 'النحو والصرف', 'الصرف', ['الصرف'], null, 'الصرف'),
-            course('sec-balagha', 'البلاغة', 'البلاغة', [], null, 'البلاغة'),
-            course('sec-literature-texts-reading', 'الأدب والنصوص والمطالعة', 'الأدب والنصوص والمطالعة', [], null, 'الأدب • النصوص • المطالعة'),
-            course('sec-insha', 'الإنشاء', 'الإنشاء', [], null, 'الإنشاء'),
+            course('sec-nahw', 'النحو', 'النحو', [], null, 'النحو'),
+            course('sec-sarf', 'الصرف', 'الصرف', [], null, 'الصرف'),
+            course('sec-balagha', 'البلاغة العربية', 'البلاغة', [], null, 'البلاغة'),
+            course('sec-literature-texts-reading', 'الأدب والنصوص والمطالعة', 'الأدب والنصوص', [], null, 'الأدب • النصوص'),
+            course('sec-insha', 'الإنشاء', 'الإنشاء', [], ['الأول الثانوي', 'الثاني الثانوي'], 'الإنشاء'),
+            course('sec-reading-insha', 'المطالعة والإنشاء', 'المطالعة والإنشاء', [], ['الثالث الثانوي'], '10 موضوعات مطالعة و9 فنون إنشائية', 'المطالعة • فن الإنشاء'),
             course('sec-arud-qafiya', 'العروض والقافية', 'العروض والقافية', [], ['الثاني الثانوي'], 'يظهر في الصف الثاني الثانوي وفق الخطة الدراسية')
+          ]
+        },
+        {
+          name: 'مواد عامة',
+          courses: [
+            course('sec-english', 'اللغة الإنجليزية', 'اللغة الإنجليزية', [], ['الثالث الثانوي'], 'مادة عامة — الصف الثالث الثانوي'),
+            course('sec-history', 'التاريخ', 'التاريخ', [], ['الثالث الثانوي'], 'مادة عامة — الصف الثالث الثانوي'),
+            course('sec-geography', 'الجغرافيا', 'الجغرافيا', [], ['الثالث الثانوي'], 'مادة عامة — الصف الثالث الثانوي'),
+            course('sec-math', 'الرياضيات', 'الرياضيات', [], ['الثالث الثانوي'], 'مادة عامة — الصف الثالث الثانوي')
           ]
         }
       ]
@@ -122,6 +137,7 @@
           grades: item.grades.slice(),
           detail: item.detail,
           subgroup: item.subgroup,
+          branchCourseIds: Object.assign({}, item.branchCourseIds),
           group: group.name
         });
       });
@@ -144,8 +160,32 @@
             grades: item.grades.slice(),
             detail: item.detail,
             subgroup: item.subgroup,
+            branchCourseIds: Object.assign({}, item.branchCourseIds),
             group: stage.groups[i].name
           };
+        }
+      }
+    }
+    for (var groupIndex = 0; groupIndex < stage.groups.length; groupIndex++) {
+      for (var courseIndex = 0; courseIndex < stage.groups[groupIndex].courses.length; courseIndex++) {
+        var parent = stage.groups[groupIndex].courses[courseIndex];
+        var branchNames = Object.keys(parent.branchCourseIds || {});
+        for (var branchIndex = 0; branchIndex < branchNames.length; branchIndex++) {
+          var branchName = branchNames[branchIndex];
+          if (parent.branchCourseIds[branchName] === courseId) {
+            return {
+              id: courseId,
+              parentId: parent.id,
+              subject: parent.subject,
+              name: parent.name + ' — ' + branchName,
+              branches: [],
+              grades: parent.grades.slice(),
+              detail: parent.detail,
+              subgroup: parent.subgroup,
+              branch: branchName,
+              group: stage.groups[groupIndex].name
+            };
+          }
         }
       }
     }
@@ -158,7 +198,8 @@
     isAzharStage: isAzharStage,
     getStage: getStage,
     getCourses: getCourses,
-    getCourse: getCourse
+    getCourse: getCourse,
+    installStyle: installStyle
   };
 
   function escapeHtml(value) {
@@ -171,13 +212,14 @@
     if (document.getElementById('azharCurriculumStyle')) return;
     var style = document.createElement('style');
     style.id = 'azharCurriculumStyle';
-    style.textContent = '.azhar-curriculum-group{margin:0 0 18px}.azhar-curriculum-group-title{margin:15px 0 8px;padding:9px 12px;border-right:4px solid #C9A227;background:#FFF8E1;border-radius:8px;color:#66510A;font-size:15px;font-weight:700}.azhar-curriculum-subject{display:flex;align-items:center;gap:12px;width:100%;margin:0 0 9px;padding:14px;border:1px solid #eee6c8;border-right:5px solid #C9A227;border-radius:13px;background:#fff;text-align:right;font:inherit;cursor:pointer}.azhar-curriculum-subject-icon{font-size:27px}.azhar-curriculum-subject-copy{flex:1}.azhar-curriculum-subject-name{font-weight:700;color:#333}.azhar-curriculum-subject-detail{margin-top:4px;color:#777;font-size:12px;line-height:1.6}.azhar-curriculum-subject-arrow{color:#C9A227;font-size:22px}';
+    style.textContent = '.azhar-curriculum-intro{margin:0 0 12px;padding:12px 14px;border-right:5px solid #C9A227;border-radius:12px;background:#FFF8E1;color:#66510A;font-weight:700}.azhar-curriculum-group{margin:0 0 18px}.azhar-curriculum-group-title{margin:15px 0 8px;padding:9px 12px;border-right:4px solid #C9A227;background:#FFF8E1;border-radius:8px;color:#66510A;font-size:15px;font-weight:700}.azhar-curriculum-subject{display:flex;align-items:center;gap:12px;width:100%;margin:0 0 9px;padding:14px;border:1px solid #eee6c8;border-right:5px solid #C9A227;border-radius:13px;background:#fff;text-align:right;font:inherit;cursor:pointer}.azhar-curriculum-subject-icon{font-size:27px}.azhar-curriculum-subject-copy{flex:1}.azhar-curriculum-subject-name{font-weight:700;color:#333}.azhar-curriculum-subject-detail{margin-top:4px;color:#777;font-size:12px;line-height:1.6}.azhar-curriculum-subject-arrow{color:#C9A227;font-size:22px}';
     document.head.appendChild(style);
   }
 
   var icons = {
     'المواد الشرعية': '🕌',
-    'مواد اللغة العربية': '📖'
+    'مواد اللغة العربية': '📖',
+    'مواد عامة': '🗂️'
   };
 
   window.openAzharGrade = function (gradeName) {
@@ -206,26 +248,79 @@
     for (var i = 0; i < buttons.length; i++) {
       buttons[i].addEventListener('click', function () {
         var item = getCourse(stageId, this.getAttribute('data-azhar-course'));
-        if (item) window.openAzharSubject(item.id, item.name, item.group);
+        if (item) {
+          window.currentAzharCourseId = item.id;
+          window.currentAzharCourseGroup = item.group;
+          window.currentAzharSubjectGroup = item.group;
+          window.currentAzharCourseBranch = '';
+          window.openAzharSubject(item.id, item.name, item.group);
+        }
       });
     }
     if (typeof screenHistory !== 'undefined' && typeof currentScreen !== 'undefined') screenHistory.push(currentScreen);
     if (window.showScreen) window.showScreen('azharScreen');
   };
 
-  window.openAzharSubject = function (courseId, name, groupName) {
+  window.openAzharSubject = function (courseId, name, groupName, branch) {
     var stageId = typeof currentStage !== 'undefined' ? currentStage : '';
+    window.currentAzharCourseId = courseId || '';
     var item = getCourse(stageId, courseId);
+    if (item && branch && item.branches.indexOf(branch) < 0) return;
+    if (item && item.branches.length > 1 && !branch) {
+      currentSubject = item.subject;
+      window.currentAzharCourseGroup = item.group;
+      window.currentAzharSubjectGroup = item.group;
+      window.currentAzharCourseBranch = '';
+      window.currentAzharSubjectBranch = '';
+      window.currentAzharCourseLabel = item.name;
+      installStyle();
+      var choiceList = document.getElementById('termsList');
+      var choiceTitle = document.getElementById('termsTitle');
+      var choiceHeader = document.getElementById('termsHeader');
+      if (!choiceList) return;
+      if (choiceTitle) choiceTitle.textContent = 'اختر الفرع — ' + item.name;
+      if (choiceHeader) choiceHeader.textContent = item.name + ' • الصف ' + (typeof currentGrade !== 'undefined' ? currentGrade : '');
+      choiceList.innerHTML = '<div class="azhar-curriculum-intro">اختر الفرع أو المذهب المطابق لدراستك، وستظهر أعمال المعلم المعتمدة لهذا الاختيار.</div><section class="azhar-curriculum-group"><h3 class="azhar-curriculum-group-title">' + escapeHtml(item.name) + '</h3>' + item.branches.map(function (value) { return '<button type="button" class="azhar-curriculum-subject" data-azhar-branch="' + escapeHtml(value) + '"><span class="azhar-curriculum-subject-icon">📚</span><span class="azhar-curriculum-subject-copy"><span class="azhar-curriculum-subject-name">' + escapeHtml(value) + '</span><span class="azhar-curriculum-subject-detail">اختيار الفرع الدراسي</span></span><span class="azhar-curriculum-subject-arrow">‹</span></button>'; }).join('') + '</section>';
+      var branchButtons = choiceList.querySelectorAll('[data-azhar-branch]');
+      for (var branchIndex = 0; branchIndex < branchButtons.length; branchIndex++) {
+        branchButtons[branchIndex].addEventListener('click', function () {
+          var selectedBranch = this.getAttribute('data-azhar-branch');
+          window.currentAzharCourseId = item.id;
+          window.currentAzharCourseGroup = item.group;
+          window.currentAzharSubjectGroup = item.group;
+          window.currentAzharCourseBranch = selectedBranch;
+          window.currentAzharSubjectBranch = selectedBranch;
+          window.currentAzharCourseLabel = item.name + ' — ' + selectedBranch;
+          var branchCourseId = item.branchCourseIds && item.branchCourseIds[selectedBranch];
+          if (branchCourseId) {
+            window.openAzharSubject(branchCourseId, item.name + ' — ' + selectedBranch);
+          } else {
+            window.openAzharSubject(item.id, item.name, item.group, selectedBranch);
+          }
+          currentSubject = item.subject;
+          window.currentAzharCourseId = item.id;
+          window.currentAzharCourseBranch = selectedBranch;
+          window.currentAzharSubjectBranch = selectedBranch;
+          window.currentAzharCourseLabel = item.name + ' — ' + selectedBranch;
+        });
+      }
+      if (typeof screenHistory !== 'undefined' && typeof currentScreen !== 'undefined') screenHistory.push(currentScreen);
+      if (window.showScreen) window.showScreen('termsScreen');
+      return;
+    }
     if (!item) {
       currentSubject = name || courseId || '';
       window.currentAzharSubjectGroup = groupName || '';
       window.currentAzharSubjectBranch = '';
+      window.currentAzharCourseBranch = '';
       window.currentAzharCourseLabel = name || currentSubject;
     } else {
       currentSubject = item.subject;
       window.currentAzharSubjectGroup = item.group;
-      window.currentAzharSubjectBranch = '';
-      window.currentAzharCourseLabel = item.name;
+      window.currentAzharSubjectBranch = branch || (item.branches.length === 1 ? item.branches[0] : '');
+      window.currentAzharCourseBranch = window.currentAzharSubjectBranch;
+      window.currentAzharCourseGroup = item.group;
+      window.currentAzharCourseLabel = item.name + (window.currentAzharCourseBranch ? ' — ' + window.currentAzharCourseBranch : '');
     }
     var title = document.getElementById('termsTitle');
     var header = document.getElementById('termsHeader');

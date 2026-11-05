@@ -9,6 +9,7 @@
   var db = window.firebase && window.firebase.firestore ? window.firebase.firestore() : null;
   var liveRefreshTimer = null;
   var teacherDirectoryState = null;
+  var teacherDirectoryFilter = null;
 
   function toast(message) { if (window.showToast) window.showToast(message); else console.log(message); }
   function uid() { return window.currentUser && window.currentUser.uid ? String(window.currentUser.uid) : ''; }
@@ -99,6 +100,20 @@
     return details.join(' • ');
   }
   function teacherTermName(term) { return Number(term) === 2 ? 'الترم الثاني' : 'الترم الأول'; }
+  function applyTeacherDirectoryFilter(docs) {
+    if (!teacherDirectoryFilter) return docs;
+    var filter = teacherDirectoryFilter;
+    return docs.filter(function (doc) {
+      var item = doc.data() || {};
+      if (filter.stage && item.stage !== filter.stage) return false;
+      if (filter.grade && item.grade !== filter.grade) return false;
+      if (filter.subject && item.subject !== filter.subject) return false;
+      if (filter.term !== null && filter.term !== undefined && Number(item.term || 1) !== Number(filter.term)) return false;
+      if (filter.branch && item.branch !== filter.branch) return false;
+      if (filter.curriculumId && item.curriculumId && item.curriculumId !== filter.curriculumId) return false;
+      return true;
+    });
+  }
   function renderTeacherDirectory(docs) {
     var list = document.getElementById('teacherDirectoryScreenContent');
     if (!list) return;
@@ -132,7 +147,8 @@
     });
     list.innerHTML = html;
   }
-  window.openTeacherDirectory = async function () {
+  window.openTeacherDirectory = async function (filter) {
+    teacherDirectoryFilter = filter || null;
     styleOnce();
     screen('teacherDirectoryScreen', '👨‍🏫 شرح الأستاذ', 'linear-gradient(135deg,#00695C,#26A69A)');
     enterScreen('teacherDirectoryScreen');
@@ -151,6 +167,7 @@
           docs = saved.filter(function (item) { return item && item.type === 'teacher_explanation'; }).map(function (item) { return { id: String(item.id), data: function () { return item; } }; });
         } catch (cacheError) { console.warn('Offline teacher content unavailable', cacheError); }
       }
+      docs = applyTeacherDirectoryFilter(docs);
       docs.sort(function (a, b) { var ad = a.data() || {}; var bd = b.data() || {}; return String(bd.created_at || bd.createdAt || '').localeCompare(String(ad.created_at || ad.createdAt || '')); });
       renderTeacherDirectory(docs);
     } catch (error) {
@@ -160,6 +177,7 @@
         var cached = JSON.parse(localStorage.getItem('offline_lessons') || '[]');
         savedDocs = cached.filter(function (item) { return item && item.type === 'teacher_explanation'; }).map(function (item) { return { id: String(item.id), data: function () { return item; } }; });
       } catch (cacheError) { console.warn(cacheError); }
+      savedDocs = applyTeacherDirectoryFilter(savedDocs);
       if (savedDocs.length) renderTeacherDirectory(savedDocs);
       else list.innerHTML = '<div class="tw-empty">تعذر تحميل قائمة المعلمين. تحقق من الاتصال، أو افتحها بعد الاتصال بالإنترنت أول مرة.</div>';
     }
@@ -191,17 +209,75 @@
     if (teacherDirectoryState) renderTeacherDirectory(teacherDirectoryState.docs);
   };
 
+  window.openAzharTeacherDirectory = function (termNumber) {
+    if (!window.openTeacherDirectory) return;
+    var stageId = typeof currentStage !== 'undefined' ? currentStage : '';
+    var azhar = String(stageId).indexOf('azhar_') === 0;
+    return window.openTeacherDirectory({
+      stage: stageId, grade: typeof currentGrade !== 'undefined' ? currentGrade : '',
+      subject: typeof currentSubject !== 'undefined' ? currentSubject : '',
+      curriculumId: azhar ? window.currentAzharCourseId || '' : '',
+      branch: azhar ? window.currentAzharCourseBranch || '' : '',
+      term: termNumber == null ? null : Number(termNumber)
+    });
+  };
   // Replace the exercise tile with the teacher's approved work feed.
   window.renderTerms = function () {
     var list = document.getElementById('termsList');
     if (!list) return;
     var terms = [{ num: 1, name: 'الترم الأول', icon: '📘' }, { num: 2, name: 'الترم الثاني', icon: '📙' }];
     list.innerHTML = terms.map(function (term) {
-      return '<div class="term-card ' + (term.num === 2 ? 'term-2' : '') + '"><div class="term-header"><div class="term-icon">' + term.icon + '</div><div class="term-title">' + term.name + '</div><div class="term-count">منهج كامل</div></div><div class="term-sections"><div class="section-chip" onclick="openContent(\'lessons\',' + term.num + ',\'' + term.name + '\')">📄 الدروس</div><div class="section-chip" onclick="openContent(\'exams\',' + term.num + ',\'' + term.name + '\')">📝 امتحانات</div><div class="section-chip" onclick="openContent(\'videos\',' + term.num + ',\'' + term.name + '\')">🎥 فيديوهات</div></div></div>';
+      return '<div class="term-card ' + (term.num === 2 ? 'term-2' : '') + '"><div class="term-header"><div class="term-icon">' + term.icon + '</div><div class="term-title">' + term.name + '</div><div class="term-count">منهج كامل</div></div><div class="term-sections"><div class="section-chip" onclick="openContent(\'lessons\',' + term.num + ',\'' + term.name + '\')">📄 الدروس</div><div class="section-chip" onclick="openContent(\'exercises\',' + term.num + ',\'' + term.name + '\')">✏️ تدريبات</div><div class="section-chip" onclick="openContent(\'exams\',' + term.num + ',\'' + term.name + '\')">📝 امتحانات</div><div class="section-chip" onclick="openContent(\'videos\',' + term.num + ',\'' + term.name + '\')">🎥 فيديوهات</div><div class="section-chip" data-azhar-teacher-course="1" onclick="openContent(\'teacher_explanation\',' + term.num + ',\'' + term.name + '\')">👨‍🏫 شرح الأستاذ</div></div></div>';
     }).join('');
+    var teacherTiles = list.querySelectorAll('[data-azhar-teacher-course]');
+    for (var tileIndex = 0; tileIndex < teacherTiles.length; tileIndex++) {
+      teacherTiles[tileIndex].onclick = function () {
+        var card = this.parentNode && this.parentNode.parentNode;
+        var termTitle = card && card.querySelector('.term-title');
+        var termNumber = termTitle && termTitle.textContent.indexOf('الثاني') >= 0 ? 2 : 1;
+        window.openAzharTeacherDirectory(termNumber);
+      };
+    }
   };
+  function ensureAzharTeacherCourseButtons() {
+    if (String(window.currentStage || '').indexOf('azhar_') !== 0 || !window.currentAzharCourseId) return;
+    var terms = document.getElementById('termsList');
+    if (!terms) return;
+    var sections = terms.querySelectorAll('.term-card .term-sections');
+    for (var i = 0; i < sections.length; i++) {
+      var existingLinks = sections[i].querySelectorAll('button, .section-chip');
+      var hasTeacherLink = false;
+      for (var j = 0; j < existingLinks.length; j++) {
+        if (String(existingLinks[j].textContent || '').indexOf('شرح الأستاذ') >= 0) hasTeacherLink = true;
+      }
+      if (hasTeacherLink || sections[i].querySelector('[data-azhar-teacher-course]')) continue;
+      var button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'section-chip';
+      button.setAttribute('data-azhar-teacher-course', '1');
+      button.textContent = '👨‍🏫 شرح الأستاذ';
+      button.onclick = function () {
+        if (window.openTeacherDirectory) window.openTeacherDirectory({
+          stage: window.currentStage || '', grade: window.currentGrade || '', subject: window.currentSubject || '',
+          curriculumId: window.currentAzharCourseId || '', branch: window.currentAzharCourseBranch || '', term: null
+        });
+      };
+      sections[i].appendChild(button);
+    }
+  }
+  var termsForTeacherFeed = document.getElementById('termsList');
+  if (termsForTeacherFeed && window.MutationObserver) {
+    var teacherFeedObserver = new window.MutationObserver(ensureAzharTeacherCourseButtons);
+    teacherFeedObserver.observe(termsForTeacherFeed, { childList: true, subtree: true });
+  }
   window.openContent = async function (type, termNumber, termName) {
-    if (type === 'teacher_explanation') { await window.openTeacherDirectory(); return; }
+    if (type === 'teacher_explanation') {
+      await window.openTeacherDirectory({
+        stage: currentStage || '', grade: currentGrade || '', subject: currentSubject || '',
+        curriculumId: window.currentAzharCourseId || '', branch: window.currentAzharCourseBranch || '', term: termNumber
+      });
+      return;
+    }
     currentTerm = termNumber;
     currentSection = type;
     var titles = { lessons: '📄 الدروس', teacher_explanation: '👨‍🏫 شرح الأستاذ', exercises: '✏️ تدريبات', exams: '📝 امتحانات', videos: '🎥 فيديوهات' };
