@@ -1,6 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const OWNER_EMAIL = "hafezzaza98@gmail.com";
 const ALLOWED_ORIGIN = "https://rehanamohamedalasd1234-bot.github.io";
 
 const corsHeaders = {
@@ -31,7 +30,7 @@ function getAdminClient() {
   });
 }
 
-async function verifyOwnerToken(request: Request, admin: ReturnType<typeof getAdminClient>) {
+async function verifyOwnerToken(request: Request, admin: ReturnType<typeof getAdminClient>, input: Record<string, unknown>) {
   const authorization = request.headers.get("authorization") || "";
   const match = authorization.match(/^Bearer\s+(.+)$/i);
   if (!match) throw new Response("Unauthorized", { status: 401 });
@@ -39,12 +38,12 @@ async function verifyOwnerToken(request: Request, admin: ReturnType<typeof getAd
   const { data, error } = await admin.auth.getUser(match[1]);
   if (error || !data.user) throw new Response("Unauthorized", { status: 401 });
 
-  const user = data.user;
-  const email = String(user.email || "").trim().toLowerCase();
-  if (email !== OWNER_EMAIL || !user.email_confirmed_at) {
+  const appRole = String(input.app_role || "").trim().toLowerCase();
+  const appUserId = String(input.app_user_id || "").trim();
+  if (appRole !== "owner" || !appUserId || appUserId.length > 160) {
     throw new Response("Forbidden", { status: 403 });
   }
-  return { id: user.id, email };
+  return { id: data.user.id, appUserId };
 }
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -65,10 +64,10 @@ Deno.serve(async (request: Request) => {
     try { input = JSON.parse(text); } catch (_) { return jsonResponse(400, { error: "Invalid JSON" }); }
 
     const admin = getAdminClient();
-    const owner = await verifyOwnerToken(request, admin);
+    const owner = await verifyOwnerToken(request, admin, input);
     const action = String(input.action || "");
     if (action === "verify") {
-      return jsonResponse(200, { ok: true, data: { email: owner.email } });
+      return jsonResponse(200, { ok: true, data: { app_user_id: owner.appUserId } });
     }
 
     let result;
@@ -107,7 +106,7 @@ Deno.serve(async (request: Request) => {
   } catch (error) {
     if (error instanceof Response) {
       const status = error.status;
-      return jsonResponse(status, { error: status === 403 ? "هذا البريد غير مخوّل لإدارة المنشورات." : "جلسة المالك غير صالحة؛ سجّلي الدخول مجددًا." });
+      return jsonResponse(status, { error: status === 403 ? "هذا الحساب ليس حساب المالك." : "جلسة الحساب غير صالحة؛ سجّلي الدخول مجددًا." });
     }
     console.error("Owner moderation request failed", error instanceof Error ? error.message : "unknown error");
     return jsonResponse(500, { error: "تعذر الاتصال بخدمة مراجعة المالك." });

@@ -1,5 +1,5 @@
 /* Ta3lemy social news feed.
- * Owner moderation is verified server-side from a confirmed Supabase email/password session.
+ * Simple moderation uses the normal platform account for the owner.
  * Supabase anonymous Auth sessions are scoped per Ta3lemy UID.
  */
 (function () {
@@ -11,8 +11,6 @@
   var authUser = null;
   var adminStatus = 'pending';
   var adminPosts = [];
-  var ownerEmail = 'hafezzaza98@gmail.com';
-  var ownerAuthClientInstance = null;
   var maxImageBytes = 10 * 1024 * 1024;
   var maxVideoBytes = 25 * 1024 * 1024;
   var maxTextLength = 3000;
@@ -26,102 +24,23 @@
   ];
 
   function appUser() { return window.currentUser || null; }
-  function ownerAuthClient() {
-    if (ownerAuthClientInstance) return ownerAuthClientInstance;
-    var sdk = window.supabase;
-    if (!sdk || typeof sdk.createClient !== 'function' || !config.url || !config.publishableKey) {
-      throw new Error('خدمة حساب المالك غير جاهزة؛ حدّث الصفحة وحاولي مرة أخرى.');
-    }
-    ownerAuthClientInstance = sdk.createClient(config.url, config.publishableKey, {
-      auth: { storageKey: 'ta3lemy-owner-moderation-auth-v1', persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
-    });
-    return ownerAuthClientInstance;
-  }
   async function ownerApiRequest(action, fields) {
-    var auth = ownerAuthClient();
-    var sessionResult = await auth.auth.getSession();
+    await ensureIdentity();
+    var sessionResult = await ensureClient().auth.getSession();
     if (sessionResult.error) throw sessionResult.error;
     var session = sessionResult.data && sessionResult.data.session;
-    var user = session && session.user;
-    if (!user || String(user.email || '').trim().toLowerCase() !== ownerEmail || !user.email_confirmed_at) {
-      throw new Error('سجّلي الدخول ببريد المالك بعد تأكيده من رسالة البريد.');
-    }
+    if (!session || !session.access_token) throw new Error('سجّلي الدخول إلى المنصة أولًا.');
     var base = String(config.url || '').replace(/\/$/, '');
     var response = await fetch(base + '/functions/v1/social-owner-moderation', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'apikey': config.publishableKey, 'Authorization': 'Bearer ' + session.access_token },
-      body: JSON.stringify(Object.assign({ action: action }, fields || {}))
+      body: JSON.stringify(Object.assign({ action: action, app_user_id: appUid(), app_role: role() }, fields || {}))
     });
     var body;
     try { body = await response.json(); } catch (_) { body = {}; }
-    if (!response.ok || !body.ok) throw new Error(body.error || 'تعذر التحقق من حساب المالك.');
+    if (!response.ok || !body.ok) throw new Error(body.error || 'تعذر تنفيذ العملية.');
     return body.data;
   }
-  window.ownerSetupModerationPassword = async function () {
-    try {
-      var email = String(document.getElementById('socialOwnerEmail') && document.getElementById('socialOwnerEmail').value || '').trim().toLowerCase();
-      var password = String(document.getElementById('socialOwnerPassword') && document.getElementById('socialOwnerPassword').value || '');
-      if (email !== ownerEmail) throw new Error('اكتبي بريد المالك المعتمد: ' + ownerEmail);
-      if (password.length < 8) throw new Error('اختاري كلمة مرور من 8 أحرف أو أكثر.');
-      var result = await ownerAuthClient().auth.signUp({ email: email, password: password });
-      if (result.error) throw result.error;
-      if (result.data && result.data.session) {
-        await ownerApiRequest('verify');
-        toast('✅ تم إعداد كلمة المرور والدخول لإدارة المنشورات.');
-        await updateOwnerModerationUi(true);
-      } else {
-        var status = document.getElementById('socialOwnerAuthStatus');
-        if (status) status.textContent = 'أرسلنا رسالة تأكيد إلى ' + email + '؛ افتحيها ثم ارجعي للمنصة وسجّلي الدخول.';
-        toast('افتحي رسالة التأكيد التي وصلت إلى بريد المالك، ثم عودي إلى المنصة.');
-      }
-    } catch (error) {
-      console.error('[social-news] owner password setup failed', error);
-      toast(error.message || 'تعذر إعداد كلمة مرور إدارة المنشورات.');
-    }
-  };
-  window.ownerModerationPasswordLogin = async function () {
-    try {
-      var email = String(document.getElementById('socialOwnerEmail') && document.getElementById('socialOwnerEmail').value || '').trim().toLowerCase();
-      var password = String(document.getElementById('socialOwnerPassword') && document.getElementById('socialOwnerPassword').value || '');
-      if (email !== ownerEmail) throw new Error('اكتبي بريد المالك المعتمد: ' + ownerEmail);
-      if (!password) throw new Error('اكتبي كلمة مرور إدارة المنشورات.');
-      var result = await ownerAuthClient().auth.signInWithPassword({ email: email, password: password });
-      if (result.error) throw result.error;
-      if (!result.data.user || !result.data.user.email_confirmed_at) {
-        await ownerAuthClient().auth.signOut();
-        throw new Error('أكدي بريدك من رسالة التأكيد التي وصلتك أول مرة.');
-      }
-      await ownerApiRequest('verify');
-      toast('✅ تم الدخول لإدارة المنشورات.');
-      await updateOwnerModerationUi(true);
-    } catch (error) {
-      console.error('[social-news] owner password login failed', error);
-      toast(error.message || 'تعذر الدخول؛ تحققي من البريد وكلمة المرور.');
-    }
-  };
-  window.ownerResetModerationPassword = async function () {
-    try {
-      var email = String(document.getElementById('socialOwnerEmail') && document.getElementById('socialOwnerEmail').value || '').trim().toLowerCase();
-      if (email !== ownerEmail) throw new Error('اكتبي بريد المالك المعتمد: ' + ownerEmail);
-      var result = await ownerAuthClient().auth.resetPasswordForEmail(email);
-      if (result.error) throw result.error;
-      toast('إذا كان الحساب مسجّلًا، ستصل رسالة استعادة كلمة المرور إلى بريد المالك.');
-    } catch (error) {
-      console.error('[social-news] owner password reset failed', error);
-      toast(error.message || 'تعذر إرسال رسالة استعادة كلمة المرور.');
-    }
-  };
-  window.ownerModerationSignOut = async function () {
-    try {
-      var result = await ownerAuthClient().auth.signOut();
-      if (result.error) throw result.error;
-      toast('تم تسجيل الخروج من إدارة المنشورات.');
-      await updateOwnerModerationUi(false);
-    } catch (error) {
-      console.error('[social-news] owner moderation sign-out failed', error);
-      toast('تعذر تسجيل الخروج من إدارة المنشورات.');
-    }
-  };
   function appUid() {
     var user = appUser();
     return user && user.uid ? String(user.uid) : '';
@@ -266,28 +185,10 @@
     return `
       <section style="background:#EAF3FF;border:1px solid #C7DDF8;border-radius:16px;padding:14px;margin-bottom:16px;">
         <div style="font-weight:800;color:#174A7C;font-size:16px;margin-bottom:6px;">🛡️ مراجعة المنشورات — للمالك</div>
-        <div style="font-size:12px;color:#455A64;line-height:1.7;margin-bottom:9px;">دخول المنصة سيبقى بالطريقة القديمة. لإدارة المنشورات استخدمي بريد المالك وكلمة مرور تنشئينها هنا مرة واحدة؛ لا يلزم إعداد Google.</div>
-        <label for="socialOwnerEmail" style="display:block;font-size:12px;font-weight:700;margin:7px 0 4px;">بريد المالك</label>
-        <input id="socialOwnerEmail" type="email" value="hafezzaza98@gmail.com" autocomplete="username" style="width:100%;box-sizing:border-box;padding:10px;border:1px solid #B0BEC5;border-radius:9px;font-family:inherit;direction:ltr;text-align:left;">
-        <label for="socialOwnerPassword" style="display:block;font-size:12px;font-weight:700;margin:8px 0 4px;">كلمة مرور إدارة المنشورات</label>
-        <input id="socialOwnerPassword" type="password" minlength="8" autocomplete="current-password" placeholder="8 أحرف على الأقل" style="width:100%;box-sizing:border-box;padding:10px;border:1px solid #B0BEC5;border-radius:9px;font-family:inherit;">
-        <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:8px;">
-          <button type="button" id="socialOwnerSetupBtn" style="border:0;border-radius:9px;padding:9px 12px;background:#E8F5E9;color:#2E7D32;font-weight:700;">إنشاء كلمة مرور لأول مرة</button>
-          <button type="button" id="socialOwnerLoginBtn" style="border:0;border-radius:9px;padding:9px 12px;background:#1565C0;color:white;font-weight:700;">دخول إدارة المنشورات</button>
-          <button type="button" id="socialOwnerResetBtn" style="border:0;border-radius:9px;padding:9px 12px;background:#fff;color:#1565C0;font-weight:700;">نسيت كلمة المرور</button>
-        </div>
-        <div id="socialOwnerAuthStatus" role="status" style="font-size:12px;color:#455A64;line-height:1.7;margin-top:8px;">استخدمي البريد المعتمد: hafezzaza98@gmail.com</div>
-        <div id="socialOwnerTools" style="display:none;margin-top:13px;padding-top:12px;border-top:1px solid #C7DDF8;">
-          <div style="font-weight:700;color:#2E7D32;font-size:13px;margin-bottom:8px;">✅ تم التحقق — يمكنك الآن مراجعة المنشورات</div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <button type="button" data-social-admin-status="pending" style="border:0;border-radius:9px;padding:9px 12px;background:#1565C0;color:white;font-weight:700;">طلبات جديدة</button>
-            <button type="button" data-social-admin-status="approved" style="border:0;border-radius:9px;padding:9px 12px;background:#fff;color:#1565C0;font-weight:700;">المنشورات المنشورة</button>
-            <button type="button" id="socialStatsBtn" style="border:0;border-radius:9px;padding:9px 12px;background:#E8F5E9;color:#2E7D32;font-weight:700;">📊 إحصائيات الموجز</button>
-            <button type="button" id="socialOwnerSignOutBtn" style="border:0;border-radius:9px;padding:9px 12px;background:#FFEBEE;color:#B71C1C;font-weight:700;">تسجيل الخروج من الإدارة</button>
-          </div>
-        </div>
+        <div style="font-size:12px;color:#455A64;line-height:1.7;margin-bottom:9px;">أنت داخل بحساب المالك العادي. اضغط الزر لعرض المنشورات المنتظرة، ثم اختر موافقة أو رفض.</div>
+        <button type="button" data-social-admin-status="pending" style="border:0;border-radius:10px;padding:10px 14px;background:#1565C0;color:white;font-weight:700;">📥 عرض المنشورات المنتظرة</button>
+        <button type="button" data-social-admin-status="approved" style="border:0;border-radius:10px;padding:10px 14px;background:#fff;color:#1565C0;font-weight:700;margin-right:6px;">📚 المنشورات المنشورة</button>
         <div id="socialAdminQueue" style="margin-top:12px;"></div>
-        <div id="socialAdminStats" style="margin-top:12px;"></div>
       </section>`;
   }
   function renderAdminStats(data) {
@@ -323,41 +224,6 @@
         else toast('المنشور غير ظاهر في الصفحة الحالية؛ حدّثي الموجز لعرضه.');
       });
     });
-  }
-  async function updateOwnerModerationUi(autoLoad) {
-    var status = document.getElementById('socialOwnerAuthStatus');
-    var tools = document.getElementById('socialOwnerTools');
-    if (tools) tools.style.display = 'none';
-    if (!status) return false;
-    try {
-      var auth = ownerAuthClient();
-      var result = await auth.auth.getSession();
-      if (result.error) throw result.error;
-      var session = result.data && result.data.session;
-      var user = session && session.user;
-      if (!user) {
-        status.textContent = 'لأول مرة: أنشئي كلمة مرور الإدارة، ثم سجّلي الدخول. البريد المعتمد: ' + ownerEmail;
-        return false;
-      }
-      if (String(user.email || '').trim().toLowerCase() !== ownerEmail) {
-        await auth.auth.signOut();
-        status.textContent = 'هذا ليس بريد المالك المعتمد. استخدمي ' + ownerEmail;
-        return false;
-      }
-      if (!user.email_confirmed_at) {
-        status.textContent = 'افتحي رسالة التأكيد المرسلة إلى ' + ownerEmail + ' ثم عودي وسجّلي الدخول.';
-        return false;
-      }
-      await ownerApiRequest('verify');
-      status.textContent = '✅ تم التحقق من بريد المالك: ' + ownerEmail;
-      if (tools) tools.style.display = 'block';
-      if (autoLoad) await loadAdminPosts(adminStatus);
-      return true;
-    } catch (error) {
-      console.error('[social-news] owner auth status failed', error);
-      status.textContent = 'تعذر التحقق الآن. تأكدي من الاتصال ثم سجّلي الدخول مرة أخرى.';
-      return false;
-    }
   }
   function renderMedia(post) {
     var image = safeCloudinaryUrl(post.image_url, 'image');
@@ -551,17 +417,6 @@
     c.querySelectorAll('[data-social-admin-status]').forEach(function (button) {
       button.addEventListener('click', function () { loadAdminPosts(button.getAttribute('data-social-admin-status')); });
     });
-    var statsButton = document.getElementById('socialStatsBtn');
-    if (statsButton) statsButton.addEventListener('click', loadAdminStats);
-    var setupButton = document.getElementById('socialOwnerSetupBtn');
-    if (setupButton) setupButton.addEventListener('click', window.ownerSetupModerationPassword);
-    var loginButton = document.getElementById('socialOwnerLoginBtn');
-    if (loginButton) loginButton.addEventListener('click', window.ownerModerationPasswordLogin);
-    var resetButton = document.getElementById('socialOwnerResetBtn');
-    if (resetButton) resetButton.addEventListener('click', window.ownerResetModerationPassword);
-    var signOutButton = document.getElementById('socialOwnerSignOutBtn');
-    if (signOutButton) signOutButton.addEventListener('click', window.ownerModerationSignOut);
-    if (role() === 'owner') updateOwnerModerationUi(true);
   }
   window.openNews = async function () {
     if (!appUid()) { toast('سجّلي الدخول إلى المنصة أولًا.'); return; }
@@ -813,22 +668,9 @@
       toast('تعذر حذف التعليق.');
     }
   };
-  function resetOwnerModerationOnLogout() {
-    var previousLogout = window.logout;
-    if (typeof previousLogout !== 'function' || previousLogout.__socialNewsWrapped) return;
-    var wrapped = async function () {
-      adminPosts = [];
-      try { if (ownerAuthClientInstance) await ownerAuthClientInstance.auth.signOut(); } catch (_) {}
-      return previousLogout.apply(this, arguments);
-    };
-    wrapped.__socialNewsWrapped = true;
-    window.logout = wrapped;
-  }
-
   ensureNewsScreen();
   ensureComposerScreen();
   updateEntryLabels();
-  resetOwnerModerationOnLogout();
   window.addEventListener('load', function () { setTimeout(updateEntryLabels, 900); });
   console.log('✅ Facebook-style social news feed loaded');
 })();
