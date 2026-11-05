@@ -231,6 +231,9 @@
       window.currentRole = 'student';
       syncChatProfileAfterPlatformLogin();
       window.saveRememberedStudentLogin(username, password);
+      if (typeof window.saveOfflineLoginCredential === 'function') {
+        try { await window.saveOfflineLoginCredential({ username: username, password: password, ownerCode: '', role: 'student' }); } catch (offlineError) { console.warn('offline setup', offlineError); }
+      }
       try { localStorage.setItem('lastUser', JSON.stringify({name: window.currentUser.name, displayName: window.currentUser.displayName, uid: window.currentUser.uid, role: 'student', points: window.currentUser.points})); } catch (e) {}
       if (typeof window.logLogin === 'function') await window.logLogin(username, 'student', true, 'custom auth');
       if (reply.isNew && reply.recoveryCode && typeof window.showRecoveryCode === 'function') window.showRecoveryCode(reply.recoveryCode, window.currentUser.name);
@@ -264,6 +267,10 @@
       window.login = async function(){
         // لا نسمح للمعلم باستخدام مسار الاسم/كلمة المرور أو حفظ الدور محليًا.
         if (window.currentRole === 'teacher') {
+          if (!navigator.onLine) {
+            if (typeof showToast === 'function') showToast('دخول المعلم الآمن يحتاج اتصالًا بالإنترنت.');
+            return;
+          }
           if (typeof window.teacherPhoneLogin !== 'function') {
             if (typeof showToast === 'function') showToast('تسجيل الهاتف الآمن غير جاهز؛ حدّث الصفحة');
             return;
@@ -287,6 +294,10 @@
           return;
         }
 
+        if (!navigator.onLine && typeof window.loginOfflineLocally === 'function') {
+          return window.loginOfflineLocally({ username: uname, password: pwd, ownerCode: ownerCode, role: String(window.currentRole || 'student') });
+        }
+
         if (window.currentRole === 'owner') {
           if (ownerCode !== '135790') {
             await window.logLogin(uname, 'owner', false, 'owner code wrong');
@@ -305,29 +316,11 @@
                 role: 'owner',
                 points: window.currentUser.points || 0
               }));
+              if (typeof window.saveOfflineLoginCredential === 'function') {
+                try { await window.saveOfflineLoginCredential({ username: uname, password: pwd, ownerCode: ownerCode, role: 'owner' }); } catch (offlineError) { console.warn('owner offline setup', offlineError); }
+              }
             }
           } catch(e){ console.error(e); }
-          return;
-        }
-        
-        // Offline
-        if (!navigator.onLine) {
-          var saved = localStorage.getItem('lastUser');
-          if (saved) {
-            try {
-              var su = JSON.parse(saved);
-              if (su.role !== 'student') {
-                if(typeof showToast === 'function') showToast('تسجيل المعلم أو المالك يتطلب تحققًا آمنًا عبر الإنترنت');
-                return;
-              }
-              window.currentUser = {name: uname, displayName: su.displayName || su.name || uname, uid: su.uid, points: su.points || 0};
-              window.currentRole = 'student';
-              if(typeof showToast === 'function') showToast('📴 دخول offline');
-              if(typeof showScreen === 'function') setTimeout(function(){ showScreen('homeScreen'); }, 400);
-              return;
-            } catch(e){}
-          }
-          if(typeof showToast === 'function') showToast('⚠️ محتاج نت أول مرة');
           return;
         }
         
@@ -368,6 +361,9 @@
             localStorage.setItem('lastUser', JSON.stringify({
               name: uname, displayName: uname, uid: uid, role: window.currentRole, points: 0
             }));
+            if (typeof window.saveOfflineLoginCredential === 'function') {
+              try { await window.saveOfflineLoginCredential({ username: uname, password: pwd, ownerCode: ownerCode, role: String(window.currentRole || 'student') }); } catch (offlineError) { console.warn('offline setup', offlineError); }
+            }
             
             await window.logLogin(uname, window.currentRole, true, 'new account');
             window.showRecoveryCode(recCode, uname);
@@ -418,6 +414,9 @@
           localStorage.setItem('lastUser', JSON.stringify({
             name: uname, displayName: window.currentUser.displayName, uid: uid2, role: user.role || window.currentRole, points: user.points || 0
           }));
+          if (typeof window.saveOfflineLoginCredential === 'function') {
+            try { await window.saveOfflineLoginCredential({ username: uname, password: pwd, ownerCode: ownerCode, role: String(user.role || window.currentRole || 'student') }); } catch (offlineError) { console.warn('offline setup', offlineError); }
+          }
           
           await fs.collection('users').doc(uid2).update({lastLogin: new Date().toISOString()});
           await window.logLogin(uname, window.currentRole, true, '');

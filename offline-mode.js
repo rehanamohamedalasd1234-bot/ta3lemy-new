@@ -32,7 +32,6 @@
     saveRecords(all.slice(-8));
   }
   async function offlineLogin(form) {
-    if (form.role === 'owner') return notify('دخول المالك واعتماد المنشورات يحتاجان اتصالًا بالإنترنت وتحقق Google.');
     if (!form.username || !form.password) return notify('أدخل اسم الحساب وكلمة المرور اللذين استخدمتهما على هذا الجهاز من قبل.');
     var record = readRecords().find(function (r) { return r.role === form.role && r.username === normalize(form.username); });
     if (!record) return notify('هذا الحساب لم يُجهّز للعمل دون إنترنت على هذا الجهاز. سجّلي الدخول به مرة واحدة أثناء الاتصال أولًا.');
@@ -68,10 +67,17 @@
     if (button) { button.style.display = navigator.onLine ? '' : 'none'; button.title = navigator.onLine ? 'نزّلي المحتوى على هذا الجهاز قبل انقطاع الإنترنت' : 'اتصلي بالإنترنت لبدء التنزيل'; }
   }
   function blockNetworkOnlyScreens() {
-    ['openMessages', 'openPublicChat'].forEach(function (name) {
+    ['openMessages', 'openPublicChat', 'openChat', 'openNewMessage', 'openRadio', 'playRadio', 'playMyStationAudio', 'addMyStationAudio', 'sendMessage'].forEach(function (name) {
       var original = window[name];
       if (typeof original !== 'function' || original.__offlineGuard) return;
-      var wrapped = function () { if (!navigator.onLine) { notify('الدردشة تحتاج اتصالًا بالإنترنت.'); return; } return original.apply(this, arguments); };
+      var wrapped = function () {
+        if (!navigator.onLine) {
+          var radioAction = name === 'openRadio' || name === 'playRadio' || name === 'playMyStationAudio' || name === 'addMyStationAudio';
+          notify(radioAction ? '📻 الإذاعات تحتاج اتصالًا بالإنترنت.' : '💬 الدردشة تحتاج اتصالًا بالإنترنت.');
+          return;
+        }
+        return original.apply(this, arguments);
+      };
       wrapped.__offlineGuard = true; window[name] = wrapped;
     });
   }
@@ -94,10 +100,7 @@
     var original = window.login;
     window.login = async function () {
       var form = getInputs();
-      if (form.role === 'owner') {
-        if (!navigator.onLine) return notify('دخول المالك واعتماد المنشورات يحتاجان اتصالًا بالإنترنت.');
-        return original.apply(this, arguments);
-      }
+      if (form.role === 'owner' && !navigator.onLine) return offlineLogin(form);
       if (!navigator.onLine) return offlineLogin(form);
       var beforeUser = window.currentUser;
       try { var result = await original.apply(this, arguments); } catch (error) { console.error(error); }
@@ -112,6 +115,8 @@
     window.login.__offlineLoginWrapper = true;
     return true;
   }
+  window.saveOfflineLoginCredential = saveOfflineCredential;
+  window.loginOfflineLocally = offlineLogin;
   // امسحي فورًا أي كلمة مرور قديمة محفوظة كنص واضح، قبل أن تعمل واجهة التذكّر القديمة.
   try { localStorage.removeItem(LEGACY_PASSWORD_KEY); } catch (_) {}
   window.saveRememberedStudentLogin = function () {};
