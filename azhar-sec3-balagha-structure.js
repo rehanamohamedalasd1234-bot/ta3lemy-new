@@ -14,15 +14,34 @@
   }
   function renderThirdSubjects() {
     var list = document.getElementById('azharList');
-    if (!list) return;
-    var subjects = [
-      ['quran_t', 'القرآن الكريم والتفسير', '📖'], ['tafsir', 'تفسير النسفي', '📖'], ['hadith', 'الحديث الشريف', '📜'], ['fiqh', 'الفقه', '⚖️'],
-      ['aqeeda', 'أصول الدين (العقيدة)', '🕌'], ['seera', 'السيرة النبوية', '🌟'], ['nahw', 'النحو والصرف', '📝'],
-      ['balagha', 'البلاغة العربية', '📚'], ['tawhid', 'التوحيد', '🕌'], ['ibn_aqil', 'شرح ابن عقيل', '📝'], ['adab', 'الأدب', '📚'], ['mock_exams', 'اختبارات تجريبية شاملة', '📝'], ['arabic', 'اللغة العربية', '📖'], ['english', 'اللغة الإنجليزية', '🇬🇧'],
-      ['history', 'التاريخ', '📜'], ['geo', 'الجغرافيا', '🗺️'], ['math', 'الرياضيات', '🔢']
-    ];
-    list.innerHTML = subjects.map(function (s) { return '<div class="azhar-subject-item" data-az3-subject="' + s[0] + '" style="border-right-color:#C9A227"><div style="font-size:30px">' + s[2] + '</div><div class="stage-info"><div class="stage-name">' + s[1] + '</div></div><div class="stage-arrow" style="color:#C9A227">‹</div></div>'; }).join('');
-    list.querySelectorAll('[data-az3-subject]').forEach(function (card) { card.onclick = function () { window.openAzharSubject(card.getAttribute('data-az3-subject'), card.querySelector('.stage-name').textContent); }; });
+    var curriculum = window.AZHAR_CURRICULUM;
+    if (!list || !curriculum) return;
+    if (curriculum.installStyle) curriculum.installStyle();
+    var stage = curriculum.getStage('azhar_sec');
+    if (!stage) return;
+    var html = '<div class="azhar-curriculum-intro">المرحلة الثانوية الأزهرية • الثالث الثانوي</div>';
+    stage.groups.forEach(function (group) {
+      var courses = curriculum.getCourses('azhar_sec', 'الثالث الثانوي', group.name);
+      if (!courses.length) return;
+      html += '<section class="azhar-curriculum-group"><h3 class="azhar-curriculum-group-title">' + esc(group.name) + '</h3>';
+      courses.forEach(function (course) {
+        html += '<button type="button" class="azhar-curriculum-subject" data-az3-course="' + esc(course.id) + '"><span class="azhar-curriculum-subject-icon">' + (group.name === 'المواد الشرعية' ? '🕌' : group.name === 'مواد عامة' ? '🗂️' : '📖') + '</span><span class="azhar-curriculum-subject-copy"><span class="azhar-curriculum-subject-name">' + esc(course.name) + '</span><span class="azhar-curriculum-subject-detail">' + esc(course.detail || group.name) + '</span></span><span class="azhar-curriculum-subject-arrow">‹</span></button>';
+      });
+      html += '</section>';
+    });
+    html += '<button type="button" class="azhar-curriculum-subject" data-az3-mock="1"><span class="azhar-curriculum-subject-icon">📝</span><span class="azhar-curriculum-subject-copy"><span class="azhar-curriculum-subject-name">اختبارات تجريبية شاملة</span><span class="azhar-curriculum-subject-detail">نماذج تفاعلية للمواد المتاحة</span></span><span class="azhar-curriculum-subject-arrow">‹</span></button>';
+    list.innerHTML = html;
+    list.querySelectorAll('[data-az3-course]').forEach(function (card) {
+      card.onclick = function () {
+        var item = curriculum.getCourse('azhar_sec', card.getAttribute('data-az3-course'));
+        if (!item) return;
+        window.currentAzharCourseId = item.id;
+        window.currentAzharCourseGroup = item.group;
+        window.openAzharSubject(item.id, item.name, item.group);
+      };
+    });
+    var mock = list.querySelector('[data-az3-mock]');
+    if (mock) mock.onclick = function () { if (window.openAzharMockExams) window.openAzharMockExams(); };
     go('azharScreen');
   }
   function openBalagha() {
@@ -58,5 +77,5 @@
     list.innerHTML = '<article class="lesson-body" style="border-top:5px solid #C9A227"><div style="font-size:12px;color:#8A6B00;font-weight:bold">' + esc(x.unit) + ' • صفحة ' + esc(x.page) + '</div><h2>' + esc(x.title) + '</h2><p style="white-space:pre-line;line-height:2">' + esc(x.content) + '</p>' + objectives + (x.example ? '<div style="background:#E8F5E9;border-radius:14px;padding:14px;margin-top:14px"><b>مثال محلل</b><p>' + esc(x.example) + '</p></div>' : '') + (x.activity ? '<div style="background:#E3F2FD;border-radius:14px;padding:14px;margin-top:14px"><b>نشاط تطبيقي</b><p>' + esc(x.activity) + '</p></div>' : '') + (x.question ? '<div style="background:#F3E5F5;border-radius:14px;padding:14px;margin-top:14px"><b>سؤال سريع</b><p>' + esc(x.question) + '</p><details><summary>إظهار الإجابة</summary><p>' + esc(x.answer || '') + '</p></details></div>' : '') + questions + '<p style="font-size:12px;color:#777;margin-top:16px">المصدر: <a href="' + SOURCE + '" target="_blank" rel="noopener">كتاب البلاغة العربية الرسمي</a></p></article>';
   }
   window.openAzharGrade = function (gradeName) { if (window.currentStage === 'azhar_sec' && gradeName === 'الثالث الثانوي') { window.currentGrade = gradeName; renderThirdSubjects(); return; } return oldOpenGrade.apply(this, arguments); };
-  window.openAzharSubject = function (id, name) { if (isThird() && (id === 'balagha' || name === 'البلاغة العربية')) { openBalagha(); return; } return oldOpenSubject.apply(this, arguments); };
+  window.openAzharSubject = function (id, name) { if (isThird() && (id === 'sec-balagha' || id === 'balagha' || name === 'البلاغة' || name === 'البلاغة العربية')) { window.currentAzharCourseId = 'sec-balagha'; window.currentSubject = 'البلاغة العربية'; openBalagha(); return; } return oldOpenSubject.apply(this, arguments); };
 })();
