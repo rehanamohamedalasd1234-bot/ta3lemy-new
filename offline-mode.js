@@ -1,4 +1,4 @@
-/* وضع عدم الاتصال — يضاف في نهاية extras.js بعد بقية أكواد الدخول. */
+/* وضع عدم الاتصال — يُحمّل بعد بقية ملفات الدخول ليلتقط جميع الأدوار. */
 (function () {
   'use strict';
   var KEY = 'ta3lemy_offline_auth_v1';
@@ -42,16 +42,13 @@
       window.currentRole = record.role;
       window.TA3LEMY_OFFLINE_MODE = true;
       try { localStorage.setItem('lastUser', JSON.stringify(record.account)); } catch (_) {}
-      showOfflineBanner();
       if (typeof window.showScreen === 'function') window.showScreen('homeScreen');
-      notify('تم الدخول بوضع عدم الاتصال. المتاح هو المحتوى المحفوظ فقط؛ الدردشة والبث المباشر يحتاجان إنترنت.');
       hideCloudControls();
     } catch (error) { console.error(error); notify(error.message || 'تعذر التحقق محليًا.'); }
   }
-  function showOfflineBanner() {
+  function clearOfflineBanner() {
     var badge = document.getElementById('offlineModeBanner');
-    if (!badge) { badge = document.createElement('div'); badge.id = 'offlineModeBanner'; badge.style.cssText = 'position:fixed;top:8px;left:8px;right:8px;z-index:99999;padding:9px 12px;border-radius:12px;background:#5D4037;color:white;text-align:center;font:700 12px sans-serif;box-shadow:0 2px 8px #0003'; document.body.appendChild(badge); }
-    badge.textContent = navigator.onLine ? 'جلسة محلية — اتصلي بالإنترنت ثم سجّلي الدخول لمزامنة الحساب' : 'وضع عدم الاتصال — المتاح هو المحتوى المحمّل فقط';
+    if (badge) badge.remove();
   }
   function hideCloudControls() {
     if (document.body) document.body.classList.add('ta3lemy-offline-session');
@@ -65,6 +62,10 @@
   function updateDownloadButton() {
     var button = document.getElementById('offlineBtnInGrid');
     if (button) { button.style.display = navigator.onLine ? '' : 'none'; button.title = navigator.onLine ? 'نزّلي المحتوى على هذا الجهاز قبل انقطاع الإنترنت' : 'اتصلي بالإنترنت لبدء التنزيل'; }
+  }
+  function hideLegacyPasswordRememberOption() {
+    var wrapper = document.getElementById('rememberStudentLoginWrap');
+    if (wrapper) wrapper.style.display = 'none';
   }
   function blockNetworkOnlyScreens() {
     ['openMessages', 'openPublicChat', 'openChat', 'openNewMessage', 'openRadio', 'playRadio', 'playMyStationAudio', 'addMyStationAudio', 'sendMessage'].forEach(function (name) {
@@ -122,15 +123,16 @@
   window.saveRememberedStudentLogin = function () {};
   window.restoreRememberedStudentLogin = function () {};
   function install() {
-    if (document.getElementById('rememberStudentLoginWrap')) document.getElementById('rememberStudentLoginWrap').style.display = 'none';
+    clearOfflineBanner();
+    hideLegacyPasswordRememberOption();
     // لا نحتفظ بكلمة المرور كنص واضح؛ يستخدم النظام بدلًا منها بصمة محلية مشتقة.
     window.saveRememberedStudentLogin = function () {};
     window.restoreRememberedStudentLogin = function () {};
     installLogin(); updateDownloadButton(); blockNetworkOnlyScreens(); guardLogout();
     var attempts = 0;
-    var timer = setInterval(function () { attempts++; if (installLogin() || attempts > 20) clearInterval(timer); updateDownloadButton(); blockNetworkOnlyScreens(); guardLogout(); }, 500);
-    window.addEventListener('online', function () { updateDownloadButton(); if (window.currentUser && window.TA3LEMY_OFFLINE_MODE) showOfflineBanner(); });
-    window.addEventListener('offline', function () { updateDownloadButton(); if (window.currentUser) showOfflineBanner(); });
+    var timer = setInterval(function () { attempts++; if (installLogin() || attempts > 20) clearInterval(timer); hideLegacyPasswordRememberOption(); updateDownloadButton(); blockNetworkOnlyScreens(); guardLogout(); }, 500);
+    window.addEventListener('online', updateDownloadButton);
+    window.addEventListener('offline', updateDownloadButton);
   }
   install();
 })();

@@ -121,6 +121,13 @@
       };
 
       window.currentRole = 'teacher';
+      if (typeof window.saveOfflineLoginCredential === 'function') {
+        try {
+          await window.saveOfflineLoginCredential({ username: email, password: password, ownerCode: '', role: 'teacher' });
+        } catch (offlineError) {
+          console.warn('Teacher offline login setup failed', offlineError);
+        }
+      }
       if (typeof window.syncPrivateChatProfile === 'function') {
         window.syncPrivateChatProfile().catch(function (error) { console.warn('تعذر مزامنة ملف المعلم مع الدردشة', error); });
       }

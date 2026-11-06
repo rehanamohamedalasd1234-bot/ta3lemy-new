@@ -15,13 +15,6 @@
     }
   } catch(e){ console.log('Offline error:', e); }
   
-  window.addEventListener('online', function(){
-    if(typeof showToast === 'function') showToast('✅ رجع الاتصال');
-  });
-  window.addEventListener('offline', function(){
-    if(typeof showToast === 'function') showToast('📴 وضع Offline');
-  });
-  
   // ═══ 2. Device ID ═══
   window.getDeviceId = function(){
     var did = localStorage.getItem('hafez_device_id');
@@ -265,10 +258,20 @@
       var origLogin = window.login;
       
       window.login = async function(){
-        // لا نسمح للمعلم باستخدام مسار الاسم/كلمة المرور أو حفظ الدور محليًا.
+        // المعلم يدخل عبر Firebase عند الاتصال، أو عبر بصمة محلية بعد توثيق سابق على الجهاز.
         if (window.currentRole === 'teacher') {
           if (!navigator.onLine) {
-            if (typeof showToast === 'function') showToast('دخول المعلم الآمن يحتاج اتصالًا بالإنترنت.');
+            if (typeof window.loginOfflineLocally === 'function') {
+              var teacherEmail = document.getElementById('usernameInput');
+              var teacherPassword = document.getElementById('passwordInput');
+              return window.loginOfflineLocally({
+                username: teacherEmail ? teacherEmail.value.trim() : '',
+                password: teacherPassword ? teacherPassword.value : '',
+                ownerCode: '',
+                role: 'teacher'
+              });
+            }
+            if (typeof showToast === 'function') showToast('الدخول دون إنترنت غير جاهز؛ حاولي بعد تحميل الصفحة والاتصال مرة واحدة.');
             return;
           }
           if (typeof window.teacherPhoneLogin !== 'function') {
