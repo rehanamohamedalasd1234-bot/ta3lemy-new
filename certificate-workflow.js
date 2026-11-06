@@ -169,7 +169,7 @@
     content.innerHTML = certificateScreenMarkup();
     var ownName = document.getElementById('cwOwnerName'); if (ownName && user()) ownName.value = String(user().name || '');
     var profileMenu = document.getElementById('certificateToolMenu');
-    if (profileMenu) { var label = profileMenu.querySelector('span:nth-child(2)'); if (label) label.textContent = 'شهادات التقدير الخاصة بي'; }
+    if (profileMenu) { var label = profileMenu.querySelector('span:nth-child(2)'); if (label) label.textContent = role() === 'teacher' ? 'شهاداتي وترشيح طالب' : (role() === 'owner' ? 'إدارة الشهادات' : 'شهاداتي'); }
     if (role() === 'owner') {
       addSignatureCanvas(); loadRecipients('cwDirectRecipient', true); loadOwnerQueue();
     } else if (role() === 'teacher') {
@@ -282,7 +282,7 @@
   function install() {
     addStyles(); ensureScreens(); addGalleryShortcut();
     if (!document.getElementById('homeCertificateGalleryBtn')) setTimeout(addGalleryShortcut, 250);
-    var profile = document.getElementById('certificateToolMenu'); if (profile) { var label = profile.querySelector('span:nth-child(2)'); if (label) label.textContent = 'شهادات التقدير الخاصة بي'; }
+    var profile = document.getElementById('certificateToolMenu'); if (profile) { var label = profile.querySelector('span:nth-child(2)'); if (label) label.textContent = role() === 'teacher' ? 'شهاداتي وترشيح طالب' : (role() === 'owner' ? 'إدارة الشهادات' : 'شهاداتي'); }
   }
   window.addEventListener('load', install, { once: true });
   if (document.readyState === 'interactive' || document.readyState === 'complete') setTimeout(install, 0);
