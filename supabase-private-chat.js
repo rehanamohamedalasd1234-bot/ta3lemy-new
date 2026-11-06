@@ -13,6 +13,7 @@
   var state = {
     mode: 'home', user: null, profile: null, homeTab: 'chats', conversationId: '', friend: null,
     messageChannel: null, requestsChannel: null, callsInboxChannel: null,
+    presenceChannel: null, presenceUserId: '', presenceUsers: {}, presenceVisibilityHandler: null, presenceConnected: false,
     call: null, peer: null, localStream: null, remoteStream: null,
     callRowChannel: null, candidateChannel: null, candidateQueue: [], pendingCandidates: [],
     missedTimer: null, disconnectTimer: null, recorder: null, recordingStream: null,
@@ -113,7 +114,7 @@
     var nextScope = 'hafez-chat-' + encodeURIComponent(scope);
     if (client && clientScope !== nextScope) {
       var previousClient = client;
-      [state.messageChannel, state.requestsChannel, state.callsInboxChannel, state.callRowChannel, state.candidateChannel].forEach(function (channel) {
+      [state.messageChannel, state.requestsChannel, state.callsInboxChannel, state.callRowChannel, state.candidateChannel, state.presenceChannel].forEach(function (channel) {
         if (channel) { try { previousClient.removeChannel(channel); } catch (_) {} }
       });
       clearTimeout(state.missedTimer); clearTimeout(state.disconnectTimer); stopIncomingCallAlert();
@@ -121,6 +122,9 @@
       if (state.localStream) state.localStream.getTracks().forEach(function (track) { track.stop(); });
       if (state.remoteStream) state.remoteStream.getTracks().forEach(function (track) { track.stop(); });
       state.messageChannel = null; state.requestsChannel = null; state.callsInboxChannel = null;
+      state.presenceChannel = null; state.presenceUserId = ''; state.presenceUsers = {}; state.presenceConnected = false;
+      if (state.presenceVisibilityHandler) document.removeEventListener('visibilitychange', state.presenceVisibilityHandler);
+      state.presenceVisibilityHandler = null;
       state.callRowChannel = null; state.candidateChannel = null; state.call = null; state.peer = null;
       state.localStream = null; state.remoteStream = null; state.user = null; state.profile = null;
       state.conversationId = ''; state.friend = null; state.pendingCandidates = []; state.candidateQueue = [];
@@ -164,6 +168,7 @@
         .select('id,handle,display_name,avatar_url').single();
       if (updated.error) throw updated.error;
       state.profile = updated.data;
+      startPresence();
       return state.profile;
     }
     for (var attempt = 0; attempt < 5; attempt++) {
@@ -172,12 +177,110 @@
         .select('id,handle,display_name,avatar_url').single();
       if (!inserted.error && inserted.data) {
         state.profile = inserted.data;
+        startPresence();
         return state.profile;
       }
       if (inserted.error && inserted.error.code === '23505') continue;
       throw inserted.error || new Error('تعذر إنشاء ملف الحساب في الدردشة.');
     }
     throw new Error('تعذر إعداد حساب الدردشة؛ أعد المحاولة.');
+  }
+  function presenceIsActive(userId) {
+    var id = String(userId || '');
+    if (id && id === state.presenceUserId) return state.presenceConnected && document.visibilityState !== 'hidden';
+    return !!state.presenceUsers[id];
+  }
+  function updatePresenceBadge(badge, userId) {
+    if (!badge) return;
+    var active = presenceIsActive(userId);
+    badge.classList.toggle('active', active);
+    badge.classList.toggle('inactive', !active);
+    badge.setAttribute('aria-label', active ? 'نشط الآن' : 'غير نشط');
+    var label = badge.querySelector('[data-spc-presence-label]');
+    if (label) label.textContent = active ? 'نشط' : 'غير نشط';
+  }
+  function presenceBadge(userId) {
+    var badge = document.createElement('span'); badge.className = 'spc-presence';
+    badge.setAttribute('data-spc-presence-id', String(userId || ''));
+    var dot = document.createElement('i'); dot.className = 'spc-presence-dot'; dot.setAttribute('aria-hidden', 'true');
+    var label = document.createElement('span'); label.setAttribute('data-spc-presence-label', 'true');
+    badge.appendChild(dot); badge.appendChild(label); updatePresenceBadge(badge, userId);
+    return badge;
+  }
+  function updatePresenceIndicators() {
+    document.querySelectorAll('[data-spc-presence-id]').forEach(function (badge) {
+      updatePresenceBadge(badge, badge.getAttribute('data-spc-presence-id'));
+    });
+    var selfStatus = document.getElementById('spcSelfPresence');
+    if (selfStatus && state.user) updatePresenceBadge(selfStatus, state.user.id);
+  }
+  function refreshPresenceState(channel) {
+    if (!channel || channel !== state.presenceChannel) return;
+    var snapshot = channel.presenceState() || {};
+    var activeUsers = {};
+    Object.keys(snapshot).forEach(function (key) {
+      var metas = Array.isArray(snapshot[key]) ? snapshot[key] : [];
+      if (key === state.presenceUserId) return;
+      if (metas.some(function (meta) { return meta && meta.active === true; })) activeUsers[key] = true;
+    });
+    state.presenceUsers = activeUsers;
+    updatePresenceIndicators();
+  }
+  function stopPresence() {
+    if (state.presenceVisibilityHandler) document.removeEventListener('visibilitychange', state.presenceVisibilityHandler);
+    state.presenceVisibilityHandler = null;
+    var channel = state.presenceChannel;
+    state.presenceChannel = null; state.presenceUserId = ''; state.presenceUsers = {}; state.presenceConnected = false;
+    if (channel && client) { try { client.removeChannel(channel); } catch (error) { console.warn('[private-chat] presence cleanup failed', error); } }
+    updatePresenceIndicators();
+  }
+  function trackPresence(channel) {
+    if (!channel || channel !== state.presenceChannel) return;
+    var tracking;
+    try { tracking = channel.track({ active: document.visibilityState !== 'hidden' }); }
+    catch (error) {
+      state.presenceConnected = false;
+      console.warn('[private-chat] presence tracking failed', error);
+      updatePresenceIndicators();
+      return;
+    }
+    Promise.resolve(tracking).then(function (result) {
+      if (channel !== state.presenceChannel) return;
+      state.presenceConnected = result === 'ok';
+      updatePresenceIndicators();
+    }).catch(function (error) {
+      if (channel !== state.presenceChannel) return;
+      state.presenceConnected = false;
+      console.warn('[private-chat] presence tracking failed', error);
+      updatePresenceIndicators();
+    });
+  }
+  function startPresence() {
+    if (!client || !state.user || !state.user.id) return;
+    var userId = String(state.user.id);
+    if (state.presenceChannel && state.presenceUserId === userId) return;
+    stopPresence();
+    state.presenceUserId = userId;
+    var channel = client.channel('ta3lemy-platform-presence-v1', { config: { presence: { key: userId } } });
+    state.presenceChannel = channel;
+    channel.on('presence', { event: 'sync' }, function () { refreshPresenceState(channel); });
+    channel.on('presence', { event: 'join' }, function () { refreshPresenceState(channel); });
+    channel.on('presence', { event: 'leave' }, function () { refreshPresenceState(channel); });
+    channel.subscribe(function (status) {
+      if (channel !== state.presenceChannel) return;
+      if (status === 'SUBSCRIBED') {
+        state.presenceConnected = false;
+        trackPresence(channel);
+        refreshPresenceState(channel);
+      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+        state.presenceConnected = false; state.presenceUsers = {}; updatePresenceIndicators();
+      }
+    });
+    state.presenceVisibilityHandler = function () {
+      if (state.presenceChannel !== channel) return;
+      trackPresence(channel);
+    };
+    document.addEventListener('visibilitychange', state.presenceVisibilityHandler);
   }
   function addChatStyles() {
     if (document.getElementById('supabasePrivateChatStyle')) return;
@@ -192,7 +295,8 @@
       '.spc-home-exit{border:0;border-radius:9px;background:#fff;color:#2E7D32;padding:8px 10px;font:inherit;font-size:12px;font-weight:800;white-space:nowrap;cursor:pointer;min-height:38px}',
       '.spc-card{background:#fff;border:1px solid #e6ece7;border-radius:14px;padding:12px;margin:0 0 9px;display:flex;align-items:center;gap:10px}',
       '.spc-avatar{width:44px;height:44px;flex:0 0 44px;border-radius:50%;background:#e8f5e9;color:#2E7D32;display:flex;align-items:center;justify-content:center;font-size:21px;overflow:hidden}.spc-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}',
-      '.spc-info{flex:1;min-width:0}.spc-small{font-size:12px;color:#758078;margin-top:4px;overflow-wrap:anywhere}',
+      '.spc-info{flex:1;min-width:0}.spc-name-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.spc-small{font-size:12px;color:#758078;margin-top:4px;overflow-wrap:anywhere}',
+      '.spc-presence{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;white-space:nowrap}.spc-presence-dot{width:8px;height:8px;border-radius:50%;background:#9e9e9e;display:inline-block}.spc-presence.active{color:#218838}.spc-presence.active .spc-presence-dot{background:#28a745;box-shadow:0 0 0 2px #28a74522}.spc-presence.inactive{color:#7b827d}.spc-header-presence{font-size:10px}',
       '.spc-actions{display:flex;gap:6px;flex-wrap:wrap}.spc-btn{border:0;border-radius:9px;padding:9px 12px;font:inherit;font-size:12px;font-weight:700;cursor:pointer}',
       '.spc-green{background:#2E7D32;color:#fff}.spc-blue{background:#1976D2;color:#fff}.spc-red{background:#C62828;color:#fff}.spc-gray{background:#ecefec;color:#334438}',
       '.spc-search{display:flex;gap:8px;margin:8px 0 14px}.spc-search input{min-width:0;flex:1}',
@@ -268,9 +372,13 @@
   function refreshIdentityNote() {
     var note = document.getElementById('spcIdentityNote');
     if (!note || !state.profile) return;
-    note.textContent = 'حسابك ظاهر باسم: ' + memberLabel(state.profile) + ' — ابحث عن أصدقائك بالاسم أو اخترهم من القائمة.';
+    note.textContent = 'حسابك ظاهر باسم: ' + memberLabel(state.profile) + ' — حالتك: ';
+    note.appendChild(presenceBadge(state.user && state.user.id));
+    var help = document.createElement('span');
+    help.textContent = ' — ابحث عن أصدقائك بالاسم أو اخترهم من القائمة.';
+    note.appendChild(help);
   }
-  function rowCard(icon, title, subtitle, actions, photoUrl) {
+  function rowCard(icon, title, subtitle, actions, photoUrl, presenceUserId) {
     var row = document.createElement('div'); row.className = 'spc-card';
     var avatar = document.createElement('div'); avatar.className = 'spc-avatar';
     var fallback = icon || Array.from(String(title || 'مستخدم').trim())[0] || '👤';
@@ -282,9 +390,12 @@
       avatar.appendChild(image);
     } else avatar.textContent = fallback;
     var info = document.createElement('div'); info.className = 'spc-info';
+    var nameRow = document.createElement('div'); nameRow.className = 'spc-name-row';
     var name = document.createElement('b'); name.textContent = title || 'مستخدم';
+    nameRow.appendChild(name);
+    if (presenceUserId) nameRow.appendChild(presenceBadge(presenceUserId));
     var detail = document.createElement('div'); detail.className = 'spc-small'; detail.textContent = subtitle || '';
-    info.appendChild(name); info.appendChild(detail); row.appendChild(avatar); row.appendChild(info);
+    info.appendChild(nameRow); info.appendChild(detail); row.appendChild(avatar); row.appendChild(info);
     if (actions) row.appendChild(actions);
     return row;
   }
@@ -345,7 +456,7 @@
       var peer = peers[peerIdFromConversation(conversation)] || {};
       var time = conversation.updated_at ? new Date(conversation.updated_at).toLocaleDateString('ar-EG') : '';
       var open = actionButton('فتح', 'spc-green', function () { window.openChat(conversation.id, peer.id, peer); });
-      box.appendChild(rowCard('💬', memberLabel(peer), time ? 'آخر نشاط: ' + time : 'محادثة خاصة', open, peer.avatar_url));
+      box.appendChild(rowCard('💬', memberLabel(peer), time ? 'آخر رسالة: ' + time : 'محادثة خاصة', open, peer.avatar_url, peer.id));
     });
   }
   async function acceptedFriendRequests() {
@@ -406,7 +517,7 @@
     friendIds.forEach(function (id) {
       var profile = friendProfiles[id] || { id: id, display_name: 'مستخدم' };
       var message = actionButton('مراسلة', 'spc-green', function () { openConversationFor(id, profile); });
-      friendsBox.appendChild(rowCard('👤', memberLabel(profile), 'صديق', message, profile.avatar_url));
+      friendsBox.appendChild(rowCard('👤', memberLabel(profile), 'صديق', message, profile.avatar_url, profile.id || id));
     });
 
     function accountAction(profile) {
@@ -431,7 +542,7 @@
         var status = relation && relation.status === 'accepted' ? 'صديق'
           : relation && relation.status === 'pending' ? (relation.sender_id === uid ? 'طلب صداقة مُرسل' : 'أرسل لك طلب صداقة')
           : 'حساب على المنصة';
-        target.appendChild(rowCard('👤', memberLabel(profile), status, accountAction(profile), profile.avatar_url));
+      target.appendChild(rowCard('👤', memberLabel(profile), status, accountAction(profile), profile.avatar_url, profile.profile_id));
       });
     }
     function renderSuggestions() {
@@ -532,14 +643,14 @@
         actionButton('قبول', 'spc-green', function () { answerFriendRequest(request.id, 'accepted'); }),
         actionButton('رفض', 'spc-red', function () { answerFriendRequest(request.id, 'rejected'); })
       );
-      box.appendChild(rowCard('📩', memberLabel(profile), 'طلب صداقة وارد', actions, profile.avatar_url));
+      box.appendChild(rowCard('📩', memberLabel(profile), 'طلب صداقة وارد', actions, profile.avatar_url, request.sender_id));
     });
     var outgoingTitle = document.createElement('h3'); outgoingTitle.textContent = 'طلبات أرسلتها'; outgoingTitle.style.marginTop = '18px'; box.appendChild(outgoingTitle);
     var outgoing = pending.filter(function (request) { return request.sender_id === uid; });
     if (!outgoing.length) { var noneOut = document.createElement('div'); noneOut.className = 'spc-small'; noneOut.textContent = 'لا توجد طلبات معلقة أرسلتها.'; box.appendChild(noneOut); }
     outgoing.forEach(function (request) {
       var profile = profiles[request.recipient_id] || {};
-      box.appendChild(rowCard('⏳', memberLabel(profile), 'بانتظار قبول طلب الصداقة', null, profile.avatar_url));
+      box.appendChild(rowCard('⏳', memberLabel(profile), 'بانتظار قبول طلب الصداقة', null, profile.avatar_url, request.recipient_id));
     });
   }
   async function answerFriendRequest(requestId, status) {
@@ -575,7 +686,7 @@
       var other = call.caller_id === uid ? call.callee_id : call.caller_id;
       var profile = peers[other] || {};
       var when = call.created_at ? new Date(call.created_at).toLocaleString('ar-EG') : '';
-      box.appendChild(rowCard(call.call_type === 'video' ? '📹' : '📞', memberLabel(profile), (labels[call.status] || call.status) + (when ? ' • ' + when : ''), null, profile.avatar_url));
+      box.appendChild(rowCard(call.call_type === 'video' ? '📹' : '📞', memberLabel(profile), (labels[call.status] || call.status) + (when ? ' • ' + when : ''), null, profile.avatar_url, other));
     });
   }
   function stopChannel(channel) {
@@ -653,6 +764,15 @@
     if (!screen) screen = createPrivateChatScreen();
     var title = screen.querySelector('[data-spc-title]');
     if (title) title.textContent = memberLabel(state.friend.display_name);
+    var header = screen.querySelector('.logo');
+    if (header) {
+      var oldPresence = header.querySelector('[data-spc-header-presence]');
+      if (oldPresence) oldPresence.remove();
+      var headerPresence = presenceBadge(friendId);
+      headerPresence.classList.add('spc-header-presence');
+      headerPresence.setAttribute('data-spc-header-presence', 'true');
+      if (title) title.after(headerPresence); else header.appendChild(headerPresence);
+    }
     if (state.messageChannel) { stopChannel(state.messageChannel); state.messageChannel = null; }
     pushScreen('supabasePrivateChatScreen');
     await loadMessages();
@@ -1102,6 +1222,7 @@
   window.addEventListener('load', syncCurrentAccountProfile);
   var originalLogout = window.logout;
   window.logout = async function () {
+    stopPresence();
     await finishCall(true);
     stopChannel(state.messageChannel); stopChannel(state.requestsChannel); stopChannel(state.callsInboxChannel);
     state.messageChannel = null; state.requestsChannel = null; state.callsInboxChannel = null;
