@@ -49,9 +49,7 @@ jobs:
 
       - name: Build signed release APK
         working-directory: android
-        env:
-          APP_VERSION_CODE: ${{ 100000 + github.run_number }}
-        run: ./gradlew assembleRelease --stacktrace
+        run: APP_VERSION_CODE=$((100000 + GITHUB_RUN_NUMBER)) ./gradlew assembleRelease --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
