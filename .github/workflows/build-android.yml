@@ -63,10 +63,15 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          VERSION_CODE=$((100000 + GITHUB_RUN_NUMBER))
+          cat > ta3lemy-version.json <<EOF
+          {"version":"1.0.${VERSION_CODE}","build":${VERSION_CODE},"updated":"$(date -u +%Y-%m-%dT%H:%M:%SZ)","notes":"تحديث تلقائي لمنصة حافظ التعليمية"}
+          EOF
           cp android/app/build/outputs/apk/release/app-release.apk ta3lemy-hafez.apk
           if gh release view latest --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             gh release upload latest ta3lemy-hafez.apk --repo "$GITHUB_REPOSITORY" --clobber
+            gh release upload latest ta3lemy-version.json --repo "$GITHUB_REPOSITORY" --clobber
             gh release edit latest --repo "$GITHUB_REPOSITORY" --title "آخر إصدار من تطبيق منصة حافظ" --notes "يتم تحديث هذا الإصدار تلقائيًا من الفرع main."
           else
-            gh release create latest ta3lemy-hafez.apk --repo "$GITHUB_REPOSITORY" --title "آخر إصدار من تطبيق منصة حافظ" --notes "يتم تحديث هذا الإصدار تلقائيًا من الفرع main."
+            gh release create latest ta3lemy-hafez.apk ta3lemy-version.json --repo "$GITHUB_REPOSITORY" --title "آخر إصدار من تطبيق منصة حافظ" --notes "يتم تحديث هذا الإصدار تلقائيًا من الفرع main."
           fi
