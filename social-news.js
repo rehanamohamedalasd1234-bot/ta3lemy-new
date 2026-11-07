@@ -1,7 +1,4 @@
-/* Ta3lemy social news feed.
- * Simple moderation uses the normal platform account for the owner.
- * Supabase anonymous Auth sessions are scoped per Ta3lemy UID.
- */
+/* Ta3lemy social news feed. Moderation uses an isolated, email-verified owner session. */
 (function () {
   'use strict';
 
@@ -25,16 +22,14 @@
 
   function appUser() { return window.currentUser || null; }
   async function ownerApiRequest(action, fields) {
-    await ensureIdentity();
-    var sessionResult = await ensureClient().auth.getSession();
-    if (sessionResult.error) throw sessionResult.error;
-    var session = sessionResult.data && sessionResult.data.session;
-    if (!session || !session.access_token) throw new Error('سجّلي الدخول إلى المنصة أولًا.');
+    if (!window.HafezOwnerAuth) throw new Error('خدمة التحقق من بريد المالك غير جاهزة؛ حدّثي الصفحة.');
+    var session = await window.HafezOwnerAuth.getVerifiedSession();
+    if (!session || !session.access_token) throw new Error('أرسلي رابط التحقق إلى بريد المالك وافتحيه أولًا.');
     var base = String(config.url || '').replace(/\/$/, '');
     var response = await fetch(base + '/functions/v1/social-owner-moderation', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'apikey': config.publishableKey, 'Authorization': 'Bearer ' + session.access_token },
-      body: JSON.stringify(Object.assign({ action: action, app_user_id: appUid(), app_role: role() }, fields || {}))
+      body: JSON.stringify(Object.assign({ action: action }, fields || {}))
     });
     var body;
     try { body = await response.json(); } catch (_) { body = {}; }
@@ -184,9 +179,11 @@
   function ownerPanelMarkup() {
     return `
       <section style="background:#EAF3FF;border:1px solid #C7DDF8;border-radius:16px;padding:14px;margin-bottom:16px;">
-        <div style="font-weight:800;color:#174A7C;font-size:16px;margin-bottom:6px;">🛡️ مراجعة المنشورات — للمالك</div>
-        <div style="font-size:12px;color:#455A64;line-height:1.7;margin-bottom:9px;">أنت داخل بحساب المالك العادي. اضغط الزر لعرض المنشورات المنتظرة، ثم اختر موافقة أو رفض.</div>
-        <button type="button" data-social-admin-status="pending" style="border:0;border-radius:10px;padding:10px 14px;background:#1565C0;color:white;font-weight:700;">📥 عرض المنشورات المنتظرة</button>
+        <div style="font-weight:800;color:#174A7C;font-size:16px;margin-bottom:6px;">🛡️ مراجعة المنشورات — تحقق بريد المالك</div>
+        <div style="font-size:12px;color:#455A64;line-height:1.7;margin-bottom:9px;">إدارة المنشورات لا تعتمد على الدور الظاهر داخل التطبيق. أرسلي رابطًا آمنًا إلى بريد المالك المعتمد، ثم افتحيه على هذا الجهاز.</div>
+        <button type="button" id="socialOwnerLoginBtn" style="border:0;border-radius:10px;padding:10px 14px;background:#2E7D32;color:white;font-weight:700;">📧 إرسال رابط التحقق</button>
+        <div id="socialOwnerAuthStatus" role="status" style="font-size:12px;line-height:1.7;margin-top:8px;"></div>
+        <button type="button" data-social-admin-status="pending" style="border:0;border-radius:10px;padding:10px 14px;background:#1565C0;color:white;font-weight:700;margin-top:8px;">📥 عرض المنشورات المنتظرة</button>
         <button type="button" data-social-admin-status="approved" style="border:0;border-radius:10px;padding:10px 14px;background:#fff;color:#1565C0;font-weight:700;margin-right:6px;">📚 المنشورات المنشورة</button>
         <div id="socialAdminQueue" style="margin-top:12px;"></div>
       </section>`;
@@ -413,6 +410,11 @@
         var postId = parent ? parent.id.substring('commentsList-'.length) : '';
         window.deleteComment(postId, item);
       });
+    });
+    var ownerLoginButton = document.getElementById('socialOwnerLoginBtn');
+    if (ownerLoginButton) ownerLoginButton.addEventListener('click', function () {
+      if (window.HafezOwnerAuth) window.HafezOwnerAuth.requestMagicLink('socialOwnerAuthStatus');
+      else toast('خدمة التحقق غير جاهزة؛ أعيدي تحميل الصفحة.');
     });
     c.querySelectorAll('[data-social-admin-status]').forEach(function (button) {
       button.addEventListener('click', function () { loadAdminPosts(button.getAttribute('data-social-admin-status')); });

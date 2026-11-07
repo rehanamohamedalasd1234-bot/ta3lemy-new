@@ -1,19 +1,28 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const ALLOWED_ORIGIN = "https://rehanamohamedalasd1234-bot.github.io";
+const OWNER_EMAIL = "rehanamohamedalasd1234@gmail.com";
+const ALLOWED_ORIGINS = new Set([
+  "https://rehanamohamedalasd1234-bot.github.io",
+  "https://localhost",
+  "http://localhost",
+  "capacitor://localhost",
+]);
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
-  "Access-Control-Allow-Headers": "authorization, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Max-Age": "86400",
-  "Vary": "Origin",
-};
+function headersFor(origin: string | null) {
+  const headers: Record<string, string> = {
+    "Access-Control-Allow-Headers": "authorization, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Max-Age": "86400",
+    "Vary": "Origin",
+  };
+  if (origin && ALLOWED_ORIGINS.has(origin)) headers["Access-Control-Allow-Origin"] = origin;
+  return headers;
+}
 
-function jsonResponse(status: number, body: Record<string, unknown>): Response {
+function jsonResponse(status: number, body: Record<string, unknown>, origin: string | null): Response {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...corsHeaders, "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" },
+    headers: { ...headersFor(origin), "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" },
   });
 }
 
@@ -30,44 +39,40 @@ function getAdminClient() {
   });
 }
 
-async function verifyOwnerToken(request: Request, admin: ReturnType<typeof getAdminClient>, input: Record<string, unknown>) {
+async function verifyOwnerToken(request: Request, admin: ReturnType<typeof getAdminClient>) {
   const authorization = request.headers.get("authorization") || "";
-  const match = authorization.match(/^Bearer\s+(.+)$/i);
-  if (!match) throw new Response("Unauthorized", { status: 401 });
+  if (authorization.slice(0, 7).toLowerCase() !== "bearer ") throw new Response("Unauthorized", { status: 401 });
+  const token = authorization.slice(7).trim();
+  if (!token) throw new Response("Unauthorized", { status: 401 });
 
-  const { data, error } = await admin.auth.getUser(match[1]);
-  if (error || !data.user) throw new Response("Unauthorized", { status: 401 });
-
-  const appRole = String(input.app_role || "").trim().toLowerCase();
-  const appUserId = String(input.app_user_id || "").trim();
-  if (appRole !== "owner" || !appUserId || appUserId.length > 160) {
+  const { data, error } = await admin.auth.getUser(token);
+  const user = data && data.user;
+  if (error || !user) throw new Response("Unauthorized", { status: 401 });
+  if (user.is_anonymous === true || !user.email_confirmed_at || String(user.email || "").trim().toLowerCase() !== OWNER_EMAIL) {
     throw new Response("Forbidden", { status: 403 });
   }
-  return { id: data.user.id, appUserId };
+  return { id: user.id, email: OWNER_EMAIL };
 }
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 Deno.serve(async (request: Request) => {
   const origin = request.headers.get("origin");
-  if (request.method === "OPTIONS") {
-    if (origin !== ALLOWED_ORIGIN) return new Response(null, { status: 403 });
-    return new Response(null, { status: 204, headers: corsHeaders });
-  }
-  if (origin !== ALLOWED_ORIGIN) return jsonResponse(403, { error: "Origin not allowed" });
-  if (request.method !== "POST") return jsonResponse(405, { error: "Method not allowed" });
+  if (origin && !ALLOWED_ORIGINS.has(origin)) return jsonResponse(403, { error: "Origin not allowed" }, origin);
+  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: headersFor(origin) });
+  if (request.method !== "POST") return jsonResponse(405, { error: "Method not allowed" }, origin);
 
   try {
     const text = await request.text();
-    if (text.length > 12000) return jsonResponse(413, { error: "Request too large" });
+    if (text.length > 12000) return jsonResponse(413, { error: "Request too large" }, origin);
     let input: Record<string, unknown>;
-    try { input = JSON.parse(text); } catch (_) { return jsonResponse(400, { error: "Invalid JSON" }); }
+    try { input = JSON.parse(text); } catch (_) { return jsonResponse(400, { error: "Invalid JSON" }, origin); }
 
     const admin = getAdminClient();
-    const owner = await verifyOwnerToken(request, admin, input);
+    const owner = await verifyOwnerToken(request, admin);
     const action = String(input.action || "");
     if (action === "verify") {
-      return jsonResponse(200, { ok: true, data: { app_user_id: owner.appUserId } });
+      return jsonResponse(200, { ok: true, data: { verified: true, owner_id: owner.id } }, origin);
     }
 
     let result;
@@ -80,35 +85,35 @@ Deno.serve(async (request: Request) => {
       const postId = String(input.post_id || "");
       const content = typeof input.content === "string" ? input.content : null;
       if (!uuidPattern.test(postId) || content === null || content.length > 3000) {
-        return jsonResponse(400, { error: "Invalid post data" });
+        return jsonResponse(400, { error: "Invalid post data" }, origin);
       }
       result = await admin.rpc("social_owner_edit", { p_post_id: postId, p_content: content });
     } else if (action === "decide") {
       const postId = String(input.post_id || "");
       const decision = String(input.decision || "");
       if (!uuidPattern.test(postId) || !["approve", "reject", "delete"].includes(decision)) {
-        return jsonResponse(400, { error: "Invalid moderation request" });
+        return jsonResponse(400, { error: "Invalid moderation request" }, origin);
       }
       result = await admin.rpc("social_owner_decide", { p_post_id: postId, p_action: decision });
     } else if (action === "delete_comment") {
       const commentId = String(input.comment_id || "");
-      if (!uuidPattern.test(commentId)) return jsonResponse(400, { error: "Invalid comment" });
+      if (!uuidPattern.test(commentId)) return jsonResponse(400, { error: "Invalid comment" }, origin);
       result = await admin.rpc("social_owner_delete_comment", { p_comment_id: commentId });
     } else {
-      return jsonResponse(400, { error: "Unknown action" });
+      return jsonResponse(400, { error: "Unknown action" }, origin);
     }
 
     if (result.error) {
       console.error("Owner moderation RPC failed", { action, code: result.error.code });
-      return jsonResponse(400, { error: "تعذر تنفيذ الإجراء. حدّثي الصفحة وحاولي مرة أخرى." });
+      return jsonResponse(400, { error: "تعذر تنفيذ الإجراء. حدّثي الصفحة وحاولي مرة أخرى." }, origin);
     }
-    return jsonResponse(200, { ok: true, data: result.data });
+    return jsonResponse(200, { ok: true, data: result.data }, origin);
   } catch (error) {
     if (error instanceof Response) {
       const status = error.status;
-      return jsonResponse(status, { error: status === 403 ? "هذا الحساب ليس حساب المالك." : "جلسة الحساب غير صالحة؛ سجّلي الدخول مجددًا." });
+      return jsonResponse(status, { error: status === 403 ? "هذا الحساب ليس حساب المالك المعتمد." : "جلسة الحساب غير صالحة؛ سجّلي الدخول مجددًا." }, origin);
     }
     console.error("Owner moderation request failed", error instanceof Error ? error.message : "unknown error");
-    return jsonResponse(500, { error: "تعذر الاتصال بخدمة مراجعة المالك." });
+    return jsonResponse(500, { error: "تعذر الاتصال بخدمة مراجعة المالك." }, origin);
   }
 });
