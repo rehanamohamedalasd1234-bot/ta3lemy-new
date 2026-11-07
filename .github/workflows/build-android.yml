@@ -47,15 +47,17 @@ jobs:
       - name: Copy web app into Capacitor
         run: npm run cap:copy
 
-      - name: Build debug APK
+      - name: Build signed release APK
         working-directory: android
-        run: ./gradlew assembleDebug --stacktrace
+        env:
+          APP_VERSION_CODE: ${{ 100000 + github.run_number }}
+        run: ./gradlew assembleRelease --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: ta3lemy-hafez-${{ github.run_number }}
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: ta3lemy-hafez-release-${{ github.run_number }}
+          path: android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 30
 
@@ -63,7 +65,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk ta3lemy-hafez.apk
+          cp android/app/build/outputs/apk/release/app-release.apk ta3lemy-hafez.apk
           if gh release view latest --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             gh release upload latest ta3lemy-hafez.apk --repo "$GITHUB_REPOSITORY" --clobber
             gh release edit latest --repo "$GITHUB_REPOSITORY" --title "آخر إصدار من تطبيق منصة حافظ" --notes "يتم تحديث هذا الإصدار تلقائيًا من الفرع main."

@@ -3,12 +3,13 @@ apply plugin: 'com.android.application'
 android {
     namespace = "com.ta3lemy.hafez"
     compileSdk = rootProject.ext.compileSdkVersion
+    def buildNumber = (System.getenv('APP_VERSION_CODE') ?: '100000').toInteger()
     defaultConfig {
         applicationId "com.ta3lemy.hafez"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 97
-        versionName "1.0.97"
+        versionCode buildNumber
+        versionName "1.0.${buildNumber}"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,10 +17,19 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        distribution {
+            storeFile file('../keystore/ta3lemy-distribution.jks')
+            storePassword 'ta3lemy-release-2026'
+            keyAlias 'ta3lemy-release'
+            keyPassword 'ta3lemy-release-2026'
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.distribution
         }
     }
 }
