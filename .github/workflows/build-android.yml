@@ -51,6 +51,12 @@ jobs:
         working-directory: android
         run: APP_VERSION_CODE=$((100000 + GITHUB_RUN_NUMBER)) ./gradlew assembleRelease --stacktrace
 
+      - name: Verify APK integrity and signature
+        run: |
+          APK=android/app/build/outputs/apk/release/app-release.apk
+          "$ANDROID_HOME/build-tools/36.0.0/zipalign" -c -P 4 -v 4 "$APK"
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose "$APK"
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:

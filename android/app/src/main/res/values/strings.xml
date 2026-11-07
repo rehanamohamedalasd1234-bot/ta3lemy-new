@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">منصة حافظ التعليمية</string>
-    <string name="title_activity_main">منصة حافظ التعليمية</string>
+    <string name="app_name">منصة الأستاذ حافظ التعليمية</string>
+    <string name="title_activity_main">منصة الأستاذ حافظ التعليمية</string>
     <string name="package_name">com.ta3lemy.hafez</string>
     <string name="custom_url_scheme">com.ta3lemy.hafez</string>
 </resources>
