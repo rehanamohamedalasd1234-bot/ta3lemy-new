@@ -60,6 +60,38 @@
     screen = document.createElement('div');
     screen.id = 'tvChannelsScreen';
     screen.className = 'screen';
+    var styles = document.createElement('style');
+    styles.id = 'tvChannelStyles';
+    styles.textContent = `
+      #tvChannelsScreen .tv-channel-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+      #tvChannelsScreen .tv-channel-card{position:relative;overflow:hidden;border:1px solid #dce9e7;border-radius:20px;background:linear-gradient(145deg,#fff 0%,#fbfefd 100%);box-shadow:0 7px 22px rgba(0,77,64,.08);transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+      #tvChannelsScreen .tv-channel-card:before{content:"";position:absolute;inset:0 0 auto;height:4px;background:linear-gradient(90deg,#00796b,#4db6ac)}
+      #tvChannelsScreen .tv-channel-card[data-category="sports"]:before{background:linear-gradient(90deg,#d84343,#ffb74d)}
+      #tvChannelsScreen .tv-channel-card[data-category="education"]:before{background:linear-gradient(90deg,#3949ab,#26a69a)}
+      #tvChannelsScreen .tv-channel-card[data-category="custom"]:before{background:linear-gradient(90deg,#00897b,#80cbc4)}
+      #tvChannelsScreen .tv-channel-card:hover{transform:translateY(-3px);border-color:#80cbc4;box-shadow:0 12px 28px rgba(0,77,64,.14)}
+      #tvChannelsScreen .tv-card-open{display:block;width:100%;padding:17px 16px 14px;border:0;background:transparent;color:inherit;text-align:right;font:inherit;cursor:pointer}
+      #tvChannelsScreen .tv-card-open:focus-visible{outline:3px solid #26a69a;outline-offset:-4px;border-radius:20px}
+      #tvChannelsScreen .tv-card-head{display:flex;align-items:center;gap:13px;min-height:76px}
+      #tvChannelsScreen .tv-logo-box{position:relative;display:grid;place-items:center;flex:0 0 76px;width:76px;height:76px;overflow:hidden;border:1px solid #edf2f1;border-radius:19px;background:#fff;box-shadow:0 4px 12px rgba(38,50,56,.08)}
+      #tvChannelsScreen .tv-logo-box img{display:block;width:100%;height:100%;padding:5px;box-sizing:border-box;object-fit:contain;background:#fff}
+      #tvChannelsScreen .tv-logo-fallback{display:none;position:absolute;inset:0;place-items:center;background:linear-gradient(145deg,#e0f2f1,#b2dfdb);color:#00695c;font-size:29px}
+      #tvChannelsScreen .tv-brand-bein{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;background:linear-gradient(145deg,#58258b,#32145b);color:#fff;font-family:Arial,sans-serif;font-weight:800;letter-spacing:-1px}
+      #tvChannelsScreen .tv-brand-bein strong{font-size:25px;line-height:1}
+      #tvChannelsScreen .tv-brand-bein small{margin-top:4px;font-size:9px;letter-spacing:3px}
+      #tvChannelsScreen .tv-channel-info{min-width:0;flex:1}
+      #tvChannelsScreen .tv-category-pill{display:inline-flex;align-items:center;gap:5px;margin-bottom:6px;padding:4px 9px;border-radius:99px;background:#eef7f5;color:#28766d;font-size:10px;font-weight:800}
+      #tvChannelsScreen .tv-channel-name{margin:0;color:#203a37;font-size:16px;font-weight:800;line-height:1.45;overflow-wrap:anywhere}
+      #tvChannelsScreen .tv-channel-desc{margin:13px 0 0;color:#61716f;font-size:12px;line-height:1.75}
+      #tvChannelsScreen .tv-card-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:15px;padding-top:11px;border-top:1px solid #edf2f1}
+      #tvChannelsScreen .tv-card-cta{display:inline-flex;align-items:center;gap:7px;color:#00796b;font-size:12px;font-weight:800}
+      #tvChannelsScreen .tv-card-cta-icon{display:grid;place-items:center;width:25px;height:25px;border-radius:50%;background:#e0f2f1;font-size:12px}
+      #tvChannelsScreen .tv-card-source{color:#879592;font-size:10px;font-weight:700}
+      #tvChannelsScreen .tv-card-admin{display:flex;justify-content:flex-end;padding:0 15px 13px}
+      #tvChannelsScreen .tv-card-delete{border:1px solid #ffdde0;border-radius:9px;padding:6px 9px;background:#fff8f8;color:#b71c1c;font:inherit;font-size:11px;font-weight:700;cursor:pointer}
+      @media(max-width:520px){#tvChannelsScreen .tv-channel-grid{grid-template-columns:1fr;gap:11px}#tvChannelsScreen .tv-card-open{padding:14px}#tvChannelsScreen .tv-logo-box{flex-basis:68px;width:68px;height:68px}}
+      @media(prefers-reduced-motion:reduce){#tvChannelsScreen .tv-channel-card{transition:none}}
+    `;
     screen.innerHTML = `
       <div class="top-bar" style="background:linear-gradient(135deg,#00695C,#26A69A);">
         <button class="icon-btn" onclick="goBack()" aria-label="رجوع">→</button>
@@ -67,14 +99,15 @@
         <button class="icon-btn" id="tvManageToggle" type="button" onclick="toggleTvManage()" aria-label="إدارة القنوات" title="إدارة القنوات" style="display:none;">⚙️</button>
       </div>
       <div class="content" style="padding:14px;max-width:900px;margin:0 auto;">
-        <div style="background:#E0F2F1;border:1px solid #B2DFDB;border-radius:14px;padding:12px 14px;margin-bottom:12px;color:#24524D;font-size:13px;line-height:1.8;">
-          القنوات التي لا تسمح بالتضمين تفتح من مصدرها الرسمي. المشغّل الداخلي مخصص للمصادر التي تملكها أو لديك إذن صريح لتشغيلها.
+        <div style="background:linear-gradient(135deg,#e7f5f2,#f4fbf9);border:1px solid #cce6e1;border-radius:16px;padding:13px 15px;margin-bottom:14px;color:#24524D;font-size:13px;line-height:1.8;">
+          اختر بطاقة القناة لبدء المشاهدة أو فتح مصدرها الرسمي. المشاهدة داخل المنصة متاحة للمصادر المسموح بتضمينها.
         </div>
         <div id="tvOwnerPanel" style="display:none;"></div>
         <div id="tvCategoryFilters" style="display:flex;gap:7px;overflow:auto;padding:2px 1px 10px;margin-bottom:4px;"></div>
         <div id="tvChannelStatus" role="status" style="padding:12px;color:#607D8B;text-align:center;">جاري تحميل القنوات…</div>
-        <div id="tvChannelList" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;"></div>
+        <div id="tvChannelList" class="tv-channel-grid"></div>
       </div>`;
+    screen.appendChild(styles);
     document.body.appendChild(screen);
     renderFilters();
     return screen;
@@ -100,6 +133,27 @@
     return category === 'sports' ? '🏆' : category === 'education' ? '🎓' : '📡';
   }
 
+  function defaultLogo(channel) {
+    var name = String(channel.name || '').toLowerCase();
+    if (name.indexOf('on time') !== -1 || name.indexOf('on sport') !== -1 || name.indexOf('أون') !== -1) return './assets/tv-channels/onsport.webp';
+    if (name.indexOf('al ahly') !== -1 || name.indexOf('الأهلي') !== -1) return './assets/tv-channels/alahly-tv.webp';
+    if (name.indexOf('madrasetna') !== -1 || name.indexOf('مدرستنا') !== -1) return './assets/tv-channels/madrasetna.webp';
+    return '';
+  }
+
+  function logoMarkup(channel) {
+    var customLogo = safeHttps(channel.logo_url);
+    var src = customLogo || defaultLogo(channel);
+    var name = String(channel.name || '').toLowerCase();
+    if (src) {
+      return '<div class="tv-logo-box"><img data-tv-logo src="' + esc(src) + '" alt="شعار ' + esc(channel.name) + '" loading="lazy" decoding="async"><span class="tv-logo-fallback" aria-hidden="true">' + categoryIcon(channel.category) + '</span></div>';
+    }
+    if (name.indexOf('bein') !== -1 || name.indexOf('بي إن') !== -1 || name.indexOf('بين سبورت') !== -1) {
+      return '<div class="tv-logo-box" aria-label="beIN SPORTS"><span class="tv-brand-bein"><strong>beIN</strong><small>SPORTS</small></span></div>';
+    }
+    return '<div class="tv-logo-box" aria-hidden="true"><span class="tv-logo-fallback" style="display:grid;position:static;">' + categoryIcon(channel.category) + '</span></div>';
+  }
+
   function safeYoutubeId(value) {
     try {
       var url = new URL(String(value || ''));
@@ -117,11 +171,11 @@
   function channelActionMarkup(channel) {
     var behavior = String(channel.behavior || 'external');
     var url = safeHttps(channel.watch_url);
-    if (!url) return '<span style="font-size:12px;color:#B71C1C;">الرابط غير صالح</span>';
+    if (!url) return '<span class="tv-card-cta" style="color:#B71C1C;">المصدر غير متاح</span>';
     if (behavior === 'youtube' || behavior === 'hls' || behavior === 'video') {
-      return '<button type="button" data-tv-play="' + esc(channel.id) + '" style="border:0;border-radius:10px;padding:9px 12px;background:#00796B;color:#fff;font:inherit;font-weight:700;">▶ مشاهدة داخل المنصة</button>';
+      return '<span class="tv-card-cta"><span class="tv-card-cta-icon">▶</span>مشاهدة داخل المنصة</span><span class="tv-card-source">مشغّل داخلي</span>';
     }
-    return '<a href="' + esc(url) + '" target="_blank" rel="noopener noreferrer" style="display:inline-block;text-decoration:none;border-radius:10px;padding:9px 12px;background:#00796B;color:#fff;font-size:13px;font-weight:700;">فتح المصدر الرسمي ↗</a>';
+    return '<span class="tv-card-cta"><span class="tv-card-cta-icon">↗</span>فتح القناة</span><span class="tv-card-source">المصدر الرسمي</span>';
   }
 
   function renderChannels() {
@@ -136,21 +190,37 @@
       status.textContent = channels.length ? 'لا توجد قنوات في هذا التصنيف.' : 'لا توجد قنوات متاحة الآن.';
       return;
     }
-    status.textContent = 'اختاري قناة لفتحها من مصدرها الرسمي أو تشغيل محطة مصرح بها.';
+    status.textContent = 'اضغط على شعار القناة أو بطاقتها لفتحها.';
     host.innerHTML = shown.map(function (channel) {
-      var logo = safeHttps(channel.logo_url);
-      var icon = logo ? '<img src="' + esc(logo) + '" alt="" loading="lazy" referrerpolicy="no-referrer" style="width:42px;height:42px;object-fit:contain;border-radius:10px;background:#fff;">' : '<div aria-hidden="true" style="width:42px;height:42px;display:grid;place-items:center;border-radius:10px;background:#E0F2F1;font-size:23px;">' + categoryIcon(channel.category) + '</div>';
+      var logo = logoMarkup(channel);
       var canDelete = ownerRole() && !!verifiedOwnerSession;
-      return '<article style="background:#fff;border:1px solid #E0E7E7;border-radius:15px;padding:13px;box-shadow:0 3px 12px rgba(0,0,0,.05);">' +
-        '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">' + icon + '<div style="min-width:0;flex:1;"><div style="font-weight:800;color:#263238;overflow-wrap:anywhere;">' + esc(channel.name) + '</div><div style="font-size:11px;color:#607D8B;margin-top:3px;">' + esc(categories[channel.category] || 'قناة') + '</div></div></div>' +
-        (channel.description ? '<div style="font-size:12px;line-height:1.7;color:#546E7A;margin-bottom:10px;">' + esc(channel.description) + '</div>' : '') +
-        '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' + channelActionMarkup(channel) + (canDelete ? '<button type="button" data-tv-delete="' + esc(channel.id) + '" style="border:1px solid #FFCDD2;border-radius:10px;padding:8px 10px;background:#FFF8F8;color:#B71C1C;font:inherit;font-size:12px;font-weight:700;">حذف</button>' : '') + '</div>' +
+      return '<article class="tv-channel-card" data-category="' + esc(channel.category || '') + '">' +
+        '<button class="tv-card-open" type="button" data-tv-open="' + esc(channel.id) + '" aria-label="فتح ' + esc(channel.name) + '">' +
+          '<div class="tv-card-head">' + logo + '<div class="tv-channel-info"><span class="tv-category-pill">' + categoryIcon(channel.category) + ' ' + esc(categories[channel.category] || 'قناة') + '</span><h3 class="tv-channel-name">' + esc(channel.name) + '</h3></div></div>' +
+          (channel.description ? '<p class="tv-channel-desc">' + esc(channel.description) + '</p>' : '') +
+          '<div class="tv-card-footer">' + channelActionMarkup(channel) + '</div>' +
+        '</button>' +
+        (canDelete ? '<div class="tv-card-admin"><button class="tv-card-delete" type="button" data-tv-delete="' + esc(channel.id) + '">حذف القناة</button></div>' : '') +
         '</article>';
     }).join('');
-    host.querySelectorAll('[data-tv-play]').forEach(function (button) {
+    host.querySelectorAll('[data-tv-open]').forEach(function (button) {
       button.addEventListener('click', function () {
-        var item = channels.find(function (channel) { return String(channel.id) === String(button.getAttribute('data-tv-play')); });
-        if (item) openPlayer(item);
+        var item = channels.find(function (channel) { return String(channel.id) === String(button.getAttribute('data-tv-open')); });
+        if (!item) return;
+        if (['youtube', 'hls', 'video'].indexOf(String(item.behavior || 'external')) !== -1) {
+          openPlayer(item);
+          return;
+        }
+        var url = safeHttps(item.watch_url);
+        if (!url) { notify('مصدر القناة غير متاح حاليًا.'); return; }
+        window.open(url, '_blank', 'noopener,noreferrer');
+      });
+    });
+    host.querySelectorAll('[data-tv-logo]').forEach(function (image) {
+      image.addEventListener('error', function () {
+        image.hidden = true;
+        var fallback = image.parentElement && image.parentElement.querySelector('.tv-logo-fallback');
+        if (fallback) fallback.style.display = 'grid';
       });
     });
     host.querySelectorAll('[data-tv-delete]').forEach(function (button) {
