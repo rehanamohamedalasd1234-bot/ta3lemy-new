@@ -1,0 +1,20 @@
+name = "ta3lemy-ask"
+main = "src/index.mjs"
+compatibility_date = "2026-11-01"
+workers_dev = true
+
+[ai]
+binding = "AI"
+
+[vars]
+ALLOWED_ORIGINS = "https://rehanamohamedalasd1234-bot.github.io"
+
+# The Worker Free AI quota is the account-level hard stop. This additional
+# per-IP binding limits accidental bursts; it is approximate and per location.
+[[ratelimits]]
+name = "ASK_RATE_LIMIT"
+namespace_id = "842710337"
+
+  [ratelimits.simple]
+  limit = 8
+  period = 60
