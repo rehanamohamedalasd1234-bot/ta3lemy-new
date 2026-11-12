@@ -1,10 +1,10 @@
 // Service Worker for the Hafez educational platform.
 // Shell files are prefetched for offline launch; media is stored only when the user explicitly downloads it.
 const CACHE_PREFIX = 'ta3lemy-shell-';
-const CACHE_NAME = CACHE_PREFIX + '1.0.108';
+const CACHE_NAME = CACHE_PREFIX + '1.0.109';
 const MEDIA_CACHE_NAME = 'ta3lemy-media-v1';
 const APP_SHELL = [
-  './', './index.html', './extras.js', './curriculum-display-fix.js', './offline-mode.js', './navigation-fix.js', './service-worker.js', './manifest.json', './version.json', './auth-init.js', './fix-canvas.css',
+  './', './index.html', './extras.js', './curriculum-display-fix.js', './offline-mode.js', './navigation-fix.js', './service-worker.js', './manifest.json', './version.json', './app-update.js', './auth-init.js', './fix-canvas.css',
   './teacher-auth.js', './teacher.js', './owner-approvals.js', './azhar-curriculum.js', './teacher-workflow.js', './curriculum-links.js', './science-grade7-term1.js', './social-grade7-term1.js', './social-grade8-term1.js', './science-grade8-term1.js', './social-grade9-term1.js', './arabic-grade7-term1.js', './arabic-grade8-term1.js', './english-grade7-term1.js', './english-grade8-term1.js', './english-grade9-term1.js',
   './math-grade7-term1.js',
   './religion-grade7-term1.js', './computer-grade7-term1.js', './art-grade7-term1.js',
@@ -67,20 +67,35 @@ self.addEventListener('activate', event => {
   );
 });
 
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
+});
+
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
 
-  // Serve exact app-shell paths from cache first, then update in background
+  // Cross-origin media is served from the explicit download cache first; live streams still use the network.
+  if (url.origin !== self.location.origin && isMediaRequest(event.request, url)) {
+    event.respondWith((async () => {
+      const mediaCache = await caches.open(MEDIA_CACHE_NAME);
+      const cached = await mediaCache.match(event.request, { ignoreVary: true });
+      if (cached) return cached;
+      try { return await fetch(event.request); }
+      catch (_) { return new Response('', { status: 503, statusText: 'Offline Media Not Found' }); }
+    })());
+    return;
+  }
+
+  // Serve exact app-shell paths from cache first, then refresh the cache in the background.
+  // ignoreSearch lets versioned script URLs (for example ?v=1.0.94) use their cached file offline.
   if (url.origin === self.location.origin && APP_SHELL_PATHS.has(url.pathname)) {
     event.respondWith(
-      caches.match(event.request).then(cached => {
+      caches.match(event.request, { ignoreSearch: true }).then(cached => {
         const fetchPromise = fetch(event.request).then(networkResponse => {
-          if (networkResponse.ok) {
-            caches.open(CACHE_NAME).then(cache => cache.put(event.request, networkResponse.clone()));
-          }
+          if (networkResponse.ok) caches.open(CACHE_NAME).then(cache => cache.put(event.request, networkResponse.clone()));
           return networkResponse;
-        }).catch(() => cached);
+        }).catch(() => cached || (url.pathname === new URL(APP_SHELL_FALLBACK).pathname ? caches.match(APP_SHELL_FALLBACK) : undefined));
         return cached || fetchPromise;
       })
     );
@@ -100,15 +115,15 @@ self.addEventListener('fetch', event => {
           try { await cache.put(event.request, response.clone()); } catch (_) {}
         }
         return response;
-      } catch (error) {
+      } catch (_) {
         return cached || new Response('', { status: 503, statusText: 'Offline SDK Not Found' });
       }
     })());
     return;
   }
 
-  // Network first for all other requests
+  // Network first for all other requests, with cached response as a fallback.
   event.respondWith(
-    fetch(event.request).catch(() => caches.match(event.request))
+    fetch(event.request).catch(() => caches.match(event.request, { ignoreSearch: true }))
   );
 });

@@ -2052,6 +2052,43 @@ console.log('✅ Exercises UI loaded');
 // ═══════════════════════════════════════════════════════
 (function(){
   var MEDIA_CACHE_NAME='ta3lemy-media-v1';
+  var OFFLINE_DB_NAME='ta3lemy-offline-data-v1';
+  function openOfflineDb(){
+    return new Promise(function(resolve,reject){
+      if(!('indexedDB' in window)){reject(new Error('IndexedDB unavailable'));return;}
+      var request=indexedDB.open(OFFLINE_DB_NAME,1);
+      request.onupgradeneeded=function(){var db=request.result;if(!db.objectStoreNames.contains('records'))db.createObjectStore('records');};
+      request.onsuccess=function(){resolve(request.result);};request.onerror=function(){reject(request.error||new Error('IndexedDB open failed'));};
+    });
+  }
+  function putOfflineRecord(key,value){
+    return openOfflineDb().then(function(db){return new Promise(function(resolve,reject){
+      var tx=db.transaction('records','readwrite');tx.objectStore('records').put(value,key);
+      tx.oncomplete=function(){db.close();resolve();};tx.onerror=tx.onabort=function(){var e=tx.error||new Error('IndexedDB write failed');db.close();reject(e);};
+    });});
+  }
+  function getOfflineRecord(key){
+    return openOfflineDb().then(function(db){return new Promise(function(resolve,reject){
+      var tx=db.transaction('records','readonly'),request=tx.objectStore('records').get(key);
+      request.onsuccess=function(){var value=request.result;db.close();resolve(value);};request.onerror=function(){var e=request.error||new Error('IndexedDB read failed');db.close();reject(e);};
+    });});
+  }
+  window.saveOfflineQuran=async function(quran,index){
+    try{localStorage.setItem('offline_quran_full',JSON.stringify(quran));localStorage.setItem('ta3lemy_surahs',JSON.stringify(index));return 'localStorage';}
+    catch(storageError){
+      await putOfflineRecord('quran',{quran:quran,index:index,savedAt:new Date().toISOString()});
+      try{localStorage.removeItem('offline_quran_full');localStorage.setItem('ta3lemy_surahs',JSON.stringify(index));}catch(_){}
+      return 'IndexedDB';
+    }
+  };
+  window.readOfflineQuran=async function(){
+    var quran=null,index=[];
+    try{quran=JSON.parse(localStorage.getItem('offline_quran_full')||'null');}catch(_){}
+    try{index=JSON.parse(localStorage.getItem('ta3lemy_surahs')||'[]');if(!Array.isArray(index))index=[];}catch(_){}
+    if(quran&&Object.keys(quran).length)return {quran:quran,index:index};
+    try{var stored=await getOfflineRecord('quran');if(stored&&stored.quran)return {quran:stored.quran,index:Array.isArray(stored.index)?stored.index:index};}catch(e){console.warn('تعذر قراءة نسخة القرآن من التخزين المحلي:',e);}
+    return {quran:null,index:index};
+  };
   window.offlineMediaIsCached=async function(url){
     if(!url||!('caches' in window))return false;
     try{var cache=await caches.open(MEDIA_CACHE_NAME);return !!(await cache.match(url));}catch(e){return false;}
@@ -2105,11 +2142,10 @@ console.log('✅ Exercises UI loaded');
       if(!response.ok)throw new Error('Quran API '+response.status);
       var payload=await response.json();if(!payload.data||!payload.data.surahs)throw new Error('بيانات القرآن غير مكتملة');
       var quran={},surahIndex=payload.data.surahs.map(function(s){
-        quran[s.number]={name:s.name,revelationType:s.revelationType,ayahs:s.ayahs.map(function(a){return {number:a.number,numberInSurah:a.numberInSurah,num:a.numberInSurah,text:a.text};})};
+        quran[s.number]={name:s.name,revelationType:s.revelationType,ayahs:s.ayahs.map(function(a){return a.text;})};
         return {number:s.number,name:s.name,englishName:s.englishName,numberOfAyahs:s.numberOfAyahs,revelationType:s.revelationType};
       });
-      localStorage.setItem('offline_quran_full',JSON.stringify(quran));
-      localStorage.setItem('ta3lemy_surahs',JSON.stringify(surahIndex));
+      await window.saveOfflineQuran(quran,surahIndex);
       report.quran=surahIndex.length;
     }catch(e){console.error('تعذر تنزيل القرآن:',e);if(typeof showToast==='function')showToast('⚠️ لم يكتمل تنزيل نص القرآن');}
     try{

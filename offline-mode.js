@@ -68,12 +68,12 @@
     if (wrapper) wrapper.style.display = 'none';
   }
   function blockNetworkOnlyScreens() {
-    ['openMessages', 'openPublicChat', 'openChat', 'openNewMessage', 'openRadio', 'playRadio', 'playMyStationAudio', 'addMyStationAudio', 'sendMessage'].forEach(function (name) {
+    ['openMessages', 'openPublicChat', 'openChat', 'openNewMessage', 'playRadio', 'addMyStationAudio', 'sendMessage'].forEach(function (name) {
       var original = window[name];
       if (typeof original !== 'function' || original.__offlineGuard) return;
       var wrapped = function () {
         if (!navigator.onLine) {
-          var radioAction = name === 'openRadio' || name === 'playRadio' || name === 'playMyStationAudio' || name === 'addMyStationAudio';
+          var radioAction = name === 'playRadio' || name === 'addMyStationAudio';
           notify(radioAction ? '📻 الإذاعات تحتاج اتصالًا بالإنترنت.' : '💬 الدردشة تحتاج اتصالًا بالإنترنت.');
           return;
         }
