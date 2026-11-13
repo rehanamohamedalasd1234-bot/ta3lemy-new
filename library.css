@@ -1,0 +1,83 @@
+#libraryHomeButton { border:0; background:transparent; color:inherit; font:inherit; }
+#libraryHomeButton:focus-visible { outline:3px solid #2e7d32; outline-offset:2px; border-radius:12px; }
+.library-screen .library-content {
+  padding: 14px 14px 30px;
+  direction: rtl;
+  max-width: 980px;
+  margin: 0 auto;
+}
+.library-header-actions { display:flex; align-items:center; gap:8px; }
+.library-chip, .library-filter {
+  border:1px solid #dce9dc; background:#fff; color:#255d36; border-radius:999px;
+  padding:8px 13px; font:inherit; font-size:13px; cursor:pointer; white-space:nowrap;
+}
+.library-filters { display:flex; gap:8px; overflow-x:auto; padding:7px 1px 12px; scrollbar-width:thin; }
+.library-filter.active { background:#2e7d32; color:#fff; border-color:#2e7d32; }
+.library-toolbar { display:grid; grid-template-columns:1fr; gap:10px; margin:10px 0 12px; }
+.library-search {
+  width:100%; box-sizing:border-box; min-height:46px; border:1px solid #d8e2d8; border-radius:13px;
+  padding:10px 14px; background:#fff; color:#233; font:inherit; font-size:15px;
+}
+.library-message { padding:13px 15px; border-radius:12px; margin:10px 0; background:#f0f7ee; color:#365b3b; font-size:14px; line-height:1.7; }
+.library-message.error { background:#fff0ef; color:#962c20; }
+.library-books { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:12px; }
+.library-card { background:#fff; border:1px solid #e7eee7; border-radius:16px; padding:15px; box-shadow:0 3px 12px rgba(25,70,35,.07); display:flex; flex-direction:column; min-height:175px; }
+.library-card-icon { font-size:28px; margin-bottom:5px; }
+.library-card h3 { margin:2px 0 5px; color:#234c31; font-size:17px; line-height:1.5; }
+.library-card p { color:#65736a; margin:3px 0; line-height:1.6; font-size:13px; }
+.library-card .library-card-meta { color:#38683f; font-size:12px; margin-top:auto; padding-top:10px; }
+.library-card button, .library-primary, .library-secondary, .library-danger {
+  border:0; border-radius:11px; padding:10px 13px; font:inherit; font-weight:700; cursor:pointer; min-height:42px;
+}
+.library-primary { background:#2e7d32; color:#fff; }
+.library-secondary { background:#eaf3eb; color:#286135; }
+.library-danger { background:#fff0ef; color:#a1261a; }
+.library-card .library-primary { width:100%; margin-top:12px; }
+.library-empty { text-align:center; background:#fff; border:1px dashed #c9d8ca; border-radius:16px; padding:26px 16px; color:#64736a; line-height:1.8; }
+.library-reader-info { background:#fff; padding:13px; border-radius:14px; margin-bottom:10px; line-height:1.7; }
+.library-reader-frame { width:100%; height:min(72vh,900px); min-height:440px; border:0; border-radius:12px; background:#fff; }
+.library-reader-text { white-space:pre-wrap; overflow-wrap:anywhere; background:#fff; border-radius:14px; padding:20px; line-height:2; font-size:17px; color:#242a25; min-height:45vh; }
+.library-reader-actions { display:flex; flex-wrap:wrap; gap:8px; margin:10px 0 14px; }
+.library-admin-banner { background:#fff8e3; border:1px solid #f1dc96; color:#665216; border-radius:13px; padding:12px 14px; line-height:1.7; margin-bottom:13px; }
+.library-auth-panel, .library-admin-panel { background:#fff; border:1px solid #e4ebe4; border-radius:16px; padding:16px; margin-bottom:14px; }
+.library-auth-panel h3, .library-admin-panel h3 { margin:0 0 8px; color:#284c31; }
+.library-form-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.library-field { display:flex; flex-direction:column; gap:6px; min-width:0; color:#3e5142; font-size:13px; font-weight:700; }
+.library-field.full { grid-column:1 / -1; }
+.library-field input, .library-field textarea, .library-field select {
+  width:100%; box-sizing:border-box; border:1px solid #d8e2d8; border-radius:10px; padding:10px 11px;
+  min-height:43px; background:#fff; color:#243328; font:inherit; font-size:14px;
+}
+.library-field textarea { min-height:95px; resize:vertical; line-height:1.7; }
+.library-checks { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:12px 0; }
+.library-check { display:flex; gap:8px; align-items:flex-start; color:#47564a; font-size:13px; line-height:1.6; }
+.library-check input { margin-top:4px; }
+.library-admin-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+.library-admin-book { background:#fff; border:1px solid #e5ebe5; border-radius:13px; padding:12px; margin:8px 0; }
+.library-admin-book-title { font-weight:800; color:#2b5033; line-height:1.5; }
+.library-admin-book-meta { color:#64736a; font-size:12px; line-height:1.8; margin:3px 0 9px; }
+.library-admin-book-actions { display:flex; flex-wrap:wrap; gap:7px; }
+.library-admin-book-actions button { flex:1 1 auto; }
+.library-folder-row { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid #edf1ed; }
+.library-folder-name { color:#34543a; overflow-wrap:anywhere; }
+.library-small-note { color:#69756b; font-size:12px; line-height:1.65; }
+.library-loading { text-align:center; padding:24px; color:#617365; }
+body.dark-mode .library-card, body.dark-mode .library-reader-info, body.dark-mode .library-reader-text,
+body.dark-mode .library-auth-panel, body.dark-mode .library-admin-panel, body.dark-mode .library-admin-book { background:#1e2a22; color:#e5eee6; border-color:#344638; }
+body.dark-mode .library-card h3, body.dark-mode .library-auth-panel h3, body.dark-mode .library-admin-panel h3,
+body.dark-mode .library-admin-book-title { color:#c6e9cb; }
+body.dark-mode .library-card p, body.dark-mode .library-card-meta, body.dark-mode .library-admin-book-meta,
+body.dark-mode .library-folder-name, body.dark-mode .library-small-note { color:#c0cfc2; }
+body.dark-mode .library-search, body.dark-mode .library-field input, body.dark-mode .library-field textarea, body.dark-mode .library-field select { background:#172019; color:#eef5ef; border-color:#455848; }
+body.dark-mode .library-filter, body.dark-mode .library-chip { background:#26352a; border-color:#455848; color:#d6ead9; }
+body.dark-mode .library-filter.active { background:#2e7d32; color:#fff; }
+@media (max-width:520px) {
+  .library-screen .library-content { padding:10px 10px 24px; }
+  .library-books { grid-template-columns:1fr; }
+  .library-card { min-height:0; }
+  .library-form-grid { grid-template-columns:1fr; }
+  .library-field.full { grid-column:auto; }
+  .library-checks { grid-template-columns:1fr; }
+  .library-reader-frame { height:70vh; min-height:360px; }
+  .library-reader-text { font-size:16px; padding:15px; }
+}

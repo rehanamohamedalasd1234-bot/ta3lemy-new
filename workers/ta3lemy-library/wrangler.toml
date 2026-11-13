@@ -1,0 +1,13 @@
+name = "ta3lemy-library"
+main = "src/index.mjs"
+compatibility_date = "2026-11-13"
+workers_dev = true
+
+[[kv_namespaces]]
+binding = "LIBRARY_KV"
+id = "dc0c9ecae752401b9468e660ecda74d7"
+
+[vars]
+ALLOWED_ORIGIN = "https://rehanamohamedalasd1234-bot.github.io"
+SUPABASE_URL = "https://mnewhplyicaacflvzkyr.supabase.co"
+SUPABASE_PUBLISHABLE_KEY = "sb_publishable_3yy6wHcXCI3lCnwm_gixfg_1wtTn3mI"

@@ -88,7 +88,16 @@ test('the updater checks the published repository version and refreshes the serv
   assert.doesNotMatch(updater, /releases\/latest\/download/);
   assert.match(updater, /registration\.update\(\)/);
   assert.match(html, /onclick="openAppUpdate\(\)"/);
-  assert.match(html, /name="ta3lemy-version" content="1\.0\.109"/);
+  assert.match(html, /name="ta3lemy-version" content="1\.0\.111"/);
+});
+
+test('the library is reachable from the student home and owner administration supports sign-out', async () => {
+  const library = await read('library.js');
+  assert.match(library, /id = 'libraryHomeButton'/);
+  assert.match(library, /tile\.addEventListener\('click', openLibrary\)/);
+  assert.match(library, /function openLibraryAdmin\(\)/);
+  assert.match(library, /function signOutOwner\(\)/);
+  assert.match(library, /HafezOwnerAuth\.signOut\(\)/);
 });
 
 test('Quran offline downloads use compact verse strings and IndexedDB fallback', async () => {
