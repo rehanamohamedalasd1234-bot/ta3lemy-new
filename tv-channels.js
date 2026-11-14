@@ -5,6 +5,8 @@
   var config = window.SUPABASE_CHAT_CONFIG || {};
   var publicClient = null;
   var channels = [];
+  var activeHls = null;
+  var activeChannel = null;
   var verifiedOwnerSession = null;
   var managerOpen = false;
   var selectedCategory = 'all';
@@ -22,6 +24,14 @@
       behavior: 'hls',
       watch_url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
       description: 'بث تجريبي مفتوح لاختبار المشغل داخل المنصة. ليس قناة تجارية.'
+    },
+    {
+      id: 'nasa-official-live',
+      name: 'NASA — البث الرسمي',
+      category: 'education',
+      behavior: 'external',
+      watch_url: 'https://www.youtube.com/@NASA/streams',
+      description: 'علوم وفضاء من المصدر الرسمي؛ تُفتح صفحة البث الرسمية عند توفر بث حي.'
     }
   ];
 
@@ -73,33 +83,40 @@
     var styles = document.createElement('style');
     styles.id = 'tvChannelStyles';
     styles.textContent = `
+      #tvChannelsScreen .tv-console{background:#111827;border-radius:24px;padding:10px;box-shadow:0 14px 35px rgba(15,23,42,.25);margin-bottom:14px}
+      #tvChannelsScreen .tv-live-stage{position:relative;display:grid;place-items:center;min-height:210px;aspect-ratio:16/9;overflow:hidden;border-radius:17px;background:radial-gradient(circle at 50% 35%,#164e63,#020617 70%);color:#fff;text-align:center}
+      #tvChannelsScreen .tv-live-stage video,#tvChannelsScreen .tv-live-stage iframe{width:100%;height:100%;border:0;object-fit:contain;background:#000}
+      #tvChannelsScreen .tv-stage-placeholder{padding:25px;color:#d1fae5}.tv-stage-placeholder strong{display:block;font-size:25px;margin:8px 0}.tv-stage-placeholder span{font-size:12px;color:#b6c8d0}
+      #tvChannelsScreen .tv-live-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;color:#fff;padding:10px 5px 2px;font-size:13px}.tv-live-dot{width:9px;height:9px;background:#ef4444;border-radius:50%;display:inline-block;margin-left:5px;box-shadow:0 0 0 4px rgba(239,68,68,.18)}
+      #tvChannelsScreen .tv-channel-strip{display:flex;gap:10px;overflow-x:auto;padding:5px 2px 12px;scroll-snap-type:x proximity}
+      #tvChannelsScreen .tv-channel-strip::-webkit-scrollbar{height:5px}#tvChannelsScreen .tv-channel-strip::-webkit-scrollbar-thumb{background:#80cbc4;border-radius:8px}
       #tvChannelsScreen .tv-channel-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
-      #tvChannelsScreen .tv-channel-card{position:relative;overflow:hidden;border:1px solid #dce9e7;border-radius:20px;background:linear-gradient(145deg,#fff 0%,#fbfefd 100%);box-shadow:0 7px 22px rgba(0,77,64,.08);transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+      #tvChannelsScreen .tv-channel-card{position:relative;overflow:hidden;min-width:165px;flex:0 0 165px;border:1px solid #dce9e7;border-radius:16px;background:linear-gradient(145deg,#fff 0%,#fbfefd 100%);box-shadow:0 7px 22px rgba(0,77,64,.08);transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;scroll-snap-align:start}
       #tvChannelsScreen .tv-channel-card:before{content:"";position:absolute;inset:0 0 auto;height:4px;background:linear-gradient(90deg,#00796b,#4db6ac)}
       #tvChannelsScreen .tv-channel-card[data-category="sports"]:before{background:linear-gradient(90deg,#d84343,#ffb74d)}
       #tvChannelsScreen .tv-channel-card[data-category="education"]:before{background:linear-gradient(90deg,#3949ab,#26a69a)}
       #tvChannelsScreen .tv-channel-card[data-category="custom"]:before{background:linear-gradient(90deg,#00897b,#80cbc4)}
       #tvChannelsScreen .tv-channel-card:hover{transform:translateY(-3px);border-color:#80cbc4;box-shadow:0 12px 28px rgba(0,77,64,.14)}
-      #tvChannelsScreen .tv-card-open{display:block;width:100%;padding:17px 16px 14px;border:0;background:transparent;color:inherit;text-align:right;font:inherit;cursor:pointer}
+      #tvChannelsScreen .tv-card-open{display:block;width:100%;padding:13px 12px 12px;border:0;background:transparent;color:inherit;text-align:right;font:inherit;cursor:pointer}
       #tvChannelsScreen .tv-card-open:focus-visible{outline:3px solid #26a69a;outline-offset:-4px;border-radius:20px}
-      #tvChannelsScreen .tv-card-head{display:flex;align-items:center;gap:13px;min-height:76px}
-      #tvChannelsScreen .tv-logo-box{position:relative;display:grid;place-items:center;flex:0 0 76px;width:76px;height:76px;overflow:hidden;border:1px solid #edf2f1;border-radius:19px;background:#fff;box-shadow:0 4px 12px rgba(38,50,56,.08)}
+      #tvChannelsScreen .tv-card-head{display:block;min-height:115px}.tv-channel-info{margin-top:9px}
+      #tvChannelsScreen .tv-logo-box{position:relative;display:grid;place-items:center;width:100%;height:82px;overflow:hidden;border:1px solid #edf2f1;border-radius:13px;background:#fff;box-shadow:0 4px 12px rgba(38,50,56,.08)}
       #tvChannelsScreen .tv-logo-box img{display:block;width:100%;height:100%;padding:5px;box-sizing:border-box;object-fit:contain;background:#fff}
       #tvChannelsScreen .tv-logo-fallback{display:none;position:absolute;inset:0;place-items:center;background:linear-gradient(145deg,#e0f2f1,#b2dfdb);color:#00695c;font-size:29px}
       #tvChannelsScreen .tv-brand-bein{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;background:linear-gradient(145deg,#58258b,#32145b);color:#fff;font-family:Arial,sans-serif;font-weight:800;letter-spacing:-1px}
       #tvChannelsScreen .tv-brand-bein strong{font-size:25px;line-height:1}
       #tvChannelsScreen .tv-brand-bein small{margin-top:4px;font-size:9px;letter-spacing:3px}
-      #tvChannelsScreen .tv-channel-info{min-width:0;flex:1}
+      #tvChannelsScreen .tv-channel-info{min-width:0}
       #tvChannelsScreen .tv-category-pill{display:inline-flex;align-items:center;gap:5px;margin-bottom:6px;padding:4px 9px;border-radius:99px;background:#eef7f5;color:#28766d;font-size:10px;font-weight:800}
       #tvChannelsScreen .tv-channel-name{margin:0;color:#203a37;font-size:16px;font-weight:800;line-height:1.45;overflow-wrap:anywhere}
-      #tvChannelsScreen .tv-channel-desc{margin:13px 0 0;color:#61716f;font-size:12px;line-height:1.75}
+      #tvChannelsScreen .tv-channel-desc{margin:8px 0 0;color:#61716f;font-size:11px;line-height:1.65;min-height:36px}
       #tvChannelsScreen .tv-card-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:15px;padding-top:11px;border-top:1px solid #edf2f1}
       #tvChannelsScreen .tv-card-cta{display:inline-flex;align-items:center;gap:7px;color:#00796b;font-size:12px;font-weight:800}
       #tvChannelsScreen .tv-card-cta-icon{display:grid;place-items:center;width:25px;height:25px;border-radius:50%;background:#e0f2f1;font-size:12px}
       #tvChannelsScreen .tv-card-source{color:#879592;font-size:10px;font-weight:700}
       #tvChannelsScreen .tv-card-admin{display:flex;justify-content:flex-end;padding:0 15px 13px}
       #tvChannelsScreen .tv-card-delete{border:1px solid #ffdde0;border-radius:9px;padding:6px 9px;background:#fff8f8;color:#b71c1c;font:inherit;font-size:11px;font-weight:700;cursor:pointer}
-      @media(max-width:520px){#tvChannelsScreen .tv-channel-grid{grid-template-columns:1fr;gap:11px}#tvChannelsScreen .tv-card-open{padding:14px}#tvChannelsScreen .tv-logo-box{flex-basis:68px;width:68px;height:68px}}
+      @media(max-width:520px){#tvChannelsScreen .tv-live-stage{min-height:190px}.tv-channel-card{min-width:150px!important;flex-basis:150px!important}}
       @media(prefers-reduced-motion:reduce){#tvChannelsScreen .tv-channel-card{transition:none}}
     `;
     screen.innerHTML = `
@@ -110,14 +127,18 @@
       </div>
       <div class="content" style="padding:14px;max-width:900px;margin:0 auto;">
         <div style="background:linear-gradient(135deg,#e7f5f2,#f4fbf9);border:1px solid #cce6e1;border-radius:16px;padding:13px 15px;margin-bottom:14px;color:#24524D;font-size:13px;line-height:1.8;">
-          اختر بطاقة القناة لبدء المشاهدة أو فتح مصدرها الرسمي. المشاهدة داخل المنصة متاحة للمصادر المسموح بتضمينها.
+          اختر القناة من الشريط لتظهر على شاشة التلفزيون. لا تظهر روابط البث للمشاهد؛ القنوات الرسمية التي لا تسمح بالتضمين تفتح من مصدرها الرسمي فقط.
         </div>
         <button id="tvAddChannelCta" type="button" onclick="toggleTvManage()" style="width:100%;border:0;border-radius:14px;padding:13px 15px;margin-bottom:12px;background:linear-gradient(135deg,#00796B,#26A69A);color:#fff;font:inherit;font-weight:800;box-shadow:0 5px 16px rgba(0,121,107,.18);">➕ إضافة قناة إلى محطتي الخاصة</button>
         <div style="background:#FFF8E1;color:#6D4C41;border-radius:12px;padding:10px 12px;margin-bottom:12px;font-size:12px;line-height:1.8;">المشاهد يضغط على البطاقة فتعمل داخل المنصة بدون ظهور الرابط. الإضافة نفسها تحتاج رابط بث تملكه أو تصريحًا باستخدامه؛ لا يمكن تشغيل قناة تلفزيونية من دون مصدر بث في الخلفية.</div>
         <div id="tvOwnerPanel" style="display:none;"></div>
+        <section class="tv-console" aria-label="مشغل التلفزيون">
+          <div id="tvLiveStage" class="tv-live-stage"><div class="tv-stage-placeholder">📺<strong>شاشة التلفزيون</strong><span>اختر قناة من الشريط بالأسفل لبدء المشاهدة</span></div></div>
+          <div class="tv-live-bar"><span><span class="tv-live-dot"></span><b id="tvNowTitle">لا توجد قناة مختارة</b></span><span id="tvNowStatus">جاهز</span></div>
+        </section>
         <div id="tvCategoryFilters" style="display:flex;gap:7px;overflow:auto;padding:2px 1px 10px;margin-bottom:4px;"></div>
         <div id="tvChannelStatus" role="status" style="padding:12px;color:#607D8B;text-align:center;">جاري تحميل القنوات…</div>
-        <div id="tvChannelList" class="tv-channel-grid"></div>
+        <div id="tvChannelList" class="tv-channel-strip" aria-label="شريط القنوات"></div>
       </div>`;
     screen.appendChild(styles);
     document.body.appendChild(screen);
@@ -220,7 +241,7 @@
         var item = channels.find(function (channel) { return String(channel.id) === String(button.getAttribute('data-tv-open')); });
         if (!item) return;
         if (['youtube', 'hls', 'video'].indexOf(String(item.behavior || 'external')) !== -1) {
-          openPlayer(item);
+          playInTvStage(item);
           return;
         }
         var url = safeHttps(item.watch_url);
@@ -251,7 +272,10 @@
         .select('id,name,category,behavior,watch_url,logo_url,description,sort_order,is_active')
         .eq('is_active', true).order('sort_order', { ascending: true }).order('name', { ascending: true }).limit(100);
       if (result.error) throw result.error;
-      channels = Array.isArray(result.data) && result.data.length ? result.data : fallbackChannels.slice();
+      var remoteChannels = Array.isArray(result.data) ? result.data : [];
+      var remoteUrls = remoteChannels.map(function (channel) { return String(channel.watch_url || ''); });
+      var localFallbacks = fallbackChannels.filter(function (channel) { return remoteUrls.indexOf(String(channel.watch_url || '')) === -1; });
+      channels = localFallbacks.concat(remoteChannels);
       verifiedOwnerSession = null;
       if (ownerRole() && window.HafezOwnerAuth) {
         try { verifiedOwnerSession = await window.HafezOwnerAuth.getVerifiedSession(); } catch (_) {}
@@ -401,6 +425,39 @@
     return window.__ta3lemyHlsLoading;
   }
 
+  function playInTvStage(channel) {
+    var stage = document.getElementById('tvLiveStage');
+    var title = document.getElementById('tvNowTitle');
+    var status = document.getElementById('tvNowStatus');
+    var url = safeHttps(channel && channel.watch_url);
+    if (!stage || !url) { notify('مصدر القناة غير متاح حاليًا.'); return; }
+    if (activeHls) { try { activeHls.destroy(); } catch (_) {} activeHls = null; }
+    activeChannel = channel;
+    stage.innerHTML = '';
+    if (title) title.textContent = channel.name || 'القناة';
+    if (status) status.textContent = 'جاري التحميل…';
+    var video = document.createElement('video');
+    video.controls = true; video.playsInline = true; video.autoplay = true; video.muted = true; video.preload = 'metadata';
+    stage.appendChild(video);
+    video.addEventListener('playing', function () { if (status) status.textContent = 'مباشر'; });
+    video.addEventListener('error', function () { if (status) status.textContent = 'تعذر تشغيل هذا المصدر'; });
+    if (channel.behavior === 'video' || video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = url;
+      video.play().catch(function () { if (status) status.textContent = 'اضغط تشغيل'; });
+      return;
+    }
+    loadHlsJs().then(function (Hls) {
+      if (!Hls || !Hls.isSupported()) throw new Error('HLS unsupported');
+      activeHls = new Hls();
+      activeHls.loadSource(url);
+      activeHls.attachMedia(video);
+      activeHls.on(Hls.Events.MANIFEST_PARSED, function () { video.play().catch(function () {}); });
+    }).catch(function () {
+      if (status) status.textContent = 'هذا البث لا يسمح بالتشغيل داخل الصفحة';
+      stage.innerHTML = '<div class="tv-stage-placeholder">⚠️<strong>تعذر تشغيل القناة</strong><span>جرّب قناة أخرى أو افتح المصدر الرسمي.</span></div>';
+    });
+  }
+
   function openPlayer(channel) {
     var overlay = document.createElement('div');
     overlay.id = 'tvPlayerOverlay';
@@ -489,7 +546,10 @@
       document.getElementById('tvChannelsScreen').classList.add('active');
     }
     renderOwnerPanel();
-    loadChannels();
+    loadChannels().then(function () {
+      var first = channels.find(function (channel) { return ['youtube', 'hls', 'video'].indexOf(String(channel.behavior || 'external')) !== -1; });
+      if (first) playInTvStage(first);
+    });
   };
 
   window.addEventListener('ta3lemy-owner-auth-changed', function () {
