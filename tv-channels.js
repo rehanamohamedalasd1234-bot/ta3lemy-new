@@ -14,6 +14,16 @@
     education: 'تعليم',
     custom: 'محطاتي الخاصة'
   };
+  var fallbackChannels = [
+    {
+      id: 'demo-educational-stream',
+      name: 'قناة تجريبية تعليمية',
+      category: 'education',
+      behavior: 'hls',
+      watch_url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
+      description: 'بث تجريبي مفتوح لاختبار المشغل داخل المنصة. ليس قناة تجارية.'
+    }
+  ];
 
   function esc(value) {
     return String(value == null ? '' : value).replace(/[&<>"']/g, function (c) {
@@ -102,6 +112,8 @@
         <div style="background:linear-gradient(135deg,#e7f5f2,#f4fbf9);border:1px solid #cce6e1;border-radius:16px;padding:13px 15px;margin-bottom:14px;color:#24524D;font-size:13px;line-height:1.8;">
           اختر بطاقة القناة لبدء المشاهدة أو فتح مصدرها الرسمي. المشاهدة داخل المنصة متاحة للمصادر المسموح بتضمينها.
         </div>
+        <button id="tvAddChannelCta" type="button" onclick="toggleTvManage()" style="width:100%;border:0;border-radius:14px;padding:13px 15px;margin-bottom:12px;background:linear-gradient(135deg,#00796B,#26A69A);color:#fff;font:inherit;font-weight:800;box-shadow:0 5px 16px rgba(0,121,107,.18);">➕ إضافة قناة إلى محطتي الخاصة</button>
+        <div style="background:#FFF8E1;color:#6D4C41;border-radius:12px;padding:10px 12px;margin-bottom:12px;font-size:12px;line-height:1.8;">المشاهد يضغط على البطاقة فتعمل داخل المنصة بدون ظهور الرابط. الإضافة نفسها تحتاج رابط بث تملكه أو تصريحًا باستخدامه؛ لا يمكن تشغيل قناة تلفزيونية من دون مصدر بث في الخلفية.</div>
         <div id="tvOwnerPanel" style="display:none;"></div>
         <div id="tvCategoryFilters" style="display:flex;gap:7px;overflow:auto;padding:2px 1px 10px;margin-bottom:4px;"></div>
         <div id="tvChannelStatus" role="status" style="padding:12px;color:#607D8B;text-align:center;">جاري تحميل القنوات…</div>
@@ -239,7 +251,7 @@
         .select('id,name,category,behavior,watch_url,logo_url,description,sort_order,is_active')
         .eq('is_active', true).order('sort_order', { ascending: true }).order('name', { ascending: true }).limit(100);
       if (result.error) throw result.error;
-      channels = Array.isArray(result.data) ? result.data : [];
+      channels = Array.isArray(result.data) && result.data.length ? result.data : fallbackChannels.slice();
       verifiedOwnerSession = null;
       if (ownerRole() && window.HafezOwnerAuth) {
         try { verifiedOwnerSession = await window.HafezOwnerAuth.getVerifiedSession(); } catch (_) {}
@@ -248,7 +260,7 @@
       renderChannels();
     } catch (error) {
       console.error('[tv-channels] load failed', error && error.message || 'unknown error');
-      channels = [];
+      channels = fallbackChannels.slice();
       if (status) status.textContent = 'تعذر تحميل القنوات الآن. تحققي من الإنترنت ثم أعيدي المحاولة.';
       renderChannels();
     }
