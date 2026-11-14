@@ -30,12 +30,9 @@
   }
 
   function redirectUrl() {
-    var current = String(window.location.href || '');
-    var isLocalApp = /^(https?:\/\/)?localhost(?::\d+)?\b/i.test(current) || /^(capacitor|ionic):\/\/localhost/i.test(current);
-    var url = new URL(isLocalApp ? PUBLIC_APP_URL : current);
-    url.hash = '';
-    url.search = '';
-    return url.toString();
+    // لا نستخدم عنوان WebView (localhost أو file://) في روابط البريد.
+    // رابط التحقق يجب أن يفتح على الموقع العام حتى داخل APK.
+    return PUBLIC_APP_URL;
   }
 
   function setStatus(elementId, text, isError) {
@@ -93,7 +90,7 @@
       });
       if (result.error) throw result.error;
       try { sessionStorage.setItem('ta3lemy_owner_link_requested_at', String(Date.now())); } catch (_) {}
-      setStatus(statusElementId, 'تم طلب رابط تحقق إلى بريد المالك. افتحي الرابط على الجهاز نفسه ثم ارجعي إلى المنصة.', false);
+      setStatus(statusElementId, 'تم إرسال رابط جديد إلى بريد المالك. استخدمي الرسالة الجديدة فقط؛ لن يتم استخدام localhost.', false);
       return true;
     } catch (error) {
       console.error('[owner-auth] email link request failed', error && error.message || 'unknown error');
