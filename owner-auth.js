@@ -4,6 +4,7 @@
 
   var OWNER_EMAIL = 'rehanamohamedalasd1234@gmail.com';
   var STORAGE_KEY = 'ta3lemy-owner-auth-v1';
+  var PUBLIC_APP_URL = 'https://rehanamohamedalasd1234-bot.github.io/ta3lemy-new/';
   var client = null;
 
   function getClient() {
@@ -29,7 +30,9 @@
   }
 
   function redirectUrl() {
-    var url = new URL(window.location.href);
+    var current = String(window.location.href || '');
+    var isLocalApp = /^(https?:\/\/)?localhost(?::\d+)?\b/i.test(current) || /^(capacitor|ionic):\/\/localhost/i.test(current);
+    var url = new URL(isLocalApp ? PUBLIC_APP_URL : current);
     url.hash = '';
     url.search = '';
     return url.toString();
