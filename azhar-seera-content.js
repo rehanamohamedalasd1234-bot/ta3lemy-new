@@ -56,4 +56,15 @@ window.addEventListener('load', function() {
         }
       ];
 
-      for (var i = 0
+      for (var i = 0; i < lessons.length; i++) {
+        try {
+          await fs.collection('lessons').add(lessons[i]);
+        } catch (error) {
+          console.warn('[azhar-seera-content] lesson seed skipped', error);
+        }
+      }
+    } catch (error) {
+      console.warn('[azhar-seera-content] seed unavailable', error);
+    }
+  }, 2500);
+});
