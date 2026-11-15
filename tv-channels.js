@@ -45,9 +45,33 @@
       id: 'nasa-official-live',
       name: 'NASA الرسمي — علوم وفضاء',
       category: 'education',
+      behavior: 'youtube',
+      watch_url: 'https://www.youtube.com/channel/UC9SM7V7J1pAhPabOUST01fw',
+      description: 'بث رسمي من NASA عن الفضاء ومحطة الفضاء الدولية؛ قد لا يتوفر بث حي طوال الوقت.'
+    },
+    {
+      id: 'natgeo-kids-official-live',
+      name: 'Nat Geo Kids — أطفال وعلوم',
+      category: 'education',
+      behavior: 'youtube',
+      watch_url: 'https://www.youtube.com/channel/UCXVCgDuD_QCkI7gTKU7-tpg',
+      description: 'قناة National Geographic Kids الرسمية: علوم وحيوانات وتجارب ومحتوى مناسب للأطفال.'
+    },
+    {
+      id: 'monterey-aquarium-live-cams',
+      name: 'أكواريوم مونتيري — كائنات بحرية مباشرة',
+      category: 'education',
       behavior: 'external',
-      watch_url: 'https://www.youtube.com/@NASA/streams',
-      description: 'بث ومواد علمية من المصدر الرسمي؛ قد لا يتوفر بث حي طوال الوقت.'
+      watch_url: 'https://www.montereybayaquarium.org/cams-videos/live-cams',
+      description: 'كاميرات مباشرة رسمية لقناديل البحر وثعالب البحر وأسماك القرش والغابة البحرية.'
+    },
+    {
+      id: 'san-diego-zoo-live-cams',
+      name: 'حديقة سان دييغو — حيوانات مباشرة',
+      category: 'education',
+      behavior: 'external',
+      watch_url: 'https://zoo.sandiegozoo.org/live-cameras',
+      description: 'كاميرات رسمية للحيوانات مثل البطاريق والباندا والنمور والزرافات.'
     }
   ];
 
