@@ -21,7 +21,7 @@
       id: 'moe-madrasetna-official',
       name: 'قناة مدرستنا الرسمية',
       category: 'education',
-      behavior: 'external',
+      behavior: 'youtube',
       watch_url: 'https://www.youtube.com/channel/UCnxju7_Ug6VbC6en6tBL6Aw',
       description: 'قناة تعليمية تابعة لوزارة التربية والتعليم؛ تعرض مواد دراسية للمرحلتين الابتدائية والإعدادية.'
     },
@@ -29,7 +29,7 @@
       id: 'moe-edu-stream',
       name: 'قناة وزارة التعليم التعليمية',
       category: 'education',
-      behavior: 'external',
+      behavior: 'youtube',
       watch_url: 'https://www.youtube.com/channel/UCGgeDgjIJ3GXZcLUnExAybw',
       description: 'قناة التسجيلات التعليمية المرتبطة ببوابة البث الرسمية لوزارة التربية والتعليم.'
     },
@@ -143,10 +143,10 @@
       </div>
       <div class="content" style="padding:14px;max-width:900px;margin:0 auto;">
         <div style="background:linear-gradient(135deg,#e7f5f2,#f4fbf9);border:1px solid #cce6e1;border-radius:16px;padding:13px 15px;margin-bottom:14px;color:#24524D;font-size:13px;line-height:1.8;">
-          مشاهدة القنوات التعليمية الرسمية لا تحتاج تسجيل دخول المالك. تفتح الروابط من مصدرها الأصلي؛ تحقق المالك مطلوب فقط لإضافة أو حذف محطة خاصة، ولا نعيد بث القنوات المحمية.
+          مشاهدة القنوات التعليمية الرسمية تتم داخل شاشة التلفزيون؛ تحقق المالك مطلوب فقط لإضافة أو حذف محطة خاصة، ولا نعيد بث القنوات المحمية.
         </div>
         <button id="tvAddChannelCta" type="button" onclick="toggleTvManage()" style="width:100%;border:0;border-radius:14px;padding:13px 15px;margin-bottom:12px;background:linear-gradient(135deg,#00796B,#26A69A);color:#fff;font:inherit;font-weight:800;box-shadow:0 5px 16px rgba(0,121,107,.18);">➕ إضافة قناة إلى محطتي الخاصة</button>
-        <div style="background:#FFF8E1;color:#6D4C41;border-radius:12px;padding:10px 12px;margin-bottom:12px;font-size:12px;line-height:1.8;">القنوات الرسمية تفتح من مصدرها الأصلي. لا نعيد بث محتوى محمي ولا نتجاوز الاشتراك أو قيود التضمين؛ إضافة محطة خاصة تحتاج رابطًا تملكه أو إذنًا باستخدامه.</div>
+        <div style="background:#FFF8E1;color:#6D4C41;border-radius:12px;padding:10px 12px;margin-bottom:12px;font-size:12px;line-height:1.8;">اضغط على شعار القناة لتشغيلها داخل شاشة التلفزيون. إذا منع المصدر التضمين ستظهر رسالة داخل الشاشة بدل إخراجك من المنصة.</div>
         <div id="tvOwnerPanel" style="display:none;"></div>
         <section class="tv-console" aria-label="مشغل التلفزيون">
           <div id="tvLiveStage" class="tv-live-stage"><div class="tv-stage-placeholder">📺<strong>شاشة التلفزيون</strong><span>اختر قناة من الشريط بالأسفل لبدء المشاهدة</span></div></div>
@@ -217,6 +217,17 @@
     } catch (_) { return ''; }
   }
 
+  function youtubeEmbedUrl(value) {
+    var url;
+    try { url = new URL(String(value || '')); } catch (_) { return ''; }
+    var id = safeYoutubeId(value);
+    if (id) return 'https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1&rel=0';
+    var match = url.pathname.match(/^\/channel\/(UC[A-Za-z0-9_-]{20,})/i);
+    if (match) return 'https://www.youtube-nocookie.com/embed/live_stream?channel=' + encodeURIComponent(match[1]) + '&autoplay=1';
+    if (url.hostname.toLowerCase().replace(/^www\./, '') === 'youtube.com' && /^\/@[^/]+\/live/i.test(url.pathname)) return url.href;
+    return '';
+  }
+
   function channelActionMarkup(channel) {
     var behavior = String(channel.behavior || 'external');
     var url = safeHttps(channel.watch_url);
@@ -256,13 +267,7 @@
       button.addEventListener('click', function () {
         var item = channels.find(function (channel) { return String(channel.id) === String(button.getAttribute('data-tv-open')); });
         if (!item) return;
-        if (['youtube', 'hls', 'video'].indexOf(String(item.behavior || 'external')) !== -1) {
-          playInTvStage(item);
-          return;
-        }
-        var url = safeHttps(item.watch_url);
-        if (!url) { notify('مصدر القناة غير متاح حاليًا.'); return; }
-        window.open(url, '_blank', 'noopener,noreferrer');
+        playInTvStage(item);
       });
     });
     host.querySelectorAll('[data-tv-logo]').forEach(function (image) {
@@ -452,6 +457,34 @@
     stage.innerHTML = '';
     if (title) title.textContent = channel.name || 'القناة';
     if (status) status.textContent = 'جاري التحميل…';
+    if (channel.behavior === 'youtube') {
+      var embedUrl = youtubeEmbedUrl(url);
+      if (!embedUrl) {
+        if (status) status.textContent = 'رابط YouTube غير قابل للتضمين';
+        stage.innerHTML = '<div class="tv-stage-placeholder">⚠️<strong>لا يمكن تضمين هذه القناة</strong><span>استخدمي رابط قناة أو بث يسمح بالتضمين.</span></div>';
+        return;
+      }
+      var frame = document.createElement('iframe');
+      frame.src = embedUrl;
+      frame.title = String(channel.name || 'مشغل القناة');
+      frame.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+      frame.referrerPolicy = 'strict-origin-when-cross-origin';
+      frame.allowFullscreen = true;
+      stage.appendChild(frame);
+      if (status) status.textContent = 'يعمل داخل المنصة';
+      return;
+    }
+    if (channel.behavior === 'external') {
+      var externalFrame = document.createElement('iframe');
+      externalFrame.src = url;
+      externalFrame.title = String(channel.name || 'القناة');
+      externalFrame.allow = 'autoplay; fullscreen; picture-in-picture';
+      externalFrame.referrerPolicy = 'strict-origin-when-cross-origin';
+      externalFrame.style.cssText = 'width:100%;height:100%;border:0;background:#000;';
+      stage.appendChild(externalFrame);
+      if (status) status.textContent = 'داخل شاشة المنصة';
+      return;
+    }
     var video = document.createElement('video');
     video.controls = true; video.playsInline = true; video.autoplay = true; video.muted = true; video.preload = 'metadata';
     stage.appendChild(video);
@@ -470,7 +503,7 @@
       activeHls.on(Hls.Events.MANIFEST_PARSED, function () { video.play().catch(function () {}); });
     }).catch(function () {
       if (status) status.textContent = 'هذا البث لا يسمح بالتشغيل داخل الصفحة';
-      stage.innerHTML = '<div class="tv-stage-placeholder">⚠️<strong>تعذر تشغيل القناة</strong><span>جرّب قناة أخرى أو افتح المصدر الرسمي.</span></div>';
+      stage.innerHTML = '<div class="tv-stage-placeholder">⚠️<strong>تعذر تشغيل القناة داخل الشاشة</strong><span>المصدر منع التضمين أو لا يدعم التشغيل المباشر.</span></div>';
     });
   }
 
