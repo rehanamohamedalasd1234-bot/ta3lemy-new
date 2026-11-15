@@ -7,6 +7,12 @@
   var LIBRARY_DB_NAME = 'ta3lemy-library-offline-v1';
   var LIBRARY_DB_STORE = 'catalogs';
   var DEFAULT_FOLDERS = ['مراجع دراسية', 'لغة وأدب', 'علوم ورياضيات', 'تاريخ وجغرافيا', 'دين وثقافة', 'تكنولوجيا', 'صحة وحياة', 'تنمية ومهارات', 'أطفال وقصص', 'متنوعات'];
+  var STARTER_BOOKS = [
+    { id: 'open-kalila-dimna-1355', title: 'كليلة ودمنة', author: 'عبد الله بن المقفع', folder: 'أطفال وقصص', description: 'حكايات تراثية تتضمن قصصًا رمزية وحِكمًا. نسخة مصورة من طبعة قديمة؛ يفضّل أن يقرأها الطلاب الأصغر بإرشاد.', license: 'الملكية العامة — طبعة مصر 1355هـ', rightsNote: 'المصدر: ويكي مصدر، ملف كليلة ودمنة.pdf؛ تصف صفحة الملف النسخة القديمة بأنها في الملكية العامة. https://ar.wikisource.org/wiki/%D9%85%D9%84%D9%81:%D9%83%D9%84%D9%8A%D9%84%D8%A9_%D9%88%D8%AF%D9%85%D9%86%D8%A9.pdf', format: 'pdf', fileUrl: 'https://upload.wikimedia.org/wikisource/ar/a/af/%D9%83%D9%84%D9%8A%D9%84%D8%A9_%D9%88%D8%AF%D9%85%D9%86%D8%A9.pdf', textContent: '', allowCopy: true, allowDownload: true, allowPrint: true, status: 'published', rightsConfirmed: true },
+    { id: 'open-bukhala-1318', title: 'البخلاء', author: 'الجاحظ', folder: 'لغة وأدب', description: 'أدب ساخر ومواقف اجتماعية بلغة تراثية؛ يناسب غالبًا المرحلة الثانوية، ويُستحسن قراءته بإرشاد.', license: 'الملكية العامة — طبعة بريل 1318هـ', rightsNote: 'المصدر: ويكي مصدر، ملف كتاب البخلاء.pdf؛ تصف صفحة الملف النسخة المصورة القديمة بأنها في الملكية العامة. https://ar.wikisource.org/wiki/%D9%85%D9%84%D9%81:%D9%83%D8%AA%D8%A7%D8%A8_%D8%A7%D9%84%D8%A8%D8%AE%D9%84%D8%A7%D8%A1.pdf', format: 'pdf', fileUrl: 'https://upload.wikimedia.org/wikisource/ar/4/43/%D9%83%D8%AA%D8%A7%D8%A8_%D8%A7%D9%84%D8%A8%D8%AE%D9%84%D8%A7%D8%A1.pdf', textContent: '', allowCopy: true, allowDownload: true, allowPrint: true, status: 'published', rightsConfirmed: true },
+    { id: 'open-muqaddimah-selections-1323', title: 'منتقى من مقدمة ابن خلدون', author: 'عبد الرحمن بن خلدون', folder: 'تاريخ وجغرافيا', description: 'مختارات فكرية وتاريخية من مقدمة ابن خلدون، من طبعة قديمة من 115 صفحة؛ مناسبة للمرحلة الثانوية مع شرح المعلم.', license: 'الملكية العامة — مطبعة بريل، ليدن 1323هـ', rightsNote: 'المصدر: ويكي مصدر، ملف منتقى من مقدمة ابن خلدون.pdf؛ تصف صفحة الملف النسخة القديمة بأنها في الملكية العامة. https://ar.wikisource.org/wiki/%D9%85%D9%84%D9%81:%D9%85%D9%86%D8%AA%D9%82%D9%89_%D9%85%D9%86_%D9%85%D9%82%D8%AF%D9%85%D8%A9_%D8%A7%D8%A8%D9%86_%D8%AE%D9%84%D8%AF%D9%88%D9%86.pdf', format: 'pdf', fileUrl: 'https://upload.wikimedia.org/wikisource/ar/1/1f/%D9%85%D9%86%D8%AA%D9%82%D9%89_%D9%85%D9%86_%D9%85%D9%82%D8%AF%D9%85%D8%A9_%D8%A7%D8%A8%D9%86_%D8%AE%D9%84%D8%AF%D9%88%D9%86.pdf', textContent: '', allowCopy: true, allowDownload: true, allowPrint: true, status: 'published', rightsConfirmed: true },
+    { id: 'cc-python-for-everybody-ar-2023', title: 'بايثون للجميع: التعامل مع البيانات باستخدام لغة بايثون 3', author: 'تشارلز ر. سيفيرنس؛ الترجمة: Electronics Go', folder: 'تكنولوجيا', description: 'كتاب تمهيدي عربي لتعلم البرمجة وتحليل البيانات. أُبقي مسودة إلى أن يراجع المالك شرط الاستخدام غير التجاري في الرخصة.', license: 'CC BY-NC-SA 3.0 — غير تجاري، مع النسب والمشاركة بالمثل', rightsNote: 'تأليف Charles R. Severance؛ ترجمة Electronics Go (2023). لم نعدّل الملف. المصدر: https://www.py4e.com/book | الترخيص: https://creativecommons.org/licenses/by-nc-sa/3.0/ . تسمح الرخصة بإعادة الاستخدام غير التجاري مع نسب العمل ومشاركة أي تعديل بالرخصة نفسها؛ لا يُنشر إذا كانت المنصة تستخدم إعلانات مدفوعة أو استخدامًا تجاريًا.', format: 'pdf', fileUrl: API + '/resources/python-for-everybody-ar.pdf', textContent: '', allowCopy: true, allowDownload: true, allowPrint: true, status: 'draft', rightsConfirmed: true }
+  ];
   var publicCatalog = { version: 1, folders: DEFAULT_FOLDERS.slice(), books: [] };
   var adminCatalog = null;
   var adminToken = '';
@@ -75,7 +81,7 @@
 
     var admin = makeScreen('libraryAdminScreen', '🛡️ إدارة المكتبة');
     ensureOwnerSignOutButton(admin);
-    admin.querySelector('[data-library-content]').innerHTML = '<div class="library-admin-banner">إدارة الكتب والمجلدات خاصة بالمالك. يُسمح بالنشر فقط للكتب التي تملك المنصة حق نشرها أو تحمل ترخيصًا مناسبًا. أزرار النسخ والطباعة والتحكم في الإتاحة ليست حماية DRM؛ قد تسمح أدوات قارئ PDF بنسخ الملف أو طباعته.</div><div id="libraryAuthPanel" class="library-auth-panel"><h3>التحقق من حساب المالك</h3><p class="library-small-note">تُحمى الإضافة والتعديل بجلسة بريد المالك الموثّقة، إضافةً إلى التحقق من الخادم. هذا مستقل عن قواعد Firestore ولا يفتحها.</p><div id="libraryAuthStatus" class="library-message" role="status">جارٍ التحقق من الجلسة…</div><button id="libraryRequestLink" class="library-primary" type="button">إرسال رابط تحقق للمالك</button></div><div id="libraryAdminPanel" class="library-admin-panel" hidden><h3>إضافة كتاب أو تعديله</h3><form id="libraryBookForm"><div class="library-form-grid"><label class="library-field">عنوان الكتاب<input id="libTitle" name="title" maxlength="160" required></label><label class="library-field">اسم المؤلف<input id="libAuthor" name="author" maxlength="120" required></label><label class="library-field">المجلد أو المجال<input id="libFolder" name="folder" list="libraryFolderChoices" maxlength="80" required><datalist id="libraryFolderChoices"></datalist></label><label class="library-field">نوع المحتوى<select id="libFormat" name="format"><option value="pdf">ملف PDF</option><option value="text">نص كتاب</option></select></label><label class="library-field full" id="libFileField">ملف PDF (بحد أقصى 10 ميجابايت)<input id="libFile" name="file" type="file" accept="application/pdf,.pdf"></label><label class="library-field full" id="libTextField" hidden>نص الكتاب<textarea id="libText" name="textContent" maxlength="350000" placeholder="أدخل نصًا تملك حق نشره"></textarea></label><label class="library-field full">نبذة قصيرة<textarea id="libDescription" name="description" maxlength="1200"></textarea></label><label class="library-field">بيان الترخيص أو حق النشر<input id="libLicense" name="license" maxlength="160" placeholder="تأليف المنصة / ملك عام / رخصة مفتوحة / إذن نشر" required></label><label class="library-field">تفاصيل مصدر الحق أو الترخيص<input id="libRightsNote" name="rightsNote" maxlength="800" placeholder="اختياري: مصدر الإذن أو رابط الترخيص"></label><label class="library-field">حالة الكتاب<select id="libStatus" name="status"><option value="published">منشور للطلاب</option><option value="draft">مسودة للمالك فقط</option></select></label></div><div class="library-checks"><label class="library-check"><input id="libAllowCopy" type="checkbox" checked><span>إظهار خيار النسخ (مع مراعاة أدوات قارئ PDF)</span></label><label class="library-check"><input id="libAllowDownload" type="checkbox" checked><span>السماح بخيار التحميل</span></label><label class="library-check"><input id="libAllowPrint" type="checkbox" checked><span>إظهار خيار الطباعة</span></label><label class="library-check"><input id="libRightsConfirmed" type="checkbox"><span>أؤكد امتلاك حق النشر أو وجود ترخيص يسمح بإتاحة هذا الكتاب</span></label></div><div class="library-admin-actions"><button class="library-primary" type="submit" id="libSaveBook">حفظ الكتاب</button><button class="library-secondary" type="button" id="libCancelEdit" hidden>إلغاء التعديل</button></div></form></div><div id="libraryFoldersPanel" class="library-admin-panel" hidden><h3>مجلدات الكتب</h3><form id="libraryFolderForm" class="library-toolbar"><input id="libNewFolder" class="library-search" maxlength="80" placeholder="اسم المجلد الجديد" required><button class="library-secondary" type="submit">إضافة مجلد</button></form><div id="libraryAdminFolders"></div></div><div id="libraryAdminBooksPanel" class="library-admin-panel" hidden><h3>الكتب الحالية</h3><div id="libraryAdminBooks"></div></div>';
+    admin.querySelector('[data-library-content]').innerHTML = '<div class="library-admin-banner">إدارة الكتب والمجلدات خاصة بالمالك. يُسمح بالنشر فقط للكتب التي تملك المنصة حق نشرها أو تحمل ترخيصًا مناسبًا. أزرار النسخ والطباعة والتحكم في الإتاحة ليست حماية DRM؛ قد تسمح أدوات قارئ PDF بنسخ الملف أو طباعته.</div><div id="libraryAuthPanel" class="library-auth-panel"><h3>التحقق من حساب المالك</h3><p class="library-small-note">تُحمى الإضافة والتعديل بجلسة بريد المالك الموثّقة، إضافةً إلى التحقق من الخادم. هذا مستقل عن قواعد Firestore ولا يفتحها.</p><div id="libraryAuthStatus" class="library-message" role="status">جارٍ التحقق من الجلسة…</div><button id="libraryRequestLink" class="library-primary" type="button">إرسال رابط تحقق للمالك</button></div><div id="libraryAdminPanel" class="library-admin-panel" hidden><h3>إضافة كتاب أو تعديله</h3><p class="library-small-note">استيراد المجموعة يضيف ثلاثة كتب من طبعات قديمة مصنفة ملكية عامة. يضاف كتاب «بايثون للجميع» كمسودة فقط بسبب شرط الاستخدام غير التجاري في رخصته.</p><div class="library-admin-actions"><button id="libraryImportStarterBooks" class="library-secondary" type="button">استيراد الكتب المفتوحة المقترحة</button></div><form id="libraryBookForm"><div class="library-form-grid"><label class="library-field">عنوان الكتاب<input id="libTitle" name="title" maxlength="160" required></label><label class="library-field">اسم المؤلف<input id="libAuthor" name="author" maxlength="120" required></label><label class="library-field">المجلد أو المجال<input id="libFolder" name="folder" list="libraryFolderChoices" maxlength="80" required><datalist id="libraryFolderChoices"></datalist></label><label class="library-field">نوع المحتوى<select id="libFormat" name="format"><option value="pdf">ملف PDF</option><option value="text">نص كتاب</option></select></label><label class="library-field full" id="libFileField">ملف PDF (بحد أقصى 10 ميجابايت)<input id="libFile" name="file" type="file" accept="application/pdf,.pdf"></label><label class="library-field full" id="libTextField" hidden>نص الكتاب<textarea id="libText" name="textContent" maxlength="350000" placeholder="أدخل نصًا تملك حق نشره"></textarea></label><label class="library-field full">نبذة قصيرة<textarea id="libDescription" name="description" maxlength="1200"></textarea></label><label class="library-field">بيان الترخيص أو حق النشر<input id="libLicense" name="license" maxlength="160" placeholder="تأليف المنصة / ملك عام / رخصة مفتوحة / إذن نشر" required></label><label class="library-field">تفاصيل مصدر الحق أو الترخيص<input id="libRightsNote" name="rightsNote" maxlength="800" placeholder="اختياري: مصدر الإذن أو رابط الترخيص"></label><label class="library-field">حالة الكتاب<select id="libStatus" name="status"><option value="published">منشور للطلاب</option><option value="draft">مسودة للمالك فقط</option></select></label></div><div class="library-checks"><label class="library-check"><input id="libAllowCopy" type="checkbox" checked><span>إظهار خيار النسخ (مع مراعاة أدوات قارئ PDF)</span></label><label class="library-check"><input id="libAllowDownload" type="checkbox" checked><span>السماح بخيار التحميل</span></label><label class="library-check"><input id="libAllowPrint" type="checkbox" checked><span>إظهار خيار الطباعة</span></label><label class="library-check"><input id="libRightsConfirmed" type="checkbox"><span>أؤكد امتلاك حق النشر أو وجود ترخيص يسمح بإتاحة هذا الكتاب</span></label></div><div class="library-admin-actions"><button class="library-primary" type="submit" id="libSaveBook">حفظ الكتاب</button><button class="library-secondary" type="button" id="libCancelEdit" hidden>إلغاء التعديل</button></div></form></div><div id="libraryFoldersPanel" class="library-admin-panel" hidden><h3>مجلدات الكتب</h3><form id="libraryFolderForm" class="library-toolbar"><input id="libNewFolder" class="library-search" maxlength="80" placeholder="اسم المجلد الجديد" required><button class="library-secondary" type="submit">إضافة مجلد</button></form><div id="libraryAdminFolders"></div></div><div id="libraryAdminBooksPanel" class="library-admin-panel" hidden><h3>الكتب الحالية</h3><div id="libraryAdminBooks"></div></div>';
 
     var format = document.getElementById('libFormat');
     format.addEventListener('change', updateFormatFields);
@@ -83,6 +89,7 @@
     document.getElementById('libCancelEdit').addEventListener('click', resetBookForm);
     document.getElementById('libraryFolderForm').addEventListener('submit', addFolderForm);
     document.getElementById('libraryRequestLink').addEventListener('click', requestOwnerLink);
+    document.getElementById('libraryImportStarterBooks').addEventListener('click', importStarterBooks);
 
     var search = document.getElementById('librarySearch');
     search.addEventListener('input', function () { searchTerm = search.value.trim().toLocaleLowerCase(); renderPublicCatalog(); });
@@ -263,6 +270,48 @@
     });
   }
 
+  function appendRightsNote(parent, note) {
+    if (!note) return;
+    var element = document.createElement('div');
+    element.className = 'library-small-note';
+    var pattern = /https:\/\/[^\s|]+/g;
+    var cursor = 0;
+    var match;
+    while ((match = pattern.exec(note))) {
+      element.appendChild(document.createTextNode(note.slice(cursor, match.index)));
+      var rawUrl = match[0];
+      var url = rawUrl.replace(/[.,،؛)]+$/, '');
+      var suffix = rawUrl.slice(url.length);
+      try {
+        var parsedUrl = new URL(url);
+        if (parsedUrl.protocol !== 'https:') throw new Error('unsafe link');
+        var link = document.createElement('a');
+        link.href = parsedUrl.href;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = url;
+        element.appendChild(link);
+      } catch (_) {
+        element.appendChild(document.createTextNode(url));
+      }
+      if (suffix) element.appendChild(document.createTextNode(suffix));
+      cursor = match.index + rawUrl.length;
+    }
+    element.appendChild(document.createTextNode(note.slice(cursor)));
+    parent.appendChild(element);
+  }
+
+  function formatBookWithAttribution(book) {
+    return [
+      'العنوان: ' + (book.title || ''),
+      'المؤلف/المترجم: ' + (book.author || 'غير محدد'),
+      'الترخيص: ' + (book.license || 'غير محدد'),
+      book.rightsNote ? 'المصدر والحقوق: ' + book.rightsNote : '',
+      '------------------------------',
+      book.textContent || ''
+    ].filter(Boolean).join('\n');
+  }
+
   async function openLibrary() {
     ensureScreens();
     activeFolder = '';
@@ -297,6 +346,7 @@
     var author = document.createElement('div'); author.textContent = 'المؤلف: ' + (book.author || 'غير محدد');
     var rights = document.createElement('div'); rights.className = 'library-small-note'; rights.textContent = 'الحقوق: ' + (book.license || 'غير محدد');
     appendElements(info, [title, author, rights]);
+    appendRightsNote(info, book.rightsNote || '');
     clearElement(actions);
     clearElement(body);
 
@@ -331,9 +381,9 @@
       return;
     }
     try {
-      if (navigator.clipboard && navigator.clipboard.writeText) await navigator.clipboard.writeText(book.textContent || '');
+      if (navigator.clipboard && navigator.clipboard.writeText) await navigator.clipboard.writeText(formatBookWithAttribution(book));
       else {
-        var area = document.createElement('textarea'); area.value = book.textContent || ''; document.body.appendChild(area); area.select(); document.execCommand('copy'); area.remove();
+        var area = document.createElement('textarea'); area.value = formatBookWithAttribution(book); document.body.appendChild(area); area.select(); document.execCommand('copy'); area.remove();
       }
       toast('تم نسخ النص.');
     } catch (_) { toast('تعذر النسخ تلقائيًا؛ حدّد النص واضغط نسخ.'); }
@@ -341,7 +391,7 @@
 
   async function downloadBook(book) {
     if (book.format === 'text') {
-      var blob = new Blob([book.textContent || ''], { type: 'text/plain;charset=utf-8' });
+      var blob = new Blob([formatBookWithAttribution(book)], { type: 'text/plain;charset=utf-8' });
       triggerDownload(blob, safeFilename(book.title) + '.txt');
       return;
     }
@@ -381,7 +431,7 @@
     var popup = window.open('', '_blank');
     if (!popup) { toast('اسمح بفتح نافذة الطباعة ثم أعد المحاولة.'); return; }
     popup.document.open();
-    popup.document.write('<!doctype html><html lang="ar" dir="rtl"><meta charset="utf-8"><title>' + escapeHtml(book.title || 'كتاب') + '</title><style>body{font-family:Arial,sans-serif;direction:rtl;white-space:pre-wrap;line-height:2;margin:24px}</style><h1>' + escapeHtml(book.title || 'كتاب') + '</h1><p>' + escapeHtml(book.author || '') + '</p><article>' + escapeHtml(book.textContent || '') + '</article></html>');
+    popup.document.write('<!doctype html><html lang="ar" dir="rtl"><meta charset="utf-8"><title>' + escapeHtml(book.title || 'كتاب') + '</title><style>body{font-family:Arial,sans-serif;direction:rtl;white-space:pre-wrap;line-height:2;margin:24px}</style><h1>' + escapeHtml(book.title || 'كتاب') + '</h1><p>' + escapeHtml(book.author || '') + '</p><section><h2>الترخيص والمصدر</h2><p>' + escapeHtml(book.license || 'غير محدد') + '</p><p>' + escapeHtml(book.rightsNote || '') + '</p></section><article>' + escapeHtml(book.textContent || '') + '</article></html>');
     popup.document.close();
     popup.onload = function () { popup.focus(); popup.print(); };
   }
@@ -499,6 +549,43 @@
     await cacheCatalog({ version: adminCatalog.version, folders: adminCatalog.folders, books: adminCatalog.books.filter(function (book) { return book.status === 'published'; }) });
     renderAdmin();
     toast(successText || 'تم حفظ التعديل.');
+  }
+
+  async function importStarterBooks() {
+    if (!adminToken || !adminCatalog) {
+      setStatus('libraryAuthStatus', 'يلزم التحقق من حساب المالك قبل استيراد الكتب.', true);
+      return;
+    }
+    var existing = adminCatalog.books || [];
+    var additions = STARTER_BOOKS.filter(function (candidate) {
+      return !existing.some(function (book) {
+        var sameTitle = String(book.title || '').trim().toLocaleLowerCase() === candidate.title.toLocaleLowerCase();
+        var sameAuthor = String(book.author || '').trim().toLocaleLowerCase() === candidate.author.toLocaleLowerCase();
+        return book.id === candidate.id || (sameTitle && sameAuthor);
+      });
+    });
+    if (!additions.length) {
+      toast('الكتب المقترحة موجودة بالفعل في المكتبة.');
+      return;
+    }
+    var publishedCount = additions.filter(function (book) { return book.status === 'published'; }).length;
+    var draftCount = additions.length - publishedCount;
+    var confirmText = 'سيتم إضافة ' + additions.length + ' كتب إلى المكتبة: ' + publishedCount + ' كتب مفتوحة للطلاب و' + draftCount + ' مسودة للمالك. سيبقى كتاب «بايثون للجميع» مسودة بسبب شرط الاستخدام غير التجاري. هل تريد المتابعة؟';
+    if (!window.confirm(confirmText)) return;
+
+    var button = document.getElementById('libraryImportStarterBooks');
+    var oldLabel = button ? button.textContent : '';
+    if (button) { button.disabled = true; button.textContent = 'جارٍ استيراد الكتب…'; }
+    try {
+      var now = new Date().toISOString();
+      var imported = additions.map(function (book) { return Object.assign({}, book, { createdAt: now, updatedAt: now }); });
+      var folders = Array.from(new Set((adminCatalog.folders || []).concat(imported.map(function (book) { return book.folder; }))));
+      await saveAdminCatalog({ version: 1, folders: folders, books: existing.concat(imported) }, 'تمت إضافة الكتب المفتوحة؛ وكتاب بايثون محفوظ كمسودة لمراجعة شرط الترخيص.');
+    } catch (error) {
+      setStatus('libraryAuthStatus', error.message || 'تعذر استيراد الكتب المقترحة.', true);
+    } finally {
+      if (button) { button.disabled = false; button.textContent = oldLabel; }
+    }
   }
 
   async function saveBookForm(event) {

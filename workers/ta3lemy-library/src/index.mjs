@@ -1,5 +1,6 @@
 const CATALOG_KEY = 'ta3lemy-library-catalog-v1';
-const OWNER_EMAIL = 'rehanamohamedalasd1234@gmail.com';
+const OWNER_EMAIL = 'rehanmohamedalasd1234@gmail.com';
+const PY4E_AR_URL = 'https://www.py4e.com/translations/AR/ar/book_ar_2023_01_01.pdf';
 const MAX_CATALOG_BYTES = 20 * 1024 * 1024;
 const MAX_BODY_BYTES = MAX_CATALOG_BYTES + 4 * 1024 * 1024;
 const MAX_BOOKS = 500;
@@ -218,6 +219,27 @@ export default {
     try {
       if (url.pathname === '/health' && request.method === 'GET') {
         return jsonResponse({ ok: true, storageReady: !!env.LIBRARY_KV }, env.LIBRARY_KV ? 200 : 503, origin, env);
+      }
+
+      if (url.pathname === '/resources/python-for-everybody-ar.pdf' && request.method === 'GET') {
+        const range = request.headers.get('Range');
+        const upstream = range
+          ? await fetch(PY4E_AR_URL, { headers: { Range: range } })
+          : await fetch(PY4E_AR_URL, { cf: { cacheEverything: true, cacheTtl: 86400 } });
+        if (!upstream.ok || !String(upstream.headers.get('Content-Type') || '').toLowerCase().includes('application/pdf')) {
+          throw new LibraryError(502, 'تعذر جلب نسخة الكتاب الآن');
+        }
+        const fileHeaders = corsHeaders(origin, env);
+        ['Content-Length', 'Content-Range', 'Accept-Ranges', 'ETag', 'Last-Modified'].forEach((name) => {
+          const value = upstream.headers.get(name);
+          if (value) fileHeaders.set(name, value);
+        });
+        fileHeaders.set('Content-Type', 'application/pdf');
+        fileHeaders.set('Content-Disposition', 'inline; filename="python-for-everybody-ar.pdf"');
+        fileHeaders.set('Cache-Control', 'public, max-age=86400');
+        fileHeaders.set('Access-Control-Expose-Headers', 'Accept-Ranges, Content-Range, Content-Length');
+        fileHeaders.set('X-Content-Type-Options', 'nosniff');
+        return new Response(upstream.body, { status: upstream.status, headers: fileHeaders });
       }
 
       if (url.pathname === '/catalog' && request.method === 'GET') {
