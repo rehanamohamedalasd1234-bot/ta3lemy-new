@@ -18,20 +18,36 @@
   };
   var fallbackChannels = [
     {
-      id: 'demo-educational-stream',
-      name: 'قناة تجريبية تعليمية',
+      id: 'moe-madrasetna-official',
+      name: 'قناة مدرستنا الرسمية',
       category: 'education',
-      behavior: 'hls',
-      watch_url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
-      description: 'بث تجريبي مفتوح لاختبار المشغل داخل المنصة. ليس قناة تجارية.'
+      behavior: 'external',
+      watch_url: 'https://www.youtube.com/channel/UCnxju7_Ug6VbC6en6tBL6Aw',
+      description: 'قناة تعليمية تابعة لوزارة التربية والتعليم؛ تعرض مواد دراسية للمرحلتين الابتدائية والإعدادية.'
+    },
+    {
+      id: 'moe-edu-stream',
+      name: 'قناة وزارة التعليم التعليمية',
+      category: 'education',
+      behavior: 'external',
+      watch_url: 'https://www.youtube.com/channel/UCGgeDgjIJ3GXZcLUnExAybw',
+      description: 'قناة التسجيلات التعليمية المرتبطة ببوابة البث الرسمية لوزارة التربية والتعليم.'
+    },
+    {
+      id: 'moe-live-lessons',
+      name: 'منصة البث المباشر للحصص — الوزارة',
+      category: 'education',
+      behavior: 'external',
+      watch_url: 'https://stream.moe.gov.eg/',
+      description: 'مواعيد وجلسات افتراضية رسمية حسب الصف الدراسي؛ تتطلب اتصالًا بالإنترنت.'
     },
     {
       id: 'nasa-official-live',
-      name: 'NASA — البث الرسمي',
+      name: 'NASA الرسمي — علوم وفضاء',
       category: 'education',
       behavior: 'external',
       watch_url: 'https://www.youtube.com/@NASA/streams',
-      description: 'علوم وفضاء من المصدر الرسمي؛ تُفتح صفحة البث الرسمية عند توفر بث حي.'
+      description: 'بث ومواد علمية من المصدر الرسمي؛ قد لا يتوفر بث حي طوال الوقت.'
     }
   ];
 
@@ -127,10 +143,10 @@
       </div>
       <div class="content" style="padding:14px;max-width:900px;margin:0 auto;">
         <div style="background:linear-gradient(135deg,#e7f5f2,#f4fbf9);border:1px solid #cce6e1;border-radius:16px;padding:13px 15px;margin-bottom:14px;color:#24524D;font-size:13px;line-height:1.8;">
-          اختر القناة من الشريط لتظهر على شاشة التلفزيون. لا تظهر روابط البث للمشاهد؛ القنوات الرسمية التي لا تسمح بالتضمين تفتح من مصدرها الرسمي فقط.
+          مشاهدة القنوات التعليمية الرسمية لا تحتاج تسجيل دخول المالك. تفتح الروابط من مصدرها الأصلي؛ تحقق المالك مطلوب فقط لإضافة أو حذف محطة خاصة، ولا نعيد بث القنوات المحمية.
         </div>
         <button id="tvAddChannelCta" type="button" onclick="toggleTvManage()" style="width:100%;border:0;border-radius:14px;padding:13px 15px;margin-bottom:12px;background:linear-gradient(135deg,#00796B,#26A69A);color:#fff;font:inherit;font-weight:800;box-shadow:0 5px 16px rgba(0,121,107,.18);">➕ إضافة قناة إلى محطتي الخاصة</button>
-        <div style="background:#FFF8E1;color:#6D4C41;border-radius:12px;padding:10px 12px;margin-bottom:12px;font-size:12px;line-height:1.8;">المشاهد يضغط على البطاقة فتعمل داخل المنصة بدون ظهور الرابط. الإضافة نفسها تحتاج رابط بث تملكه أو تصريحًا باستخدامه؛ لا يمكن تشغيل قناة تلفزيونية من دون مصدر بث في الخلفية.</div>
+        <div style="background:#FFF8E1;color:#6D4C41;border-radius:12px;padding:10px 12px;margin-bottom:12px;font-size:12px;line-height:1.8;">القنوات الرسمية تفتح من مصدرها الأصلي. لا نعيد بث محتوى محمي ولا نتجاوز الاشتراك أو قيود التضمين؛ إضافة محطة خاصة تحتاج رابطًا تملكه أو إذنًا باستخدامه.</div>
         <div id="tvOwnerPanel" style="display:none;"></div>
         <section class="tv-console" aria-label="مشغل التلفزيون">
           <div id="tvLiveStage" class="tv-live-stage"><div class="tv-stage-placeholder">📺<strong>شاشة التلفزيون</strong><span>اختر قناة من الشريط بالأسفل لبدء المشاهدة</span></div></div>
@@ -295,7 +311,7 @@
     if (!verifiedOwnerSession) {
       return '<section style="background:#E8F5E9;border:1px solid #C8E6C9;border-radius:15px;padding:14px;margin-bottom:12px;">' +
         '<div style="font-weight:800;color:#1B5E20;margin-bottom:6px;">🔐 إدارة القنوات — تحقق المالك</div>' +
-        '<div style="font-size:12px;color:#455A64;line-height:1.8;margin-bottom:10px;">سيُرسل رابط دخول إلى بريد المالك المعتمد. بعد فتحه، عودي إلى المنصة على الجهاز نفسه. لن تمنح صفة الحساب الظاهرة في التطبيق صلاحيات إدارة بمفردها.</div>' +
+        '<div style="font-size:12px;color:#455A64;line-height:1.8;margin-bottom:10px;">تحقق المالك مطلوب فقط لإضافة أو حذف محطتك الخاصة. القنوات الرسمية الجاهزة متاحة للمشاهدة دون هذا الإجراء، وصفة الحساب الظاهرة في التطبيق وحدها لا تمنح صلاحية الإدارة.</div>' +
         '<button type="button" id="tvOwnerLoginBtn" style="border:0;border-radius:10px;padding:10px 14px;background:#2E7D32;color:#fff;font:inherit;font-weight:700;">📧 إرسال رابط التحقق</button>' +
         '<div id="tvOwnerAuthStatus" role="status" style="font-size:12px;line-height:1.7;margin-top:8px;"></div></section>';
     }

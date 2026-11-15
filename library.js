@@ -74,7 +74,7 @@
       return { library: document.getElementById('libraryScreen'), reader: document.getElementById('libraryReaderScreen'), admin: document.getElementById('libraryAdminScreen') };
     }
     var library = makeScreen('libraryScreen', '📚 المكتبة');
-    library.querySelector('[data-library-content]').innerHTML = '<div id="libraryStatus" class="library-message" role="status"></div><div class="library-toolbar"><input id="librarySearch" class="library-search" type="search" placeholder="ابحث باسم الكتاب أو المؤلف" aria-label="ابحث في المكتبة"></div><div id="libraryFilters" class="library-filters" aria-label="مجلدات المكتبة"></div><div id="libraryBooks" class="library-books"></div>';
+    library.querySelector('[data-library-content]').innerHTML = '<div id="libraryStatus" class="library-message" role="status"></div><p class="library-small-note" role="note">قراءة الكتب المنشورة وتنزيلها متاحان للطلاب دون تسجيل حساب المالك؛ التحقق مطلوب للإضافة والتعديل فقط.</p><div class="library-toolbar"><input id="librarySearch" class="library-search" type="search" placeholder="ابحث باسم الكتاب أو المؤلف" aria-label="ابحث في المكتبة"></div><div id="libraryFilters" class="library-filters" aria-label="مجلدات المكتبة"></div><div id="libraryBooks" class="library-books"></div>';
 
     var reader = makeScreen('libraryReaderScreen', '📖 قراءة الكتاب');
     reader.querySelector('[data-library-content]').innerHTML = '<div id="libraryReaderInfo" class="library-reader-info"></div><div id="libraryReaderActions" class="library-reader-actions"></div><div id="libraryReaderBody"></div>';
@@ -252,7 +252,7 @@
     if (!books.length) {
       var empty = document.createElement('div');
       empty.className = 'library-empty';
-      empty.textContent = (publicCatalog.books || []).length ? 'لا توجد نتائج مطابقة. جرّب مجلدًا أو كلمة بحث أخرى.' : 'المكتبة جاهزة للمحتوى. سيظهر هنا ما يضيفه المالك من كتب ومراجع مرخّصة.';
+      empty.textContent = (publicCatalog.books || []).length ? 'لا توجد نتائج مطابقة. جرّب مجلدًا أو كلمة بحث أخرى.' : 'اتصل بالإنترنت مرة واحدة لتحميل فهرس الكتب، ثم نزّل الكتاب الذي تريده لقراءته دون اتصال.';
       list.appendChild(empty);
       return;
     }
