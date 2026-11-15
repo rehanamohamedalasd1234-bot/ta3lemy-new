@@ -3,7 +3,7 @@
   'use strict';
 
   var SITE_URL = 'https://rehanamohamedalasd1234-bot.github.io/ta3lemy-new/';
-  var VERSION_URL = 'https://raw.githubusercontent.com/rehanamohamedalasd1234-bot/ta3lemy-new/main/version.json';
+  var VERSION_URL = SITE_URL + 'version.json';
   var localVersion = '0.0.0';
   var latestVersion = null;
   var modalId = 'ta3lemyUpdateModal';
@@ -168,8 +168,9 @@
           var worker = registration.installing || registration.waiting;
           if (worker) {
             if (worker.state === 'installed' || worker.state === 'waiting') worker.postMessage({ type: 'SKIP_WAITING' });
-            var activated = await waitForWorker(worker, 20000);
-            if (!activated) throw new Error('لم يكتمل تثبيت ملفات التحديث');
+            // بعض إصدارات Android WebView لا ترسل statechange في الوقت المتوقع.
+            // لا نعتبر ذلك فشلًا؛ إعادة فتح الموقع ستكمل التحديث أو تستخدم الشبكة مباشرة.
+            await waitForWorker(worker, 8000);
           }
         }
       }
@@ -178,11 +179,13 @@
       window.location.replace(target.href);
       return true;
     } catch (error) {
-      console.error('App update:', error);
-      applyingUpdate = false;
-      if (button) { button.disabled = false; button.textContent = latestVersion && compareVersions(latestVersion.version, localVersion) > 0 ? '🔄 تحديث محتوى المنصة الآن' : '🔄 إعادة تحميل أحدث الملفات'; }
-      notify('تعذر إكمال التحديث الآن. تحقق من الاتصال بالإنترنت وحاول مرة أخرى؛ سيظل المحتوى المحفوظ متاحًا.');
-      return false;
+      // لا نوقف التحديث بسبب Service Worker غير مدعوم أو بطيء في WebView.
+      // ننتقل إلى نسخة الموقع العامة مع cache-bust، وهي آلية التحديث الأساسية.
+      console.warn('Service Worker update deferred:', error);
+      var fallback = new URL(SITE_URL);
+      fallback.searchParams.set('ta3lemy-refresh', String(Date.now()));
+      window.location.replace(fallback.href);
+      return true;
     }
   }
 
