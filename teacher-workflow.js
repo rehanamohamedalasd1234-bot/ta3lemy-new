@@ -474,14 +474,29 @@
       existingImageInput.setAttribute('multiple', 'multiple');
       existingImageInput.setAttribute('accept', 'image/*');
       var imageLabel = existingImageInput.parentNode && existingImageInput.parentNode.querySelector('label');
-      if (imageLabel) imageLabel.textContent = '📷 صور صفحات المنهج (يمكن اختيار عدة صور مرة واحدة)';
+      if (imageLabel) imageLabel.textContent = '📷 صور صفحات المنهج (حتى 20 صورة دفعة واحدة)';
       var imageHint = existingImageInput.parentNode && existingImageInput.parentNode.querySelector('[data-multi-image-hint]');
       if (!imageHint) {
         imageHint = document.createElement('small');
         imageHint.setAttribute('data-multi-image-hint', '1');
         imageHint.style.cssText = 'display:block;margin-top:5px;color:#68756d;line-height:1.7';
-        imageHint.textContent = 'حدّد كل صور الصفحات معًا من مدير الملفات، وسيتم حفظها بالترتيب داخل شرح الأستاذ.';
+        imageHint.textContent = 'حدّد حتى 20 صورة معًا من مدير الملفات. راجع المعاينة؛ ستُحفظ الصور بالترتيب بعد موافقة المالك.';
         existingImageInput.parentNode.appendChild(imageHint);
+      }
+      imageHint.id = 'teacherMultiImageHelp';
+      imageHint.textContent = 'حدّد حتى 20 صورة معًا من مدير الملفات. راجع المعاينة؛ ستُحفظ الصور بالترتيب بعد موافقة المالك.';
+      var imagePreview = existingImageInput.parentNode.querySelector('#teacherMultiImagePreview');
+      if (!imagePreview) {
+        imagePreview = document.createElement('div');
+        imagePreview.id = 'teacherMultiImagePreview';
+        imagePreview.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;margin-top:8px';
+        existingImageInput.parentNode.appendChild(imagePreview);
+      }
+      if (existingImageInput.getAttribute('data-preview-bound') !== '1') {
+        existingImageInput.setAttribute('data-preview-bound', '1');
+        existingImageInput.addEventListener('change', function () {
+          if (typeof window.previewCurriculumImages === 'function') window.previewCurriculumImages(existingImageInput, 'teacherMultiImageHelp', 'teacherMultiImagePreview');
+        });
       }
     }
     var wanted = [
@@ -556,7 +571,6 @@
     var audioInput = document.getElementById('upAudio');
     var pdfInput = document.getElementById('upPdf');
     var imageFiles = imageInput && imageInput.files ? Array.prototype.slice.call(imageInput.files) : [];
-    var imageFile = imageFiles[0] || null;
     var videoFile = videoInput && videoInput.files && videoInput.files[0];
     var audioFile = audioInput && audioInput.files && audioInput.files[0];
     var pdfFile = pdfInput && pdfInput.files && pdfInput.files[0];
@@ -566,13 +580,13 @@
       if (!azharCourse || azharCourse.group !== subjectGroup || azharCourse.grades.length && azharCourse.grades.indexOf(grade) < 0) return toast('اختر المرحلة والصف ومجموعة المادة الصحيحة من قوائم الأزهر');
       if (azharCourse.branches.length && azharCourse.branches.indexOf(branch) < 0) return toast('اختر الفرع أو المذهب من القائمة');
     }
-    if (!content && !imageFile && !videoFile && !audioFile && !pdfFile) return toast('أضف شرحًا أو صورة أو فيديو أو تسجيلًا صوتيًا أو ملف PDF واحدًا على الأقل');
+    if (!content && !imageFiles.length && !videoFile && !audioFile && !pdfFile) return toast('أضف شرحًا أو صورة أو فيديو أو تسجيلًا صوتيًا أو ملف PDF واحدًا على الأقل');
     if (stage === 'kindergarten_languages' && (['KG1', 'KG2'].indexOf(grade) < 0 || ['عربي', 'English', 'Maths'].indexOf(subject) < 0)) return toast('اختر KG1 أو KG2 ومادة عربي أو English أو Maths');
     if (audioFile && audioFile.size > 25 * 1024 * 1024) return toast('حجم التسجيل الصوتي يجب ألا يتجاوز 25 ميجابايت');
     if (pdfFile && !/\.pdf$/i.test(pdfFile.name || '')) return toast('اختر ملفًا بامتداد PDF');
     if (pdfFile && pdfFile.size > 10 * 1024 * 1024) return toast('حجم ملف PDF يجب ألا يتجاوز 10 ميجابايت على الخطة المجانية');
-    if (imageFiles.length > 30) return toast('يمكن رفع 30 صورة كحد أقصى في الشرح الواحد');
-    if (imageFiles.some(function (file) { return !/^image\//i.test(file.type || '') || file.size > 10 * 1024 * 1024; })) return toast('كل صورة يجب أن تكون صورة فعلية وألا يتجاوز حجمها 10 ميجابايت');
+    if (imageFiles.length > 20) return toast('يمكن رفع 20 صورة كحد أقصى في العمل الواحد');
+    if (imageFiles.some(function (file) { var validType = /^image\//i.test(file.type || '') || /\.(jpe?g|png|gif|webp|bmp|avif|heic|tiff?)$/i.test(file.name || ''); return !validType || file.size > 10 * 1024 * 1024; })) return toast('كل ملف يجب أن يكون صورة فعلية وألا يتجاوز 10 ميجابايت');
     if (button) { button.disabled = true; button.textContent = '⏳ جارٍ رفع العمل للمراجعة...'; }
     try {
       var imageUrls = [];
@@ -582,7 +596,7 @@
       var pdfUrl = null;
       for (var imageIndex = 0; imageIndex < imageFiles.length; imageIndex += 1) {
         if (button) button.textContent = '⏳ رفع الصورة ' + (imageIndex + 1) + ' من ' + imageFiles.length + '...';
-        var uploadedImage = await window.uploadFile(imageFiles[imageIndex], 'teacher_content');
+        var uploadedImage = await window.uploadFile(imageFiles[imageIndex], 'teacher_content', true);
         if (!uploadedImage) throw new Error('فشل رفع الصورة رقم ' + (imageIndex + 1));
         imageUrls.push(uploadedImage);
       }
@@ -611,7 +625,10 @@
       });
       toast('تم إرسال العمل للمالك، وسيظهر للطلاب بعد الموافقة');
       ['upTitle', 'upContent'].forEach(function (id) { var element = document.getElementById(id); if (element) element.value = ''; });
-      if (imageInput) imageInput.value = '';
+      if (imageInput) {
+        imageInput.value = '';
+        if (typeof window.previewCurriculumImages === 'function') window.previewCurriculumImages(imageInput, 'teacherMultiImageHelp', 'teacherMultiImagePreview');
+      }
       if (videoInput) videoInput.value = '';
       if (audioInput) audioInput.value = '';
       if (pdfInput) pdfInput.value = '';

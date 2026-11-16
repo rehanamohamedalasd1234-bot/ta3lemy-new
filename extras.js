@@ -2119,7 +2119,9 @@ console.log('✅ Exercises UI loaded');
   };
   function mediaUrlsFromLesson(item){
     var keys=['image_url','imageUrl','video_url','videoUrl','audio_url','audioUrl','file_url','fileUrl','media_url','mediaUrl','attachment_url','attachmentUrl'];
-    return keys.map(function(k){return item&&item[k];}).filter(function(u){return typeof u==='string'&&/^https?:\/\//i.test(u);});
+    var urls=keys.map(function(k){return item&&item[k];}).filter(function(u){return typeof u==='string'&&/^https?:\/\//i.test(u);});
+    var images=item&&Array.isArray(item.image_urls)?item.image_urls:(item&&Array.isArray(item.imageUrls)?item.imageUrls:[]);
+    return urls.concat(images).filter(function(u){return typeof u==='string'&&/^https?:\/\//i.test(u);});
   }
   window.downloadAllOffline=async function(){
     if(!navigator.onLine){if(typeof showToast==='function')showToast('⚠️ اتصل بالإنترنت أولًا لبدء تنزيل المحتوى');return;}
@@ -2638,7 +2640,7 @@ console.log('✅ Exercises UI loaded');
     var s = document.createElement('div');
     s.id = 'teacherUploadScreen';
     s.className = 'screen';
-    s.innerHTML = '<div class="top-bar" style="background:linear-gradient(135deg,#1976D2,#0D47A1);"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>📤 رفع محتوى</span></div><div style="width:42px;"></div></div><div class="content"><div class="form-group"><label class="form-label">نوع المحتوى</label><select class="form-input" id="upType"><option value="lesson">درس</option><option value="exercise">تدريب</option><option value="exam">امتحان</option><option value="video">فيديو</option></select></div><div class="form-group"><label class="form-label">المرحلة</label><select class="form-input" id="upStage"><option value="primary">ابتدائي</option><option value="prep">إعدادي</option><option value="sec">ثانوي</option><option value="bakkalorya">بكالوريا</option></select></div><div class="form-group"><label class="form-label">الصف</label><input type="text" class="form-input" id="upGrade" placeholder="مثال: الأول"></div><div class="form-group"><label class="form-label">المادة</label><input type="text" class="form-input" id="upSubject" placeholder="مثال: رياضيات"></div><div class="form-group"><label class="form-label">العنوان</label><input type="text" class="form-input" id="upTitle" placeholder="عنوان المحتوى"></div><div class="form-group"><label class="form-label">المحتوى (نص)</label><textarea class="form-input" id="upContent" rows="5"></textarea></div><div class="form-group"><label class="form-label">📷 صورة (اختياري)</label><input type="file" class="form-input" id="upImage" accept="image/*" style="padding:10px;"></div><div class="form-group"><label class="form-label">🎥 فيديو (اختياري)</label><input type="file" class="form-input" id="upVideo" accept="video/*" style="padding:10px;"></div><button class="btn-primary" id="upSubmitBtn" onclick="submitTeacherUpload()" style="background:linear-gradient(135deg,#1976D2,#0D47A1);">📤 رفع المحتوى</button></div>';
+    s.innerHTML = '<div class="top-bar" style="background:linear-gradient(135deg,#1976D2,#0D47A1);"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>📤 رفع محتوى</span></div><div style="width:42px;"></div></div><div class="content"><div class="form-group"><label class="form-label">نوع المحتوى</label><select class="form-input" id="upType"><option value="lesson">درس</option><option value="exercise">تدريب</option><option value="exam">امتحان</option><option value="video">فيديو</option></select></div><div class="form-group"><label class="form-label">المرحلة</label><select class="form-input" id="upStage"><option value="primary">ابتدائي</option><option value="prep">إعدادي</option><option value="sec">ثانوي</option><option value="bakkalorya">بكالوريا</option></select></div><div class="form-group"><label class="form-label">الصف</label><input type="text" class="form-input" id="upGrade" placeholder="مثال: الأول"></div><div class="form-group"><label class="form-label">المادة</label><input type="text" class="form-input" id="upSubject" placeholder="مثال: رياضيات"></div><div class="form-group"><label class="form-label">العنوان</label><input type="text" class="form-input" id="upTitle" placeholder="عنوان المحتوى"></div><div class="form-group"><label class="form-label">المحتوى (نص)</label><textarea class="form-input" id="upContent" rows="5"></textarea></div><div class="form-group"><label class="form-label">📷 صور تعليمية (اختياري)</label><input type="file" class="form-input" id="upImage" accept="image/*" multiple style="padding:10px;"><small id="teacherMultiImageHelp" data-multi-image-hint="1" style="display:block;margin-top:6px;color:#68756d;line-height:1.7">اختر حتى 20 صورة دفعة واحدة، وستظهر للطلاب بعد موافقة المالك.</small><div id="teacherMultiImagePreview" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px"></div></div><div class="form-group"><label class="form-label">🎥 فيديو (اختياري)</label><input type="file" class="form-input" id="upVideo" accept="video/*" style="padding:10px;"></div><button class="btn-primary" id="upSubmitBtn" onclick="submitTeacherUpload()" style="background:linear-gradient(135deg,#1976D2,#0D47A1);">📤 رفع المحتوى</button></div>';
     document.body.appendChild(s);
   }
 
@@ -2657,16 +2659,23 @@ console.log('✅ Exercises UI loaded');
     var subject = document.getElementById('upSubject').value.trim();
     var title = document.getElementById('upTitle').value.trim();
     var content = document.getElementById('upContent').value.trim();
-    var img = document.getElementById('upImage').files[0];
+    var imageInput = document.getElementById('upImage');
+    var imgFiles = imageInput && imageInput.files ? Array.prototype.slice.call(imageInput.files) : [];
+    var img = imgFiles[0];
     var vid = document.getElementById('upVideo').files[0];
     var btn = document.getElementById('upSubmitBtn');
     
     if(!title || !content){ if(typeof showToast === 'function') showToast('⚠️ أدخل العنوان والمحتوى'); return; }
+    if(imgFiles.length > 20){ if(typeof showToast === 'function') showToast('يمكنك اختيار 20 صورة كحد أقصى في المرة الواحدة'); return; }
     if(btn){ btn.disabled = true; btn.textContent = '⏳ جاري الرفع...'; }
     
     try {
-      var imgUrl = null, vidUrl = null;
-      if(img) imgUrl = await window.uploadFile(img, 'teacher_content');
+      var imgUrls = [], imgUrl = null, vidUrl = null;
+      if(imgFiles.length){
+        if(typeof window.uploadImageSet !== 'function') throw new Error('أعد تحميل الصفحة ثم حاول رفع الصور مرة أخرى');
+        imgUrls = await window.uploadImageSet(imgFiles, 'teacher_content', function(done,total){if(btn)btn.textContent='⏳ رفع الصورة '+done+' من '+total+'...';});
+        imgUrl = imgUrls[0] || null;
+      }
       if(vid) vidUrl = await window.uploadFile(vid, 'teacher_content');
       
       await firebase.firestore().collection('teacher_uploads').add({
@@ -2679,6 +2688,7 @@ console.log('✅ Exercises UI loaded');
         title: title,
         content: content,
         image_url: imgUrl,
+        image_urls: imgUrls,
         video_url: vidUrl,
         createdAt: new Date().toISOString()
       });
@@ -2686,6 +2696,7 @@ console.log('✅ Exercises UI loaded');
       if(typeof showToast === 'function') showToast('✅ تم رفع المحتوى');
       document.getElementById('upTitle').value = '';
       document.getElementById('upContent').value = '';
+      if(imageInput){imageInput.value='';if(typeof window.previewCurriculumImages==='function')window.previewCurriculumImages(imageInput,'teacherMultiImageHelp','teacherMultiImagePreview');}
       if(btn){ btn.disabled = false; btn.textContent = '📤 رفع المحتوى'; }
       if(typeof goBack === 'function') goBack();
     } catch(e){

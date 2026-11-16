@@ -10,7 +10,7 @@
 <meta name="description" content="منصة الأستاذ حافظ التعليمية — تعليم عام وأزهر وبكالوريا جديدة. دروس، تدريبات، امتحانات، قرآن كريم، مراجعة شاملة، وتطبيق يعمل بدون إنترنت.">
 <meta name="keywords" content="منصة تعليمية, بكالوريا, أزهر شريف, تعليم عام, دروس, قرآن كريم, امتحانات, مراجعة, الأستاذ حافظ">
 <meta name="author" content="الأستاذ حافظ">
-<meta name="ta3lemy-version" content="1.0.115">
+<meta name="ta3lemy-version" content="1.0.116">
 <meta name="robots" content="index, follow">
 <meta name="revisit-after" content="7 days">
 <meta property="og:type" content="website">
@@ -22,7 +22,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="منصة الأستاذ حافظ التعليمية">
 <meta name="twitter:description" content="تعليم عام + أزهر + بكالوريا + قرآن كريم">
-<link rel="stylesheet" href="./library.css?v=1.0.115">
+<link rel="stylesheet" href="./library.css?v=1.0.116">
 </head><body><div id="splashScreen" class="screen active"><div class="splash-content"><div class="splash-logo">🎓</div><div class="splash-title">منصة الأستاذ حافظ التعليمية</div><div class="splash-subtitle">للتعليم العام والأزهر الشريف والبكالوريا</div><div class="loader"></div></div></div>
 
 <div id="loginScreen" class="screen"><div class="login-logo">🎓</div><div class="login-title">مرحباً بك</div><div class="login-sub">سجّل دخولك للمتابعة</div><div class="role-selector"><button class="role-btn active" onclick="selectRole(this,'student')">🎒 طالب</button><button class="role-btn" onclick="selectRole(this,'teacher')">👨‍🏫 معلم</button><button class="role-btn" onclick="selectRole(this,'parent')">👨‍👩‍👧 ولي أمر</button><button class="role-btn" onclick="selectRole(this,'owner')">👑 مالك</button></div><div class="form-group"><input type="text" id="usernameInput" class="form-input" placeholder="👤 اسم المستخدم"></div><div class="form-group"><input type="password" id="passwordInput" class="form-input" placeholder="🔒 كلمة المرور"></div><div class="form-group" id="ownerCodeGroup" style="display:none;"><input type="password" id="ownerCodeInput" class="form-input" placeholder="🔐 كود المالك"></div><button class="btn-primary" onclick="login()">تسجيل الدخول</button></div>
@@ -104,7 +104,7 @@
 <option value="azhar_prep">الأزهر - الإعدادي</option>
 <option value="azhar_sec">الأزهر - الثانوي</option>
 </select>+</select></div><div class="form-group"><label class="form-label">الصف</label><select class="form-input" id="newLessonGrade"><option value="الأول">الأول</option><option value="الثاني">الثاني</option><option value="الثالث">الثالث</option><option value="الرابع">الرابع</option><option value="الخامس">الخامس</option><option value="السادس">السادس</option>
-<option value="أزهري">أزهري</option></select></div><div class="form-group"><label class="form-label">المادة</label><select class="form-input" id="newLessonSubject"><option value="اللغة العربية">اللغة العربية</option><option value="رياضيات">رياضيات</option><option value="علوم">علوم</option><option value="فيزياء">فيزياء</option><option value="كيمياء">كيمياء</option><option value="أحياء">أحياء</option><option value="إنجليزي">إنجليزي</option><option value="دراسات">دراسات</option><option value="تاريخ">تاريخ</option><option value="جغرافيا">جغرافيا</option><option value="فلسفة ومنطق">فلسفة ومنطق</option><option value="تربية دينية">تربية دينية</option><option value="حاسب آلي">حاسب آلي</option><option value="فنية">فنية</option><option value="القرآن والتفسير">القرآن والتفسير</option><option value="الحديث الشريف">الحديث الشريف</option><option value="الفقه">الفقه</option><option value="العقيدة">العقيدة</option><option value="السيرة النبوية">السيرة النبوية</option><option value="النحو">النحو</option><option value="الصرف والبلاغة">الصرف والبلاغة</option></select></div><div class="form-group"><label class="form-label">القسم</label><select class="form-input" id="newLessonType"><option value="lessons">📄 درس</option><option value="exercises">✏️ تدريبات</option><option value="exams">📝 امتحانات</option><option value="videos">🎥 فيديوهات</option></select></div><div class="form-group"><label class="form-label">الترم</label><select class="form-input" id="newLessonTerm"><option value="1">الترم الأول</option><option value="2">الترم الثاني</option></select></div><div class="form-group"><label class="form-label">الترتيب (رقم)</label><input type="number" class="form-input" id="newLessonOrder" value="1" min="1"></div><div class="form-group"><label class="form-label">📝 سؤال (اختياري)</label><textarea class="form-input" id="newLessonQuestion" rows="2"></textarea></div><div class="form-group"><label class="form-label">✅ الإجابة (اختياري)</label><textarea class="form-input" id="newLessonAnswer" rows="2"></textarea></div><div class="form-group"><label class="form-label">📷 صورة (اختياري)</label><input type="file" class="form-input" id="newLessonImageFile" accept="image/*" style="padding:10px;"></div><div class="form-group"><label class="form-label">🎥 فيديو (اختياري)</label><input type="file" class="form-input" id="newLessonVideoFile" accept="video/*" style="padding:10px;"></div><button class="btn-primary" id="saveLessonBtn" onclick="saveNewLesson()">💾 حفظ الدرس</button></div></div>
+<option value="أزهري">أزهري</option></select></div><div class="form-group"><label class="form-label">المادة</label><select class="form-input" id="newLessonSubject"><option value="اللغة العربية">اللغة العربية</option><option value="رياضيات">رياضيات</option><option value="علوم">علوم</option><option value="فيزياء">فيزياء</option><option value="كيمياء">كيمياء</option><option value="أحياء">أحياء</option><option value="إنجليزي">إنجليزي</option><option value="دراسات">دراسات</option><option value="تاريخ">تاريخ</option><option value="جغرافيا">جغرافيا</option><option value="فلسفة ومنطق">فلسفة ومنطق</option><option value="تربية دينية">تربية دينية</option><option value="حاسب آلي">حاسب آلي</option><option value="فنية">فنية</option><option value="القرآن والتفسير">القرآن والتفسير</option><option value="الحديث الشريف">الحديث الشريف</option><option value="الفقه">الفقه</option><option value="العقيدة">العقيدة</option><option value="السيرة النبوية">السيرة النبوية</option><option value="النحو">النحو</option><option value="الصرف والبلاغة">الصرف والبلاغة</option></select></div><div class="form-group"><label class="form-label">القسم</label><select class="form-input" id="newLessonType"><option value="lessons">📄 درس</option><option value="exercises">✏️ تدريبات</option><option value="exams">📝 امتحانات</option><option value="videos">🎥 فيديوهات</option></select></div><div class="form-group"><label class="form-label">الترم</label><select class="form-input" id="newLessonTerm"><option value="1">الترم الأول</option><option value="2">الترم الثاني</option></select></div><div class="form-group"><label class="form-label">الترتيب (رقم)</label><input type="number" class="form-input" id="newLessonOrder" value="1" min="1"></div><div class="form-group"><label class="form-label">📝 سؤال (اختياري)</label><textarea class="form-input" id="newLessonQuestion" rows="2"></textarea></div><div class="form-group"><label class="form-label">✅ الإجابة (اختياري)</label><textarea class="form-input" id="newLessonAnswer" rows="2"></textarea></div><div class="form-group"><label class="form-label">📷 صور الدرس (اختياري)</label><input type="file" class="form-input" id="newLessonImageFile" accept="image/*" multiple onchange="previewCurriculumImages(this, 'newLessonImageHelp', 'newLessonImagePreview')" style="padding:10px;"><small id="newLessonImageHelp" style="display:block;margin-top:6px;color:#68756d;line-height:1.7">يمكنك تحديد حتى 20 صورة دفعة واحدة؛ ستظهر للطلاب مع الدرس بالترتيب.</small><div id="newLessonImagePreview" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px"></div></div><div class="form-group"><label class="form-label">🎥 فيديو (اختياري)</label><input type="file" class="form-input" id="newLessonVideoFile" accept="video/*" style="padding:10px;"></div><button class="btn-primary" id="saveLessonBtn" onclick="saveNewLesson()">💾 حفظ الدرس</button></div></div>
 
 <div id="ownerEditorScreen" class="screen"><div class="top-bar" style="background:linear-gradient(135deg,#B71C1C,#E53935);"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>👨‍🏫 تعديل المالك</span></div><div style="width:42px;"></div></div><div class="content"><div class="form-group"><label class="form-label">الاسم</label><input type="text" class="form-input" id="ownerName"></div><div class="form-group"><label class="form-label">السيرة الذاتية</label><textarea class="form-input" id="ownerBio" rows="5"></textarea></div><div class="form-group"><label class="form-label">📷 الصورة</label><input type="file" class="form-input" id="ownerImageFile" accept="image/*" style="padding:10px;"></div><button class="btn-primary" onclick="saveOwnerProfile()">💾 حفظ</button></div></div>
 
@@ -144,20 +144,20 @@ const generalSubjects=[{id:'arabic',name:'اللغة العربية',icon:'📖'
 const azharSubjects=[{id:'quran_t',name:'القرآن والتفسير',icon:'📖'},{id:'hadith',name:'الحديث الشريف',icon:'📜'},{id:'fiqh',name:'الفقه',icon:'⚖️'},{id:'aqeeda',name:'العقيدة',icon:'🕌'},{id:'seera',name:'السيرة النبوية',icon:'🌟'},{id:'nahw',name:'النحو',icon:'📝'},{id:'sarf',name:'الصرف والبلاغة',icon:'📚'}];
 const bakkaloryaTracks=[{id:'medical',name:'الطب وعلوم الحياة',icon:'🩺',color:'#E53935',desc:'فيزياء أو رياضيات + أحياء + كيمياء'},{id:'engineering',name:'الهندسة وعلوم الحاسب',icon:'⚙️',color:'#1976D2',desc:'كيمياء أو برمجة + رياضيات + فيزياء'},{id:'business',name:'الأعمال',icon:'💼',color:'#F9A825',desc:'محاسبة أو إدارة + رياضيات + اقتصاد'},{id:'arts',name:'الآداب والفنون',icon:'🎨',color:'#7B1FA2',desc:'علم نفس أو لغة + جغرافيا + إحصاء'}];
 const radioStations=[{name:'إذاعة القرآن الكريم - مصر',url:'https://n0d.radiojar.com/8s5u5tpdtwzuv'},{name:'إذاعة القرآن الكريم - السعودية',url:'https://Qurango.net/radio/tarateel'},{name:'إذاعة السنة النبوية',url:'https://n0d.radiojar.com/0tpy1h0kxtzuv'},{name:'إذاعة تفسير القرآن',url:'https://Qurango.net/radio/tafseer'},{name:'إذاعة القرآن الكريم - الكويت',url:'https://Qurango.net/radio/mishary_alafasy'}];
-async function uploadFile(file,folder){
+async function uploadFile(file,folder,quiet){
   if(!file)return null;
   const isPdf=file.type==='application/pdf'||/\.pdf$/i.test(file.name||'');
-  if(isPdf&&file.size>10*1024*1024){showToast('❌ حجم ملف PDF يجب ألا يتجاوز 10 ميجابايت');return null;}
+  if(isPdf&&file.size>10*1024*1024){if(!quiet)showToast('❌ حجم ملف PDF يجب ألا يتجاوز 10 ميجابايت');return null;}
   try{
-    showToast('⏳ جاري الرفع...');
+    if(!quiet)showToast('⏳ جاري الرفع...');
     const fd=new FormData();fd.append('file',file);fd.append('upload_preset',UPLOAD_PRESET);if(folder)fd.append('folder',folder);
     const resourceType=isPdf?'image':'auto';
     const r=await fetch('https://api.cloudinary.com/v1_1/'+CLOUD_NAME+'/'+resourceType+'/upload',{method:'POST',body:fd});
     const d=await r.json().catch(function(){return {};});
     if(!r.ok)throw new Error(d.error&&d.error.message||'Upload failed');
     if(!d.secure_url)throw new Error('No URL');
-    showToast('✅ تم الرفع');return d.secure_url;
-  }catch(e){console.error(e);showToast('❌ فشل الرفع'+(e&&e.message?': '+e.message:''));return null;}
+    if(!quiet)showToast('✅ تم الرفع');return d.secure_url;
+  }catch(e){console.error(e);if(!quiet)showToast('❌ فشل الرفع'+(e&&e.message?': '+e.message:''));return null;}
 }
 function openEducation(){const l=document.getElementById('stagesList');l.innerHTML=Object.keys(stagesData).map(k=>{const s=stagesData[k];return'<div class="stage-item" onclick="openStage(\''+k+'\')"><div class="stage-icon">'+s.icon+'</div><div class="stage-info"><div class="stage-name">'+s.name+'</div><div class="stage-sub">'+s.grades.length+' صفوف</div></div><div class="stage-arrow">‹</div></div>';}).join('');screenHistory.push(currentScreen);showScreen('educationScreen');}
 function openStage(id){currentStage=id;const s=stagesData[id];document.getElementById('gradesTitle').textContent=s.name;const l=document.getElementById('gradesList');l.innerHTML=s.grades.map(g=>'<div class="stage-item" onclick="openGrade(\''+id+'\',\''+g+'\')"><div class="stage-icon" style="background:#E8F5E9;">🎓</div><div class="stage-info"><div class="stage-name">الصف '+g+'</div><div class="stage-sub">اضغط لعرض المواد</div></div><div class="stage-arrow">‹</div></div>').join('');screenHistory.push(currentScreen);showScreen('gradesScreen');}
@@ -452,7 +452,83 @@ function showHomeAd(i){if(!homeAds||homeAds.length===0)return;const ad=homeAds[i
 function openAdmin(){loadAdminStats();screenHistory.push(currentScreen);showScreen('adminScreen');}
 async function loadAdminStats(){try{const l=await db.collection('lessons').get();const a=await db.collection('ads').get();const u=await db.collection('users').get();document.getElementById('statLessons').textContent=l.size;document.getElementById('statAds').textContent=a.size;document.getElementById('statUsers').textContent=u.size;}catch(e){console.error(e);}}
 function openAddLesson(){screenHistory.push(currentScreen);showScreen('addLessonScreen');}
-async function saveNewLesson(){const t=document.getElementById('newLessonTitle').value.trim();const c=document.getElementById('newLessonContent').value.trim();const st=document.getElementById('newLessonStage').value;const g=document.getElementById('newLessonGrade').value;const s=document.getElementById('newLessonSubject').value;const ty=document.getElementById('newLessonType').value;const te=parseInt(document.getElementById('newLessonTerm').value);const ord=parseInt(document.getElementById('newLessonOrder').value)||1;const q=document.getElementById('newLessonQuestion').value.trim();const ans=document.getElementById('newLessonAnswer').value.trim();const im=document.getElementById('newLessonImageFile').files[0];const vi=document.getElementById('newLessonVideoFile').files[0];const btn=document.getElementById('saveLessonBtn');if(!t){showToast('⚠️ أدخل عنوان الدرس');return;}if(btn){btn.disabled=true;btn.textContent='⏳ جاري الحفظ...';}let iu=null,vu=null;if(im)iu=await uploadFile(im,'lessons/images');if(vi)vu=await uploadFile(vi,'lessons/videos');try{await db.collection('lessons').add({title:t,content:c,subject:s,grade:g,stage:st,term:te,type:ty,order:ord,question:q,answer:ans,image_url:iu,video_url:vu,created_at:new Date().toISOString()});showToast('✅ تم حفظ الدرس');document.getElementById('newLessonTitle').value='';document.getElementById('newLessonContent').value='';document.getElementById('newLessonQuestion').value='';document.getElementById('newLessonAnswer').value='';if(btn){btn.disabled=false;btn.textContent='💾 حفظ الدرس';}setTimeout(()=>goBack(),1000);}catch(e){console.error(e);if(btn){btn.disabled=false;btn.textContent='💾 حفظ الدرس';}showToast('❌ فشل الحفظ');}}
+window.previewCurriculumImages=function(input,helpId,previewId){
+  const files=input&&input.files?Array.prototype.slice.call(input.files):[];
+  const help=document.getElementById(helpId);
+  const preview=document.getElementById(previewId);
+  if(help){help.textContent=files.length>20?'تم اختيار '+files.length+' صورة؛ الحد الأقصى 20 صورة في المرة الواحدة.':files.length?'تم اختيار '+files.length+' صورة. ستظهر للطلاب بالترتيب.':'يمكنك تحديد حتى 20 صورة دفعة واحدة؛ ستظهر للطلاب مع الدرس بالترتيب.';}
+  if(!preview)return;
+  const previous=preview._previewUrls||[];
+  if(window.URL&&URL.revokeObjectURL)previous.forEach(function(url){try{URL.revokeObjectURL(url);}catch(_){}});
+  preview._previewUrls=[];preview.innerHTML='';
+  if(!window.URL||!URL.createObjectURL)return;
+  files.slice(0,6).forEach(function(file,index){
+    try{
+      const url=URL.createObjectURL(file);preview._previewUrls.push(url);
+      const tile=document.createElement('div');tile.style.cssText='width:82px;text-align:center;font-size:11px;color:#68756d';
+      const image=document.createElement('img');image.src=url;image.alt='معاينة الصورة '+(index+1);image.style.cssText='display:block;width:76px;height:64px;object-fit:cover;border-radius:8px;background:#f2f4f2;margin:auto';
+      const label=document.createElement('div');label.textContent='صورة '+(index+1);label.style.marginTop='3px';tile.appendChild(image);tile.appendChild(label);preview.appendChild(tile);
+    }catch(_){ }
+  });
+  if(files.length>6){const more=document.createElement('div');more.textContent='+'+(files.length-6)+' صور';more.style.cssText='align-self:center;padding:8px;color:#68756d;font-size:12px';preview.appendChild(more);}
+};
+window.uploadImageSet=async function(files,folder,onProgress){
+  const selected=files?Array.prototype.slice.call(files):[];
+  if(selected.length>20)throw new Error('يمكنك اختيار 20 صورة كحد أقصى في المرة الواحدة');
+  const urls=[];
+  for(let i=0;i<selected.length;i++){
+    const file=selected[i];
+    const isImage=String(file.type||'').toLowerCase().indexOf('image/')===0||/\.(jpe?g|png|gif|webp|bmp|avif|heic|tiff?)$/i.test(file.name||'');
+    if(!isImage)throw new Error('الملف رقم '+(i+1)+' ليس صورة صالحة');
+    if(file.size>10*1024*1024)throw new Error('حجم الصورة رقم '+(i+1)+' يتجاوز 10 ميجابايت');
+    if(typeof onProgress==='function')onProgress(i+1,selected.length);
+    const url=await uploadFile(file,folder,true);
+    if(!url)throw new Error('تعذر رفع الصورة رقم '+(i+1)+' ('+(file.name||'صورة')+')');
+    urls.push(url);
+  }
+  return urls;
+};
+async function saveNewLesson(){
+  const t=document.getElementById('newLessonTitle').value.trim();
+  const c=document.getElementById('newLessonContent').value.trim();
+  const st=document.getElementById('newLessonStage').value;
+  const g=document.getElementById('newLessonGrade').value;
+  const s=document.getElementById('newLessonSubject').value;
+  const ty=document.getElementById('newLessonType').value;
+  const te=parseInt(document.getElementById('newLessonTerm').value,10);
+  const ord=parseInt(document.getElementById('newLessonOrder').value,10)||1;
+  const q=document.getElementById('newLessonQuestion').value.trim();
+  const ans=document.getElementById('newLessonAnswer').value.trim();
+  const imageInput=document.getElementById('newLessonImageFile');
+  const imageFiles=imageInput&&imageInput.files?Array.prototype.slice.call(imageInput.files):[];
+  const videoInput=document.getElementById('newLessonVideoFile');
+  const vi=videoInput&&videoInput.files&&videoInput.files[0];
+  const btn=document.getElementById('saveLessonBtn');
+  if(!t){showToast('⚠️ أدخل عنوان الدرس');return;}
+  if(imageFiles.length>20){showToast('يمكنك اختيار 20 صورة كحد أقصى في المرة الواحدة');return;}
+  if(btn){btn.disabled=true;btn.textContent='⏳ جاري الحفظ...';}
+  try{
+    const imageUrls=await window.uploadImageSet(imageFiles,'lessons/images',function(done,total){if(btn)btn.textContent='⏳ رفع الصورة '+done+' من '+total+'...';});
+    const imageUrl=imageUrls[0]||null;
+    let vu=null;
+    if(vi){if(btn)btn.textContent='⏳ جاري رفع الفيديو...';vu=await uploadFile(vi,'lessons/videos',true);if(!vu)throw new Error('فشل رفع الفيديو');}
+    if(btn)btn.textContent='⏳ حفظ بيانات الدرس...';
+    await db.collection('lessons').add({title:t,content:c,subject:s,grade:g,stage:st,term:te,type:ty,order:ord,question:q,answer:ans,image_url:imageUrl,image_urls:imageUrls,video_url:vu,created_at:new Date().toISOString()});
+    showToast('✅ تم حفظ الدرس'+(imageUrls.length?' مع '+imageUrls.length+' صور':''));
+    document.getElementById('newLessonTitle').value='';
+    document.getElementById('newLessonContent').value='';
+    document.getElementById('newLessonQuestion').value='';
+    document.getElementById('newLessonAnswer').value='';
+    if(imageInput){imageInput.value='';window.previewCurriculumImages(imageInput,'newLessonImageHelp','newLessonImagePreview');}
+    if(videoInput)videoInput.value='';
+    if(btn){btn.disabled=false;btn.textContent='💾 حفظ الدرس';}
+    setTimeout(()=>goBack(),1000);
+  }catch(e){
+    console.error('Owner lesson save failed',e);
+    if(btn){btn.disabled=false;btn.textContent='💾 حفظ الدرس';}
+    showToast('❌ تعذر حفظ الدرس: '+(e&&e.message?e.message:'تحقق من الاتصال'));
+  }
+}
 async function openLessonsManager(){screenHistory.push(currentScreen);showScreen('lessonsManagerScreen');loadAllLessons();}
 async function loadAllLessons(){const l=document.getElementById('allLessonsList');l.innerHTML='<div class="empty-state"><p>⏳</p></div>';try{const snap=await db.collection('lessons').orderBy('created_at','desc').get();if(snap.empty){l.innerHTML='<div class="empty-state"><div class="empty-state-icon">📚</div><p>لا توجد دروس</p></div>';return;}let html='';snap.forEach(doc=>{const it=doc.data();html+='<div style="background:#fff;border-radius:14px;padding:14px;margin-bottom:10px;"><div style="font-weight:bold;font-size:15px;margin-bottom:6px;">'+(it.title||'بدون عنوان')+'</div><div style="font-size:12px;color:#999;margin-bottom:8px;">'+(it.subject||'')+' • '+(it.grade||'')+' • '+(it.type||'')+'</div><button onclick="deleteLesson(\''+doc.id+'\')" style="background:#FFEBEE;color:#E53935;border:none;padding:8px 12px;border-radius:10px;font-family:inherit;font-weight:bold;cursor:pointer;">🗑️ حذف</button></div>';});l.innerHTML=html;}catch(e){console.error(e);l.innerHTML='<div class="empty-state">حدث خطأ</div>';}}
 async function deleteLesson(id){if(!confirm('حذف الدرس؟'))return;try{await db.collection('lessons').doc(id).delete();loadAllLessons();showToast('🗑️ تم الحذف');}catch(e){console.error(e);}}
@@ -598,40 +674,40 @@ async function deletePublicMsg(id) {
         showToast('🗑️ تم حذف الرسالة');
     } catch(e) { console.error(e); }
 }
-async function uploadFile(file,folder){
+async function uploadFile(file,folder,quiet){
   if(!file)return null;
   const isPdf=file.type==='application/pdf'||/\.pdf$/i.test(file.name||'');
-  if(isPdf&&file.size>10*1024*1024){showToast('❌ حجم ملف PDF يجب ألا يتجاوز 10 ميجابايت');return null;}
+  if(isPdf&&file.size>10*1024*1024){if(!quiet)showToast('❌ حجم ملف PDF يجب ألا يتجاوز 10 ميجابايت');return null;}
   try{
-    showToast('⏳ جاري الرفع...');
+    if(!quiet)showToast('⏳ جاري الرفع...');
     const fd=new FormData();fd.append('file',file);fd.append('upload_preset',UPLOAD_PRESET);if(folder)fd.append('folder',folder);
     const resourceType=isPdf?'image':'auto';
     const r=await fetch('https://api.cloudinary.com/v1_1/'+CLOUD_NAME+'/'+resourceType+'/upload',{method:'POST',body:fd});
     const d=await r.json().catch(function(){return {};});
     if(!r.ok)throw new Error(d.error&&d.error.message||'Upload failed');
     if(!d.secure_url)throw new Error('No URL');
-    showToast('✅ تم الرفع');return d.secure_url;
-  }catch(e){console.error(e);showToast('❌ فشل الرفع'+(e&&e.message?': '+e.message:''));return null;}
+    if(!quiet)showToast('✅ تم الرفع');return d.secure_url;
+  }catch(e){console.error(e);if(!quiet)showToast('❌ فشل الرفع'+(e&&e.message?': '+e.message:''));return null;}
 }
 function openEducation(){const l=document.getElementById('stagesList');l.innerHTML=Object.keys(stagesData).map(k=>{const s=stagesData[k];return'<div class="stage-item" onclick="openStage(\''+k+'\')"><div class="stage-icon">'+s.icon+'</div><div class="stage-info"><div class="stage-name">'+s.name+'</div><div class="stage-sub">'+s.grades.length+' صفوف</div></div><div class="stage-arrow">‹</div></div>';}).join('');screenHistory.push(currentScreen);showScreen('educationScreen');}
 function openStage(id){currentStage=id;const s=stagesData[id];document.getElementById('gradesTitle').textContent=s.name;const l=document.getElementById('gradesList');l.innerHTML=s.grades.map(g=>'<div class="stage-item" onclick="openGrade(\''+id+'\',\''+g+'\')"><div class="stage-icon" style="background:#E8F5E9;">🎓</div><div class="stage-info"><div class="stage-name">الصف '+g+'</div><div class="stage-sub">اضغط لعرض المواد</div></div><div class="stage-arrow">‹</div></div>').join('');screenHistory.push(currentScreen);showScreen('gradesScreen');}
 function openGrade(id,name){currentGrade=name;document.getElementById('subjectsTitle').textContent='الصف '+name;const l=document.getElementById('subjectsList');l.innerHTML=generalSubjects.map(s=>'<div class="subject-card" onclick="openSubject(\''+s.id+'\',\''+s.name+'\')"><div class="subject-icon" style="background:'+s.color+'20;color:'+s.color+';">'+s.icon+'</div><div class="subject-name">'+s.name+'</div></div>').join('');screenHistory.push(currentScreen);showScreen('subjectsScreen');}
 function openSubject(id,name){currentSubject=name;document.getElementById('termsTitle').textContent=name;document.getElementById('termsHeader').textContent=name+' - '+(currentGrade||'');renderTerms();screenHistory.push(currentScreen);showScreen('termsScreen');}
 function renderTerms(){const l=document.getElementById('termsList');const terms=[{num:1,name:'الترم الأول',icon:'📘'},{num:2,name:'الترم الثاني',icon:'📙'}];l.innerHTML=terms.map(t=>'<div class="term-card '+(t.num===2?'term-2':'')+'"><div class="term-header"><div class="term-icon">'+t.icon+'</div><div class="term-title">'+t.name+'</div><div class="term-count">منهج كامل</div></div><div class="term-sections"><div class="section-chip" onclick="openContent(\'lessons\','+t.num+',\''+t.name+'\')">📄 الدروس</div><div class="section-chip" onclick="openContent(\'exercises\','+t.num+',\''+t.name+'\')">✏️ تدريبات</div><div class="section-chip" onclick="openContent(\'exams\','+t.num+',\''+t.name+'\')">📝 امتحانات</div><div class="section-chip" onclick="openContent(\'reviews\','+t.num+',\''+t.name+'\')">🔁 مراجعات</div><div class="section-chip" onclick="openContent(\'videos\','+t.num+',\''+t.name+'\')">🎥 فيديوهات</div></div></div>').join('');}
-async function uploadFile(file,folder){
+async function uploadFile(file,folder,quiet){
   if(!file)return null;
   const isPdf=file.type==='application/pdf'||/\.pdf$/i.test(file.name||'');
-  if(isPdf&&file.size>10*1024*1024){showToast('❌ حجم ملف PDF يجب ألا يتجاوز 10 ميجابايت');return null;}
+  if(isPdf&&file.size>10*1024*1024){if(!quiet)showToast('❌ حجم ملف PDF يجب ألا يتجاوز 10 ميجابايت');return null;}
   try{
-    showToast('⏳ جاري الرفع...');
+    if(!quiet)showToast('⏳ جاري الرفع...');
     const fd=new FormData();fd.append('file',file);fd.append('upload_preset',UPLOAD_PRESET);if(folder)fd.append('folder',folder);
     const resourceType=isPdf?'image':'auto';
     const r=await fetch('https://api.cloudinary.com/v1_1/'+CLOUD_NAME+'/'+resourceType+'/upload',{method:'POST',body:fd});
     const d=await r.json().catch(function(){return {};});
     if(!r.ok)throw new Error(d.error&&d.error.message||'Upload failed');
     if(!d.secure_url)throw new Error('No URL');
-    showToast('✅ تم الرفع');return d.secure_url;
-  }catch(e){console.error(e);showToast('❌ فشل الرفع'+(e&&e.message?': '+e.message:''));return null;}
+    if(!quiet)showToast('✅ تم الرفع');return d.secure_url;
+  }catch(e){console.error(e);if(!quiet)showToast('❌ فشل الرفع'+(e&&e.message?': '+e.message:''));return null;}
 }
 function openEducation(){const l=document.getElementById('stagesList');l.innerHTML=Object.keys(stagesData).map(k=>{const s=stagesData[k];return'<div class="stage-item" onclick="openStage(\''+k+'\')"><div class="stage-icon">'+s.icon+'</div><div class="stage-info"><div class="stage-name">'+s.name+'</div><div class="stage-sub">'+s.grades.length+' صفوف</div></div><div class="stage-arrow">‹</div></div>';}).join('');screenHistory.push(currentScreen);showScreen('educationScreen');}
 function openStage(id){currentStage=id;const s=stagesData[id];document.getElementById('gradesTitle').textContent=s.name;const l=document.getElementById('gradesList');l.innerHTML=s.grades.map(g=>'<div class="stage-item" onclick="openGrade(\''+id+'\',\''+g+'\')"><div class="stage-icon" style="background:#E8F5E9;">🎓</div><div class="stage-info"><div class="stage-name">الصف '+g+'</div><div class="stage-sub">اضغط لعرض المواد</div></div><div class="stage-arrow">‹</div></div>').join('');screenHistory.push(currentScreen);showScreen('gradesScreen');}
@@ -838,7 +914,47 @@ function openAdmin(){loadAdminStats();screenHistory.push(currentScreen);showScre
 async function loadAdminStats(){try{const l=await db.collection('lessons').get();const a=await db.collection('ads').get();const u=await db.collection('users').get();document.getElementById('statLessons').textContent=l.size;document.getElementById('statAds').textContent=a.size;document.getElementById('statUsers').textContent=u.size;}catch(e){console.error(e);}}
 async function backupLessons(){if(!currentUser||currentRole!=='owner'){showToast('⚠️ مسموح للمالك فقط');return;}try{showToast('⏳ جاري تحضير النسخة الاحتياطية...');const snap=await db.collection('lessons').get();const data=[];snap.forEach(doc=>{data.push({id:doc.id,...doc.data()});});const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='lessons-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(url);showToast('✅ تم تحميل النسخة الاحتياطية');}catch(e){console.error(e);showToast('❌ فشل النسخ الاحتياطي');}}
 function openAddLesson(){screenHistory.push(currentScreen);showScreen('addLessonScreen');}
-async function saveNewLesson(){const t=document.getElementById('newLessonTitle').value.trim();const c=document.getElementById('newLessonContent').value.trim();const st=document.getElementById('newLessonStage').value;const g=document.getElementById('newLessonGrade').value;const s=document.getElementById('newLessonSubject').value;const ty=document.getElementById('newLessonType').value;const te=parseInt(document.getElementById('newLessonTerm').value);const ord=parseInt(document.getElementById('newLessonOrder').value)||1;const q=document.getElementById('newLessonQuestion').value.trim();const ans=document.getElementById('newLessonAnswer').value.trim();const im=document.getElementById('newLessonImageFile').files[0];const vi=document.getElementById('newLessonVideoFile').files[0];const btn=document.getElementById('saveLessonBtn');if(!t){showToast('⚠️ أدخل عنوان الدرس');return;}if(btn){btn.disabled=true;btn.textContent='⏳ جاري الحفظ...';}let iu=null,vu=null;if(im)iu=await uploadFile(im,'lessons/images');if(vi)vu=await uploadFile(vi,'lessons/videos');try{await db.collection('lessons').add({title:t,content:c,subject:s,grade:g,stage:st,term:te,type:ty,order:ord,question:q,answer:ans,image_url:iu,video_url:vu,created_at:new Date().toISOString()});showToast('✅ تم حفظ الدرس');document.getElementById('newLessonTitle').value='';document.getElementById('newLessonContent').value='';document.getElementById('newLessonQuestion').value='';document.getElementById('newLessonAnswer').value='';if(btn){btn.disabled=false;btn.textContent='💾 حفظ الدرس';}setTimeout(()=>goBack(),1000);}catch(e){console.error(e);if(btn){btn.disabled=false;btn.textContent='💾 حفظ الدرس';}showToast('❌ فشل الحفظ');}}
+async function saveNewLesson(){
+  const t=document.getElementById('newLessonTitle').value.trim();
+  const c=document.getElementById('newLessonContent').value.trim();
+  const st=document.getElementById('newLessonStage').value;
+  const g=document.getElementById('newLessonGrade').value;
+  const s=document.getElementById('newLessonSubject').value;
+  const ty=document.getElementById('newLessonType').value;
+  const te=parseInt(document.getElementById('newLessonTerm').value,10);
+  const ord=parseInt(document.getElementById('newLessonOrder').value,10)||1;
+  const q=document.getElementById('newLessonQuestion').value.trim();
+  const ans=document.getElementById('newLessonAnswer').value.trim();
+  const imageInput=document.getElementById('newLessonImageFile');
+  const imageFiles=imageInput&&imageInput.files?Array.prototype.slice.call(imageInput.files):[];
+  const videoInput=document.getElementById('newLessonVideoFile');
+  const vi=videoInput&&videoInput.files&&videoInput.files[0];
+  const btn=document.getElementById('saveLessonBtn');
+  if(!t){showToast('⚠️ أدخل عنوان الدرس');return;}
+  if(imageFiles.length>20){showToast('يمكنك اختيار 20 صورة كحد أقصى في المرة الواحدة');return;}
+  if(btn){btn.disabled=true;btn.textContent='⏳ جاري الحفظ...';}
+  try{
+    const imageUrls=await window.uploadImageSet(imageFiles,'lessons/images',function(done,total){if(btn)btn.textContent='⏳ رفع الصورة '+done+' من '+total+'...';});
+    const imageUrl=imageUrls[0]||null;
+    let vu=null;
+    if(vi){if(btn)btn.textContent='⏳ جاري رفع الفيديو...';vu=await uploadFile(vi,'lessons/videos',true);if(!vu)throw new Error('فشل رفع الفيديو');}
+    if(btn)btn.textContent='⏳ حفظ بيانات الدرس...';
+    await db.collection('lessons').add({title:t,content:c,subject:s,grade:g,stage:st,term:te,type:ty,order:ord,question:q,answer:ans,image_url:imageUrl,image_urls:imageUrls,video_url:vu,created_at:new Date().toISOString()});
+    showToast('✅ تم حفظ الدرس'+(imageUrls.length?' مع '+imageUrls.length+' صور':''));
+    document.getElementById('newLessonTitle').value='';
+    document.getElementById('newLessonContent').value='';
+    document.getElementById('newLessonQuestion').value='';
+    document.getElementById('newLessonAnswer').value='';
+    if(imageInput){imageInput.value='';window.previewCurriculumImages(imageInput,'newLessonImageHelp','newLessonImagePreview');}
+    if(videoInput)videoInput.value='';
+    if(btn){btn.disabled=false;btn.textContent='💾 حفظ الدرس';}
+    setTimeout(()=>goBack(),1000);
+  }catch(e){
+    console.error('Owner lesson save failed',e);
+    if(btn){btn.disabled=false;btn.textContent='💾 حفظ الدرس';}
+    showToast('❌ تعذر حفظ الدرس: '+(e&&e.message?e.message:'تحقق من الاتصال'));
+  }
+}
 async function openLessonsManager(){screenHistory.push(currentScreen);showScreen('lessonsManagerScreen');loadAllLessons();}
 async function loadAllLessons(){const l=document.getElementById('allLessonsList');l.innerHTML='<div class="empty-state"><p>⏳</p></div>';try{const snap=await db.collection('lessons').orderBy('created_at','desc').get();if(snap.empty){l.innerHTML='<div class="empty-state"><div class="empty-state-icon">📚</div><p>لا توجد دروس</p></div>';return;}let html='';snap.forEach(doc=>{const it=doc.data();html+='<div style="background:#fff;border-radius:14px;padding:14px;margin-bottom:10px;"><div style="font-weight:bold;font-size:15px;margin-bottom:6px;">'+(it.title||'بدون عنوان')+'</div><div style="font-size:12px;color:#999;margin-bottom:8px;">'+(it.subject||'')+' • '+(it.grade||'')+' • '+(it.type||'')+'</div><button onclick="deleteLesson(\''+doc.id+'\')" style="background:#FFEBEE;color:#E53935;border:none;padding:8px 12px;border-radius:10px;font-family:inherit;font-weight:bold;cursor:pointer;">🗑️ حذف</button></div>';});l.innerHTML=html;}catch(e){console.error(e);l.innerHTML='<div class="empty-state">حدث خطأ</div>';}}
 async function deleteLesson(id){if(!confirm('حذف الدرس؟'))return;try{await db.collection('lessons').doc(id).delete();loadAllLessons();showToast('🗑️ تم الحذف');}catch(e){console.error(e);}}
@@ -970,7 +1086,7 @@ if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.s
 <script src="./recognition-and-azkar.js?v=1.0.94"></script>
 <script src="./quiz-competitions.js?v=1.0.95"></script>
 <script src="./certificate-workflow.js?v=1.0.97"></script>
-<script src="./library-config.js?v=1.0.115"></script>
-<script src="./library.js?v=1.0.115"></script>
+<script src="./library-config.js?v=1.0.116"></script>
+<script src="./library.js?v=1.0.116"></script>
 </body>
 </html>
