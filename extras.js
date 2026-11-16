@@ -2118,7 +2118,7 @@ console.log('✅ Exercises UI loaded');
     if(typeof showToast==='function')showToast('✅ حُفظ صوت '+surah.name+': '+saved+' آية'+(failed?' • تعذر '+failed:''));
   };
   function mediaUrlsFromLesson(item){
-    var keys=['image_url','imageUrl','video_url','videoUrl','audio_url','audioUrl','file_url','fileUrl','media_url','mediaUrl','attachment_url','attachmentUrl'];
+    var keys=['image_url','imageUrl','teacherPhotoUrl','teacher_photo_url','video_url','videoUrl','audio_url','audioUrl','file_url','fileUrl','media_url','mediaUrl','attachment_url','attachmentUrl'];
     var urls=keys.map(function(k){return item&&item[k];}).filter(function(u){return typeof u==='string'&&/^https?:\/\//i.test(u);});
     var images=item&&Array.isArray(item.image_urls)?item.image_urls:(item&&Array.isArray(item.imageUrls)?item.imageUrls:[]);
     return urls.concat(images).filter(function(u){return typeof u==='string'&&/^https?:\/\//i.test(u);});

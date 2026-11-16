@@ -21,6 +21,86 @@
     });
   }
   function attr(value) { return esc(value).replace(/`/g, '&#96;'); }
+  var TEACHER_AVATAR_CACHE_KEY = 'ta3lemy_teacher_avatar_cache_v1';
+  function safeTeacherAvatar(value) {
+    var raw = String(value || '').trim();
+    if (!/^https:\/\//i.test(raw) || /[\s"'<>]/.test(raw)) return '';
+    try {
+      var parsed = new URL(raw);
+      var host = parsed.hostname.toLowerCase();
+      var appHost = window.location && window.location.hostname ? window.location.hostname.toLowerCase() : '';
+      if (parsed.protocol !== 'https:' || parsed.username || parsed.password) return '';
+      return host === appHost || host === 'cloudinary.com' || host.endsWith('.cloudinary.com') ? parsed.href : '';
+    } catch (_) { return ''; }
+  }
+  function readTeacherAvatarCache() {
+    try { var cache = JSON.parse(localStorage.getItem(TEACHER_AVATAR_CACHE_KEY) || '{}'); return cache && typeof cache === 'object' ? cache : {}; }
+    catch (_) { return {}; }
+  }
+  function writeTeacherAvatarCache(cache) {
+    try {
+      var ids = Object.keys(cache);
+      if (ids.length > 100) ids.slice(0, ids.length - 100).forEach(function (id) { delete cache[id]; });
+      localStorage.setItem(TEACHER_AVATAR_CACHE_KEY, JSON.stringify(cache));
+    } catch (_) {}
+  }
+  function cacheTeacherAvatarOffline(value) {
+    var url = safeTeacherAvatar(value);
+    if (!url || typeof navigator === 'undefined' || !navigator.onLine || typeof window.cacheOfflineMediaUrl !== 'function') return;
+    try { Promise.resolve(window.cacheOfflineMediaUrl(url)).catch(function () {}); } catch (_) {}
+  }
+  function mountTeacherAvatar(index, value) {
+    var container = document.getElementById('teacherDirectoryAvatar' + index);
+    var url = safeTeacherAvatar(value);
+    if (!container || !url) return;
+    var image = container.querySelector('img');
+    if (!image) {
+      image = document.createElement('img');
+      image.alt = '';
+      image.referrerPolicy = 'no-referrer';
+      image.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%';
+      image.onerror = function () { this.style.display = 'none'; };
+      container.appendChild(image);
+    }
+    image.style.display = 'block';
+    image.src = url;
+  }
+  function clearTeacherAvatar(index) {
+    var container = document.getElementById('teacherDirectoryAvatar' + index);
+    var image = container && container.querySelector('img');
+    if (image) image.remove();
+  }
+  async function loadTeacherAvatars(groups) {
+    var cache = readTeacherAvatarCache();
+    var lookups = [];
+    groups.forEach(function (group, index) {
+      var cached = group.id && safeTeacherAvatar(cache[group.id]);
+      if (!group.photoUrl && cached) { group.photoUrl = cached; mountTeacherAvatar(index, cached); }
+      if (!db || !db.collection) return;
+      if (!group.id || group.id.length > 128 || /[\/\\?#]/.test(group.id)) return;
+      lookups.push(db.collection('public_profiles').doc(group.id).get().then(function (snap) {
+        if (!snap.exists) return;
+        var profile = snap.data() || {};
+        if (profile.role && profile.role !== 'teacher') return;
+        var avatar = safeTeacherAvatar(profile.avatarURL || profile.avatarUrl || '');
+        if (avatar) {
+          group.photoUrl = avatar;
+          cache[group.id] = avatar;
+          writeTeacherAvatarCache(cache);
+          mountTeacherAvatar(index, avatar);
+          cacheTeacherAvatarOffline(avatar);
+        } else if ((Object.prototype.hasOwnProperty.call(profile, 'avatarURL') || Object.prototype.hasOwnProperty.call(profile, 'avatarUrl')) && !String(profile.avatarURL || profile.avatarUrl || '').trim()) {
+          group.photoUrl = '';
+          delete cache[group.id];
+          writeTeacherAvatarCache(cache);
+          clearTeacherAvatar(index);
+        }
+      }).catch(function () {
+        if (!group.photoUrl && cached) { group.photoUrl = cached; mountTeacherAvatar(index, cached); }
+      }));
+    });
+    await Promise.all(lookups);
+  }
   function now() { return new Date().toISOString(); }
   function screenBack() { if (typeof window.goBack === 'function') window.goBack(); }
   function enterScreen(id) {
@@ -123,9 +203,10 @@
       var item = doc.data() || {};
       var identity = String(item.teacherId || item.authUid || item.teacherName || 'teacher_unknown');
       if (!groupsById[identity]) {
-        groupsById[identity] = { name: item.teacherName || 'المعلم', docs: [] };
+        groupsById[identity] = { id: String(item.teacherId || item.authUid || ''), name: item.teacherName || 'المعلم', photoUrl: safeTeacherAvatar(item.teacherPhotoUrl || item.teacher_photo_url || ''), docs: [] };
         groups.push(groupsById[identity]);
       }
+      if (!groupsById[identity].photoUrl) groupsById[identity].photoUrl = safeTeacherAvatar(item.teacherPhotoUrl || item.teacher_photo_url || '');
       groupsById[identity].docs.push(doc);
     });
     groups.sort(function (a, b) { return a.name.localeCompare(b.name); });
@@ -143,9 +224,14 @@
         if (scopes.indexOf(scope) < 0) scopes.push(scope);
       });
       var summary = scopes.slice(0, 2).join(' | ') + (scopes.length > 2 ? ' | +' + (scopes.length - 2) : '');
-      html += '<button type="button" onclick="openTeacherWorkGroup(' + index + ')" style="width:100%;display:flex;align-items:center;gap:12px;text-align:right;background:#fff;border:1px solid #e5ece5;border-radius:16px;padding:14px;margin:0 0 10px;box-shadow:0 2px 8px rgba(0,0,0,.05);font-family:inherit;cursor:pointer"><span style="width:54px;height:54px;flex:0 0 54px;border-radius:16px;background:#E0F2F1;color:#00695C;display:flex;align-items:center;justify-content:center;font-size:30px">👨‍🏫</span><span style="flex:1"><span style="display:block;font-weight:700;color:#245b35;font-size:15px">الأستاذ ' + esc(group.name) + '</span><span style="display:block;margin-top:4px;font-size:12px;color:#68756d">' + group.docs.length + ' عمل معتمد</span><span style="display:block;margin-top:4px;font-size:11px;color:#68756d">' + esc(summary) + '</span></span><span style="font-size:24px;color:#999">‹</span></button>';
+      var avatarMarkup = '<span id="teacherDirectoryAvatar' + index + '" style="position:relative;width:54px;height:54px;flex:0 0 54px;border-radius:50%;overflow:hidden;background:#E0F2F1;color:#00695C;display:flex;align-items:center;justify-content:center;font-size:27px">👨‍🏫';
+      if (group.photoUrl) avatarMarkup += '<img src="' + attr(group.photoUrl) + '" alt="" referrerpolicy="no-referrer" onerror="this.style.display=\'none\'" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%">';
+      avatarMarkup += '</span>';
+      html += '<button type="button" onclick="openTeacherWorkGroup(' + index + ')" style="width:100%;display:flex;align-items:center;gap:12px;text-align:right;background:#fff;border:1px solid #e5ece5;border-radius:16px;padding:14px;margin:0 0 10px;box-shadow:0 2px 8px rgba(0,0,0,.05);font-family:inherit;cursor:pointer">' + avatarMarkup + '<span style="flex:1"><span style="display:block;font-weight:700;color:#245b35;font-size:15px">الأستاذ ' + esc(group.name) + '</span><span style="display:block;margin-top:4px;font-size:12px;color:#68756d">' + group.docs.length + ' عمل معتمد</span><span style="display:block;margin-top:4px;font-size:11px;color:#68756d">' + esc(summary) + '</span></span><span style="font-size:24px;color:#999">‹</span></button>';
     });
     list.innerHTML = html;
+    groups.forEach(function (group) { if (group.photoUrl) cacheTeacherAvatarOffline(group.photoUrl); });
+    loadTeacherAvatars(groups);
   }
   window.openTeacherDirectory = async function (filter) {
     teacherDirectoryFilter = filter || null;
@@ -614,7 +700,9 @@
         if (!pdfUrl) throw new Error('فشل رفع ملف PDF. تحقق من إعدادات Cloudinary أو اتصال الإنترنت');
       }
       await db.collection('teacher_uploads').add({
-        teacherId: uid(), teacherName: teacherName, type: workType, stage: stage, grade: grade,
+        teacherId: uid(), teacherName: teacherName,
+        teacherPhotoUrl: safeTeacherAvatar(window.currentUser.photo_url || window.currentUser.photoURL || ''),
+        type: workType, stage: stage, grade: grade,
         subject: subject, subjectLabel: subjectLabel, curriculumGroup: curriculumGroup,
         curriculumSubgroup: curriculumSubgroup, branch: isAzhar ? branch : '',
         curriculumId: azharCourse ? azharCourse.id : '', term: term, title: title, content: content,
