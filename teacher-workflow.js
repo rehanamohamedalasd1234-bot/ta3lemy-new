@@ -469,6 +469,21 @@
   function ensureUploadForm() {
     var type = document.getElementById('upType');
     if (!type) return;
+    var existingImageInput = document.getElementById('upImage');
+    if (existingImageInput) {
+      existingImageInput.setAttribute('multiple', 'multiple');
+      existingImageInput.setAttribute('accept', 'image/*');
+      var imageLabel = existingImageInput.parentNode && existingImageInput.parentNode.querySelector('label');
+      if (imageLabel) imageLabel.textContent = '📷 صور صفحات المنهج (يمكن اختيار عدة صور مرة واحدة)';
+      var imageHint = existingImageInput.parentNode && existingImageInput.parentNode.querySelector('[data-multi-image-hint]');
+      if (!imageHint) {
+        imageHint = document.createElement('small');
+        imageHint.setAttribute('data-multi-image-hint', '1');
+        imageHint.style.cssText = 'display:block;margin-top:5px;color:#68756d;line-height:1.7';
+        imageHint.textContent = 'حدّد كل صور الصفحات معًا من مدير الملفات، وسيتم حفظها بالترتيب داخل شرح الأستاذ.';
+        existingImageInput.parentNode.appendChild(imageHint);
+      }
+    }
     var wanted = [
       ['lesson', 'درس / شرح'], ['explanation', 'شرح'], ['exercise', 'تدريب'],
       ['exam', 'امتحان'], ['review', 'مراجعة'], ['image', 'صورة تعليمية'], ['video', 'فيديو'], ['audio', 'تسجيل صوتي']
@@ -540,7 +555,8 @@
     var videoInput = document.getElementById('upVideo');
     var audioInput = document.getElementById('upAudio');
     var pdfInput = document.getElementById('upPdf');
-    var imageFile = imageInput && imageInput.files && imageInput.files[0];
+    var imageFiles = imageInput && imageInput.files ? Array.prototype.slice.call(imageInput.files) : [];
+    var imageFile = imageFiles[0] || null;
     var videoFile = videoInput && videoInput.files && videoInput.files[0];
     var audioFile = audioInput && audioInput.files && audioInput.files[0];
     var pdfFile = pdfInput && pdfInput.files && pdfInput.files[0];
@@ -555,16 +571,22 @@
     if (audioFile && audioFile.size > 25 * 1024 * 1024) return toast('حجم التسجيل الصوتي يجب ألا يتجاوز 25 ميجابايت');
     if (pdfFile && !/\.pdf$/i.test(pdfFile.name || '')) return toast('اختر ملفًا بامتداد PDF');
     if (pdfFile && pdfFile.size > 10 * 1024 * 1024) return toast('حجم ملف PDF يجب ألا يتجاوز 10 ميجابايت على الخطة المجانية');
+    if (imageFiles.length > 30) return toast('يمكن رفع 30 صورة كحد أقصى في الشرح الواحد');
+    if (imageFiles.some(function (file) { return !/^image\//i.test(file.type || '') || file.size > 10 * 1024 * 1024; })) return toast('كل صورة يجب أن تكون صورة فعلية وألا يتجاوز حجمها 10 ميجابايت');
     if (button) { button.disabled = true; button.textContent = '⏳ جارٍ رفع العمل للمراجعة...'; }
     try {
+      var imageUrls = [];
       var imageUrl = null;
       var videoUrl = null;
       var audioUrl = null;
       var pdfUrl = null;
-      if (imageFile) {
-        imageUrl = await window.uploadFile(imageFile, 'teacher_content');
-        if (!imageUrl) throw new Error('فشل رفع الصورة');
+      for (var imageIndex = 0; imageIndex < imageFiles.length; imageIndex += 1) {
+        if (button) button.textContent = '⏳ رفع الصورة ' + (imageIndex + 1) + ' من ' + imageFiles.length + '...';
+        var uploadedImage = await window.uploadFile(imageFiles[imageIndex], 'teacher_content');
+        if (!uploadedImage) throw new Error('فشل رفع الصورة رقم ' + (imageIndex + 1));
+        imageUrls.push(uploadedImage);
       }
+      imageUrl = imageUrls[0] || null;
       if (videoFile) {
         videoUrl = await window.uploadFile(videoFile, 'teacher_content');
         if (!videoUrl) throw new Error('فشل رفع الفيديو');
@@ -582,7 +604,7 @@
         subject: subject, subjectLabel: subjectLabel, curriculumGroup: curriculumGroup,
         curriculumSubgroup: curriculumSubgroup, branch: isAzhar ? branch : '',
         curriculumId: azharCourse ? azharCourse.id : '', term: term, title: title, content: content,
-        image_url: imageUrl, video_url: videoUrl, audio_url: audioUrl, pdf_url: pdfUrl,
+        image_url: imageUrl, image_urls: imageUrls, video_url: videoUrl, audio_url: audioUrl, pdf_url: pdfUrl,
         pdf_name: pdfFile ? pdfFile.name : '', pdf_size: pdfFile ? pdfFile.size : 0,
         status: 'pending', createdAt: now(),
         authUid: uid()

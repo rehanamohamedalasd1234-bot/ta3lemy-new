@@ -210,7 +210,8 @@ async function viewContent(id){
     if(!it){showToast('⚠️ الدرس غير محفوظ على هذا الجهاز');return;}
     document.getElementById('viewerTitle').textContent=it.title||'';
     let h='<h2 style="color:#2E7D32;margin-bottom:16px;">'+(it.title||'')+'</h2>';
-    if(it.image_url)h+='<img src="'+it.image_url+'">';
+    const pageImages=Array.isArray(it.image_urls)&&it.image_urls.length?it.image_urls:(it.image_url?[it.image_url]:[]);
+    if(pageImages.length)h+='<div class="teacher-pages-gallery" style="display:grid;gap:12px;margin:12px 0;">'+pageImages.map(function(src,index){return '<figure style="margin:0;text-align:center;"><img src="'+src+'" alt="صفحة '+(index+1)+'" style="display:block;width:100%;height:auto;max-height:900px;object-fit:contain;border:1px solid #e0e8e1;border-radius:12px;background:#fff;"><figcaption style="font-size:11px;color:#718078;margin-top:4px;">صفحة '+(index+1)+' من '+pageImages.length+'</figcaption></figure>';}).join('')+'</div>';
     if(it.content)h+='<div style="line-height:2;font-size:15px;white-space:pre-wrap;">'+it.content+'</div>';
     if(it.pdf_url||it.pdfUrl)h+=pdfAttachmentMarkup(it.pdf_url||it.pdfUrl,it.pdf_name||it.pdfName);
     if(it.video_url)h+=inAppVideoMarkup(it.video_url);else if(it.video_search)h+=inAppVideoMarkup('');
