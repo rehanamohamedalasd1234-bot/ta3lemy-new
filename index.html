@@ -10,7 +10,7 @@
 <meta name="description" content="منصة الأستاذ حافظ التعليمية — تعليم عام وأزهر وبكالوريا جديدة. دروس، تدريبات، امتحانات، قرآن كريم، مراجعة شاملة، وتطبيق يعمل بدون إنترنت.">
 <meta name="keywords" content="منصة تعليمية, بكالوريا, أزهر شريف, تعليم عام, دروس, قرآن كريم, امتحانات, مراجعة, الأستاذ حافظ">
 <meta name="author" content="الأستاذ حافظ">
-<meta name="ta3lemy-version" content="1.0.116">
+<meta name="ta3lemy-version" content="1.0.117">
 <meta name="robots" content="index, follow">
 <meta name="revisit-after" content="7 days">
 <meta property="og:type" content="website">
@@ -22,7 +22,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="منصة الأستاذ حافظ التعليمية">
 <meta name="twitter:description" content="تعليم عام + أزهر + بكالوريا + قرآن كريم">
-<link rel="stylesheet" href="./library.css?v=1.0.116">
+<link rel="stylesheet" href="./library.css?v=1.0.117">
 </head><body><div id="splashScreen" class="screen active"><div class="splash-content"><div class="splash-logo">🎓</div><div class="splash-title">منصة الأستاذ حافظ التعليمية</div><div class="splash-subtitle">للتعليم العام والأزهر الشريف والبكالوريا</div><div class="loader"></div></div></div>
 
 <div id="loginScreen" class="screen"><div class="login-logo">🎓</div><div class="login-title">مرحباً بك</div><div class="login-sub">سجّل دخولك للمتابعة</div><div class="role-selector"><button class="role-btn active" onclick="selectRole(this,'student')">🎒 طالب</button><button class="role-btn" onclick="selectRole(this,'teacher')">👨‍🏫 معلم</button><button class="role-btn" onclick="selectRole(this,'parent')">👨‍👩‍👧 ولي أمر</button><button class="role-btn" onclick="selectRole(this,'owner')">👑 مالك</button></div><div class="form-group"><input type="text" id="usernameInput" class="form-input" placeholder="👤 اسم المستخدم"></div><div class="form-group"><input type="password" id="passwordInput" class="form-input" placeholder="🔒 كلمة المرور"></div><div class="form-group" id="ownerCodeGroup" style="display:none;"><input type="password" id="ownerCodeInput" class="form-input" placeholder="🔐 كود المالك"></div><button class="btn-primary" onclick="login()">تسجيل الدخول</button></div>
@@ -210,8 +210,51 @@ async function viewContent(id){
     if(!it){showToast('⚠️ الدرس غير محفوظ على هذا الجهاز');return;}
     document.getElementById('viewerTitle').textContent=it.title||'';
     let h='<h2 style="color:#2E7D32;margin-bottom:16px;">'+(it.title||'')+'</h2>';
-    const pageImages=Array.isArray(it.image_urls)&&it.image_urls.length?it.image_urls:(it.image_url?[it.image_url]:[]);
-    if(pageImages.length)h+='<div class="teacher-pages-gallery" style="display:grid;gap:12px;margin:12px 0;">'+pageImages.map(function(src,index){return '<figure style="margin:0;text-align:center;"><img src="'+src+'" alt="صفحة '+(index+1)+'" style="display:block;width:100%;height:auto;max-height:900px;object-fit:contain;border:1px solid #e0e8e1;border-radius:12px;background:#fff;"><figcaption style="font-size:11px;color:#718078;margin-top:4px;">صفحة '+(index+1)+' من '+pageImages.length+'</figcaption></figure>';}).join('')+'</div>';
+    const rawPageImages=Array.isArray(it.image_urls)&&it.image_urls.length?it.image_urls:(it.image_url?[it.image_url]:[]);
+    const appHost=window.location&&window.location.hostname?window.location.hostname.toLowerCase():'';
+    const pageImages=rawPageImages.map(function(src){
+      if(typeof src!=='string'||/[\s"'<>]/.test(src))return '';
+      try{
+        var parsed=new URL(src);
+        var host=parsed.hostname.toLowerCase();
+        var allowedHost=host===appHost||host==='cloudinary.com'||host.endsWith('.cloudinary.com');
+        return parsed.protocol==='https:'&&!parsed.username&&!parsed.password&&allowedHost?parsed.href:'';
+      }catch(_){return '';}
+    }).filter(Boolean);
+    function escapeGalleryAttribute(value){return String(value).replace(/[&<>"']/g,function(character){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character];});}
+    window.__ta3lemyTeacherGallery={images:pageImages,index:0};
+    window.showTeacherGalleryImage=function(index){
+      var gallery=window.__ta3lemyTeacherGallery;
+      if(!gallery||!gallery.images||!gallery.images.length)return;
+      var nextIndex=Number(index);if(isNaN(nextIndex))nextIndex=0;
+      nextIndex=Math.max(0,Math.min(gallery.images.length-1,nextIndex));gallery.index=nextIndex;
+      var image=document.getElementById('teacherGalleryImage');
+      var counter=document.getElementById('teacherGalleryCounter');
+      var selector=document.getElementById('teacherGallerySelect');
+      if(image){image.src=gallery.images[nextIndex];image.alt='الصورة '+(nextIndex+1)+' من '+gallery.images.length;}
+      if(counter)counter.textContent='الصورة '+(nextIndex+1)+' من '+gallery.images.length;
+      if(selector)selector.value=String(nextIndex);
+      var previous=document.getElementById('teacherGalleryPrevious');
+      var following=document.getElementById('teacherGalleryNext');
+      if(previous){previous.disabled=nextIndex===0;previous.style.opacity=previous.disabled?'.5':'1';}
+      if(following){following.disabled=nextIndex===gallery.images.length-1;following.style.opacity=following.disabled?'.5':'1';}
+    };
+    window.stepTeacherGalleryImage=function(step){
+      var gallery=window.__ta3lemyTeacherGallery;
+      if(gallery)window.showTeacherGalleryImage(gallery.index+Number(step||0));
+    };
+    if(pageImages.length){
+      h+='<section class="teacher-pages-gallery" style="margin:12px 0;padding:12px;border:1px solid #dce9de;border-radius:14px;background:#fbfefb;">';
+      h+='<div style="margin-bottom:10px;padding:9px 11px;border-radius:9px;background:#E8F5E9;color:#245b35;font-size:13px;font-weight:700;line-height:1.7;">📷 هذا العمل يحتوي على '+pageImages.length+' صورة. استخدم الأزرار أو القائمة لعرضها كلها.</div>';
+      h+='<figure style="margin:0;text-align:center;"><img id="teacherGalleryImage" src="'+escapeGalleryAttribute(pageImages[0])+'" alt="الصورة 1 من '+pageImages.length+'" style="display:block;width:100%;height:auto;max-height:68vh;object-fit:contain;border:1px solid #e0e8e1;border-radius:12px;background:#fff;"><figcaption id="teacherGalleryCounter" style="font-size:13px;font-weight:700;color:#245b35;margin-top:8px;">الصورة 1 من '+pageImages.length+'</figcaption></figure>';
+      if(pageImages.length>1){
+        h+='<div style="display:flex;align-items:center;gap:8px;margin-top:10px;direction:rtl;">';
+        h+='<button id="teacherGalleryPrevious" type="button" disabled onclick="window.stepTeacherGalleryImage(-1)" style="flex:0 0 auto;padding:10px 12px;border:0;border-radius:9px;background:#2E7D32;color:#fff;font:inherit;font-size:12px;font-weight:700;cursor:pointer;opacity:.5;">‹ السابقة</button>';
+        h+='<select id="teacherGallerySelect" onchange="window.showTeacherGalleryImage(this.value)" aria-label="اختيار صورة" style="flex:1;min-width:0;padding:10px 8px;border:1px solid #b7d2bb;border-radius:9px;background:#fff;color:#245b35;font:inherit;font-size:12px;">'+pageImages.map(function(_,index){return '<option value="'+index+'">الصورة '+(index+1)+' من '+pageImages.length+'</option>';}).join('')+'</select>';
+        h+='<button id="teacherGalleryNext" type="button" onclick="window.stepTeacherGalleryImage(1)" style="flex:0 0 auto;padding:10px 12px;border:0;border-radius:9px;background:#2E7D32;color:#fff;font:inherit;font-size:12px;font-weight:700;cursor:pointer;">التالية ›</button></div>';
+      }
+      h+='</section>';
+    }
     if(it.content)h+='<div style="line-height:2;font-size:15px;white-space:pre-wrap;">'+it.content+'</div>';
     if(it.pdf_url||it.pdfUrl)h+=pdfAttachmentMarkup(it.pdf_url||it.pdfUrl,it.pdf_name||it.pdfName);
     if(it.video_url)h+=inAppVideoMarkup(it.video_url);else if(it.video_search)h+=inAppVideoMarkup('');
@@ -1086,7 +1129,7 @@ if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.s
 <script src="./recognition-and-azkar.js?v=1.0.94"></script>
 <script src="./quiz-competitions.js?v=1.0.95"></script>
 <script src="./certificate-workflow.js?v=1.0.97"></script>
-<script src="./library-config.js?v=1.0.116"></script>
-<script src="./library.js?v=1.0.116"></script>
+<script src="./library-config.js?v=1.0.117"></script>
+<script src="./library.js?v=1.0.117"></script>
 </body>
 </html>

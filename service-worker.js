@@ -1,7 +1,7 @@
 // Service Worker for the Hafez educational platform.
 // Shell files are prefetched for offline launch; media is stored only when the user explicitly downloads it.
 const CACHE_PREFIX = 'ta3lemy-shell-';
-const CACHE_NAME = CACHE_PREFIX + '1.0.116';
+const CACHE_NAME = CACHE_PREFIX + '1.0.117';
 const MEDIA_CACHE_NAME = 'ta3lemy-media-v1';
 const APP_SHELL = [
   './', './index.html', './extras.js', './curriculum-display-fix.js', './offline-mode.js', './navigation-fix.js', './service-worker.js', './manifest.json', './version.json', './app-update.js', './auth-init.js', './fix-canvas.css',
@@ -91,18 +91,33 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Serve exact app-shell paths from cache first, then refresh the cache in the background.
-  // ignoreSearch lets versioned script URLs (for example ?v=1.0.94) use their cached file offline.
+  // Refresh app code/documents from the network when online; keep cached copies as the offline fallback.
+  // A versioned query also bypasses stale browser HTTP caches on older Android WebViews.
   if (url.origin === self.location.origin && APP_SHELL_PATHS.has(url.pathname)) {
-    event.respondWith(
-      caches.match(event.request, { ignoreSearch: true }).then(cached => {
-        const fetchPromise = fetch(event.request).then(networkResponse => {
-          if (networkResponse.ok) caches.open(CACHE_NAME).then(cache => cache.put(event.request, networkResponse.clone()));
+    event.respondWith((async () => {
+      const cache = await caches.open(CACHE_NAME);
+      const cached = await cache.match(event.request, { ignoreSearch: true });
+      const refreshFromNetwork = event.request.mode === 'navigate' || /\.(?:html|js|mjs|css|json)$/i.test(url.pathname);
+      if (!refreshFromNetwork && cached) return cached;
+
+      const networkUrl = new URL(event.request.url);
+      if (refreshFromNetwork) networkUrl.searchParams.set('__ta3lemy_update', CACHE_NAME);
+      try {
+        const networkResponse = await fetch(refreshFromNetwork ? networkUrl.href : event.request);
+        if (networkResponse.ok) {
+          await cache.put(event.request, networkResponse.clone());
           return networkResponse;
-        }).catch(() => cached || (url.pathname === new URL(APP_SHELL_FALLBACK).pathname ? caches.match(APP_SHELL_FALLBACK) : undefined));
-        return cached || fetchPromise;
-      })
-    );
+        }
+        return cached || networkResponse;
+      } catch (_) {
+        if (cached) return cached;
+        if (url.pathname === new URL(APP_SHELL_FALLBACK).pathname) {
+          const fallback = await cache.match(APP_SHELL_FALLBACK);
+          if (fallback) return fallback;
+        }
+        return new Response('', { status: 503, statusText: 'Offline App Asset Not Found' });
+      }
+    })());
     return;
   }
 
