@@ -1,7 +1,7 @@
 // Service Worker for the Hafez educational platform.
 // Shell files are prefetched for offline launch; media is stored only when the user explicitly downloads it.
 const CACHE_PREFIX = 'ta3lemy-shell-';
-const CACHE_NAME = CACHE_PREFIX + '1.0.118';
+const CACHE_NAME = CACHE_PREFIX + '1.0.119';
 const MEDIA_CACHE_NAME = 'ta3lemy-media-v1';
 const APP_SHELL = [
   './', './index.html', './extras.js', './curriculum-display-fix.js', './offline-mode.js', './navigation-fix.js', './service-worker.js', './manifest.json', './version.json', './app-update.js', './auth-init.js', './fix-canvas.css',
@@ -28,6 +28,8 @@ APP_SHELL.push('./ask-question-config.js');
 APP_SHELL.push('./library.js');
 APP_SHELL.push('./library.css');
 APP_SHELL.push('./library-config.js');
+APP_SHELL.push('./kg2-arabic-structure.js');
+APP_SHELL.push('./kg2-arabic-2026-2027-t1.json');
 const APP_SHELL_PATHS = new Set(APP_SHELL.map(file => new URL(file, self.registration.scope).pathname));
 const EXTERNAL_SHELL = [
   'https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js',
