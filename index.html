@@ -230,14 +230,8 @@ async function viewContent(id){
       nextIndex=Math.max(0,Math.min(gallery.images.length-1,nextIndex));gallery.index=nextIndex;
       var image=document.getElementById('teacherGalleryImage');
       var counter=document.getElementById('teacherGalleryCounter');
-      var selector=document.getElementById('teacherGallerySelect');
       if(image){image.src=gallery.images[nextIndex];image.alt='الصورة '+(nextIndex+1)+' من '+gallery.images.length;}
       if(counter)counter.textContent='الصورة '+(nextIndex+1)+' من '+gallery.images.length;
-      if(selector)selector.value=String(nextIndex);
-      var previous=document.getElementById('teacherGalleryPrevious');
-      var following=document.getElementById('teacherGalleryNext');
-      if(previous){previous.disabled=nextIndex===0;previous.style.opacity=previous.disabled?'.5':'1';}
-      if(following){following.disabled=nextIndex===gallery.images.length-1;following.style.opacity=following.disabled?'.5':'1';}
     };
     window.stepTeacherGalleryImage=function(step){
       var gallery=window.__ta3lemyTeacherGallery;
@@ -245,14 +239,8 @@ async function viewContent(id){
     };
     if(pageImages.length){
       h+='<section class="teacher-pages-gallery" style="margin:12px 0;padding:12px;border:1px solid #dce9de;border-radius:14px;background:#fbfefb;">';
-      h+='<div style="margin-bottom:10px;padding:9px 11px;border-radius:9px;background:#E8F5E9;color:#245b35;font-size:13px;font-weight:700;line-height:1.7;">📷 هذا العمل يحتوي على '+pageImages.length+' صورة. استخدم الأزرار أو القائمة لعرضها كلها.</div>';
-      h+='<figure style="margin:0;text-align:center;"><img id="teacherGalleryImage" src="'+escapeGalleryAttribute(pageImages[0])+'" alt="الصورة 1 من '+pageImages.length+'" style="display:block;width:100%;height:auto;max-height:68vh;object-fit:contain;border:1px solid #e0e8e1;border-radius:12px;background:#fff;"><figcaption id="teacherGalleryCounter" style="font-size:13px;font-weight:700;color:#245b35;margin-top:8px;">الصورة 1 من '+pageImages.length+'</figcaption></figure>';
-      if(pageImages.length>1){
-        h+='<div style="display:flex;align-items:center;gap:8px;margin-top:10px;direction:rtl;">';
-        h+='<button id="teacherGalleryPrevious" type="button" disabled onclick="window.stepTeacherGalleryImage(-1)" style="flex:0 0 auto;padding:10px 12px;border:0;border-radius:9px;background:#2E7D32;color:#fff;font:inherit;font-size:12px;font-weight:700;cursor:pointer;opacity:.5;">‹ السابقة</button>';
-        h+='<select id="teacherGallerySelect" onchange="window.showTeacherGalleryImage(this.value)" aria-label="اختيار صورة" style="flex:1;min-width:0;padding:10px 8px;border:1px solid #b7d2bb;border-radius:9px;background:#fff;color:#245b35;font:inherit;font-size:12px;">'+pageImages.map(function(_,index){return '<option value="'+index+'">الصورة '+(index+1)+' من '+pageImages.length+'</option>';}).join('')+'</select>';
-        h+='<button id="teacherGalleryNext" type="button" onclick="window.stepTeacherGalleryImage(1)" style="flex:0 0 auto;padding:10px 12px;border:0;border-radius:9px;background:#2E7D32;color:#fff;font:inherit;font-size:12px;font-weight:700;cursor:pointer;">التالية ›</button></div>';
-      }
+      h+='<div style="margin-bottom:10px;padding:9px 11px;border-radius:9px;background:#E8F5E9;color:#245b35;font-size:13px;font-weight:700;line-height:1.7;">📷 اسحب الصورة يمينًا أو يسارًا للانتقال بين الصفحات. اضغط مرتين على الصورة لعرضها بملء الشاشة.</div>';
+      h+='<figure id="teacherGalleryFrame" tabindex="0" style="margin:0;text-align:center;outline:none;touch-action:pan-y;user-select:none;"><img id="teacherGalleryImage" draggable="false" src="'+escapeGalleryAttribute(pageImages[0])+'" alt="الصورة 1 من '+pageImages.length+'" style="display:block;width:100%;height:min(76vh,900px);min-height:320px;object-fit:contain;border:1px solid #e0e8e1;border-radius:12px;background:#fff;cursor:grab;"><figcaption id="teacherGalleryCounter" style="font-size:13px;font-weight:700;color:#245b35;margin-top:8px;">الصورة 1 من '+pageImages.length+'</figcaption></figure>';
       h+='</section>';
     }
     if(it.content)h+='<div style="line-height:2;font-size:15px;white-space:pre-wrap;">'+it.content+'</div>';
@@ -260,6 +248,22 @@ async function viewContent(id){
     if(it.video_url)h+=inAppVideoMarkup(it.video_url);else if(it.video_search)h+=inAppVideoMarkup('');
     if(it.question){h+='<div style="margin-top:20px;background:#E8F5E9;border-radius:14px;padding:16px;"><div style="font-weight:bold;color:#2E7D32;margin-bottom:8px;">📝 سؤال:</div><div style="font-size:15px;line-height:1.8;white-space:pre-wrap;">'+it.question+'</div><button onclick="toggleAnswer(this)" style="background:#2E7D32;color:#fff;border:none;padding:10px 20px;border-radius:10px;font-family:inherit;font-weight:bold;margin-top:12px;cursor:pointer;">👁️ إظهار الإجابة</button><div class="answer-box"><div style="font-weight:bold;color:#2E7D32;margin-bottom:6px;">✅ الإجابة:</div><div style="line-height:1.8;white-space:pre-wrap;">'+(it.answer||'')+'</div></div><div style="margin-top:16px;"><div style="font-weight:bold;color:#2E7D32;margin-bottom:8px;">✍️ اكتب إجابتك:</div><textarea class="student-answer" id="studentAnswer" placeholder="اكتب إجابتك هنا..."></textarea><button onclick="saveStudentAnswer(\''+String(id).replace(/'/g,'')+'\')" style="background:#1976D2;color:#fff;border:none;padding:10px 20px;border-radius:10px;font-family:inherit;font-weight:bold;margin-top:8px;cursor:pointer;">💾 حفظ إجابتي</button></div></div>';}
     document.getElementById('viewerBody').innerHTML=h;screenHistory.push(currentScreen);showScreen('viewerScreen');
+    if(pageImages.length>1){
+      var galleryFrame=document.getElementById('teacherGalleryFrame');
+      var galleryImage=document.getElementById('teacherGalleryImage');
+      var pointerStartX=0,pointerStartY=0,pointerActive=false;
+      if(galleryFrame&&galleryImage){
+        galleryFrame.addEventListener('pointerdown',function(event){pointerActive=true;pointerStartX=event.clientX;pointerStartY=event.clientY;galleryImage.style.cursor='grabbing';try{galleryFrame.setPointerCapture(event.pointerId);}catch(_){} });
+        galleryFrame.addEventListener('pointerup',function(event){
+          if(!pointerActive)return;pointerActive=false;galleryImage.style.cursor='grab';
+          var dx=event.clientX-pointerStartX,dy=event.clientY-pointerStartY;
+          if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)){window.stepTeacherGalleryImage(dx<0?1:-1);}
+        });
+        galleryFrame.addEventListener('pointercancel',function(){pointerActive=false;galleryImage.style.cursor='grab';});
+        galleryFrame.addEventListener('keydown',function(event){if(event.key==='ArrowLeft')window.stepTeacherGalleryImage(1);if(event.key==='ArrowRight')window.stepTeacherGalleryImage(-1);});
+        galleryImage.addEventListener('dblclick',function(){if(document.fullscreenElement){document.exitFullscreen&&document.exitFullscreen();}else if(galleryImage.requestFullscreen){galleryImage.requestFullscreen().catch(function(){});}});
+      }
+    }
   }catch(e){console.error(e);showToast('❌ تعذر فتح المحتوى');}
 }
 function toggleAnswer(btn){const box=btn.nextElementSibling;if(box.style.display==='none'||!box.style.display){box.style.display='block';btn.textContent='🙈 إخفاء الإجابة';}else{box.style.display='none';btn.textContent='👁️ إظهار الإجابة';}}
