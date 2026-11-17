@@ -347,12 +347,13 @@
     return '<section style="background:#E8F5E9;border:1px solid #C8E6C9;border-radius:15px;padding:14px;margin-bottom:12px;">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;"><div style="font-weight:800;color:#1B5E20;">✅ تم التحقق من بريد المالك</div><button type="button" id="tvOwnerLogoutBtn" style="border:1px solid #A5D6A7;border-radius:9px;padding:7px 10px;background:#fff;color:#1B5E20;font:inherit;font-size:12px;">تسجيل خروج الإدارة</button></div>' +
       '<form id="tvChannelForm" style="display:grid;gap:8px;margin-top:12px;">' +
-        '<label style="font-size:12px;font-weight:700;color:#455A64;">اسم القناة أو المحطة<input name="name" required maxlength="100" autocomplete="off" placeholder="مثال: محطتي التعليمية" style="display:block;width:100%;box-sizing:border-box;margin-top:4px;padding:10px;border:1px solid #CFD8DC;border-radius:9px;font:inherit;"></label>' +
+          '<label style="font-size:12px;font-weight:700;color:#455A64;">اسم القناة أو المحطة<input name="name" required maxlength="100" autocomplete="off" placeholder="مثال: محطتي التعليمية" style="display:block;width:100%;box-sizing:border-box;margin-top:4px;padding:10px;border:1px solid #CFD8DC;border-radius:9px;font:inherit;"></label>' +
         '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' +
           '<label style="font-size:12px;font-weight:700;color:#455A64;">التصنيف<select name="category" style="display:block;width:100%;box-sizing:border-box;margin-top:4px;padding:10px;border:1px solid #CFD8DC;border-radius:9px;font:inherit;"><option value="custom">محطة خاصة</option><option value="sports">رياضة</option><option value="education">تعليم</option></select></label>' +
-          '<label style="font-size:12px;font-weight:700;color:#455A64;">طريقة العرض<select name="behavior" style="display:block;width:100%;box-sizing:border-box;margin-top:4px;padding:10px;border:1px solid #CFD8DC;border-radius:9px;font:inherit;"><option value="external">رابط رسمي خارجي</option><option value="youtube">فيديو YouTube مسموح تضمينه</option><option value="hls">بث HLS أملكه أو أملك إذنًا به</option><option value="video">ملف MP4/WEBM أملكه</option></select></label>' +
+          '<label style="font-size:12px;font-weight:700;color:#455A64;">طريقة العرض<select name="behavior" style="display:block;width:100%;box-sizing:border-box;margin-top:4px;padding:10px;border:1px solid #CFD8DC;border-radius:9px;font:inherit;"><option value="video">فيديو مرفوع من الجهاز (الأسهل)</option><option value="youtube">فيديو YouTube مسموح تضمينه</option><option value="hls">بث HLS أملكه أو أملك إذنًا به</option><option value="external">رابط رسمي خارجي</option></select></label>' +
         '</div>' +
-        '<label style="font-size:12px;font-weight:700;color:#455A64;">رابط HTTPS<input name="watch_url" type="url" required maxlength="2048" placeholder="https://..." style="display:block;width:100%;box-sizing:border-box;margin-top:4px;padding:10px;border:1px solid #CFD8DC;border-radius:9px;font:inherit;direction:ltr;text-align:left;"></label>' +
+        '<label style="font-size:12px;font-weight:700;color:#455A64;">فيديو القناة من الهاتف (الطريقة الأسهل)<input name="video_file" type="file" accept="video/mp4,video/webm,video/quicktime,video/ogg" style="display:block;width:100%;box-sizing:border-box;margin-top:4px;padding:9px;border:1px solid #CFD8DC;border-radius:9px;font:inherit;"><small style="display:block;margin-top:4px;color:#607D8B;line-height:1.7;">اختر «فيديو مرفوع من الجهاز» ثم اختر ملف الفيديو. سيعمل داخل شاشة التلفزيون دون كتابة رابط.</small></label>' +
+          '<label style="font-size:12px;font-weight:700;color:#455A64;">رابط HTTPS (اختياري عند رفع فيديو من الجهاز)<input name="watch_url" type="url" maxlength="2048" placeholder="يُملأ تلقائيًا عند رفع فيديو" style="display:block;width:100%;box-sizing:border-box;margin-top:4px;padding:10px;border:1px solid #CFD8DC;border-radius:9px;font:inherit;direction:ltr;text-align:left;"></label>' +
         '<label style="font-size:12px;font-weight:700;color:#455A64;">رابط شعار اختياري<input name="logo_url" type="url" maxlength="2048" placeholder="https://..." style="display:block;width:100%;box-sizing:border-box;margin-top:4px;padding:10px;border:1px solid #CFD8DC;border-radius:9px;font:inherit;direction:ltr;text-align:left;"></label>' +
         '<label style="font-size:12px;font-weight:700;color:#455A64;">وصف مختصر<textarea name="description" maxlength="240" rows="2" placeholder="مثال: بث محاضرات قناتك الخاصة" style="display:block;width:100%;box-sizing:border-box;margin-top:4px;padding:10px;border:1px solid #CFD8DC;border-radius:9px;font:inherit;resize:vertical;"></textarea></label>' +
         '<div style="background:#FFF8E1;color:#6D4C41;border-radius:9px;padding:9px;font-size:11px;line-height:1.8;">أضيفي فقط بثًا تملكينه أو لديك إذن صريح لاستخدامه. قنوات beIN وON Time ومدرستنا تفتح من مصادرها الرسمية؛ لا نعيد بثها أو نتجاوز الاشتراك أو قيود التضمين.</div>' +
@@ -421,6 +422,7 @@
     event.preventDefault();
     var form = event.currentTarget;
     var data = new FormData(form);
+    var videoFile = form.querySelector('[name="video_file"]') && form.querySelector('[name="video_file"]').files[0];
     var status = document.getElementById('tvChannelFormStatus');
     var input = {
       action: 'add',
@@ -431,8 +433,22 @@
       logo_url: String(data.get('logo_url') || '').trim(),
       description: String(data.get('description') || '').trim()
     };
+    if (input.behavior === 'video' && videoFile) {
+      if (!/^video\/(mp4|webm|quicktime|ogg)$/i.test(String(videoFile.type || '')) || videoFile.size > 50 * 1024 * 1024) {
+        if (status) { status.textContent = 'اختاري فيديو MP4 أو WebM أو MOV أو OGG لا يتجاوز 50 ميجابايت.'; status.style.color = '#B71C1C'; }
+        return;
+      }
+      if (status) { status.textContent = 'جاري رفع فيديو القناة…'; status.style.color = '#455A64'; }
+      try {
+        if (typeof window.uploadFile !== 'function') throw new Error('خدمة رفع الملفات غير جاهزة');
+        input.watch_url = await window.uploadFile(videoFile, 'tv-channels/videos');
+      } catch (error) {
+        if (status) { status.textContent = error.message || 'تعذر رفع فيديو القناة.'; status.style.color = '#B71C1C'; }
+        return;
+      }
+    }
     if (!input.name || !safeHttps(input.watch_url) || input.logo_url && !safeHttps(input.logo_url)) {
-      if (status) { status.textContent = 'أدخلي اسمًا ورابط HTTPS صالحًا؛ ورابط الشعار اختياري ويجب أن يكون HTTPS.'; status.style.color = '#B71C1C'; }
+      if (status) { status.textContent = 'اكتبي اسم القناة واختاري فيديو أو أدخلي رابط HTTPS صالحًا.'; status.style.color = '#B71C1C'; }
       return;
     }
     if (status) { status.textContent = 'جاري إضافة المحطة…'; status.style.color = '#455A64'; }
