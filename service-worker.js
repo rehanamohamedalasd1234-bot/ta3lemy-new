@@ -1,7 +1,7 @@
 // Service Worker for the Hafez educational platform.
 // Shell files are prefetched for offline launch; media is stored only when the user explicitly downloads it.
 const CACHE_PREFIX = 'ta3lemy-shell-';
-const CACHE_NAME = CACHE_PREFIX + '1.0.122';
+const CACHE_NAME = CACHE_PREFIX + '1.0.123';
 const MEDIA_CACHE_NAME = 'ta3lemy-media-v1';
 const APP_SHELL = [
   './', './index.html', './extras.js', './curriculum-display-fix.js', './offline-mode.js', './navigation-fix.js', './service-worker.js', './manifest.json', './version.json', './app-update.js', './auth-init.js', './fix-canvas.css',
@@ -18,6 +18,8 @@ APP_SHELL.push('./azhar-sec3-reading-insha-structure.js');
 APP_SHELL.push('./recognition-and-azkar.js');
 APP_SHELL.push('./quiz-competitions.js');
 APP_SHELL.push('./certificate-workflow.js');
+APP_SHELL.push('./azhar-sec1-fiqh-hanafi-structure.js');
+APP_SHELL.push('./azhar-sec1-fiqh-hanafi-content.json');
 APP_SHELL.push('./tv-channels.js');
 APP_SHELL.push('./assets/tv-channels/onsport.webp');
 APP_SHELL.push('./assets/tv-channels/alahly-tv.webp');
