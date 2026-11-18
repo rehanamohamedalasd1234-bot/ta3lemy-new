@@ -29,19 +29,26 @@
     else if (typeof window.alert === 'function') window.alert(message);
   }
 
-  function readLocalVersion() {
+  function readMetaVersion() {
     var meta = document.querySelector('meta[name="ta3lemy-version"]');
     if (meta && meta.content) {
       localVersion = String(meta.content);
       return Promise.resolve(localVersion);
     }
-    return fetch('./version.json', { cache: 'no-store' })
+    localVersion = String(window.TA3LEMY_VERSION || localVersion || '0.0.0');
+    return Promise.resolve(localVersion);
+  }
+
+  function readLocalVersion() {
+    // version.json هو المصدر الأساسي؛ وسم HTML قد يبقى قديمًا داخل APK سابق.
+    return fetch('./version.json?localVersionCheck=' + Date.now(), { cache: 'no-store' })
       .then(function (response) { return response.ok ? response.json() : {}; })
       .then(function (data) {
-        localVersion = String(data.version || window.TA3LEMY_VERSION || '0.0.0');
+        if (!data || !data.version) throw new Error('local version data missing');
+        localVersion = String(data.version);
         return localVersion;
       })
-      .catch(function () { return localVersion; });
+      .catch(function () { return readMetaVersion(); });
   }
 
   function removeModal() {
