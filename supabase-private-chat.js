@@ -110,7 +110,8 @@
       throw new Error('خدمة الدردشة لم تُحمّل. أعد فتح المنصة مع اتصال بالإنترنت.');
     }
     var currentAppUser = appUser();
-    var scope = currentAppUser && currentAppUser.uid ? String(currentAppUser.uid) : 'guest';
+    var accountName = currentAppUser && (currentAppUser.name || currentAppUser.displayName || currentAppUser.display_name);
+    var scope = accountName ? 'name-' + encodeURIComponent(String(accountName).trim().toLowerCase()) : (currentAppUser && currentAppUser.uid ? String(currentAppUser.uid) : 'guest');
     var nextScope = 'hafez-chat-' + encodeURIComponent(scope);
     if (client && clientScope !== nextScope) {
       var previousClient = client;
@@ -132,6 +133,12 @@
       var incomingUi = document.getElementById('spcIncomingCall'); if (incomingUi) incomingUi.remove();
     }
     if (!client || clientScope !== nextScope) {
+      try {
+        var oldScope = currentAppUser && currentAppUser.uid ? 'hafez-chat-' + encodeURIComponent(String(currentAppUser.uid)) : '';
+        var oldToken = oldScope && localStorage.getItem(oldScope + '-auth-token');
+        var newToken = localStorage.getItem(nextScope + '-auth-token');
+        if (oldToken && !newToken) localStorage.setItem(nextScope + '-auth-token', oldToken);
+      } catch (_) {}
       client = sdk.createClient(config.url, config.publishableKey, {
         auth: {
           storageKey: nextScope,

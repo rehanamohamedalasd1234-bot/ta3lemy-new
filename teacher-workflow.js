@@ -728,6 +728,31 @@
       if (button) { button.disabled = false; button.textContent = '📤 إرسال العمل للمراجعة'; }
     }
   };
+  window.editMyTeacherUpload = async function (id) {
+    if (!isTeacher()) return toast('يلزم الدخول بحساب معلم معتمد');
+    try {
+      var ref = db.collection('teacher_uploads').doc(id), snap = await ref.get();
+      if (!snap.exists || (snap.data() || {}).teacherId !== uid()) return toast('لا تملك هذا العمل');
+      var item = snap.data() || {}, title = window.prompt('عنوان العمل:', item.title || '');
+      if (title === null) return;
+      var content = window.prompt('نص الشرح:', item.content || '');
+      if (content === null) return;
+      var patch = { title: title.trim(), content: content, updatedAt: now(), updatedBy: uid() };
+      await ref.update(patch);
+      if (item.status === 'approved') await db.collection('lessons').doc(item.lessonId || ('teacher_' + id)).set({ title: patch.title, content: patch.content, updated_at: patch.updatedAt }, { merge: true });
+      toast('✅ تم تعديل عملك.'); window.loadTeacherControl();
+    } catch (error) { console.error(error); toast('تعذر تعديل العمل.'); }
+  };
+  window.deleteMyTeacherUpload = async function (id) {
+    if (!isTeacher()) return toast('يلزم الدخول بحساب معلم معتمد');
+    if (!window.confirm('حذف هذا العمل؟ لن تُحذف ملفات Cloudinary القديمة.')) return;
+    try {
+      var ref = db.collection('teacher_uploads').doc(id), snap = await ref.get(), item = snap.data() || {};
+      if (!snap.exists || item.teacherId !== uid()) return toast('لا تملك هذا العمل');
+      var batch = db.batch(); if (item.lessonId || item.status === 'approved') batch.delete(db.collection('lessons').doc(item.lessonId || ('teacher_' + id))); batch.delete(ref); await batch.commit();
+      toast('تم حذف العمل مع إبقاء ملفاته القديمة.'); window.loadTeacherControl();
+    } catch (error) { console.error(error); toast('تعذر حذف العمل.'); }
+  };
 
   // Structured broadcast request; no teacher can create a live room directly.
   function ensureBroadcastRequestScreen() {
@@ -828,7 +853,7 @@
         var status = item.status === 'approved' ? '✅ معتمد — يظهر في أيقونة شرح الأستاذ المستقلة' : item.status === 'rejected' ? '❌ مرفوض' : '⏳ عند المالك للمراجعة';
         var uploadSubject = teacherSubjectName(item);
         var uploadCurriculum = teacherCurriculumDetail(item);
-        html += '<div class="tw-card"><div class="tw-title">' + esc(item.title) + '</div><div class="tw-meta">' + esc(teacherStageName(item.stage)) + ' • الصف ' + esc(item.grade) + ' • ' + esc(uploadSubject) + (uploadCurriculum ? ' • ' + esc(uploadCurriculum) : '') + ' • ' + status + '</div></div>';
+        html += '<div class="tw-card"><div class="tw-title">' + esc(item.title) + '</div><div class="tw-meta">' + esc(teacherStageName(item.stage)) + ' • الصف ' + esc(item.grade) + ' • ' + esc(uploadSubject) + (uploadCurriculum ? ' • ' + esc(uploadCurriculum) : '') + ' • ' + status + '</div><div class="tw-actions"><button class="tw-btn" style="background:#1976D2;color:#fff" onclick="editMyTeacherUpload(\'' + attr(item.id) + '\')">✏️ تعديل</button><button class="tw-btn" style="background:#C62828;color:#fff" onclick="deleteMyTeacherUpload(\'' + attr(item.id) + '\')">🗑 حذف</button></div></div>';
       });
       body.innerHTML = html;
     } catch (error) {

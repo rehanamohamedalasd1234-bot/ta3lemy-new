@@ -604,7 +604,7 @@
       return;
     }
     queue.innerHTML = adminPosts.map(function (post) {
-      var actions = '<button type="button" data-social-edit-post="' + escapeHtml(post.id) + '" style="border:0;border-radius:8px;padding:8px 10px;background:#E3F2FD;color:#1565C0;font-weight:700;">تعديل النص</button>';
+      var actions = '<button type="button" data-social-edit-post="' + escapeHtml(post.id) + '" style="border:0;border-radius:8px;padding:8px 10px;background:#E3F2FD;color:#1565C0;font-weight:700;">تعديل النص</button><button type="button" data-social-media-post="' + escapeHtml(post.id) + '" style="border:0;border-radius:8px;padding:8px 10px;background:#E8F5E9;color:#2E7D32;font-weight:700;">إدارة المرفقات</button>';
       if (post.status === 'pending') {
         actions += '<button type="button" data-social-approve-post="' + escapeHtml(post.id) + '" style="border:0;border-radius:8px;padding:8px 10px;background:#2E7D32;color:white;font-weight:700;">موافقة ونشر</button>';
         actions += '<button type="button" data-social-reject-post="' + escapeHtml(post.id) + '" style="border:0;border-radius:8px;padding:8px 10px;background:#FFF3E0;color:#BF360C;font-weight:700;">رفض</button>';
@@ -618,6 +618,9 @@
     }).join('');
     queue.querySelectorAll('[data-social-edit-post]').forEach(function (button) {
       button.onclick = function () { editPost(button.getAttribute('data-social-edit-post')); };
+    });
+    queue.querySelectorAll('[data-social-media-post]').forEach(function (button) {
+      button.onclick = function () { editPostMedia(button.getAttribute('data-social-media-post')); };
     });
     queue.querySelectorAll('[data-social-approve-post]').forEach(function (button) {
       button.onclick = function () { decidePost(button.getAttribute('data-social-approve-post'), 'approve'); };
@@ -644,6 +647,31 @@
       console.error('[social-news] edit failed', error);
       toast('تعذر تعديل المنشور.');
     }
+  }
+  async function editPostMedia(postId) {
+    var post = adminPosts.find(function (item) { return String(item.id) === String(postId); });
+    if (!post || !window.uploadFile) return;
+    var choice = window.prompt('اكتب: صورة أو فيديو لاستبدال المرفق، أو حذف لإزالة الصورة والفيديو.', 'صورة');
+    if (choice === null) return;
+    choice = String(choice).trim().toLowerCase();
+    if (choice === 'حذف' || choice === 'delete') {
+      if (!window.confirm('إزالة المرفقات؟ لن تُحذف الملفات من Cloudinary.')) return;
+      try { await ownerApiRequest('edit_media', { post_id: postId, image_url: null, video_url: null }); toast('✅ أزيلت المرفقات مع الحفاظ على ملفات Cloudinary.'); await loadAdminPosts(adminStatus); await refreshNews(); } catch (error) { toast(error.message || 'تعذر إزالة المرفقات.'); }
+      return;
+    }
+    var isVideo = choice === 'فيديو' || choice === 'video';
+    var isImage = choice === 'صورة' || choice === 'image';
+    if (!isVideo && !isImage) { toast('اختاري صورة أو فيديو أو حذف.'); return; }
+    var input = document.createElement('input'); input.type = 'file'; input.accept = isVideo ? 'video/mp4,video/webm,video/quicktime' : 'image/*';
+    input.onchange = async function () {
+      var file = input.files && input.files[0]; if (!file) return;
+      try {
+        var url = await window.uploadFile(file, isVideo ? 'social-news/videos' : 'social-news/images');
+        if (!url) throw new Error('فشل رفع الملف');
+        await ownerApiRequest('edit_media', { post_id: postId, image_url: isImage ? url : (post.image_url || null), video_url: isVideo ? url : (post.video_url || null) });
+        toast('✅ تم تحديث المرفق.'); await loadAdminPosts(adminStatus); await refreshNews();
+      } catch (error) { console.error(error); toast(error.message || 'تعذر تحديث المرفق؛ بقي المنشور كما هو.'); }
+    }; input.click();
   }
   async function decidePost(postId, action) {
     if (action === 'delete' && !window.confirm('حذف المنشور وتعليقاته نهائيًا؟')) return;

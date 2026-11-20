@@ -88,6 +88,16 @@ Deno.serve(async (request: Request) => {
         return jsonResponse(400, { error: "Invalid post data" }, origin);
       }
       result = await admin.rpc("social_owner_edit", { p_post_id: postId, p_content: content });
+    } else if (action === "edit_media") {
+      const postId = String(input.post_id || "");
+      const imageUrl = input.image_url === null ? null : String(input.image_url || "");
+      const videoUrl = input.video_url === null ? null : String(input.video_url || "");
+      if (!uuidPattern.test(postId) || imageUrl.length > 2048 || videoUrl.length > 2048 ||
+          (imageUrl && !/^https:\/\/res\.cloudinary\.com\/[a-z0-9_-]+\/image\/upload\//i.test(imageUrl)) ||
+          (videoUrl && !/^https:\/\/res\.cloudinary\.com\/[a-z0-9_-]+\/video\/upload\//i.test(videoUrl))) {
+        return jsonResponse(400, { error: "Invalid media data" }, origin);
+      }
+      result = await admin.rpc("social_owner_edit_media", { p_post_id: postId, p_image_url: imageUrl || null, p_video_url: videoUrl || null });
     } else if (action === "decide") {
       const postId = String(input.post_id || "");
       const decision = String(input.decision || "");

@@ -56,7 +56,7 @@
     if (video) html += '<video controls playsinline src="' + video + '" style="display:block;width:100%;max-height:280px;margin:8px 0;border-radius:10px"></video>';
     if (audio) html += '<audio controls preload="metadata" src="' + audio + '" style="display:block;width:100%;margin:8px 0"></audio>';
     if (pdf) html += '<a href="' + pdf + '" target="_blank" rel="noopener noreferrer" style="display:block;margin:10px 0;padding:12px;border-radius:10px;background:#FFF3E0;color:#8A3B12;text-decoration:none;font-weight:700">📕 فتح ملف PDF: ' + esc(item.pdf_name || item.pdfName || 'ملف تعليمي') + '</a>';
-    html += '<div style="display:flex;gap:8px;margin-top:12px"><button onclick="approveTeacherUpload(\'' + esc(doc.id) + '\')" style="flex:1;background:#2E7D32;color:#fff;border:0;padding:11px 7px;border-radius:9px;font-weight:bold">✅ موافقة ونشر في شرح الأستاذ</button><button onclick="rejectTeacherUpload(\'' + esc(doc.id) + '\')" style="background:#C62828;color:#fff;border:0;padding:11px 12px;border-radius:9px;font-weight:bold">❌ رفض</button></div></article>';
+    html += '<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button onclick="approveTeacherUpload(\'' + esc(doc.id) + '\')" style="flex:1;background:#2E7D32;color:#fff;border:0;padding:11px 7px;border-radius:9px;font-weight:bold">✅ موافقة ونشر في شرح الأستاذ</button><button onclick="editTeacherUpload(\'' + esc(doc.id) + '\')" style="background:#1976D2;color:#fff;border:0;padding:11px 12px;border-radius:9px;font-weight:bold">✏️ تعديل</button><button onclick="deleteTeacherUpload(\'' + esc(doc.id) + '\')" style="background:#C62828;color:#fff;border:0;padding:11px 12px;border-radius:9px;font-weight:bold">🗑 حذف</button><button onclick="rejectTeacherUpload(\'' + esc(doc.id) + '\')" style="background:#FFF3E0;color:#C62828;border:0;padding:11px 12px;border-radius:9px;font-weight:bold">❌ رفض</button></div></article>';
     return html;
   }
   function renderApprovedCard(doc) {
@@ -66,7 +66,7 @@
     var pdf = safeUrl(item.pdf_url || item.pdfUrl);
     var html = '<article style="background:#fff;border-radius:14px;padding:14px;margin:0 0 12px;border-right:5px solid #2E7D32;box-shadow:0 2px 8px rgba(0,0,0,.06)"><div style="font-size:12px;color:#2E7D32;font-weight:700">✅ منشور للطلاب • ' + esc(label(item.type)) + '</div><h3 style="margin:7px 0">' + esc(item.title || 'بدون عنوان') + '</h3><div style="font-size:12px;line-height:1.9;color:#555">' + details(item) + '</div><div style="margin-top:8px;padding:9px;border-radius:8px;background:#E8F5E9;font-size:12px;line-height:1.8;color:#245b35">مكان ظهوره: ' + esc(location) + '</div>';
     if (pdf) html += '<a href="' + pdf + '" target="_blank" rel="noopener noreferrer" style="display:block;margin-top:10px;padding:12px;border-radius:10px;background:#FFF3E0;color:#8A3B12;text-decoration:none;font-weight:700">📕 فتح ملف PDF: ' + esc(item.pdf_name || item.pdfName || 'ملف تعليمي') + '</a>';
-    html += '<button onclick="removeTeacherPublication(\'' + esc(doc.id) + '\',\'' + esc(lessonId) + '\')" style="margin-top:11px;width:100%;background:#C62828;color:#fff;border:0;padding:11px;border-radius:9px;font-weight:bold">🗑 إزالة العمل من أيقونة شرح الأستاذ</button></article>';
+    html += '<div style="display:flex;gap:8px;margin-top:11px;flex-wrap:wrap"><button onclick="editTeacherUpload(\'' + esc(doc.id) + '\')" style="flex:1;background:#1976D2;color:#fff;border:0;padding:11px;border-radius:9px;font-weight:bold">✏️ تعديل</button><button onclick="removeTeacherPublication(\'' + esc(doc.id) + '\',\'' + esc(lessonId) + '\')" style="flex:1;background:#C62828;color:#fff;border:0;padding:11px;border-radius:9px;font-weight:bold">🗑 إزالة من العرض</button><button onclick="deleteTeacherUpload(\'' + esc(doc.id) + '\')" style="background:#7B1FA2;color:#fff;border:0;padding:11px;border-radius:9px;font-weight:bold">حذف السجل</button></div></article>';
     return html;
   }
 
@@ -143,6 +143,30 @@
       toast('تم رفض العمل');
       window.loadOwnerApprovals('pending');
     } catch (error) { console.error(error); toast('تعذر تسجيل الرفض؛ تحقق من قواعد Firestore'); }
+  };
+  window.editTeacherUpload = async function (id) {
+    if (window.currentRole !== 'owner') return toast('مسموح للمالك فقط');
+    try {
+      var ref = db().collection('teacher_uploads').doc(id), snap = await ref.get();
+      if (!snap.exists) return toast('العمل غير موجود');
+      var item = snap.data() || {}, title = window.prompt('عنوان العمل:', item.title || '');
+      if (title === null) return;
+      var content = window.prompt('نص الشرح:', item.content || '');
+      if (content === null) return;
+      var patch = { title: title.trim(), content: content, updatedAt: new Date().toISOString(), updatedBy: window.currentUser && window.currentUser.uid || '' };
+      await ref.update(patch);
+      if (item.status === 'approved') await db().collection('lessons').doc(item.lessonId || ('teacher_' + id)).set({ title: patch.title, content: patch.content, updated_at: patch.updatedAt }, { merge: true });
+      toast('✅ تم تعديل العمل والنسخة المنشورة.'); window.loadOwnerApprovals(activeTab);
+    } catch (error) { console.error(error); toast('تعذر تعديل العمل.'); }
+  };
+  window.deleteTeacherUpload = async function (id) {
+    if (window.currentRole !== 'owner') return toast('مسموح للمالك فقط');
+    if (!window.confirm('حذف سجل العمل؟ لن تُحذف ملفات Cloudinary القديمة.')) return;
+    try {
+      var ref = db().collection('teacher_uploads').doc(id), snap = await ref.get(), item = snap.data() || {}, batch = db().batch();
+      if (item.lessonId || item.status === 'approved') batch.delete(db().collection('lessons').doc(item.lessonId || ('teacher_' + id)));
+      batch.delete(ref); await batch.commit(); toast('تم حذف السجل مع إبقاء ملفات Cloudinary.'); window.loadOwnerApprovals(activeTab);
+    } catch (error) { console.error(error); toast('تعذر حذف العمل.'); }
   };
   window.removeTeacherPublication = async function (uploadId, lessonId) {
     if (window.currentRole !== 'owner') return toast('مسموح للمالك فقط');
