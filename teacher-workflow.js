@@ -249,7 +249,7 @@
       var docs = snapshot.docs ? snapshot.docs.slice() : [];
       if (!docs.length) {
         try {
-          var saved = JSON.parse(localStorage.getItem('offline_lessons') || '[]');
+          var saved = window.readOfflineLessons ? await window.readOfflineLessons() : JSON.parse(localStorage.getItem('offline_lessons') || '[]');
           docs = saved.filter(function (item) { return item && item.type === 'teacher_explanation'; }).map(function (item) { return { id: String(item.id), data: function () { return item; } }; });
         } catch (cacheError) { console.warn('Offline teacher content unavailable', cacheError); }
       }
@@ -260,7 +260,7 @@
       console.error('Teacher directory query failed', error);
       var savedDocs = [];
       try {
-        var cached = JSON.parse(localStorage.getItem('offline_lessons') || '[]');
+        var cached = window.readOfflineLessons ? await window.readOfflineLessons() : JSON.parse(localStorage.getItem('offline_lessons') || '[]');
         savedDocs = cached.filter(function (item) { return item && item.type === 'teacher_explanation'; }).map(function (item) { return { id: String(item.id), data: function () { return item; } }; });
       } catch (cacheError) { console.warn(cacheError); }
       savedDocs = applyTeacherDirectoryFilter(savedDocs);

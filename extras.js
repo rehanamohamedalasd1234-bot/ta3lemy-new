@@ -2089,6 +2089,30 @@ console.log('✅ Exercises UI loaded');
     try{var stored=await getOfflineRecord('quran');if(stored&&stored.quran)return {quran:stored.quran,index:Array.isArray(stored.index)?stored.index:index};}catch(e){console.warn('تعذر قراءة نسخة القرآن من التخزين المحلي:',e);}
     return {quran:null,index:index};
   };
+  window.saveOfflineLessons=async function(lessons){
+    var data=Array.isArray(lessons)?lessons:[];
+    var record={items:data,savedAt:new Date().toISOString()};
+    try{
+      await putOfflineRecord('lessons',record);
+      try{
+        var serialized=JSON.stringify(data);
+        if(serialized.length<=1500000)localStorage.setItem('offline_lessons',serialized);
+        else localStorage.removeItem('offline_lessons');
+      }catch(_){try{localStorage.removeItem('offline_lessons');}catch(__){}}
+      return 'IndexedDB';
+    }catch(indexedDbError){
+      localStorage.setItem('offline_lessons',JSON.stringify(data));
+      return 'localStorage';
+    }
+  };
+  window.readOfflineLessons=async function(){
+    try{
+      var stored=await getOfflineRecord('lessons');
+      if(stored&&Array.isArray(stored.items))return stored.items;
+    }catch(e){console.warn('تعذر قراءة الدروس من التخزين المحلي الكبير:',e);}
+    try{var legacy=JSON.parse(localStorage.getItem('offline_lessons')||'[]');return Array.isArray(legacy)?legacy:[];}
+    catch(_){return [];}
+  };
   window.offlineMediaIsCached=async function(url){
     if(!url||!('caches' in window))return false;
     try{var cache=await caches.open(MEDIA_CACHE_NAME);return !!(await cache.match(url));}catch(e){return false;}
@@ -2130,7 +2154,7 @@ console.log('✅ Exercises UI loaded');
     try{
       var lessonSnap=await firebase.firestore().collection('lessons').get(),lessons=[];
       lessonSnap.forEach(function(doc){lessons.push(Object.assign({id:doc.id},doc.data()));});
-      localStorage.setItem('offline_lessons',JSON.stringify(lessons));report.lessons=lessons.length;
+      await window.saveOfflineLessons(lessons);report.lessons=lessons.length;
       var lessonMedia=[];lessons.forEach(function(item){lessonMedia=lessonMedia.concat(mediaUrlsFromLesson(item));});
       var lessonUnique=Array.from(new Set(lessonMedia));
       for(var li=0;li<lessonUnique.length;li++){

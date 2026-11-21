@@ -80,9 +80,9 @@
     return aliases[key] || key;
   }
 
-  function offlineRecords(grade) {
+  async function offlineRecords(grade) {
     try {
-      var all = JSON.parse(localStorage.getItem('offline_lessons') || '[]');
+      var all = window.readOfflineLessons ? await window.readOfflineLessons() : JSON.parse(localStorage.getItem('offline_lessons') || '[]');
       return Array.isArray(all) ? all.filter(function (item) {
         return String(item.grade == null ? '' : item.grade) === grade;
       }) : [];
@@ -97,7 +97,7 @@
     if (gradeCache.has(grade)) return gradeCache.get(grade);
 
     var task = (async function () {
-      var cached = offlineRecords(grade);
+      var cached = await offlineRecords(grade);
       if (!navigator.onLine) return cached;
 
       try {

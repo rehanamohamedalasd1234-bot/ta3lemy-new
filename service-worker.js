@@ -1,7 +1,7 @@
 // Service Worker for the Hafez educational platform.
 // Shell files are prefetched for offline launch; media is stored only when the user explicitly downloads it.
 const CACHE_PREFIX = 'ta3lemy-shell-';
-const CACHE_NAME = CACHE_PREFIX + '1.0.126';
+const CACHE_NAME = CACHE_PREFIX + '1.0.127';
 const MEDIA_CACHE_NAME = 'ta3lemy-media-v1';
 const APP_SHELL = [
   './', './index.html', './extras.js', './curriculum-display-fix.js', './offline-mode.js', './navigation-fix.js', './service-worker.js', './manifest.json', './version.json', './app-update.js', './auth-init.js', './fix-canvas.css',
@@ -35,6 +35,7 @@ APP_SHELL.push('./library-config.js');
 APP_SHELL.push('./radio-station-fix.js');
 APP_SHELL.push('./kg2-arabic-structure.js');
 APP_SHELL.push('./kg2-arabic-2026-2027-t1.json');
+APP_SHELL.push('./secondary-grade1-content.js');
 const APP_SHELL_PATHS = new Set(APP_SHELL.map(file => new URL(file, self.registration.scope).pathname));
 const EXTERNAL_SHELL = [
   'https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js',
@@ -49,6 +50,47 @@ const APP_SHELL_FALLBACK = new URL('./index.html', self.registration.scope).href
 function isMediaRequest(request, url) {
   if (request.destination === 'audio' || request.destination === 'video' || request.destination === 'image') return true;
   return /\.(mp3|m4a|aac|wav|ogg|mp4|m4v|webm|mov|jpg|jpeg|png|gif|webp|avif|pdf)(?:$|[?#])/i.test(url.href);
+}
+
+async function mediaResponseForRequest(request) {
+  const mediaCache = await caches.open(MEDIA_CACHE_NAME);
+  const cached = await mediaCache.match(request, { ignoreVary: true });
+  if (!cached) {
+    try { return await fetch(request); }
+    catch (_) { return new Response('', { status: 503, statusText: 'Offline Media Not Found' }); }
+  }
+
+  const range = request.headers && request.headers.get('range');
+  if (!range || cached.type === 'opaque' || cached.status !== 200) return cached;
+
+  const match = /^bytes=(\d*)-(\d*)$/i.exec(range.trim());
+  if (!match) return cached;
+
+  try {
+    const body = await cached.arrayBuffer();
+    const size = body.byteLength;
+    let start = match[1] ? Number(match[1]) : null;
+    let end = match[2] ? Number(match[2]) : null;
+    if (start === null && end !== null) {
+      start = Math.max(0, size - end);
+      end = size - 1;
+    } else {
+      start = start === null ? 0 : start;
+      end = end === null ? size - 1 : Math.min(end, size - 1);
+    }
+    if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end) || start < 0 || start >= size || end < start) {
+      return new Response(null, { status: 416, headers: { 'Content-Range': 'bytes */' + size } });
+    }
+
+    const headers = new Headers(cached.headers);
+    headers.set('Accept-Ranges', 'bytes');
+    headers.set('Content-Range', 'bytes ' + start + '-' + end + '/' + size);
+    headers.set('Content-Length', String(end - start + 1));
+    return new Response(body.slice(start, end + 1), { status: 206, statusText: 'Partial Content', headers });
+  } catch (_) {
+    // Opaque or browser-managed media responses remain usable as complete cached assets.
+    return cached;
+  }
 }
 
 self.addEventListener('install', event => {
@@ -88,13 +130,7 @@ self.addEventListener('fetch', event => {
 
   // Cross-origin media is served from the explicit download cache first; live streams still use the network.
   if (url.origin !== self.location.origin && isMediaRequest(event.request, url)) {
-    event.respondWith((async () => {
-      const mediaCache = await caches.open(MEDIA_CACHE_NAME);
-      const cached = await mediaCache.match(event.request, { ignoreVary: true });
-      if (cached) return cached;
-      try { return await fetch(event.request); }
-      catch (_) { return new Response('', { status: 503, statusText: 'Offline Media Not Found' }); }
-    })());
+    event.respondWith(mediaResponseForRequest(event.request));
     return;
   }
 

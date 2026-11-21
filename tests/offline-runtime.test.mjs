@@ -33,7 +33,7 @@ async function makeServiceWorker({ mediaResponse = null, shellResponse = null, f
     skipWaiting: async () => {},
   };
   vm.runInNewContext(await read('service-worker.js'), {
-    self, caches, fetch: fetchImpl, URL, Request, Response, Set, Promise, console,
+    self, caches, fetch: fetchImpl, URL, Request, Response, Headers, Set, Promise, console,
   });
   return listeners;
 }
@@ -51,6 +51,18 @@ test('downloaded cross-origin audio is served from the offline media cache', asy
   listeners.fetch(event);
   const response = await event.response;
   assert.equal(await response.text(), 'saved audio');
+});
+
+test('cached readable audio supports byte-range requests used by mobile players', async () => {
+  const listeners = await makeServiceWorker({
+    mediaResponse: new Response('0123456789', { headers: { 'Content-Type': 'audio/mpeg' } }),
+  });
+  const event = fetchEvent(new Request('https://media.test/lesson.mp3', { headers: { Range: 'bytes=2-5' } }));
+  listeners.fetch(event);
+  const response = await event.response;
+  assert.equal(response.status, 206);
+  assert.equal(response.headers.get('content-range'), 'bytes 2-5/10');
+  assert.equal(await response.text(), '2345');
 });
 
 test('versioned azkar script URLs can use their cached app-shell file offline', async () => {
@@ -84,11 +96,12 @@ test('offline mode leaves local radio browsing and downloaded station playback a
 test('the updater checks the published repository version and refreshes the service worker', async () => {
   const updater = await read('app-update.js');
   const html = await read('index.html');
-  assert.match(updater, /raw\.githubusercontent\.com\/rehanamohamedalasd1234-bot\/ta3lemy-new\/main\/version\.json/);
+  assert.match(updater, /var VERSION_URL = SITE_URL \+ 'version\.json'/);
+  assert.match(updater, /fetch\('\.\/version\.json\?localVersionCheck='/);
   assert.doesNotMatch(updater, /releases\/latest\/download/);
   assert.match(updater, /registration\.update\(\)/);
   assert.match(html, /onclick="openAppUpdate\(\)"/);
-  assert.match(html, /name="ta3lemy-version" content="1\.0\.111"/);
+  assert.match(html, /name="ta3lemy-version" content="1\.0\.127"/);
 });
 
 test('the library is reachable from the student home and owner administration supports sign-out', async () => {
@@ -108,4 +121,26 @@ test('Quran offline downloads use compact verse strings and IndexedDB fallback',
   assert.match(extras, /window\.saveOfflineQuran\(quran,surahIndex\)/);
   assert.match(extras, /ayahs:s\.ayahs\.map\(function\(a\)\{return a\.text;\}\)/);
   assert.match(html, /window\.readOfflineQuran\?await window\.readOfflineQuran\(\):null/);
+  const activeQuran = html.slice(html.lastIndexOf('async function openQuran()'), html.lastIndexOf('async function playAyah('));
+  assert.match(activeQuran, /window\.readOfflineQuran\?await window\.readOfflineQuran\(\):null/);
+});
+
+test('all same-origin scripts referenced by the app are included in the offline shell', async () => {
+  const sw = await read('service-worker.js');
+  const html = await read('index.html');
+  const paths = new Set(Array.from(sw.matchAll(/['"](\.\/[^'"]+)['"]/g), (match) => match[1].split('?')[0]));
+  for (const match of html.matchAll(/<script[^>]+src=["']([^"']+)["']/gi)) {
+    const src = match[1];
+    if (/^(https?:)?\/\//i.test(src)) continue;
+    assert.ok(paths.has(src.split('?')[0]), `${src} should be cached by the service worker`);
+  }
+});
+
+test('offline lesson downloads have an IndexedDB-backed reader and writer', async () => {
+  const extras = await read('extras.js');
+  const html = await read('index.html');
+  assert.match(extras, /window\.saveOfflineLessons=async function/);
+  assert.match(extras, /window\.readOfflineLessons=async function/);
+  assert.match(extras, /await window\.saveOfflineLessons\(lessons\)/);
+  assert.match(html, /window\.readOfflineLessons\?await window\.readOfflineLessons\(\)/);
 });

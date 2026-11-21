@@ -10,7 +10,7 @@
 <meta name="description" content="منصة الأستاذ حافظ التعليمية — تعليم عام وأزهر وبكالوريا جديدة. دروس، تدريبات، امتحانات، قرآن كريم، مراجعة شاملة، وتطبيق يعمل بدون إنترنت.">
 <meta name="keywords" content="منصة تعليمية, بكالوريا, أزهر شريف, تعليم عام, دروس, قرآن كريم, امتحانات, مراجعة, الأستاذ حافظ">
 <meta name="author" content="الأستاذ حافظ">
-<meta name="ta3lemy-version" content="1.0.118">
+<meta name="ta3lemy-version" content="1.0.127">
 <meta name="robots" content="index, follow">
 <meta name="revisit-after" content="7 days">
 <meta property="og:type" content="website">
@@ -173,7 +173,7 @@ async function openContent(type,num,name){
   const l=document.getElementById('contentList');screenHistory.push(currentScreen);showScreen('contentScreen');l.innerHTML='<div class="empty-state"><p>⏳ جاري التحميل...</p></div>';
   let items=[];
   if(navigator.onLine){try{let q=db.collection('lessons').where('subject','==',currentSubject).where('term','==',num).where('type','==',type).where('grade','==',currentGrade);if(currentStage)q=q.where('stage','==',currentStage);const snap=await q.get();items=snap.docs.map(function(doc){return Object.assign({id:doc.id},doc.data());});}catch(e){console.warn('تعذر الاتصال؛ استخدام الدروس المحفوظة',e);}}
-  if(!items.length){try{items=JSON.parse(localStorage.getItem('offline_lessons')||'[]').filter(function(it){return it.subject===currentSubject&&Number(it.term)===Number(num)&&it.type===type&&it.grade===currentGrade&&(!currentStage||it.stage===currentStage);});}catch(e){items=[];}}
+  if(!items.length){try{const saved=window.readOfflineLessons?await window.readOfflineLessons():JSON.parse(localStorage.getItem('offline_lessons')||'[]');items=saved.filter(function(it){return it.subject===currentSubject&&Number(it.term)===Number(num)&&it.type===type&&it.grade===currentGrade&&(!currentStage||it.stage===currentStage);});}catch(e){items=[];}}
   if(!items.length){l.innerHTML='<div class="empty-state"><div class="empty-state-icon">📭</div><p>لا يوجد محتوى محفوظ لهذا القسم</p></div>';return;}
   items.sort(function(a,b){return (a.order||99)-(b.order||99);});
   l.innerHTML=items.map(function(it){return '<div class="content-item" onclick="viewContent(\''+String(it.id).replace(/'/g,'')+'\')"><div class="content-item-icon">📄</div><div class="content-item-info"><div class="content-item-title">'+(it.title||'بدون عنوان')+'</div><div class="content-item-sub">'+(it.content?it.content.substring(0,50)+'...':'')+'</div></div><div class="content-item-arrow">‹</div></div>';}).join('');
@@ -206,7 +206,7 @@ async function viewContent(id){
   try{
     let it=null;
     if(navigator.onLine){try{const doc=await db.collection('lessons').doc(id).get();if(doc.exists)it=doc.data();}catch(e){console.warn('استخدام نسخة الدرس المحفوظة',e);}}
-    if(!it){const saved=JSON.parse(localStorage.getItem('offline_lessons')||'[]');it=saved.find(function(x){return String(x.id)===String(id);})||null;}
+    if(!it){const saved=window.readOfflineLessons?await window.readOfflineLessons():JSON.parse(localStorage.getItem('offline_lessons')||'[]');it=saved.find(function(x){return String(x.id)===String(id);})||null;}
     if(!it){showToast('⚠️ الدرس غير محفوظ على هذا الجهاز');return;}
     document.getElementById('viewerTitle').textContent=it.title||'';
     let h='<h2 style="color:#2E7D32;margin-bottom:16px;">'+(it.title||'')+'</h2>';
@@ -767,8 +767,9 @@ async function openQuran(){
   screenHistory.push(currentScreen);showScreen('quranScreen');
   l.innerHTML='<div class="empty-state"><p>⏳ جاري التحميل...</p></div>';
   try{
-    let data=JSON.parse(localStorage.getItem('ta3lemy_surahs')||'[]');
-    const offlineQuran=JSON.parse(localStorage.getItem('offline_quran_full')||'null');
+    const saved=window.readOfflineQuran?await window.readOfflineQuran():null;
+    let data=saved&&Array.isArray(saved.index)&&saved.index.length?saved.index:JSON.parse(localStorage.getItem('ta3lemy_surahs')||'[]');
+    const offlineQuran=saved&&saved.quran?saved.quran:JSON.parse(localStorage.getItem('offline_quran_full')||'null');
     if(!data.length&&offlineQuran){
       data=Object.keys(offlineQuran).map(function(k){const s=offlineQuran[k];return {number:Number(k),name:s.name,numberOfAyahs:(s.ayahs||[]).length,revelationType:s.revelationType||'قرآن كريم'};});
       localStorage.setItem('ta3lemy_surahs',JSON.stringify(data));
@@ -793,10 +794,11 @@ async function openSurah(num){
       try{const r=await fetch('https://api.alquran.cloud/v1/surah/'+num+'/'+currentReciter);if(!r.ok)throw new Error('API');const j=await r.json();d=j.data||null;}catch(e){console.warn('تعذر جلب السورة عبر الإنترنت؛ محاولة النسخة المحفوظة',e);}
     }
     if(!d){
-      const stored=JSON.parse(localStorage.getItem('offline_quran_full')||'null');
+      const saved=window.readOfflineQuran?await window.readOfflineQuran():null;
+      const stored=saved&&saved.quran?saved.quran:JSON.parse(localStorage.getItem('offline_quran_full')||'null');
       const raw=stored&&stored[num];
       if(!raw)throw new Error('السورة غير محفوظة');
-      const idx=JSON.parse(localStorage.getItem('ta3lemy_surahs')||'[]');
+      const idx=saved&&Array.isArray(saved.index)&&saved.index.length?saved.index:JSON.parse(localStorage.getItem('ta3lemy_surahs')||'[]');
       const meta=idx.find(function(x){return Number(x.number)===Number(num);})||{};
       let offset=0;for(let n=1;n<Number(num);n++){offset+=((stored[n]&&stored[n].ayahs)||[]).length;}
       d={number:Number(num),name:raw.name||meta.name||'سورة '+num,numberOfAyahs:(raw.ayahs||[]).length,revelationType:raw.revelationType||meta.revelationType||'قرآن كريم',ayahs:(raw.ayahs||[]).map(function(a,i){return {number:Number(a.number||offset+i+1),numberInSurah:Number(a.numberInSurah||a.num||i+1),text:a.text};})};
