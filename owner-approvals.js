@@ -8,9 +8,14 @@
   function esc(value) { return String(value == null ? '' : value).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); }
   function safeUrl(value) { var url = String(value || ''); return /^https?:\/\//i.test(url) ? esc(url) : ''; }
   function imageUrls(item) {
-    var list = Array.isArray(item.image_urls) ? item.image_urls : [];
+    var list = Array.isArray(item.image_urls) ? item.image_urls : (Array.isArray(item.imageUrls) ? item.imageUrls : (Array.isArray(item.images) ? item.images : []));
     if (!list.length && (item.image_url || item.imageUrl)) list = [item.image_url || item.imageUrl];
     return list.map(safeUrl).filter(Boolean);
+  }
+  function rawImageUrls(item) {
+    var list = Array.isArray(item.image_urls) ? item.image_urls : (Array.isArray(item.imageUrls) ? item.imageUrls : (Array.isArray(item.images) ? item.images : []));
+    if (!list.length && (item.image_url || item.imageUrl)) list = [item.image_url || item.imageUrl];
+    return list.map(function (value) { return String(value || ''); }).filter(function (value) { return /^https?:\/\//i.test(value); });
   }
   function label(type) {
     return ({ lesson: 'درس / شرح', explanation: 'شرح', exercise: 'تدريب', exam: 'امتحان', review: 'مراجعة', image: 'صورة تعليمية', video: 'فيديو', audio: 'تسجيل صوتي' })[type] || 'عمل تعليمي';
@@ -62,11 +67,13 @@
   function renderApprovedCard(doc) {
     var item = doc.data() || {};
     var lessonId = item.lessonId || ('teacher_' + doc.id);
+    var images = imageUrls(item);
     var location = 'الرئيسية ← أيقونة شرح الأستاذ ← ' + (item.teacherName || 'المعلم') + ' ← ' + stageLabel(item.stage) + ' ← الصف ' + (item.grade || '—') + ' ← ' + (item.subjectLabel || item.subject || '—') + (item.branch ? ' ← ' + item.branch : '') + ' ← الترم ' + (item.term || '—');
     var pdf = safeUrl(item.pdf_url || item.pdfUrl);
     var html = '<article style="background:#fff;border-radius:14px;padding:14px;margin:0 0 12px;border-right:5px solid #2E7D32;box-shadow:0 2px 8px rgba(0,0,0,.06)"><div style="font-size:12px;color:#2E7D32;font-weight:700">✅ منشور للطلاب • ' + esc(label(item.type)) + '</div><h3 style="margin:7px 0">' + esc(item.title || 'بدون عنوان') + '</h3><div style="font-size:12px;line-height:1.9;color:#555">' + details(item) + '</div><div style="margin-top:8px;padding:9px;border-radius:8px;background:#E8F5E9;font-size:12px;line-height:1.8;color:#245b35">مكان ظهوره: ' + esc(location) + '</div>';
     if (pdf) html += '<a href="' + pdf + '" target="_blank" rel="noopener noreferrer" style="display:block;margin-top:10px;padding:12px;border-radius:10px;background:#FFF3E0;color:#8A3B12;text-decoration:none;font-weight:700">📕 فتح ملف PDF: ' + esc(item.pdf_name || item.pdfName || 'ملف تعليمي') + '</a>';
-    html += '<div style="display:flex;gap:8px;margin-top:11px;flex-wrap:wrap"><button onclick="editTeacherUpload(\'' + esc(doc.id) + '\')" style="flex:1;background:#1976D2;color:#fff;border:0;padding:11px;border-radius:9px;font-weight:bold">✏️ تعديل</button><button onclick="removeTeacherPublication(\'' + esc(doc.id) + '\',\'' + esc(lessonId) + '\')" style="flex:1;background:#C62828;color:#fff;border:0;padding:11px;border-radius:9px;font-weight:bold">🗑 إزالة من العرض</button><button onclick="deleteTeacherUpload(\'' + esc(doc.id) + '\')" style="background:#7B1FA2;color:#fff;border:0;padding:11px;border-radius:9px;font-weight:bold">حذف السجل</button></div></article>';
+    if (images.length > 1) html += '<div style="margin-top:10px;padding:9px;border-radius:9px;background:#E8F5E9;color:#245b35;font-size:12px;line-height:1.7">📷 محفوظ في المصدر: ' + images.length + ' صورة — إذا كان المنشور يعرض صورة واحدة اضغط «مزامنة الصور».</div>';
+    html += '<div style="display:flex;gap:8px;margin-top:11px;flex-wrap:wrap"><button onclick="editTeacherUpload(\'' + esc(doc.id) + '\')" style="flex:1;background:#1976D2;color:#fff;border:0;padding:11px;border-radius:9px;font-weight:bold">✏️ تعديل</button><button onclick="syncTeacherPublicationMedia(\'' + esc(doc.id) + '\',\'' + esc(lessonId) + '\')" style="flex:1;background:#1565C0;color:#fff;border:0;padding:11px;border-radius:9px;font-weight:bold">🔄 مزامنة الصور</button><button onclick="removeTeacherPublication(\'' + esc(doc.id) + '\',\'' + esc(lessonId) + '\')" style="flex:1;background:#C62828;color:#fff;border:0;padding:11px;border-radius:9px;font-weight:bold">🗑 إزالة من العرض</button><button onclick="deleteTeacherUpload(\'' + esc(doc.id) + '\')" style="background:#7B1FA2;color:#fff;border:0;padding:11px;border-radius:9px;font-weight:bold">حذف السجل</button></div></article>';
     return html;
   }
 
@@ -123,7 +130,7 @@
         term: Number(item.term) || 1, type: 'teacher_explanation',
         teacherContentType: item.type || 'lesson', teacherName: item.teacherName || '',
         teacherId: item.teacherId || item.authUid || '', teacherPhotoUrl: item.teacherPhotoUrl || item.teacher_photo_url || null,
-        image_url: item.image_url || item.imageUrl || null, image_urls: Array.isArray(item.image_urls) ? item.image_urls : (item.image_url || item.imageUrl ? [item.image_url || item.imageUrl] : []),
+        image_url: rawImageUrls(item)[0] || null, image_urls: rawImageUrls(item),
         video_url: item.video_url || item.videoUrl || null, audio_url: item.audio_url || item.audioUrl || null,
         pdf_url: item.pdf_url || item.pdfUrl || null, pdf_name: item.pdf_name || item.pdfName || '',
         pdf_size: Number(item.pdf_size || item.pdfSize) || 0,
@@ -134,6 +141,19 @@
       toast('✅ نُشر العمل في شرح الأستاذ ضمن المرحلة والصف والمادة المحددة');
       window.loadOwnerApprovals('pending');
     } catch (error) { console.error(error); toast('تعذر النشر؛ تحقق من قواعد Firestore وصلاحيات المالك'); }
+  };
+  window.syncTeacherPublicationMedia = async function (uploadId, lessonId) {
+    if (window.currentRole !== 'owner') return toast('مسموح للمالك فقط');
+    try {
+      var store = db();
+      var source = await store.collection('teacher_uploads').doc(uploadId).get();
+      if (!source.exists) throw new Error('المصدر غير موجود');
+      var images = rawImageUrls(source.data() || {});
+      if (!images.length) return toast('لا توجد صور محفوظة في العمل الأصلي');
+      await store.collection('lessons').doc(lessonId || ('teacher_' + uploadId)).set({ image_url: images[0], image_urls: images, mediaSyncedAt: new Date().toISOString() }, { merge: true });
+      toast('✅ تمت مزامنة ' + images.length + ' صورة مع شرح الأستاذ');
+      window.loadOwnerApprovals('approved');
+    } catch (error) { console.error('Teacher publication media sync failed', error); toast('تعذر مزامنة الصور'); }
   };
   window.rejectTeacherUpload = async function (id) {
     if (window.currentRole !== 'owner') return toast('مسموح للمالك فقط');
