@@ -2713,6 +2713,8 @@ console.log('✅ Exercises UI loaded');
         content: content,
         image_url: imgUrl,
         image_urls: imgUrls,
+        image_urls_json: JSON.stringify(imgUrls),
+        image_count: imgUrls.length,
         video_url: vidUrl,
         createdAt: new Date().toISOString()
       });

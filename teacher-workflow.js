@@ -706,7 +706,7 @@
         subject: subject, subjectLabel: subjectLabel, curriculumGroup: curriculumGroup,
         curriculumSubgroup: curriculumSubgroup, branch: isAzhar ? branch : '',
         curriculumId: azharCourse ? azharCourse.id : '', term: term, title: title, content: content,
-        image_url: imageUrl, image_urls: imageUrls, video_url: videoUrl, audio_url: audioUrl, pdf_url: pdfUrl,
+        image_url: imageUrl, image_urls: imageUrls, image_urls_json: JSON.stringify(imageUrls), image_count: imageUrls.length, video_url: videoUrl, audio_url: audioUrl, pdf_url: pdfUrl,
         pdf_name: pdfFile ? pdfFile.name : '', pdf_size: pdfFile ? pdfFile.size : 0,
         status: 'pending', createdAt: now(),
         authUid: uid()

@@ -9,11 +9,13 @@
   function safeUrl(value) { var url = String(value || ''); return /^https?:\/\//i.test(url) ? esc(url) : ''; }
   function imageUrls(item) {
     var list = Array.isArray(item.image_urls) ? item.image_urls : (Array.isArray(item.imageUrls) ? item.imageUrls : (Array.isArray(item.images) ? item.images : []));
+    if (!list.length && typeof item.image_urls_json === 'string') { try { var parsed = JSON.parse(item.image_urls_json); if (Array.isArray(parsed)) list = parsed; } catch (_) {} }
     if (!list.length && (item.image_url || item.imageUrl)) list = [item.image_url || item.imageUrl];
     return list.map(safeUrl).filter(Boolean);
   }
   function rawImageUrls(item) {
     var list = Array.isArray(item.image_urls) ? item.image_urls : (Array.isArray(item.imageUrls) ? item.imageUrls : (Array.isArray(item.images) ? item.images : []));
+    if (!list.length && typeof item.image_urls_json === 'string') { try { var parsed = JSON.parse(item.image_urls_json); if (Array.isArray(parsed)) list = parsed; } catch (_) {} }
     if (!list.length && (item.image_url || item.imageUrl)) list = [item.image_url || item.imageUrl];
     return list.map(function (value) { return String(value || ''); }).filter(function (value) { return /^https?:\/\//i.test(value); });
   }
@@ -130,7 +132,7 @@
         term: Number(item.term) || 1, type: 'teacher_explanation',
         teacherContentType: item.type || 'lesson', teacherName: item.teacherName || '',
         teacherId: item.teacherId || item.authUid || '', teacherPhotoUrl: item.teacherPhotoUrl || item.teacher_photo_url || null,
-        image_url: rawImageUrls(item)[0] || null, image_urls: rawImageUrls(item),
+        image_url: rawImageUrls(item)[0] || null, image_urls: rawImageUrls(item), image_urls_json: JSON.stringify(rawImageUrls(item)), image_count: rawImageUrls(item).length,
         video_url: item.video_url || item.videoUrl || null, audio_url: item.audio_url || item.audioUrl || null,
         pdf_url: item.pdf_url || item.pdfUrl || null, pdf_name: item.pdf_name || item.pdfName || '',
         pdf_size: Number(item.pdf_size || item.pdfSize) || 0,
