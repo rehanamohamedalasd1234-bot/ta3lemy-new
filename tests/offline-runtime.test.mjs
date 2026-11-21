@@ -160,3 +160,24 @@ test('teacher image sets survive upload, owner approval, resync and student disp
   assert.match(html, /#viewerScreen \.teacher-gallery-page-image \{ max-height: 82vh; \}/);
   assert.match(html, /teacher-gallery-page-image:fullscreen \{[^}]*max-width: 100vw/);
 });
+
+test('students can answer image lessons with true/false, text and touch or mouse annotations', async () => {
+  const html = await read('index.html');
+  const worker = await read('service-worker.js');
+  const activitySource = await read('student-image-activity.js');
+  assert.match(html, /teacher-image-activity-canvas/);
+  assert.match(html, /TeacherImageActivity\.choose/);
+  assert.match(html, /response\.imageAnnotations=annotations/);
+  assert.match(worker, /'\.\/student-image-activity\.js'/);
+  assert.match(activitySource, /pointerdown/);
+  assert.match(activitySource, /pointermove/);
+  assert.match(activitySource, /MAX_POINTS = 12000/);
+
+  const window = { addEventListener() {}, devicePixelRatio: 1 };
+  vm.runInNewContext(activitySource, { window, requestAnimationFrame(callback) { callback(); } });
+  window.TeacherImageActivity.init({ querySelectorAll() { return []; } }, 'lesson-123');
+  window.TeacherImageActivity.choose('صح');
+  assert.deepEqual(JSON.parse(JSON.stringify(window.TeacherImageActivity.getSubmission())), {
+    lessonId: 'lesson-123', choice: 'صح', annotations: [],
+  });
+});
