@@ -804,6 +804,103 @@
   };
   window.openTeacherBroadcast = openTeacherRequestForm;
 
+  function teacherLessonImageUrls(item) {
+    function list(value) {
+      if (Array.isArray(value)) return value;
+      if (typeof value === 'string') { try { var parsed = JSON.parse(value); return Array.isArray(parsed) ? parsed : []; } catch (_) {} }
+      return [];
+    }
+    var candidates = [list(item.image_urls), list(item.image_urls_json), list(item.imageUrls), list(item.images)];
+    var urls = [];
+    candidates.forEach(function (candidate) { if (candidate.length > urls.length) urls = candidate; });
+    if (!urls.length && (item.image_url || item.imageUrl)) urls = [item.image_url || item.imageUrl];
+    return urls.map(safeTeacherAvatar).filter(Boolean);
+  }
+  function renderTeacherImageAnnotations(lesson, annotations) {
+    if (typeof annotations === 'string') { try { annotations = JSON.parse(annotations); } catch (_) { annotations = []; } }
+    if (!Array.isArray(annotations) || !annotations.length) return '';
+    var urls = teacherLessonImageUrls(lesson);
+    var html = '<div style="margin-top:10px"><div class="tw-title">✍️ كتابة الطالب على صفحات الشرح</div>';
+    annotations.forEach(function (page) {
+      var index = Number(page && page.pageIndex);
+      var src = urls[index];
+      if (!src || !Array.isArray(page.strokes)) return;
+      var paths = page.strokes.map(function (stroke) {
+        if (!stroke || !Array.isArray(stroke.points) || !stroke.points.length) return '';
+        var d = stroke.points.slice(0, 1800).map(function (point, i) {
+          var x = Math.max(0, Math.min(1, Number(point && point[0]) || 0)) * 1000;
+          var y = Math.max(0, Math.min(1, Number(point && point[1]) || 0)) * 1000;
+          return (i ? 'L ' : 'M ') + x.toFixed(1) + ' ' + y.toFixed(1);
+        }).join(' ');
+        return '<path d="' + d + '" fill="none" stroke="#d32f2f" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>';
+      }).join('');
+      if (!paths) return;
+      html += '<figure style="margin:8px 0;padding:8px;border:1px solid #e5ece5;border-radius:10px;background:#fbfefb"><div style="position:relative;max-width:760px;margin:auto;line-height:0"><img src="' + attr(src) + '" alt="الصفحة ' + (index + 1) + ' وإجابة الطالب" style="display:block;width:100%;height:auto;border-radius:6px"><svg viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-label="كتابة الطالب" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none">' + paths + '</svg></div><figcaption class="tw-meta" style="text-align:center">الصفحة ' + (index + 1) + '</figcaption></figure>';
+    });
+    return html + '</div>';
+  }
+  window.loadTeacherStudentAnswers = async function () {
+    if (!isTeacher()) return toast('دخول المعلم المعتمد مطلوب');
+    var panel = document.getElementById('teacherStudentAnswersPanel');
+    if (!panel) return;
+    panel.innerHTML = '<div class="tw-empty">⏳ جاري تحميل إجابات الطلاب...</div>';
+    try {
+      var lessonSnapshot = await db.collection('lessons').where('teacherId', '==', uid()).get();
+      var lessonMap = Object.create(null);
+      var lessonIds = [];
+      lessonSnapshot.forEach(function (doc) { lessonMap[doc.id] = doc.data() || {}; lessonIds.push(doc.id); });
+      if (!lessonIds.length) { panel.innerHTML = '<div class="tw-empty">لا توجد دروس منشورة مرتبطة بحسابك حتى الآن.</div>'; return; }
+      var answerDocs = [];
+      for (var start = 0; start < lessonIds.length; start += 10) {
+        var chunk = lessonIds.slice(start, start + 10);
+        var answerSnapshot = await db.collection('answers').where('lessonId', 'in', chunk).get();
+        answerSnapshot.forEach(function (doc) { answerDocs.push(Object.assign({ id: doc.id }, doc.data() || {})); });
+      }
+      answerDocs.sort(function (a, b) { return String(b.createdAt || '').localeCompare(String(a.createdAt || '')); });
+      if (!answerDocs.length) { panel.innerHTML = '<div class="tw-empty">لا توجد إجابات بعد. ستظهر هنا إجابات الطلاب فور إرسالها من شرح الأستاذ.</div>'; return; }
+      var html = '<div class="tw-meta">عدد الإجابات: ' + answerDocs.length + ' — افتح كل إجابة لمراجعة نص الطالب أو كتابته فوق صورة الدرس، ثم سجّل الدرجة والملاحظة.</div>';
+      answerDocs.forEach(function (answer) {
+        var lesson = lessonMap[answer.lessonId] || {};
+        var token = String(answer.id).replace(/[^A-Za-z0-9_-]/g, '').slice(0, 100) || 'answer';
+        var choice = answer.answerChoice ? '<div class="tw-meta"><strong>اختيار صح/خطأ:</strong> ' + esc(answer.answerChoice) + '</div>' : '';
+        var text = answer.answer ? '<div style="white-space:pre-wrap;line-height:1.8;background:#f7faf7;border-radius:8px;padding:10px;margin-top:8px">' + esc(answer.answer) + '</div>' : '<div class="tw-meta">لم يكتب إجابة نصية.</div>';
+        var dateText = answer.createdAt ? new Date(answer.createdAt).toLocaleString('ar-EG') : '—';
+        var savedGrade = answer.teacherGrade == null ? '' : esc(answer.teacherGrade);
+        var savedFeedback = answer.teacherFeedback || '';
+        html += '<details class="tw-card"><summary style="cursor:pointer"><div class="tw-title">👤 ' + esc(answer.studentName || 'طالب') + ' — ' + esc(lesson.title || 'شرح الأستاذ') + '</div><div class="tw-meta">' + esc(lesson.subject || '') + ' • ' + esc(lesson.grade || '') + ' • ' + esc(dateText) + (answer.teacherGrade == null ? ' • لم يُقيّم بعد' : ' • الدرجة: ' + savedGrade + '/10') + '</div></summary><div style="padding-top:10px">' + choice + text + renderTeacherImageAnnotations(lesson, answer.imageAnnotations) + '<div class="tw-form" style="margin-top:12px;padding:12px;background:#f7faf7;border-radius:10px"><label for="teacherAnswerGrade_' + token + '">الدرجة من 10</label><input id="teacherAnswerGrade_' + token + '" class="form-input" type="number" min="0" max="10" step="0.5" value="' + savedGrade + '" placeholder="مثال: 8"><label for="teacherAnswerFeedback_' + token + '" style="margin-top:10px">ملاحظة للطالب</label><textarea id="teacherAnswerFeedback_' + token + '" class="form-input" rows="3" maxlength="800" placeholder="اكتب ملاحظة تشجيعية أو وضّح التصحيح...">' + esc(savedFeedback) + '</textarea><button type="button" class="tw-btn teacher-answer-review-save" data-answer-id="' + attr(answer.id) + '" style="background:#2E7D32;color:#fff;margin-top:10px">💾 حفظ التقييم</button></div></div></details>';
+      });
+      panel.innerHTML = html;
+      Array.prototype.forEach.call(panel.querySelectorAll('.teacher-answer-review-save'), function (button) {
+        button.addEventListener('click', function () { window.saveTeacherAnswerReview(button.getAttribute('data-answer-id')); });
+      });
+    } catch (error) {
+      console.error('Loading teacher answers failed', error);
+      panel.innerHTML = '<div class="tw-empty">تعذر تحميل الإجابات. تحقق من اتصال الإنترنت وصلاحيات قراءة إجابات الدروس.</div>';
+    }
+  };
+  window.openTeacherAnswersPanel = function () {
+    var section = document.getElementById('teacherAnswersSection');
+    if (section && section.scrollIntoView) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return window.loadTeacherStudentAnswers();
+  };
+  window.saveTeacherAnswerReview = async function (answerId) {
+    if (!isTeacher()) return toast('دخول المعلم المعتمد مطلوب');
+    var token = String(answerId).replace(/[^A-Za-z0-9_-]/g, '').slice(0, 100) || 'answer';
+    var gradeInput = document.getElementById('teacherAnswerGrade_' + token);
+    var feedbackInput = document.getElementById('teacherAnswerFeedback_' + token);
+    var grade = gradeInput ? Number(gradeInput.value) : NaN;
+    if (!Number.isFinite(grade) || grade < 0 || grade > 10) return toast('أدخل درجة من 0 إلى 10');
+    var feedback = feedbackInput ? feedbackInput.value.trim().slice(0, 800) : '';
+    try {
+      await db.collection('answers').doc(answerId).update({ teacherGrade: grade, teacherFeedback: feedback, evaluatedAt: now(), evaluatedBy: uid(), evaluatorName: window.currentUser.name || 'المعلم' });
+      toast('✅ تم حفظ تقييم الطالب وملاحظتك');
+      window.loadTeacherStudentAnswers();
+    } catch (error) {
+      console.error('Saving teacher answer review failed', error);
+      toast('تعذر حفظ التقييم. تحقق من صلاحيات التعديل في قاعدة البيانات.');
+    }
+  };
+
   window.openTeacherControl = function () {
     if (!isTeacher()) return toast('دخول المعلم المعتمد مطلوب');
     styleOnce();
@@ -831,7 +928,7 @@
       results[2].forEach(function (doc) { uploads.push(Object.assign({ id: doc.id }, doc.data())); });
       requests.sort(function (a, b) { return String(b.createdAt || '').localeCompare(String(a.createdAt || '')); });
       broadcasts.sort(function (a, b) { return String(b.createdAt || '').localeCompare(String(a.createdAt || '')); });
-      var html = '<div class="tw-actions"><button class="tw-btn" style="background:#1976D2;color:#fff" onclick="openTeacherUpload()">📤 رفع درس أو تدريب أو امتحان أو مراجعة</button><button class="tw-btn" style="background:#D32F2F;color:#fff" onclick="openBroadcast()">🔴 طلب بث جديد</button></div>';
+      var html = '<div class="tw-actions"><button class="tw-btn" style="background:#1976D2;color:#fff" onclick="openTeacherUpload()">📤 رفع درس أو تدريب أو امتحان أو مراجعة</button><button class="tw-btn" style="background:#D32F2F;color:#fff" onclick="openBroadcast()">🔴 طلب بث جديد</button><button class="tw-btn" style="background:#6A1B9A;color:#fff" onclick="openTeacherAnswersPanel()">📝 متابعة إجابات الطلاب</button></div>';
       html += '<div class="tw-section">🔴 بثوثي</div>';
       var live = broadcasts.filter(function (b) { return b.status === 'live' && (!b.endAt || Date.parse(b.endAt) > Date.now()); });
       if (!live.length) html += '<div class="tw-empty">لا يوجد بث نشط الآن.</div>';
@@ -855,7 +952,9 @@
         var uploadCurriculum = teacherCurriculumDetail(item);
         html += '<div class="tw-card"><div class="tw-title">' + esc(item.title) + '</div><div class="tw-meta">' + esc(teacherStageName(item.stage)) + ' • الصف ' + esc(item.grade) + ' • ' + esc(uploadSubject) + (uploadCurriculum ? ' • ' + esc(uploadCurriculum) : '') + ' • ' + status + '</div><div class="tw-actions"><button class="tw-btn" style="background:#1976D2;color:#fff" onclick="editMyTeacherUpload(\'' + attr(item.id) + '\')">✏️ تعديل</button><button class="tw-btn" style="background:#C62828;color:#fff" onclick="deleteMyTeacherUpload(\'' + attr(item.id) + '\')">🗑 حذف</button></div></div>';
       });
+      html += '<section id="teacherAnswersSection"><div class="tw-section">📝 إجابات الطلاب وتقييمها</div><div id="teacherStudentAnswersPanel"><div class="tw-empty">اضغط زر متابعة إجابات الطلاب لتحميل الإجابات.</div></div></section>';
       body.innerHTML = html;
+      window.loadTeacherStudentAnswers();
     } catch (error) {
       console.error('Teacher dashboard failed', error);
       body.innerHTML = '<div class="tw-empty">تعذر تحميل البيانات. قد تحتاج قواعد Firestore إلى إعداد صحيح.</div>';

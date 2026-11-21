@@ -181,3 +181,16 @@ test('students can answer image lessons with true/false, text and touch or mouse
     lessonId: 'lesson-123', choice: 'صح', annotations: [],
   });
 });
+
+
+test('teachers can review answers only for their lessons and save grades and feedback', async () => {
+  const workflow = await read('teacher-workflow.js');
+  assert.match(workflow, /window\.loadTeacherStudentAnswers = async function/);
+  assert.match(workflow, /collection\('lessons'\)\.where\('teacherId', '==', uid\(\)\)/);
+  assert.match(workflow, /collection\('answers'\)\.where\('lessonId', 'in', chunk\)/);
+  assert.match(workflow, /renderTeacherImageAnnotations\(lesson, answer\.imageAnnotations\)/);
+  assert.match(workflow, /window\.saveTeacherAnswerReview = async function/);
+  assert.match(workflow, /teacherGrade: grade, teacherFeedback: feedback/);
+  assert.match(workflow, /id=\"teacherAnswersSection\"/);
+  assert.match(workflow, /openTeacherAnswersPanel/);
+});
