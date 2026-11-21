@@ -222,53 +222,22 @@ async function viewContent(id){
       }catch(_){return '';}
     }).filter(Boolean);
     function escapeGalleryAttribute(value){return String(value).replace(/[&<>"']/g,function(character){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character];});}
-    window.__ta3lemyTeacherGallery={images:pageImages,index:0};
-    window.showTeacherGalleryImage=function(index){
-      var gallery=window.__ta3lemyTeacherGallery;
-      if(!gallery||!gallery.images||!gallery.images.length)return;
-      var nextIndex=Number(index);if(isNaN(nextIndex))nextIndex=0;
-      nextIndex=Math.max(0,Math.min(gallery.images.length-1,nextIndex));gallery.index=nextIndex;
-      var image=document.getElementById('teacherGalleryImage');
-      var counter=document.getElementById('teacherGalleryCounter');
-      var thumbs=document.getElementById('teacherGalleryThumbs');
-      if(image){image.src=gallery.images[nextIndex];image.alt='الصورة '+(nextIndex+1)+' من '+gallery.images.length;}
-      if(counter)counter.textContent='الصورة '+(nextIndex+1)+' من '+gallery.images.length;
-      if(thumbs){Array.prototype.forEach.call(thumbs.children,function(thumb,thumbIndex){thumb.style.outline=thumbIndex===nextIndex?'3px solid #2E7D32':'none';});}
-    };
-    window.stepTeacherGalleryImage=function(step){
-      var gallery=window.__ta3lemyTeacherGallery;
-      if(gallery)window.showTeacherGalleryImage(gallery.index+Number(step||0));
-    };
     if(pageImages.length){
       h+='<section class="teacher-pages-gallery" style="margin:12px 0;padding:12px;border:1px solid #dce9de;border-radius:14px;background:#fbfefb;">';
-      h+='<div style="margin-bottom:10px;padding:9px 11px;border-radius:9px;background:#E8F5E9;color:#245b35;font-size:13px;font-weight:700;line-height:1.7;">📷 هذا شرح متعدد الصفحات: استخدم السابق/التالي أو اسحب الصورة. اضغط مرتين لعرض الصفحة بملء الشاشة.</div>';
-      h+='<figure id="teacherGalleryFrame" tabindex="0" style="margin:0;text-align:center;outline:none;touch-action:pan-y;user-select:none;"><img id="teacherGalleryImage" draggable="false" src="'+escapeGalleryAttribute(pageImages[0])+'" alt="الصورة 1 من '+pageImages.length+'" style="display:block;width:100%;height:min(76vh,900px);min-height:320px;object-fit:contain;border:1px solid #e0e8e1;border-radius:12px;background:#fff;cursor:grab;"><div style="display:flex;justify-content:center;gap:8px;margin-top:10px"><button type="button" onclick="stepTeacherGalleryImage(-1)" style="border:0;border-radius:9px;padding:9px 16px;background:#E8F5E9;color:#245b35;font:inherit;font-weight:700">→ السابق</button><button type="button" onclick="stepTeacherGalleryImage(1)" style="border:0;border-radius:9px;padding:9px 16px;background:#2E7D32;color:#fff;font:inherit;font-weight:700">التالي ←</button></div><div id="teacherGalleryThumbs" style="display:flex;gap:6px;overflow-x:auto;padding:10px 2px 2px;justify-content:flex-start;direction:rtl;"></div><figcaption id="teacherGalleryCounter" style="font-size:13px;font-weight:700;color:#245b35;margin-top:4px;">الصورة 1 من '+pageImages.length+'</figcaption></figure>';
-      h+='</section>';
+      h+='<div style="margin-bottom:12px;padding:10px 12px;border-radius:9px;background:#E8F5E9;color:#245b35;font-size:13px;font-weight:700;line-height:1.8;">📷 شرح متعدد الصفحات — الصور مرتبة من الأولى إلى الأخيرة. اسحب الشاشة لأعلى أو لأسفل في الهاتف، أو استخدم بكرة الماوس على الكمبيوتر. اضغط على أي صورة لتكبيرها.</div>';
+      h+='<div id="teacherGalleryList" style="display:flex;flex-direction:column;gap:18px;">';
+      pageImages.forEach(function(src,index){h+='<figure style="margin:0;padding:10px 8px 12px;border:1px solid #e0e8e1;border-radius:12px;background:#fff;scroll-margin-top:16px;"><figcaption style="font-size:13px;font-weight:700;color:#245b35;text-align:center;margin-bottom:8px;">الصفحة '+(index+1)+' من '+pageImages.length+'</figcaption><img class="teacher-gallery-page-image" data-gallery-index="'+index+'" draggable="false" loading="'+(index<2?'eager':'lazy')+'" src="'+escapeGalleryAttribute(src)+'" alt="صفحة '+(index+1)+' من شرح الأستاذ" style="display:block;width:100%;height:auto;max-height:none;object-fit:contain;border:1px solid #e0e8e1;border-radius:8px;background:#fff;cursor:zoom-in;"></figure>';});
+      h+='</div></section>';
     }
     if(it.content)h+='<div style="line-height:2;font-size:15px;white-space:pre-wrap;">'+it.content+'</div>';
     if(it.pdf_url||it.pdfUrl)h+=pdfAttachmentMarkup(it.pdf_url||it.pdfUrl,it.pdf_name||it.pdfName);
     if(it.video_url)h+=inAppVideoMarkup(it.video_url);else if(it.video_search)h+=inAppVideoMarkup('');
     if(it.question){h+='<div style="margin-top:20px;background:#E8F5E9;border-radius:14px;padding:16px;"><div style="font-weight:bold;color:#2E7D32;margin-bottom:8px;">📝 سؤال:</div><div style="font-size:15px;line-height:1.8;white-space:pre-wrap;">'+it.question+'</div><button onclick="toggleAnswer(this)" style="background:#2E7D32;color:#fff;border:none;padding:10px 20px;border-radius:10px;font-family:inherit;font-weight:bold;margin-top:12px;cursor:pointer;">👁️ إظهار الإجابة</button><div class="answer-box"><div style="font-weight:bold;color:#2E7D32;margin-bottom:6px;">✅ الإجابة:</div><div style="line-height:1.8;white-space:pre-wrap;">'+(it.answer||'')+'</div></div><div style="margin-top:16px;"><div style="font-weight:bold;color:#2E7D32;margin-bottom:8px;">✍️ اكتب إجابتك:</div><textarea class="student-answer" id="studentAnswer" placeholder="اكتب إجابتك هنا..."></textarea><button onclick="saveStudentAnswer(\''+String(id).replace(/'/g,'')+'\')" style="background:#1976D2;color:#fff;border:none;padding:10px 20px;border-radius:10px;font-family:inherit;font-weight:bold;margin-top:8px;cursor:pointer;">💾 حفظ إجابتي</button></div></div>';}
     document.getElementById('viewerBody').innerHTML=h;screenHistory.push(currentScreen);showScreen('viewerScreen');
-    if(pageImages.length>1){
-      var thumbs=document.getElementById('teacherGalleryThumbs');
-      if(thumbs){pageImages.forEach(function(src,index){var thumb=document.createElement('button');thumb.type='button';thumb.title='فتح الصورة '+(index+1);thumb.style.cssText='border:0;border-radius:7px;padding:2px;background:#fff;cursor:pointer;outline:'+(index===0?'3px solid #2E7D32':'none')+';flex:0 0 58px;';thumb.innerHTML='<img src="'+escapeGalleryAttribute(src)+'" alt="مصغرة '+(index+1)+'" style="display:block;width:54px;height:68px;object-fit:cover;border-radius:5px;">';thumb.onclick=function(){window.showTeacherGalleryImage(index);};thumbs.appendChild(thumb);});}
-    }
-    if(pageImages.length>1){
-      var galleryFrame=document.getElementById('teacherGalleryFrame');
-      var galleryImage=document.getElementById('teacherGalleryImage');
-      var pointerStartX=0,pointerStartY=0,pointerActive=false;
-      if(galleryFrame&&galleryImage){
-        galleryFrame.addEventListener('pointerdown',function(event){pointerActive=true;pointerStartX=event.clientX;pointerStartY=event.clientY;galleryImage.style.cursor='grabbing';try{galleryFrame.setPointerCapture(event.pointerId);}catch(_){} });
-        galleryFrame.addEventListener('pointerup',function(event){
-          if(!pointerActive)return;pointerActive=false;galleryImage.style.cursor='grab';
-          var dx=event.clientX-pointerStartX,dy=event.clientY-pointerStartY;
-          if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)){window.stepTeacherGalleryImage(dx<0?1:-1);}
-        });
-        galleryFrame.addEventListener('pointercancel',function(){pointerActive=false;galleryImage.style.cursor='grab';});
-        galleryFrame.addEventListener('keydown',function(event){if(event.key==='ArrowLeft')window.stepTeacherGalleryImage(1);if(event.key==='ArrowRight')window.stepTeacherGalleryImage(-1);});
-        galleryImage.addEventListener('dblclick',function(){if(document.fullscreenElement){document.exitFullscreen&&document.exitFullscreen();}else if(galleryImage.requestFullscreen){galleryImage.requestFullscreen().catch(function(){});}});
-      }
+    if(pageImages.length){
+      Array.prototype.forEach.call(document.querySelectorAll('.teacher-gallery-page-image'),function(image){
+        image.addEventListener('click',function(){if(document.fullscreenElement){if(document.exitFullscreen)document.exitFullscreen();}else if(image.requestFullscreen){var request=image.requestFullscreen();if(request&&request.catch)request.catch(function(){});}});
+      });
     }
   }catch(e){console.error(e);showToast('❌ تعذر فتح المحتوى');}
 }
