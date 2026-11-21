@@ -7,18 +7,30 @@
   function toast(message) { if (window.showToast) window.showToast(message); }
   function esc(value) { return String(value == null ? '' : value).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); }
   function safeUrl(value) { var url = String(value || ''); return /^https?:\/\//i.test(url) ? esc(url) : ''; }
-  function imageUrls(item) {
-    var list = Array.isArray(item.image_urls) ? item.image_urls : (Array.isArray(item.imageUrls) ? item.imageUrls : (Array.isArray(item.images) ? item.images : []));
-    if (!list.length && typeof item.image_urls_json === 'string') { try { var parsed = JSON.parse(item.image_urls_json); if (Array.isArray(parsed)) list = parsed; } catch (_) {} }
-    if (!list.length && (item.image_url || item.imageUrl)) list = [item.image_url || item.imageUrl];
-    return list.map(safeUrl).filter(Boolean);
+  function imageListCandidate(value) {
+    if (Array.isArray(value)) return value;
+    if (typeof value === 'string') {
+      try { var parsed = JSON.parse(value); if (Array.isArray(parsed)) return parsed; } catch (_) {}
+    }
+    return [];
   }
   function rawImageUrls(item) {
-    var list = Array.isArray(item.image_urls) ? item.image_urls : (Array.isArray(item.imageUrls) ? item.imageUrls : (Array.isArray(item.images) ? item.images : []));
-    if (!list.length && typeof item.image_urls_json === 'string') { try { var parsed = JSON.parse(item.image_urls_json); if (Array.isArray(parsed)) list = parsed; } catch (_) {} }
-    if (!list.length && (item.image_url || item.imageUrl)) list = [item.image_url || item.imageUrl];
-    return list.map(function (value) { return String(value || ''); }).filter(function (value) { return /^https?:\/\//i.test(value); });
+    item = item || {};
+    var candidates = [item.image_urls, item.image_urls_json, item.imageUrls, item.images];
+    var best = [];
+    candidates.forEach(function (candidate) {
+      var list = imageListCandidate(candidate);
+      if (list.length > best.length) best = list;
+    });
+    if (!best.length && (item.image_url || item.imageUrl)) best = [item.image_url || item.imageUrl];
+    var seen = {};
+    return best.map(function (value) { return String(value || '').trim(); }).filter(function (value) {
+      if (!/^https?:\/\//i.test(value) || seen[value]) return false;
+      seen[value] = true;
+      return true;
+    });
   }
+  function imageUrls(item) { return rawImageUrls(item).map(safeUrl).filter(Boolean); }
   function label(type) {
     return ({ lesson: 'درس / شرح', explanation: 'شرح', exercise: 'تدريب', exam: 'امتحان', review: 'مراجعة', image: 'صورة تعليمية', video: 'فيديو', audio: 'تسجيل صوتي' })[type] || 'عمل تعليمي';
   }
@@ -152,7 +164,7 @@
       if (!source.exists) throw new Error('المصدر غير موجود');
       var images = rawImageUrls(source.data() || {});
       if (!images.length) return toast('لا توجد صور محفوظة في العمل الأصلي');
-      await store.collection('lessons').doc(lessonId || ('teacher_' + uploadId)).set({ image_url: images[0], image_urls: images, mediaSyncedAt: new Date().toISOString() }, { merge: true });
+      await store.collection('lessons').doc(lessonId || ('teacher_' + uploadId)).set({ image_url: images[0], image_urls: images, image_urls_json: JSON.stringify(images), image_count: images.length, mediaSyncedAt: new Date().toISOString() }, { merge: true });
       toast('✅ تمت مزامنة ' + images.length + ' صورة مع شرح الأستاذ');
       window.loadOwnerApprovals('approved');
     } catch (error) { console.error('Teacher publication media sync failed', error); toast('تعذر مزامنة الصور'); }

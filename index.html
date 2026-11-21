@@ -210,7 +210,14 @@ async function viewContent(id){
     if(!it){showToast('⚠️ الدرس غير محفوظ على هذا الجهاز');return;}
     document.getElementById('viewerTitle').textContent=it.title||'';
     let h='<h2 style="color:#2E7D32;margin-bottom:16px;">'+(it.title||'')+'</h2>';
-    const rawPageImages=Array.isArray(it.image_urls)&&it.image_urls.length?it.image_urls:(Array.isArray(it.imageUrls)&&it.imageUrls.length?it.imageUrls:(Array.isArray(it.images)&&it.images.length?it.images:(it.image_url||it.imageUrl?[it.image_url||it.imageUrl]:[])));
+    function pageImageCandidate(value){
+      if(Array.isArray(value))return value;
+      if(typeof value==='string'){try{const parsed=JSON.parse(value);if(Array.isArray(parsed))return parsed;}catch(_){}}
+      return [];
+    }
+    const pageImageCandidates=[pageImageCandidate(it.image_urls),pageImageCandidate(it.image_urls_json),pageImageCandidate(it.imageUrls),pageImageCandidate(it.images)];
+    let rawPageImages=[];pageImageCandidates.forEach(function(candidate){if(candidate.length>rawPageImages.length)rawPageImages=candidate;});
+    if(!rawPageImages.length&&(it.image_url||it.imageUrl))rawPageImages=[it.image_url||it.imageUrl];
     const appHost=window.location&&window.location.hostname?window.location.hostname.toLowerCase():'';
     const pageImages=rawPageImages.map(function(src){
       if(typeof src!=='string'||/[\s"'<>]/.test(src))return '';
