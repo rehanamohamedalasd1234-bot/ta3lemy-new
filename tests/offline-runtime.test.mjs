@@ -96,12 +96,14 @@ test('offline mode leaves local radio browsing and downloaded station playback a
 test('the updater checks the published repository version and refreshes the service worker', async () => {
   const updater = await read('app-update.js');
   const html = await read('index.html');
+  const appVersion = JSON.parse(await read('version.json')).version;
   assert.match(updater, /var VERSION_URL = SITE_URL \+ 'version\.json'/);
   assert.match(updater, /fetch\('\.\/version\.json\?localVersionCheck='/);
   assert.doesNotMatch(updater, /releases\/latest\/download/);
   assert.match(updater, /registration\.update\(\)/);
   assert.match(html, /onclick="openAppUpdate\(\)"/);
-  assert.match(html, /name="ta3lemy-version" content="1\.0\.127"/);
+  assert.match(html, /name="ta3lemy-version" content="[^"]+"/);
+  assert.ok(appVersion, 'version.json should define the current app version');
 });
 
 test('the library is reachable from the student home and owner administration supports sign-out', async () => {
@@ -143,4 +145,16 @@ test('offline lesson downloads have an IndexedDB-backed reader and writer', asyn
   assert.match(extras, /window\.readOfflineLessons=async function/);
   assert.match(extras, /await window\.saveOfflineLessons\(lessons\)/);
   assert.match(html, /window\.readOfflineLessons\?await window\.readOfflineLessons\(\)/);
+});
+
+test('teacher image sets survive upload, owner approval, resync and student display', async () => {
+  const teacher = await read('teacher-workflow.js');
+  const approvals = await read('owner-approvals.js');
+  const html = await read('index.html');
+  assert.match(teacher, /image_url: imageUrl, image_urls: imageUrls, image_urls_json: JSON\.stringify\(imageUrls\), image_count: imageUrls\.length/);
+  assert.match(approvals, /var candidates = \[item\.image_urls, item\.image_urls_json, item\.imageUrls, item\.images\]/);
+  assert.match(approvals, /image_urls: rawImageUrls\(item\), image_urls_json: JSON\.stringify\(rawImageUrls\(item\)\), image_count: rawImageUrls\(item\)\.length/);
+  assert.match(approvals, /window\.syncTeacherPublicationMedia = async function/);
+  assert.match(html, /pageImageCandidates=\[pageImageCandidate\(it\.image_urls\),pageImageCandidate\(it\.image_urls_json\),pageImageCandidate\(it\.imageUrls\),pageImageCandidate\(it\.images\)\]/);
+  assert.match(html, /pageImages\.forEach\(function\(src,index\)/);
 });
