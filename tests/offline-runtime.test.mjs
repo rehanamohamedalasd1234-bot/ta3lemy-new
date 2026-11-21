@@ -157,4 +157,6 @@ test('teacher image sets survive upload, owner approval, resync and student disp
   assert.match(approvals, /window\.syncTeacherPublicationMedia = async function/);
   assert.match(html, /pageImageCandidates=\[pageImageCandidate\(it\.image_urls\),pageImageCandidate\(it\.image_urls_json\),pageImageCandidate\(it\.imageUrls\),pageImageCandidate\(it\.images\)\]/);
   assert.match(html, /pageImages\.forEach\(function\(src,index\)/);
+  assert.match(html, /#viewerScreen \.teacher-gallery-page-image \{ max-height: 82vh; \}/);
+  assert.match(html, /teacher-gallery-page-image:fullscreen \{[^}]*max-width: 100vw/);
 });
