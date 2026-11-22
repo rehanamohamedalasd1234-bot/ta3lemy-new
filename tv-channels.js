@@ -18,6 +18,30 @@
   };
   var fallbackChannels = [
     {
+      id: 'on-sport-official-live',
+      name: 'ON Sport — رياضة مصرية رسمية',
+      category: 'sports',
+      behavior: 'youtube',
+      watch_url: 'https://www.youtube.com/channel/UCo2TvjBHS1BtyIkeGGTMe6w',
+      description: 'القناة الرسمية لـ ON Sport. يظهر البث المباشر داخل المنصة عند وجود مباراة أو برنامج حي؛ وفي غير ذلك ستجد أحدث المحتوى الرياضي الرسمي.'
+    },
+    {
+      id: 'ontime-sports-official-live',
+      name: 'ONTime Sports — البث الرسمي',
+      category: 'sports',
+      behavior: 'youtube',
+      watch_url: 'https://www.youtube.com/channel/UCKDpgAqxLXCt9tJwWaZS8CQ',
+      description: 'مصدر رياضي رسمي على YouTube. توفر البث يتغير حسب جدول البرامج وحقوق كل مباراة.'
+    },
+    {
+      id: 'fifa-plus-official-live',
+      name: 'FIFA+ — مباريات مجانية',
+      category: 'sports',
+      behavior: 'youtube',
+      watch_url: 'https://www.youtube.com/channel/UCc-wT5WN6__3k8It-_HM_lA',
+      description: 'قناة FIFA+ الرسمية التي تقدم مباريات وبثًا مجانيًا في دول وبطولات محددة حسب حقوق العرض.'
+    },
+    {
       id: 'moe-madrasetna-official',
       name: 'قناة مدرستنا الرسمية',
       category: 'education',
