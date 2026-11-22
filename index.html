@@ -24,7 +24,7 @@
 <meta name="description" content="منصة الأستاذ حافظ التعليمية — تعليم عام وأزهر وبكالوريا جديدة. دروس، تدريبات، امتحانات، قرآن كريم، مراجعة شاملة، وتطبيق يعمل بدون إنترنت.">
 <meta name="keywords" content="منصة تعليمية, بكالوريا, أزهر شريف, تعليم عام, دروس, قرآن كريم, امتحانات, مراجعة, الأستاذ حافظ">
 <meta name="author" content="الأستاذ حافظ">
-<meta name="ta3lemy-version" content="1.0.135">
+<meta name="ta3lemy-version" content="1.0.136">
 <meta name="robots" content="index, follow">
 <meta name="revisit-after" content="7 days">
 <meta property="og:type" content="website">
@@ -157,7 +157,7 @@ const stagesData={primary:{name:'المرحلة الابتدائية',icon:'🎒
 const generalSubjects=[{id:'arabic',name:'اللغة العربية',icon:'📖',color:'#C2185B'},{id:'math',name:'رياضيات',icon:'🔢',color:'#1976D2'},{id:'science',name:'علوم',icon:'🔬',color:'#388E3C'},{id:'physics',name:'فيزياء',icon:'⚛️',color:'#7B1FA2'},{id:'chem',name:'كيمياء',icon:'⚗️',color:'#D32F2F'},{id:'biology',name:'أحياء',icon:'🧬',color:'#00897B'},{id:'english',name:'إنجليزي',icon:'🇬🇧',color:'#303F9F'},{id:'social',name:'دراسات',icon:'🌍',color:'#0097A7'},{id:'history',name:'تاريخ',icon:'📜',color:'#6D4C41'},{id:'geo',name:'جغرافيا',icon:'🗺️',color:'#00838F'},{id:'philosophy',name:'فلسفة ومنطق',icon:'💭',color:'#8E24AA'},{id:'religion',name:'تربية دينية',icon:'🕌',color:'#2E7D32'},{id:'computer',name:'حاسب آلي',icon:'💻',color:'#455A64'},{id:'art',name:'فنية',icon:'🎨',color:'#F57C00'}];
 const azharSubjects=[{id:'quran_t',name:'القرآن والتفسير',icon:'📖'},{id:'hadith',name:'الحديث الشريف',icon:'📜'},{id:'fiqh',name:'الفقه',icon:'⚖️'},{id:'aqeeda',name:'العقيدة',icon:'🕌'},{id:'seera',name:'السيرة النبوية',icon:'🌟'},{id:'nahw',name:'النحو',icon:'📝'},{id:'sarf',name:'الصرف والبلاغة',icon:'📚'}];
 const bakkaloryaTracks=[{id:'medical',name:'الطب وعلوم الحياة',icon:'🩺',color:'#E53935',desc:'فيزياء أو رياضيات + أحياء + كيمياء'},{id:'engineering',name:'الهندسة وعلوم الحاسب',icon:'⚙️',color:'#1976D2',desc:'كيمياء أو برمجة + رياضيات + فيزياء'},{id:'business',name:'الأعمال',icon:'💼',color:'#F9A825',desc:'محاسبة أو إدارة + رياضيات + اقتصاد'},{id:'arts',name:'الآداب والفنون',icon:'🎨',color:'#7B1FA2',desc:'علم نفس أو لغة + جغرافيا + إحصاء'}];
-const radioStations=[{name:'إذاعة القرآن الكريم - مصر',url:'https://n0d.radiojar.com/8s5u5tpdtwzuv'},{name:'إذاعة القرآن الكريم - السعودية',url:'https://Qurango.net/radio/tarateel'},{name:'إذاعة السنة النبوية',url:'https://n0d.radiojar.com/0tpy1h0kxtzuv'},{name:'إذاعة تفسير القرآن',url:'https://Qurango.net/radio/tafseer'},{name:'إذاعة القرآن الكريم - الكويت',url:'https://Qurango.net/radio/mishary_alafasy'}];
+const radioStations=[{name:'إذاعة القرآن الكريم - مصر',urls:['https://stream.radiojar.com/8s5u5tpdtwzuv'],officialUrl:'https://www.maspero.eg/stream/7'},{name:'إذاعة القرآن الكريم - السعودية',urls:['https://Qurango.net/radio/tarateel']},{name:'إذاعة السنة النبوية',urls:['https://Qurango.net/radio/tafseer']},{name:'إذاعة تفسير القرآن',urls:['https://Qurango.net/radio/tafseer']},{name:'إذاعة القرآن الكريم - الكويت',urls:['https://radio.mp3islam.com/listen/quran_radio/radio.mp3'],officialUrl:'https://onlineradiobox.com/kw/quran/'},{name:'راديو مصر',urls:[],officialUrl:'https://www.maspero.eg/stream/8'},{name:'إذاعة البرنامج العام',urls:['https://livestreaming5.onlinehorizons.net/hls-live/pernamegaam/_definst_/liveevent/liveevent.m3u8','https://livestreaming5.onlinehorizons.net/hls-live/pernamegaam/_definst_/liveevent/livestream.m3u8'],officialUrl:'https://www.maspero.eg/stream/10'}];
 async function uploadFile(file,folder,quiet){
   if(!file)return null;
   const isPdf=file.type==='application/pdf'||/\.pdf$/i.test(file.name||'');
@@ -386,7 +386,7 @@ async function openRadio(){
     try{
       const snap=await db.collection('station').orderBy('created_at','desc').get();
       const fresh=[];snap.forEach(function(doc){fresh.push(Object.assign({id:doc.id},doc.data()));});
-      if(fresh.length||!items.length){items=fresh;localStorage.setItem('offline_station_items',JSON.stringify(items));}
+      items=fresh;localStorage.setItem('offline_station_items',JSON.stringify(items));
     }catch(e){console.warn('استخدام بيانات المحطة المحفوظة محليًا',e);}
   }
   if(!items.length){myList.innerHTML='<div class="empty-state"><div class="empty-state-icon">🎵</div><p>لا توجد ملفات محطة محفوظة على هذا الجهاز</p></div>';}
@@ -1149,7 +1149,7 @@ if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.s
 <script src="./recognition-and-azkar.js?v=1.0.94"></script>
 <script src="./quiz-competitions.js?v=1.0.95"></script>
 <script src="./certificate-workflow.js?v=1.0.97"></script>
-<script src="./radio-station-fix.js?v=1.0.126"></script>
+<script src="./radio-station-fix.js?v=1.0.136"></script>
 <script src="./library-config.js?v=1.0.118"></script>
 <script src="./library.js?v=1.0.118"></script>
 <script src="./student-image-activity.js"></script>
