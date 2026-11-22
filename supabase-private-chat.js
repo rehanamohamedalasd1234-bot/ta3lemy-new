@@ -105,14 +105,53 @@
       toast(fallback || 'حدث خطأ؛ حاول مرة أخرى بعد التأكد من الاتصال بالإنترنت.');
     }
   }
+  function chatStorageKeys(account) {
+    account = account || {};
+    var uid = String(account.uid || '').trim();
+    var name = String(account.name || account.displayName || account.display_name || '').trim().toLowerCase();
+    var keys = [];
+    function add(scope) {
+      if (!scope) return;
+      var key = 'hafez-chat-' + encodeURIComponent(scope) + '-auth-token';
+      if (keys.indexOf(key) < 0) keys.push(key);
+    }
+    // المفتاح الثابت الجديد أولًا، ثم مفاتيح الإصدارات السابقة لاستعادة نفس هوية Supabase.
+    if (uid) add('uid-' + uid);
+    if (uid) add(uid);
+    if (name) {
+      add('name-' + name);
+      // الإصدار السابق كان يرمّز الاسم داخل scope ثم يرمّز scope مرة ثانية.
+      var legacyNameKey = 'hafez-chat-' + encodeURIComponent('name-' + encodeURIComponent(name)) + '-auth-token';
+      if (keys.indexOf(legacyNameKey) < 0) keys.push(legacyNameKey);
+    }
+    return keys;
+  }
+  function migrateStoredChatSession(account, canonicalKey) {
+    try {
+      if (!window.localStorage || !canonicalKey || localStorage.getItem(canonicalKey)) return;
+      var keys = chatStorageKeys(account);
+      for (var i = 0; i < keys.length; i++) {
+        if (keys[i] === canonicalKey) continue;
+        var token = localStorage.getItem(keys[i]);
+        if (token) {
+          localStorage.setItem(canonicalKey, token);
+          console.info('[private-chat] restored the existing chat identity from a legacy storage key');
+          return;
+        }
+      }
+    } catch (error) { console.warn('[private-chat] could not migrate the saved chat session', error); }
+  }
   function ensureClient() {
     if (!sdk || typeof sdk.createClient !== 'function' || !config.url || !config.publishableKey) {
       throw new Error('خدمة الدردشة لم تُحمّل. أعد فتح المنصة مع اتصال بالإنترنت.');
     }
     var currentAppUser = appUser();
+    var accountUid = currentAppUser && currentAppUser.uid ? String(currentAppUser.uid).trim() : '';
     var accountName = currentAppUser && (currentAppUser.name || currentAppUser.displayName || currentAppUser.display_name);
-    var scope = accountName ? 'name-' + encodeURIComponent(String(accountName).trim().toLowerCase()) : (currentAppUser && currentAppUser.uid ? String(currentAppUser.uid) : 'guest');
+    var scope = accountUid ? 'uid-' + accountUid : (accountName ? 'name-' + String(accountName).trim().toLowerCase() : 'guest');
     var nextScope = 'hafez-chat-' + encodeURIComponent(scope);
+    var canonicalTokenKey = nextScope + '-auth-token';
+    migrateStoredChatSession(currentAppUser, canonicalTokenKey);
     if (client && clientScope !== nextScope) {
       var previousClient = client;
       [state.messageChannel, state.requestsChannel, state.callsInboxChannel, state.callRowChannel, state.candidateChannel, state.presenceChannel].forEach(function (channel) {
@@ -133,12 +172,6 @@
       var incomingUi = document.getElementById('spcIncomingCall'); if (incomingUi) incomingUi.remove();
     }
     if (!client || clientScope !== nextScope) {
-      try {
-        var oldScope = currentAppUser && currentAppUser.uid ? 'hafez-chat-' + encodeURIComponent(String(currentAppUser.uid)) : '';
-        var oldToken = oldScope && localStorage.getItem(oldScope + '-auth-token');
-        var newToken = localStorage.getItem(nextScope + '-auth-token');
-        if (oldToken && !newToken) localStorage.setItem(nextScope + '-auth-token', oldToken);
-      } catch (_) {}
       client = sdk.createClient(config.url, config.publishableKey, {
         auth: {
           storageKey: nextScope,
