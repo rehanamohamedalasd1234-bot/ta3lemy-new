@@ -18,6 +18,14 @@
   };
   var fallbackChannels = [
     {
+      id: 'maspero-channel-one-official',
+      name: 'القناة الأولى المصرية — بث رسمي مفتوح',
+      category: 'education',
+      behavior: 'external',
+      watch_url: 'https://geo.dailymotion.com/player/xi5eg.html?video=x856hbh',
+      description: 'مشغل رسمي مستضاف عبر Dailymotion من صفحة القناة الأولى على موقع ماسبيرو.'
+    },
+    {
       id: 'on-sport-official-live',
       name: 'ON Sport — رياضة مصرية رسمية',
       category: 'sports',
