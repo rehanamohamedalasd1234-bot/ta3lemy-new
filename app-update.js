@@ -4,6 +4,7 @@
 
   var SITE_URL = 'https://rehanamohamedalasd1234-bot.github.io/ta3lemy-new/';
   var VERSION_URL = SITE_URL + 'version.json';
+  var VERSION_FALLBACK_URL = 'https://raw.githubusercontent.com/rehanamohamedalasd1234-bot/ta3lemy-new/main/version.json';
   var localVersion = '0.0.0';
   var latestVersion = null;
   var modalId = 'ta3lemyUpdateModal';
@@ -41,14 +42,17 @@
 
   function readLocalVersion() {
     // version.json هو المصدر الأساسي؛ وسم HTML قد يبقى قديمًا داخل APK سابق.
+    var metaVersion = localVersion;
+    var meta = document.querySelector('meta[name="ta3lemy-version"]');
+    if (meta && meta.content) metaVersion = String(meta.content);
     return fetch('./version.json?localVersionCheck=' + Date.now(), { cache: 'no-store' })
       .then(function (response) { return response.ok ? response.json() : {}; })
       .then(function (data) {
         if (!data || !data.version) throw new Error('local version data missing');
-        localVersion = String(data.version);
+        localVersion = compareVersions(data.version, metaVersion) >= 0 ? String(data.version) : metaVersion;
         return localVersion;
       })
-      .catch(function () { return readMetaVersion(); });
+      .catch(function () { localVersion = metaVersion || '0.0.0'; return localVersion; });
   }
 
   function removeModal() {
@@ -169,17 +173,12 @@
     if (button) { button.disabled = true; button.textContent = '⏳ جاري تجهيز التحديث...'; }
     try {
       if ('serviceWorker' in navigator) {
-        var registration = await navigator.serviceWorker.getRegistration();
-        if (registration) {
-          await registration.update();
-          var worker = registration.installing || registration.waiting;
-          if (worker) {
-            if (worker.state === 'installed' || worker.state === 'waiting') worker.postMessage({ type: 'SKIP_WAITING' });
-            // بعض إصدارات Android WebView لا ترسل statechange في الوقت المتوقع.
-            // لا نعتبر ذلك فشلًا؛ إعادة فتح الموقع ستكمل التحديث أو تستخدم الشبكة مباشرة.
-            await waitForWorker(worker, 8000);
-          }
-        }
+        var registrations = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(registrations.map(function (registration) { return registration.unregister(); }));
+      }
+      if ('caches' in window) {
+        var cacheKeys = await caches.keys();
+        await Promise.all(cacheKeys.filter(function (key) { return /^ta3lemy-shell-|^ta3lemy-media-/.test(key); }).map(function (key) { return caches.delete(key); }));
       }
       var target = new URL(SITE_URL);
       target.searchParams.set('ta3lemy-refresh', String(Date.now()));
@@ -201,10 +200,15 @@
     var silent = options.silent === true;
     if (!silent) showModal({}, false, true);
     return readLocalVersion().then(function () {
-      return fetch(VERSION_URL + '?cacheBust=' + Date.now(), { cache: 'no-store', mode: 'cors' });
-    }).then(function (response) {
-      if (!response.ok) throw new Error('version request failed');
-      return response.json();
+      var stamp = String(Date.now());
+      return Promise.all([
+        fetch(VERSION_URL + '?cacheBust=' + stamp, { cache: 'no-store', mode: 'cors' }).then(function (response) { return response.ok ? response.json() : {}; }).catch(function () { return {}; }),
+        fetch(VERSION_FALLBACK_URL + '?cacheBust=' + stamp, { cache: 'no-store', mode: 'cors' }).then(function (response) { return response.ok ? response.json() : {}; }).catch(function () { return {}; })
+      ]).then(function (results) {
+        var valid = results.filter(function (item) { return item && item.version; });
+        if (!valid.length) throw new Error('version request failed');
+        return valid.reduce(function (best, item) { return compareVersions(item.version, best.version) > 0 ? item : best; });
+      });
     }).then(function (info) {
       if (!info || !info.version) throw new Error('version data missing');
       latestVersion = info;
