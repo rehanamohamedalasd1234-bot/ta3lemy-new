@@ -104,6 +104,12 @@
         return;
       }
 
+      if (typeof window.prepareAccountForEntry === 'function') {
+        await window.prepareAccountForEntry({ uid: user.uid, role: 'teacher', collection: 'teacher_accounts', snapshot: accountSnap });
+        accountSnap = await db().collection('teacher_accounts').doc(user.uid).get();
+        account = accountSnap.exists ? (accountSnap.data() || {}) : account;
+      }
+
       window.currentUser = {
         uid: user.uid,
         name:

@@ -222,6 +222,7 @@
       }
       window.currentUser = {name: reply.name || username, displayName: reply.displayName || reply.display_name || reply.name || username, uid: String(reply.uid), points: Number(reply.points || 0)};
       window.currentRole = 'student';
+      if (typeof window.prepareAccountForEntry === 'function') await window.prepareAccountForEntry({uid: String(reply.uid), role: 'student', collection: 'users'});
       syncChatProfileAfterPlatformLogin();
       window.saveRememberedStudentLogin(username, password);
       if (typeof window.saveOfflineLoginCredential === 'function') {
@@ -359,6 +360,7 @@
             });
             
             window.currentUser = {name: uname, displayName: uname, uid: uid, points: 0};
+            if (typeof window.prepareAccountForEntry === 'function') await window.prepareAccountForEntry({uid: uid, role: String(window.currentRole || 'student'), collection: 'users'});
             syncChatProfileAfterPlatformLogin();
             window.saveRememberedStudentLogin(uname, pwd);
             localStorage.setItem('lastUser', JSON.stringify({
@@ -412,6 +414,7 @@
             points: user.points || 0,
             photo_url: user.photo_url || user.photoURL || ''
           };
+          if (typeof window.prepareAccountForEntry === 'function') await window.prepareAccountForEntry({uid: uid2, role: String(user.role || window.currentRole || 'student'), collection: 'users', snapshot: userDoc});
           syncChatProfileAfterPlatformLogin();
           window.saveRememberedStudentLogin(uname, pwd);
           localStorage.setItem('lastUser', JSON.stringify({
