@@ -19,6 +19,30 @@
   };
   var fallbackChannels = [
     {
+      id: 'aljazeera-mubasher-official-live',
+      name: 'الجزيرة مباشر — البث الرسمي',
+      category: 'news',
+      behavior: 'youtube',
+      watch_url: 'https://www.youtube.com/channel/UCCv1Pd24oPErw5S7zJWltnU/live',
+      description: 'البث المباشر الرسمي لقناة الجزيرة مباشر عبر YouTube.'
+    },
+    {
+      id: 'alaraby-one-official-live',
+      name: 'العربي 1 — العربي أخبار',
+      category: 'news',
+      behavior: 'youtube',
+      watch_url: 'https://www.youtube.com/channel/UC65i3Fyq91uiUkIS0i5GLNQ/live',
+      description: 'القناة الرسمية للعربي أخبار؛ يظهر البث داخل المنصة عند توفر بث حي.'
+    },
+    {
+      id: 'alaraby-two-official-live',
+      name: 'العربي 2 — بث رسمي',
+      category: 'news',
+      behavior: 'youtube',
+      watch_url: 'https://www.youtube.com/channel/UCuCtlmcyOPNqdBf_FfrS7kg/live',
+      description: 'القناة الرسمية للعربي 2 عبر YouTube، وتقدم برامج ثقافية وترفيهية للأسرة.'
+    },
+    {
       id: 'extra-news-official-live',
       name: 'إكسترا نيوز — البث الرسمي',
       category: 'news',
@@ -175,6 +199,7 @@
       #tvChannelsScreen .tv-channel-card{position:relative;overflow:hidden;min-width:165px;flex:0 0 165px;border:1px solid #dce9e7;border-radius:16px;background:linear-gradient(145deg,#fff 0%,#fbfefd 100%);box-shadow:0 7px 22px rgba(0,77,64,.08);transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;scroll-snap-align:start}
       #tvChannelsScreen .tv-channel-card:before{content:"";position:absolute;inset:0 0 auto;height:4px;background:linear-gradient(90deg,#00796b,#4db6ac)}
       #tvChannelsScreen .tv-channel-card[data-category="sports"]:before{background:linear-gradient(90deg,#d84343,#ffb74d)}
+      #tvChannelsScreen .tv-channel-card[data-category="news"]:before{background:linear-gradient(90deg,#b71c1c,#ef5350)}
       #tvChannelsScreen .tv-channel-card[data-category="education"]:before{background:linear-gradient(90deg,#3949ab,#26a69a)}
       #tvChannelsScreen .tv-channel-card[data-category="custom"]:before{background:linear-gradient(90deg,#00897b,#80cbc4)}
       #tvChannelsScreen .tv-channel-card:hover{transform:translateY(-3px);border-color:#80cbc4;box-shadow:0 12px 28px rgba(0,77,64,.14)}
