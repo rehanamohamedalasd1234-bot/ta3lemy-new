@@ -280,6 +280,9 @@
     var behavior = String(channel.behavior || 'external');
     var url = safeHttps(channel.watch_url);
     if (!url) return '<span class="tv-card-cta" style="color:#B71C1C;">المصدر غير متاح</span>';
+    if (behavior === 'youtube' && /youtube\.com\/channel\//i.test(url)) {
+      return '<span class="tv-card-cta"><span class="tv-card-cta-icon">↗</span>فتح القناة الرسمية</span><span class="tv-card-source">YouTube الرسمي</span>';
+    }
     if (behavior === 'youtube' || behavior === 'hls' || behavior === 'video') {
       return '<span class="tv-card-cta"><span class="tv-card-cta-icon">▶</span>مشاهدة داخل المنصة</span><span class="tv-card-source">مشغّل داخلي</span>';
     }
@@ -528,6 +531,7 @@
         stage.innerHTML = '<div class="tv-stage-placeholder">⚠️<strong>لا يمكن تضمين هذه القناة</strong><span>استخدمي رابط قناة أو بث يسمح بالتضمين.</span></div>';
         return;
       }
+      var isChannelUrl = /youtube\.com\/channel\//i.test(url);
       var frame = document.createElement('iframe');
       frame.src = embedUrl;
       frame.title = String(channel.name || 'مشغل القناة');
@@ -535,7 +539,16 @@
       frame.referrerPolicy = 'strict-origin-when-cross-origin';
       frame.allowFullscreen = true;
       stage.appendChild(frame);
-      if (status) status.textContent = 'يعمل داخل المنصة';
+      if (isChannelUrl) {
+        if (status) status.textContent = 'يظهر هنا فقط عند وجود بث حي رسمي';
+        var sourceLink = document.createElement('a');
+        sourceLink.href = url;
+        sourceLink.target = '_blank';
+        sourceLink.rel = 'noopener noreferrer';
+        sourceLink.textContent = '↗ فتح القناة الرسمية على YouTube';
+        sourceLink.style.cssText = 'position:absolute;bottom:12px;right:12px;left:12px;z-index:2;display:block;padding:10px;border-radius:10px;background:rgba(0,0,0,.78);color:#fff;text-decoration:none;text-align:center;font:700 13px Cairo,Arial,sans-serif;';
+        stage.appendChild(sourceLink);
+      } else if (status) status.textContent = 'يعمل داخل المنصة';
       return;
     }
     if (channel.behavior === 'external') {
@@ -659,10 +672,7 @@
       document.getElementById('tvChannelsScreen').classList.add('active');
     }
     renderOwnerPanel();
-    loadChannels().then(function () {
-      var first = channels.find(function (channel) { return ['youtube', 'hls', 'video'].indexOf(String(channel.behavior || 'external')) !== -1; });
-      if (first) playInTvStage(first);
-    });
+    loadChannels();
   };
 
   window.addEventListener('ta3lemy-owner-auth-changed', function () {
