@@ -381,6 +381,9 @@
   async function loadChannels() {
     var status = document.getElementById('tvChannelStatus');
     if (status) status.textContent = 'جاري تحميل القنوات…';
+    // اعرض القنوات الرسمية المضمنة فورًا؛ لا تجعل تأخر Supabase يحوّل الشاشة إلى قائمة فارغة.
+    channels = fallbackChannels.slice();
+    renderChannels();
     try {
       var result = await getPublicClient().from('tv_channels')
         .select('id,name,category,behavior,watch_url,logo_url,description,sort_order,is_active')
