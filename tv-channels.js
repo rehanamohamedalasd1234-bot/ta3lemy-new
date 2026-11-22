@@ -13,10 +13,19 @@
   var categories = {
     all: 'الكل',
     sports: 'رياضة',
+    news: 'أخبار',
     education: 'تعليم',
     custom: 'محطاتي الخاصة'
   };
   var fallbackChannels = [
+    {
+      id: 'extra-news-official-live',
+      name: 'إكسترا نيوز — البث الرسمي',
+      category: 'news',
+      behavior: 'youtube',
+      watch_url: 'https://www.youtube.com/channel/UC65F33K2cXk9hGDbOQYhTOw/live',
+      description: 'البث المباشر الرسمي لقناة إكسترا نيوز عبر YouTube؛ قد يظهر عند وجود بث حي من القناة.'
+    },
     {
       id: 'maspero-channel-one-official',
       name: 'القناة الأولى المصرية — بث رسمي مفتوح',
@@ -235,7 +244,7 @@
   }
 
   function categoryIcon(category) {
-    return category === 'sports' ? '🏆' : category === 'education' ? '🎓' : '📡';
+    return category === 'sports' ? '🏆' : category === 'news' ? '📰' : category === 'education' ? '🎓' : '📡';
   }
 
   function defaultLogo(channel) {
