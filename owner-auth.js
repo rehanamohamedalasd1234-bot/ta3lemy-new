@@ -32,7 +32,8 @@
   function redirectUrl() {
     // لا نستخدم عنوان WebView (localhost أو file://) في روابط البريد.
     // رابط التحقق يجب أن يفتح على الموقع العام حتى داخل APK.
-    return PUBLIC_APP_URL;
+    // لا نأخذ origin الحالي حتى لا تنتقل رسالة قديمة إلى localhost:3000.
+    return 'https://rehanamohamedalasd1234-bot.github.io/ta3lemy-new/';
   }
 
   function setStatus(elementId, text, isError) {
