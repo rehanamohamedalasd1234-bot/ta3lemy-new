@@ -210,14 +210,14 @@
     styles.id = 'tvChannelStyles';
     styles.textContent = `
       #tvChannelsScreen .tv-console{background:#111827;border-radius:24px;padding:10px;box-shadow:0 14px 35px rgba(15,23,42,.25);margin-bottom:14px}
-      #tvChannelsScreen .tv-live-stage{position:relative;display:grid;place-items:center;min-height:210px;aspect-ratio:16/9;overflow:hidden;border-radius:17px;background:radial-gradient(circle at 50% 35%,#164e63,#020617 70%);color:#fff;text-align:center}
+      #tvChannelsScreen .tv-live-stage{position:relative;display:grid;place-items:center;width:100%;min-height:0;aspect-ratio:16/9;overflow:hidden;border-radius:17px;background:radial-gradient(circle at 50% 35%,#164e63,#020617 70%);color:#fff;text-align:center}
       #tvChannelsScreen .tv-live-stage video,#tvChannelsScreen .tv-live-stage iframe{width:100%;height:100%;border:0;object-fit:contain;background:#000}
       #tvChannelsScreen .tv-stage-placeholder{padding:25px;color:#d1fae5}.tv-stage-placeholder strong{display:block;font-size:25px;margin:8px 0}.tv-stage-placeholder span{font-size:12px;color:#b6c8d0}
       #tvChannelsScreen .tv-live-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;color:#fff;padding:10px 5px 2px;font-size:13px}.tv-live-dot{width:9px;height:9px;background:#ef4444;border-radius:50%;display:inline-block;margin-left:5px;box-shadow:0 0 0 4px rgba(239,68,68,.18)}
-      #tvChannelsScreen .tv-channel-strip{display:flex;gap:10px;overflow-x:auto;padding:5px 2px 12px;scroll-snap-type:x proximity}
+      #tvChannelsScreen .tv-channel-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(205px,1fr));gap:12px;padding:5px 2px 12px;align-items:stretch}
       #tvChannelsScreen .tv-channel-strip::-webkit-scrollbar{height:5px}#tvChannelsScreen .tv-channel-strip::-webkit-scrollbar-thumb{background:#80cbc4;border-radius:8px}
       #tvChannelsScreen .tv-channel-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
-      #tvChannelsScreen .tv-channel-card{position:relative;overflow:hidden;min-width:165px;flex:0 0 165px;border:1px solid #dce9e7;border-radius:16px;background:linear-gradient(145deg,#fff 0%,#fbfefd 100%);box-shadow:0 7px 22px rgba(0,77,64,.08);transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;scroll-snap-align:start}
+      #tvChannelsScreen .tv-channel-card{position:relative;overflow:hidden;min-width:0;display:flex;flex-direction:column;border:1px solid #dce9e7;border-radius:16px;background:linear-gradient(145deg,#fff 0%,#fbfefd 100%);box-shadow:0 7px 22px rgba(0,77,64,.08);transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
       #tvChannelsScreen .tv-channel-card:before{content:"";position:absolute;inset:0 0 auto;height:4px;background:linear-gradient(90deg,#00796b,#4db6ac)}
       #tvChannelsScreen .tv-channel-card[data-category="sports"]:before{background:linear-gradient(90deg,#d84343,#ffb74d)}
       #tvChannelsScreen .tv-channel-card[data-category="news"]:before{background:linear-gradient(90deg,#b71c1c,#ef5350)}
@@ -225,7 +225,7 @@
       #tvChannelsScreen .tv-channel-card[data-category="heritage"]:before{background:linear-gradient(90deg,#8d6e63,#d4a373)}
       #tvChannelsScreen .tv-channel-card[data-category="custom"]:before{background:linear-gradient(90deg,#00897b,#80cbc4)}
       #tvChannelsScreen .tv-channel-card:hover{transform:translateY(-3px);border-color:#80cbc4;box-shadow:0 12px 28px rgba(0,77,64,.14)}
-      #tvChannelsScreen .tv-card-open{display:block;width:100%;padding:13px 12px 12px;border:0;background:transparent;color:inherit;text-align:right;font:inherit;cursor:pointer}
+      #tvChannelsScreen .tv-card-open{display:flex;flex:1;flex-direction:column;width:100%;padding:13px 12px 12px;border:0;background:transparent;color:inherit;text-align:right;font:inherit;cursor:pointer}
       #tvChannelsScreen .tv-card-open:focus-visible{outline:3px solid #26a69a;outline-offset:-4px;border-radius:20px}
       #tvChannelsScreen .tv-card-head{display:block;min-height:115px}.tv-channel-info{margin-top:9px}
       #tvChannelsScreen .tv-logo-box{position:relative;display:grid;place-items:center;width:100%;height:82px;overflow:hidden;border:1px solid #edf2f1;border-radius:13px;background:#fff;box-shadow:0 4px 12px rgba(38,50,56,.08)}
@@ -244,7 +244,8 @@
       #tvChannelsScreen .tv-card-source{color:#879592;font-size:10px;font-weight:700}
       #tvChannelsScreen .tv-card-admin{display:flex;justify-content:flex-end;padding:0 15px 13px}
       #tvChannelsScreen .tv-card-delete{border:1px solid #ffdde0;border-radius:9px;padding:6px 9px;background:#fff8f8;color:#b71c1c;font:inherit;font-size:11px;font-weight:700;cursor:pointer}
-      @media(max-width:520px){#tvChannelsScreen .tv-live-stage{min-height:190px}.tv-channel-card{min-width:150px!important;flex-basis:150px!important}}
+      @media(max-width:700px){#tvChannelsScreen .tv-console{padding:7px;border-radius:18px}#tvChannelsScreen .tv-channel-strip{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}#tvChannelsScreen .tv-channel-card{border-radius:13px}#tvChannelsScreen .tv-card-open{padding:10px 9px 9px}#tvChannelsScreen .tv-logo-box{height:72px}#tvChannelsScreen .tv-channel-name{font-size:13px}#tvChannelsScreen .tv-channel-desc{font-size:10px;min-height:32px}#tvChannelsScreen .tv-card-footer{margin-top:10px;padding-top:8px;display:block}#tvChannelsScreen .tv-card-source{display:block;margin-top:4px}}
+      @media(max-width:360px){#tvChannelsScreen .tv-channel-strip{grid-template-columns:1fr}#tvChannelsScreen .tv-channel-name{font-size:14px}}
       @media(prefers-reduced-motion:reduce){#tvChannelsScreen .tv-channel-card{transition:none}}
     `;
     screen.innerHTML = `
