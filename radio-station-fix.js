@@ -79,6 +79,30 @@
     }
   }
 
+  function showOfficialEmbed(station) {
+    var player = document.getElementById('radioPlayer');
+    if (!player || !station || !station.embedUrl) { showOfficialFallback(station || {}); return; }
+    setPlayerTitle(station.name);
+    setStatus('▶️ المشغل الرسمي قيد التحميل...');
+    var frame = document.createElement('iframe');
+    frame.className = 'radio-official-embed';
+    frame.src = station.embedUrl;
+    frame.title = station.name || 'البث الرسمي';
+    frame.allow = 'autoplay; fullscreen; picture-in-picture';
+    frame.referrerPolicy = 'strict-origin-when-cross-origin';
+    frame.style.cssText = 'display:block;width:100%;max-width:640px;height:220px;border:0;border-radius:12px;background:#000;margin:0 auto 14px;';
+    var stopButton = player.querySelector('button[onclick="stopRadio()"]');
+    player.insertBefore(frame, stopButton || null);
+    var link = document.createElement('a');
+    link.className = 'radio-official-link';
+    link.href = station.officialUrl || station.embedUrl;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.textContent = 'فتح المصدر الرسمي في صفحة مستقلة';
+    link.style.cssText = 'display:block;color:#fff;text-decoration:underline;margin:8px auto 10px;';
+    player.insertBefore(link, stopButton || null);
+  }
+
   function setPlayerTitle(title) {
     var player = document.getElementById('radioPlayer');
     var titleNode = document.getElementById('radioStationName');
@@ -86,6 +110,8 @@
     if (titleNode) titleNode.textContent = title || 'ملف صوتي';
     var oldLink = player && player.querySelector('.radio-official-link');
     if (oldLink) oldLink.remove();
+    var oldEmbed = player && player.querySelector('.radio-official-embed');
+    if (oldEmbed) oldEmbed.remove();
   }
 
   function tryUrls(title, urls, officialUrl, index, token, onAllFailed) {
@@ -121,7 +147,7 @@
 
   function startPlayback(title, urls, officialUrl, onAllFailed) {
     urls = Array.isArray(urls) ? urls.filter(Boolean) : [urls];
-    if (!urls.length) { showOfficialFallback({ officialUrl: officialUrl }); return; }
+    if (!urls.length) { if (onAllFailed) onAllFailed(); else showOfficialFallback({ officialUrl: officialUrl }); return; }
     var token = ++playbackToken;
     setPlayerTitle(title);
     tryUrls(title, urls, officialUrl, 0, token, onAllFailed || function () { showOfficialFallback({ officialUrl: officialUrl }); });
@@ -167,7 +193,10 @@
     var station = typeof radioStations !== 'undefined' ? radioStations[index] : null;
     if (!station) return;
     if (!navigator.onLine) { toast('📴 البث المباشر يحتاج إلى اتصال بالإنترنت.'); return; }
-    startPlayback(station.name, stationUrls(station), station.officialUrl);
+    startPlayback(station.name, stationUrls(station), station.officialUrl, function () {
+      if (station.embedUrl) showOfficialEmbed(station);
+      else showOfficialFallback(station);
+    });
   };
 
   window.stopRadio = function () {
@@ -176,7 +205,13 @@
     activeUrl = '';
     if (audioElement) { audioElement.pause(); audioElement.removeAttribute('src'); audioElement.load(); }
     var player = document.getElementById('radioPlayer');
-    if (player) player.style.display = 'none';
+    if (player) {
+      var embed = player.querySelector('.radio-official-embed');
+      var link = player.querySelector('.radio-official-link');
+      if (embed) embed.remove();
+      if (link) link.remove();
+      player.style.display = 'none';
+    }
     toast('⏹️ تم الإيقاف');
   };
 })();

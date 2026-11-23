@@ -3096,3 +3096,19 @@ console.log('✅ extras.js loaded');
     }
   });
 })();
+
+// الإصدار 143: إزالة القائمة السريعة القديمة واستبدال موضعها بمدخل شرح الأستاذ.
+(function () {
+  function removeQuickMenu() {
+    document.querySelectorAll('#quickMenu').forEach(function (node) { node.remove(); });
+    var home = document.getElementById('homeScreen');
+    if (!home) return;
+    home.querySelectorAll('.content > *').forEach(function (node) {
+      var text = String(node.textContent || '').replace(/\s+/g, ' ').trim();
+      if (text === '⚡ قائمة سريعة' || text.indexOf('⚡ قائمة سريعة') !== -1) node.remove();
+    });
+  }
+  window.addEventListener('DOMContentLoaded', removeQuickMenu);
+  window.addEventListener('load', removeQuickMenu);
+  window.setInterval(removeQuickMenu, 1000);
+})();
