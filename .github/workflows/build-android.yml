@@ -49,7 +49,7 @@ jobs:
 
       - name: Build signed release APK
         working-directory: android
-        run: APP_VERSION_CODE=$((100000 + GITHUB_RUN_NUMBER)) ./gradlew assembleRelease --stacktrace
+        run: APP_VERSION_CODE=$((100000 + GITHUB_RUN_NUMBER)) APP_VERSION_NAME=$(node -p "require('../version.json').version") ./gradlew assembleRelease --stacktrace
 
       - name: Verify APK integrity and signature
         run: |
@@ -70,8 +70,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           VERSION_CODE=$((100000 + GITHUB_RUN_NUMBER))
+          VERSION_NAME=$(node -p "require('./version.json').version")
           cat > ta3lemy-version.json <<EOF
-          {"version":"1.0.${VERSION_CODE}","build":${VERSION_CODE},"updated":"$(date -u +%Y-%m-%dT%H:%M:%SZ)","notes":"تحديث تلقائي لمنصة حافظ التعليمية"}
+          {"version":"${VERSION_NAME}","build":${VERSION_CODE},"updated":"$(date -u +%Y-%m-%dT%H:%M:%SZ)","notes":"تحديث تلقائي لمنصة حافظ التعليمية"}
           EOF
           cp android/app/build/outputs/apk/release/app-release.apk ta3lemy-hafez.apk
           if gh release view latest --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then

@@ -5,6 +5,7 @@
   var SITE_URL = 'https://rehanamohamedalasd1234-bot.github.io/ta3lemy-new/';
   var VERSION_URL = SITE_URL + 'version.json';
   var VERSION_FALLBACK_URL = 'https://raw.githubusercontent.com/rehanamohamedalasd1234-bot/ta3lemy-new/main/version.json';
+  var MIN_SUPPORTED_VERSION = '1.0.145';
   var localVersion = '0.0.0';
   var latestVersion = null;
   var modalId = 'ta3lemyUpdateModal';
@@ -195,6 +196,22 @@
     }
   }
 
+  async function purgeStaleClientAndReload() {
+    try {
+      if ('serviceWorker' in navigator) {
+        var registrations = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(registrations.map(function (registration) { return registration.unregister(); }));
+      }
+      if ('caches' in window) {
+        var keys = await caches.keys();
+        await Promise.all(keys.filter(function (key) { return /^ta3lemy-shell-|^ta3lemy-media-/.test(key); }).map(function (key) { return caches.delete(key); }));
+      }
+    } catch (error) { console.warn('تعذر تنظيف كاش النسخة القديمة بالكامل:', error); }
+    var target = new URL(SITE_URL);
+    target.searchParams.set('ta3lemy-recover', String(Date.now()));
+    window.location.replace(target.href);
+  }
+
   function checkAppUpdate(options) {
     options = options || {};
     var silent = options.silent === true;
@@ -212,6 +229,16 @@
     }).then(function (info) {
       if (!info || !info.version) throw new Error('version data missing');
       latestVersion = info;
+      if (compareVersions(localVersion, MIN_SUPPORTED_VERSION) < 0 && compareVersions(info.version, MIN_SUPPORTED_VERSION) >= 0) {
+        var recoveryKey = 'ta3lemy_recovery_' + MIN_SUPPORTED_VERSION;
+        var recovered = false;
+        try { recovered = sessionStorage.getItem(recoveryKey) === '1'; } catch (_) {}
+        if (!recovered) {
+          try { sessionStorage.setItem(recoveryKey, '1'); } catch (_) {}
+          purgeStaleClientAndReload();
+          return info;
+        }
+      }
       var hasUpdate = compareVersions(info.version, localVersion) > 0;
       if (hasUpdate && silent) {
         var noticeId = noticeKey + String(info.version);
@@ -241,7 +268,9 @@
     var sixHours = 6 * 60 * 60 * 1000;
     var last = 0;
     try { last = Number(localStorage.getItem(checkKey) || 0); } catch (_) {}
-    if (last && Date.now() - last < sixHours) return;
+    var meta = document.querySelector('meta[name="ta3lemy-version"]');
+    var staleClient = meta && compareVersions(meta.content, MIN_SUPPORTED_VERSION) < 0;
+    if (!staleClient && last && Date.now() - last < sixHours) return;
     setTimeout(function () { checkAppUpdate({ silent: true }); }, 1800);
   }
 

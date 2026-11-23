@@ -4,12 +4,13 @@ android {
     namespace = "com.ta3lemy.hafez"
     compileSdk = rootProject.ext.compileSdkVersion
     def buildNumber = (System.getenv('APP_VERSION_CODE') ?: '100000').toInteger()
+    def appVersionName = System.getenv('APP_VERSION_NAME') ?: '1.0.145'
     defaultConfig {
         applicationId "com.ta3lemy.hafez"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode buildNumber
-        versionName "1.0.${buildNumber}"
+        versionName appVersionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.

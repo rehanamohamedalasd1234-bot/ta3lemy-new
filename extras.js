@@ -1790,20 +1790,8 @@ console.log('✅ Exercises UI loaded');
     }, 4000);
   });
 })();
-// ═══ تحديث إجباري للتطبيق عشان يقرأ الكود الجديد ═══
-(function(){
-  var currentVersion = '1.0.12'; // غيّر الرقم ده مع كل تحديث منشور
-  var savedVersion = localStorage.getItem('app_version');
-  if(savedVersion !== currentVersion){
-    localStorage.setItem('app_version', currentVersion);
-    if('serviceWorker' in navigator){
-      navigator.serviceWorker.getRegistrations().then(function(regs){
-        regs.forEach(function(reg){ reg.update().catch(function(){}); });
-      });
-    }
-    if(savedVersion){ setTimeout(function(){ location.reload(); }, 1200); }
-  }
-})();
+// ═══ التحديث المركزي ═══
+// app-update.js هو المسؤول الوحيد عن فحص الإصدارات وتنظيف الكاش؛ لا نستخدم نظامًا موازيًا قديمًا.
 // ═══════════════════════════════════════════════════════
 // 🧹 تنظيف وإصلاح الواجهة
 // ═══════════════════════════════════════════════════════
