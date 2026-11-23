@@ -15,9 +15,30 @@
     sports: 'رياضة',
     news: 'أخبار',
     education: 'تعليم',
+    heritage: 'تراث وترفيه',
     custom: 'محطاتي الخاصة'
   };
   var fallbackChannels = [
+    {
+      id: 'maspero-zaman-official',
+      name: 'ماسبيرو زمان — بث رسمي',
+      category: 'heritage',
+      behavior: 'external',
+      watch_url: 'https://www.maspero.eg/stream/6',
+      fallback_url: 'https://www.youtube.com/@MasperoZaman',
+      fallback_behavior: 'youtube',
+      description: 'البث الرسمي من موقع ماسبيرو، مع قناة YouTube الرسمية كبديل عند تعذر تشغيل الصفحة داخل المنصة.'
+    },
+    {
+      id: 'rotana-classic-official',
+      name: 'روتانا كلاسيك — بث رسمي',
+      category: 'heritage',
+      behavior: 'external',
+      watch_url: 'https://rotana.net/ar/channels/#/live/rotana-classical',
+      fallback_url: 'https://www.youtube.com/channel/UCJY3eGNWSFRi5YnQiUyIgRA',
+      fallback_behavior: 'youtube',
+      description: 'صفحة البث الرسمية لروتانا كلاسيك، مع قناة YouTube الرسمية كبديل للمشاهدة عند الحاجة.'
+    },
     {
       id: 'aljazeera-mubasher-official-live',
       name: 'الجزيرة مباشر — البث الرسمي',
@@ -201,6 +222,7 @@
       #tvChannelsScreen .tv-channel-card[data-category="sports"]:before{background:linear-gradient(90deg,#d84343,#ffb74d)}
       #tvChannelsScreen .tv-channel-card[data-category="news"]:before{background:linear-gradient(90deg,#b71c1c,#ef5350)}
       #tvChannelsScreen .tv-channel-card[data-category="education"]:before{background:linear-gradient(90deg,#3949ab,#26a69a)}
+      #tvChannelsScreen .tv-channel-card[data-category="heritage"]:before{background:linear-gradient(90deg,#8d6e63,#d4a373)}
       #tvChannelsScreen .tv-channel-card[data-category="custom"]:before{background:linear-gradient(90deg,#00897b,#80cbc4)}
       #tvChannelsScreen .tv-channel-card:hover{transform:translateY(-3px);border-color:#80cbc4;box-shadow:0 12px 28px rgba(0,77,64,.14)}
       #tvChannelsScreen .tv-card-open{display:block;width:100%;padding:13px 12px 12px;border:0;background:transparent;color:inherit;text-align:right;font:inherit;cursor:pointer}
@@ -604,6 +626,16 @@
       externalFrame.referrerPolicy = 'strict-origin-when-cross-origin';
       externalFrame.style.cssText = 'width:100%;height:100%;border:0;background:#000;';
       stage.appendChild(externalFrame);
+      var fallbackUrl = safeHttps(channel.fallback_url);
+      if (fallbackUrl) {
+        var fallbackLink = document.createElement('a');
+        fallbackLink.href = fallbackUrl;
+        fallbackLink.target = '_blank';
+        fallbackLink.rel = 'noopener noreferrer';
+        fallbackLink.textContent = '↗ فتح البديل الرسمي على YouTube';
+        fallbackLink.style.cssText = 'position:absolute;bottom:12px;right:12px;left:12px;z-index:2;display:block;padding:10px;border-radius:10px;background:rgba(0,0,0,.78);color:#fff;text-decoration:none;text-align:center;font:700 13px Cairo,Arial,sans-serif;';
+        stage.appendChild(fallbackLink);
+      }
       if (status) status.textContent = 'داخل شاشة المنصة';
       return;
     }
