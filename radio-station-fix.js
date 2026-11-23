@@ -193,6 +193,16 @@
     var station = typeof radioStations !== 'undefined' ? radioStations[index] : null;
     if (!station) return;
     if (!navigator.onLine) { toast('📴 البث المباشر يحتاج إلى اتصال بالإنترنت.'); return; }
+    // محطتا مصر والبرنامج العام تعملان عبر المشغل الرسمي المضمّن، وليستا روابط MP3.
+    // فتح المشغل مباشرة يمنع مرور الضغط عبر محاولة صوت فارغة في النسخ القديمة.
+    if (station.embedUrl) {
+      playbackToken += 1;
+      window.clearTimeout(retryTimer);
+      setPlayerTitle(station.name);
+      showOfficialEmbed(station);
+      toast('▶️ فتح المشغل الرسمي: ' + station.name);
+      return;
+    }
     startPlayback(station.name, stationUrls(station), station.officialUrl, function () {
       if (station.embedUrl) showOfficialEmbed(station);
       else showOfficialFallback(station);

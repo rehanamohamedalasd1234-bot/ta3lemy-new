@@ -5,7 +5,7 @@
   var SITE_URL = 'https://rehanamohamedalasd1234-bot.github.io/ta3lemy-new/';
   var VERSION_URL = SITE_URL + 'version.json';
   var VERSION_FALLBACK_URL = 'https://raw.githubusercontent.com/rehanamohamedalasd1234-bot/ta3lemy-new/main/version.json';
-  var MIN_SUPPORTED_VERSION = '1.0.145';
+  var MIN_SUPPORTED_VERSION = '1.0.146';
   var localVersion = '0.0.0';
   var latestVersion = null;
   var modalId = 'ta3lemyUpdateModal';

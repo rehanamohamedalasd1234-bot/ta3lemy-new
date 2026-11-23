@@ -24,7 +24,7 @@
 <meta name="description" content="منصة الأستاذ حافظ التعليمية — تعليم عام وأزهر وبكالوريا جديدة. دروس، تدريبات، امتحانات، قرآن كريم، مراجعة شاملة، وتطبيق يعمل بدون إنترنت.">
 <meta name="keywords" content="منصة تعليمية, بكالوريا, أزهر شريف, تعليم عام, دروس, قرآن كريم, امتحانات, مراجعة, الأستاذ حافظ">
 <meta name="author" content="الأستاذ حافظ">
-<meta name="ta3lemy-version" content="1.0.145">
+<meta name="ta3lemy-version" content="1.0.146">
 <meta name="robots" content="index, follow">
 <meta name="revisit-after" content="7 days">
 <meta property="og:type" content="website">
@@ -642,7 +642,7 @@ async function loadOwnerInfo(){try{const snap=await db.collection('owner').limit
 window.addEventListener('error',e=>console.error('❌',e.error));
 window.addEventListener('unhandledrejection',e=>console.error('❌ Promise:',e.reason));
 window.addEventListener('load',()=>{setTimeout(()=>showScreen('loginScreen'),2500);loadOwnerInfo();loadAdsOnHome();loadWisdomBar();});
-if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./service-worker.js?v=1.0.145').then(reg=>console.log('✅ SW registered')).catch(err=>console.log('❌ SW error:',err));});}
+if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./service-worker.js?v=1.0.146').then(reg=>console.log('✅ SW registered')).catch(err=>console.log('❌ SW error:',err));});}
 async function openPublicChat() {
     if (!currentUser) { showToast('⚠️ سجل دخول'); return; }
     currentChatId = 'public_chat';
@@ -1055,7 +1055,7 @@ async function loadOwnerInfo(){try{const snap=await db.collection('owner').limit
 window.addEventListener('error',e=>console.error('❌',e.error));
 window.addEventListener('unhandledrejection',e=>console.error('❌ Promise:',e.reason));
 window.addEventListener('load',()=>{setTimeout(()=>showScreen('loginScreen'),2500);loadOwnerInfo();loadAdsOnHome();loadWisdomBar();});
-if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./service-worker.js?v=1.0.145').then(reg=>console.log('✅ SW registered')).catch(err=>console.log('❌ SW error:',err));});}
+if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./service-worker.js?v=1.0.146').then(reg=>console.log('✅ SW registered')).catch(err=>console.log('❌ SW error:',err));});}
 </script>
 <script src="./extras.js"></script>
 <script src="./teacher-auth.js"></script>
@@ -1114,7 +1114,7 @@ if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.s
 
 <script src="./primary-official-only.js"></script>
 <script src="./grade1-math-expanded.js"></script><script src="./grade1-islamic-expanded.js"></script><script src="./primary-grade2-data.js"></script><script src="./primary-grade2-structure.js"></script><script src="./primary-grade3-structure.js"></script><script src="./primary-grade4-structure.js"></script><script src="./primary-grade5-structure.js"></script><script src="./primary-grade6-structure.js"></script>
-<script src="./educational-games.js"></script><script src="./app-update.js?v=1.0.145"></script><script src="./platform-stats.js"></script><script src="./gemini-fix.js"></script>
+<script src="./educational-games.js"></script><script src="./app-update.js?v=1.0.146"></script><script src="./platform-stats.js"></script><script src="./gemini-fix.js"></script>
 <script src="./offline-mode.js"></script>
 <script src="./navigation-fix.js"></script>
 <script src="./kindergarten-languages.js"></script>
@@ -1149,7 +1149,7 @@ if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.s
 <script src="./recognition-and-azkar.js?v=1.0.94"></script>
 <script src="./quiz-competitions.js?v=1.0.95"></script>
 <script src="./certificate-workflow.js?v=1.0.97"></script>
-<script src="./radio-station-fix.js?v=1.0.140"></script>
+<script src="./radio-station-fix.js?v=1.0.146"></script>
 <script src="./library-config.js?v=1.0.118"></script>
 <script src="./library.js?v=1.0.118"></script>
 <script src="./student-image-activity.js"></script>
