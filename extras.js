@@ -2934,7 +2934,7 @@ console.log('✅ extras.js loaded');
       screen.className = 'screen';
       document.body.appendChild(screen);
     }
-    screen.innerHTML = '<div class="top-bar"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>⚙️ إدارة حسابي</span></div><div style="width:42px"></div></div><div class="content"><div style="max-width:560px;margin:auto"><div style="background:#fff;border-radius:16px;padding:20px;text-align:center;margin-bottom:14px"><img id="accountManagerPhoto" alt="صورة الحساب" style="width:112px;height:112px;border-radius:50%;object-fit:cover;border:3px solid #e8f5e9"><div id="accountManagerRole" style="font-weight:700;margin:10px 0 4px"></div><div id="accountManagerLogin" style="font-size:12px;color:#68736b"></div><input id="accountManagerPhotoInput" type="file" accept="image/*" style="display:none"><div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:14px"><button class="btn-primary" id="accountChoosePhoto" type="button">📷 رفع أو تغيير الصورة</button><button class="btn-primary" id="accountRemovePhoto" type="button" style="background:#ffebee;color:#c62828">🗑️ إزالة الصورة</button></div><small style="display:block;color:#68736b;margin-top:10px">JPG أو PNG حتى 5 ميجابايت. إزالة الصورة لا تحذف النسخة الأصلية من Cloudinary.</small></div><div style="background:#fff;border-radius:16px;padding:18px"><label class="form-label" for="accountDisplayName">الاسم الظاهر</label><input id="accountDisplayName" class="form-input" type="text" maxlength="50"><small style="display:block;color:#68736b;margin:7px 0 12px">تغيير الاسم الظاهر لا يغيّر اسم الدخول أو كلمة المرور.</small><button class="btn-primary" id="accountSaveName" type="button">💾 حفظ الاسم</button></div></div></div>';
+    screen.innerHTML = '<div class="top-bar"><button class="icon-btn" onclick="goBack()">→</button><div class="logo"><span>⚙️ إدارة حسابي</span></div><div style="width:42px"></div></div><div class="content"><div style="max-width:560px;margin:auto"><div style="background:#fff;border-radius:16px;padding:20px;text-align:center;margin-bottom:14px"><img id="accountManagerPhoto" alt="صورة الحساب" style="width:112px;height:112px;border-radius:50%;object-fit:cover;border:3px solid #e8f5e9"><div id="accountManagerRole" style="font-weight:700;margin:10px 0 4px"></div><div id="accountManagerLogin" style="font-size:12px;color:#68736b"></div><input id="accountManagerPhotoInput" type="file" accept="image/*" style="display:none"><div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:14px"><button class="btn-primary" id="accountChoosePhoto" type="button">📷 رفع أو تغيير الصورة</button><button class="btn-primary" id="accountRemovePhoto" type="button" style="background:#ffebee;color:#c62828">🗑️ إزالة الصورة</button></div><small style="display:block;color:#68736b;margin-top:10px">JPG أو PNG حتى 5 ميجابايت. إزالة الصورة لا تحذف النسخة الأصلية من Cloudinary.</small></div><div style="background:#fff;border-radius:16px;padding:18px"><label class="form-label" for="accountDisplayName">الاسم الظاهر</label><input id="accountDisplayName" class="form-input" type="text" maxlength="50"><small style="display:block;color:#68736b;margin:7px 0 12px">تغيير الاسم الظاهر لا يغيّر اسم الدخول أو كلمة المرور.</small><button class="btn-primary" id="accountSaveName" type="button">💾 حفظ الاسم</button></div><div style="background:#fff;border-radius:16px;padding:18px;margin-top:14px"><div style="font-weight:800;color:#245b35;margin-bottom:10px">🔐 تغيير كلمة المرور</div><label class="form-label" for="accountCurrentPassword">كلمة المرور الحالية</label><input id="accountCurrentPassword" class="form-input" type="password" autocomplete="current-password" placeholder="اكتب كلمة المرور الحالية"><label class="form-label" for="accountNewPassword" style="margin-top:10px">كلمة المرور الجديدة</label><input id="accountNewPassword" class="form-input" type="password" autocomplete="new-password" minlength="6" placeholder="6 أحرف على الأقل"><label class="form-label" for="accountConfirmPassword" style="margin-top:10px">تأكيد كلمة المرور الجديدة</label><input id="accountConfirmPassword" class="form-input" type="password" autocomplete="new-password" minlength="6" placeholder="أعد كتابة كلمة المرور الجديدة"><small style="display:block;color:#68736b;margin:8px 0 12px;line-height:1.7">لن تتغير كلمة المرور إلا بعد التحقق من كلمة المرور الحالية. لا تشاركها مع أي شخص.</small><button class="btn-primary" id="accountSavePassword" type="button" style="background:linear-gradient(135deg,#1565C0,#1976D2)">🔑 حفظ كلمة المرور الجديدة</button></div></div></div>';
     if (window.screenHistory && window.currentScreen) window.screenHistory.push(window.currentScreen);
     if (typeof window.showScreen === 'function') window.showScreen('accountManagementScreen');
 
@@ -2952,6 +2952,7 @@ console.log('✅ extras.js loaded');
     };
     document.getElementById('accountRemovePhoto').onclick = removePhoto;
     document.getElementById('accountSaveName').onclick = saveName;
+    document.getElementById('accountSavePassword').onclick = savePassword;
     await loadSettings();
   };
 
@@ -2998,6 +2999,62 @@ console.log('✅ extras.js loaded');
     } catch (error) {
       console.error(error);
       toast('تعذر حفظ الاسم؛ تحققي من اتصال Firebase.');
+    }
+  }
+
+  async function savePassword() {
+    var currentInput = document.getElementById('accountCurrentPassword');
+    var newInput = document.getElementById('accountNewPassword');
+    var confirmInput = document.getElementById('accountConfirmPassword');
+    var currentPassword = currentInput ? currentInput.value : '';
+    var newPassword = newInput ? newInput.value : '';
+    var confirmation = confirmInput ? confirmInput.value : '';
+    if (currentPassword.length < 4) return toast('اكتب كلمة المرور الحالية بشكل صحيح.');
+    if (newPassword.length < 6) return toast('كلمة المرور الجديدة يجب أن تكون 6 أحرف على الأقل.');
+    if (newPassword !== confirmation) return toast('تأكيد كلمة المرور الجديدة غير مطابق.');
+    if (currentPassword === newPassword) return toast('استخدم كلمة مرور جديدة مختلفة.');
+    try {
+      if (teacher()) {
+        var auth = firebase.auth && firebase.auth();
+        var authUser = auth && auth.currentUser;
+        if (!authUser || !authUser.email) throw new Error('جلسة المعلم غير جاهزة؛ سجّل الدخول من جديد.');
+        var credential = firebase.auth.EmailAuthProvider.credential(authUser.email, currentPassword);
+        await authUser.reauthenticateWithCredential(credential);
+        await authUser.updatePassword(newPassword);
+        await doc().set({ passwordUpdatedAt: new Date().toISOString() }, { merge: true });
+      } else {
+        var firebaseAuth = firebase.auth && firebase.auth();
+        var callable = firebase.functions && firebase.functions('us-central1').httpsCallable('changeCustomPassword');
+        if (role() !== 'owner' && firebaseAuth && firebaseAuth.currentUser && callable) {
+          await callable({ currentPassword: currentPassword, newPassword: newPassword });
+        } else {
+        var ref = doc();
+        var snapshot = await ref.get();
+        if (!snapshot.exists) throw new Error('بيانات الحساب غير موجودة.');
+        var account = snapshot.data() || {};
+        var oldHash = typeof window.hashPassword === 'function' ? await window.hashPassword(currentPassword, account.salt || '') : '';
+        if (!account.passHash || oldHash !== String(account.passHash)) throw new Error('كلمة المرور الحالية غير صحيحة.');
+        var salt = typeof window.generateSalt === 'function' ? window.generateSalt() : String(Date.now());
+        var legacyHash = await window.hashPassword(newPassword, salt);
+        var patch = { salt: salt, passHash: legacyHash, passwordUpdatedAt: new Date().toISOString() };
+        // Keep the stronger server-side verifier in sync when Web Crypto is available.
+        if (window.crypto && crypto.subtle && window.TextEncoder) {
+          var key = await crypto.subtle.importKey('raw', new TextEncoder().encode(newPassword), 'PBKDF2', false, ['deriveBits']);
+          var bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt: new TextEncoder().encode(salt), iterations: 210000, hash: 'SHA-256' }, key, 256);
+          patch.passwordSaltV2 = salt;
+          patch.passwordHashV2 = Array.from(new Uint8Array(bits)).map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+        }
+        await ref.set(patch, { merge: true });
+        }
+      }
+      [currentInput, newInput, confirmInput].forEach(function (input) { if (input) input.value = ''; });
+      toast('✅ تم تغيير كلمة المرور بنجاح. استخدمها عند الدخول القادم.');
+    } catch (error) {
+      console.error('Password change failed', error);
+      var code = String(error && error.code || '');
+      if (code === 'auth/wrong-password' || code === 'auth/invalid-credential') return toast('كلمة المرور الحالية غير صحيحة.');
+      if (code === 'auth/requires-recent-login') return toast('لأمان الحساب، سجّل الخروج ثم ادخل من جديد وبعدها غيّر كلمة المرور.');
+      toast(error && error.message ? error.message : 'تعذر تغيير كلمة المرور.');
     }
   }
 

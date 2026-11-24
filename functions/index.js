@@ -278,3 +278,34 @@ exports.loginLegacyStudent = onCall({ region: 'us-central1', maxInstances: 10, e
     throw new HttpsError('internal', 'تعذر إكمال تسجيل الدخول الآمن. حاول مرة أخرى لاحقًا.');
   }
 });
+
+exports.changeCustomPassword = onCall({ region: 'us-central1', maxInstances: 10, enforceAppCheck: false }, async (request) => {
+  if (!request.auth || !request.auth.uid) {
+    throw new HttpsError('unauthenticated', 'يجب تسجيل الدخول قبل تغيير كلمة المرور.');
+  }
+  const currentPassword = String(request.data && request.data.currentPassword || '');
+  const newPassword = String(request.data && request.data.newPassword || '');
+  if (currentPassword.length < 4 || newPassword.length < 6 || newPassword.length > 256) {
+    throw new HttpsError('invalid-argument', 'تحقق من طول كلمات المرور.');
+  }
+  const ref = db.collection('users').doc(String(request.auth.uid));
+  const snapshot = await ref.get();
+  if (!snapshot.exists) throw new HttpsError('not-found', 'بيانات الحساب غير موجودة.');
+  const account = snapshot.data() || {};
+  if (!['student', 'parent', 'owner'].includes(String(account.role || 'student'))) {
+    throw new HttpsError('permission-denied', 'هذا الحساب يستخدم مسار مصادقة مختلف.');
+  }
+  if (!(await passwordMatches(currentPassword, account))) {
+    throw new HttpsError('permission-denied', 'كلمة المرور الحالية غير صحيحة.');
+  }
+  const salt = crypto.randomBytes(18).toString('base64url');
+  const patch = {
+    salt,
+    passHash: legacyHash(newPassword, salt),
+    passwordSaltV2: salt,
+    passwordHashV2: await strongHash(newPassword, salt),
+    passwordUpdatedAt: new Date().toISOString()
+  };
+  await ref.update(patch);
+  return { ok: true };
+});
