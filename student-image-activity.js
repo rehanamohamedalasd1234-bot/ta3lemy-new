@@ -3,7 +3,53 @@
 
   var activity = { lessonId: '', pages: [], choice: '' };
   var MAX_POINTS = 12000;
+  var DRAFT_PREFIX = 'ta3lemy_student_answer_draft_v2:';
   var resizeListenerAttached = false;
+
+  function draftKey() { return DRAFT_PREFIX + String(activity.lessonId || ''); }
+  function readDraft() {
+    try {
+      var raw = localStorage.getItem(draftKey());
+      var value = raw ? JSON.parse(raw) : null;
+      return value && typeof value === 'object' ? value : null;
+    } catch (_) { return null; }
+  }
+  function saveDraft() {
+    if (!activity.lessonId) return;
+    try {
+      var textarea = document.getElementById('studentAnswer');
+      var submission = getSubmission();
+      localStorage.setItem(draftKey(), JSON.stringify({
+        answer: textarea ? String(textarea.value || '').slice(0, 5000) : '',
+        choice: submission.choice || '',
+        annotations: submission.annotations || [],
+        updatedAt: Date.now()
+      }));
+    } catch (_) {}
+  }
+  function clearDraft() { try { localStorage.removeItem(draftKey()); } catch (_) {} }
+  function restoreDraft() {
+    var draft = readDraft();
+    if (!draft) return;
+    var textarea = document.getElementById('studentAnswer');
+    if (textarea && draft.answer) textarea.value = String(draft.answer);
+    activity.choice = String(draft.choice || '');
+    if (Array.isArray(draft.annotations)) {
+      draft.annotations.forEach(function (saved) {
+        var page = activity.pages.find(function (item) { return item.index === Number(saved.pageIndex); });
+        if (!page || !Array.isArray(saved.strokes)) return;
+        page.strokes = saved.strokes.slice(0, 120).map(function (stroke) {
+          return { color: '#d32f2f', points: Array.isArray(stroke.points) ? stroke.points.slice(0, 1800) : [] };
+        }).filter(function (stroke) { return stroke.points.length; });
+        drawPage(page);
+      });
+    }
+    Array.prototype.forEach.call(document.querySelectorAll('.image-activity-choice'), function (button) {
+      var selected = button.textContent.indexOf(activity.choice) >= 0;
+      button.classList.toggle('is-selected', selected);
+      button.setAttribute('aria-pressed', selected ? 'true' : 'false');
+    });
+  }
 
   function drawPage(page) {
     var rect = page.stage.getBoundingClientRect();
@@ -83,9 +129,12 @@
         }
       });
       ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(function (eventName) {
-        canvas.addEventListener(eventName, function () { page.currentStroke = null; });
+        canvas.addEventListener(eventName, function () { page.currentStroke = null; saveDraft(); });
       });
     });
+    var textarea = document.getElementById('studentAnswer');
+    if (textarea) textarea.addEventListener('input', saveDraft);
+    restoreDraft();
     if (!resizeListenerAttached) {
       window.addEventListener('resize', function () { activity.pages.forEach(drawPage); }, { passive: true });
       resizeListenerAttached = true;
@@ -123,6 +172,7 @@
 
   function choose(value, button) {
     activity.choice = value;
+    saveDraft();
     var root = button && button.closest('.teacher-image-answer-tools');
     if (root) {
       Array.prototype.forEach.call(root.querySelectorAll('.image-activity-choice'), function (item) {
@@ -170,6 +220,7 @@
       page.active = false;
       page.canvas.style.pointerEvents = 'none';
     });
+    clearDraft();
   }
 
   window.TeacherImageActivity = { init: init, toggle: toggle, undo: undo, clear: clear, choose: choose, getSubmission: getSubmission, reset: reset };

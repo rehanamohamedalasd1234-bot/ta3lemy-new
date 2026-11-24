@@ -24,7 +24,7 @@
 <meta name="description" content="منصة الأستاذ حافظ التعليمية — تعليم عام وأزهر وبكالوريا جديدة. دروس، تدريبات، امتحانات، قرآن كريم، مراجعة شاملة، وتطبيق يعمل بدون إنترنت.">
 <meta name="keywords" content="منصة تعليمية, بكالوريا, أزهر شريف, تعليم عام, دروس, قرآن كريم, امتحانات, مراجعة, الأستاذ حافظ">
 <meta name="author" content="الأستاذ حافظ">
-<meta name="ta3lemy-version" content="1.0.154">
+<meta name="ta3lemy-version" content="1.0.155">
 <meta name="robots" content="index, follow">
 <meta name="revisit-after" content="7 days">
 <meta property="og:type" content="website">
@@ -271,9 +271,10 @@ async function viewContent(id){
       h+='</div>';
     }
     if(pageImages.length&&currentRole==='student'){
-      h+='<section class="teacher-image-answer-tools"><div style="font-weight:700;color:#245b35;">🧠 أجب عن السؤال الموجود في الصور</div><div style="font-size:13px;line-height:1.8;color:#526b57;margin-top:4px;">يمكنك اختيار صح أو خطأ، أو كتابة إجابتك، أو تفعيل «اكتب على الصورة» ثم الكتابة بإصبعك أو بالماوس. الصورة الأصلية لا تتغير.</div><div class="teacher-image-answer-choice"><button type="button" class="image-activity-choice" aria-pressed="false" onclick="TeacherImageActivity.choose(&quot;صح&quot;,this)">✅ صح</button><button type="button" class="image-activity-choice" aria-pressed="false" onclick="TeacherImageActivity.choose(&quot;خطأ&quot;,this)">❌ خطأ</button></div><textarea class="student-answer" id="studentAnswer" placeholder="اكتب إجابتك أو ملاحظتك هنا..."></textarea><button type="button" onclick="saveStudentAnswer(this.dataset.lessonId)" data-lesson-id="'+escapeGalleryAttribute(String(id))+'" style="margin-top:10px;background:#1976D2;color:#fff;border-color:#1976D2;">📨 إرسال إجابتي</button></section>';
+      h+='<section class="teacher-image-answer-tools"><div style="font-weight:700;color:#245b35;">🧠 أجب عن السؤال الموجود في الصور</div><div style="font-size:13px;line-height:1.8;color:#526b57;margin-top:4px;">يمكنك اختيار صح أو خطأ، أو كتابة إجابتك، أو تفعيل «اكتب على الصورة» ثم الكتابة بإصبعك أو بالماوس. الصورة الأصلية لا تتغير.</div><div class="teacher-image-answer-choice"><button type="button" class="image-activity-choice" aria-pressed="false" onclick="TeacherImageActivity.choose(&quot;صح&quot;,this)">✅ صح</button><button type="button" class="image-activity-choice" aria-pressed="false" onclick="TeacherImageActivity.choose(&quot;خطأ&quot;,this)">❌ خطأ</button></div><textarea class="student-answer" id="studentAnswer" placeholder="اكتب إجابتك أو ملاحظتك هنا..."></textarea><button type="button" onclick="saveStudentAnswer(this.dataset.lessonId)" data-lesson-id="'+escapeGalleryAttribute(String(id))+'" style="margin-top:10px;background:#1976D2;color:#fff;border-color:#1976D2;">📨 إرسال إجابتي</button><div id="studentAnswerReview" style="margin-top:12px;"></div></section>';
     }
     document.getElementById('viewerBody').innerHTML=h;screenHistory.push(currentScreen);showScreen('viewerScreen');
+    if(currentRole==='student')loadStudentAnswerReview(String(id));
     if(pageImages.length&&currentRole==='student'&&window.TeacherImageActivity)window.TeacherImageActivity.init(document.getElementById('viewerBody'),String(id));
     if(pageImages.length){
       Array.prototype.forEach.call(document.querySelectorAll('.teacher-gallery-page-image'),function(image){
@@ -283,6 +284,20 @@ async function viewContent(id){
   }catch(e){console.error(e);showToast('❌ تعذر فتح المحتوى');}
 }
 function toggleAnswer(btn){const box=btn.nextElementSibling;if(box.style.display==='none'||!box.style.display){box.style.display='block';btn.textContent='🙈 إخفاء الإجابة';}else{box.style.display='none';btn.textContent='👁️ إظهار الإجابة';}}
+function reviewText(value){return String(value||'').replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+async function loadStudentAnswerReview(lessonId){
+  var box=document.getElementById('studentAnswerReview');
+  if(!box||!currentUser||!navigator.onLine)return;
+  try{
+    var snap=await db.collection('answers').where('lessonId','==',String(lessonId)).get();
+    var mine=[];snap.forEach(function(doc){var item=doc.data()||{};if(String(item.studentId||'')===String(currentUser.uid||''))mine.push(item);});
+    mine.sort(function(a,b){return String(b.createdAt||'').localeCompare(String(a.createdAt||''));});
+    var latest=mine[0];
+    if(!latest)return;
+    if(latest.teacherGrade==null){box.innerHTML='<div style="padding:10px;border-radius:10px;background:#E3F2FD;color:#155B8A;font-size:12px;line-height:1.8;">📨 تم إرسال إجابتك للمعلم، وستظهر الدرجة والتعليق هنا بعد المراجعة.</div>';return;}
+    box.innerHTML='<div style="padding:12px;border-radius:10px;background:#FFF8E1;border:1px solid #F0D27A;color:#634D00;line-height:1.8;font-size:13px;"><b>⭐ تقييم المعلم: '+reviewText(latest.teacherGrade)+'/10</b>'+(latest.teacherFeedback?'<div style="margin-top:5px;white-space:pre-wrap;">📝 '+reviewText(latest.teacherFeedback)+'</div>':'')+'</div>';
+  }catch(error){console.warn('تعذر تحميل تقييم الإجابة',error);}
+}
 async function saveStudentAnswer(lessonId){const ta=document.getElementById('studentAnswer');if(!ta)return;const ans=ta.value.trim();const activity=window.TeacherImageActivity&&window.TeacherImageActivity.getSubmission?window.TeacherImageActivity.getSubmission():null;const validActivity=activity&&activity.lessonId===String(lessonId)?activity:null;const annotations=validActivity?validActivity.annotations:[];const choice=validActivity?validActivity.choice:'';if(!ans&&!choice&&!annotations.length){showToast('⚠️ اكتب إجابتك أو اختر صح/خطأ أو اكتب على الصورة أولاً');return;}if(!currentUser){showToast('⚠️ سجل دخول');return;}try{const response={lessonId:lessonId,studentId:currentUser.uid,studentName:currentUser.name,answer:ans,createdAt:new Date().toISOString()};if(choice)response.answerChoice=choice;if(annotations.length)response.imageAnnotations=annotations;if(validActivity)response.answerType='image_activity';await db.collection('answers').add(response);showToast('✅ تم حفظ إجابتك بنجاح');ta.value='';if(validActivity)window.TeacherImageActivity.reset();}catch(e){console.error(e);showToast('❌ فشل الحفظ — تحقق من اتصال الإنترنت');}}
 function openBakkalorya(){screenHistory.push(currentScreen);showScreen('bakkaloryaScreen');const l=document.getElementById('bakkaloryaGradesList');const grades=[{id:'1',name:'الصف الأول الثانوي (تأسيسي)',icon:'📘',desc:'مواد عامة مشتركة'},{id:'2',name:'الصف الثاني الثانوي',icon:'📗',desc:'اختيار المسار + 400 درجة'},{id:'3',name:'الصف الثالث الثانوي',icon:'📕',desc:'مواد متقدمة + 200 درجة'}];l.innerHTML=grades.map(g=>'<div class="stage-item" onclick="openBakkaloryaGrade(\''+g.id+'\',\''+g.name+'\')"><div class="stage-icon">'+g.icon+'</div><div class="stage-info"><div class="stage-name">'+g.name+'</div><div class="stage-sub">'+g.desc+'</div></div><div class="stage-arrow">‹</div></div>').join('');}
 function openBakkaloryaGrade(id,name){currentBakkaloryaGrade=id;if(id==='1'){openBakkaloryaSubjects('الأول');}else{const l=document.getElementById('bakkaloryaTracksList');l.innerHTML=bakkaloryaTracks.map(t=>'<div class="stage-item" onclick="openBakkaloryaTrack(\''+t.id+'\',\''+t.name+'\',\''+id+'\')" style="border-right:5px solid '+t.color+';"><div class="stage-icon" style="background:'+t.color+'20;color:'+t.color+';font-size:32px;">'+t.icon+'</div><div class="stage-info"><div class="stage-name">'+t.name+'</div><div class="stage-sub">'+t.desc+'</div></div><div class="stage-arrow">‹</div></div>').join('');screenHistory.push(currentScreen);showScreen('bakkaloryaTracksScreen');}}
@@ -1122,7 +1137,7 @@ if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.s
 
 <script src="./primary-official-only.js"></script>
 <script src="./grade1-math-expanded.js"></script><script src="./grade1-islamic-expanded.js"></script><script src="./primary-grade2-data.js"></script><script src="./primary-grade2-structure.js"></script><script src="./primary-grade3-structure.js"></script><script src="./primary-grade4-structure.js"></script><script src="./primary-grade5-structure.js"></script><script src="./primary-grade6-structure.js"></script>
-<script src="./educational-games.js"></script><script src="./app-update.js?v=1.0.154"></script><script src="./platform-stats.js"></script><script src="./gemini-fix.js"></script>
+<script src="./educational-games.js"></script><script src="./app-update.js?v=1.0.155"></script><script src="./platform-stats.js"></script><script src="./gemini-fix.js"></script>
 <script src="./offline-mode.js"></script>
 <script src="./navigation-fix.js"></script>
 <script src="./kindergarten-languages.js"></script>
@@ -1146,7 +1161,7 @@ if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.s
 <script src="./azhar-sec1-tawhid-structure.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="./supabase-chat-config.js"></script>
-<script src="./owner-auth.js?v=1.0.154"></script>
+<script src="./owner-auth.js?v=1.0.155"></script>
 <script src="./supabase-call-alerts.js"></script>
 <script src="./supabase-private-chat.js"></script>
 <script src="./feedback-system.js"></script>
@@ -1161,5 +1176,5 @@ if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.s
 <script src="./library-config.js?v=1.0.118"></script>
 <script src="./library.js?v=1.0.118"></script>
 <script src="./student-image-activity.js"></script>
-<script src="./session-restore.js?v=1.0.154"></script></body>
+<script src="./session-restore.js?v=1.0.155"></script></body>
 </html>
