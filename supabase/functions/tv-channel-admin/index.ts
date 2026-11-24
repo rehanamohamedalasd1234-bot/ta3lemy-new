@@ -1,6 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const OWNER_EMAIL = "rehanamohamedalasd1234@gmail.com";
+const OWNER_EMAIL = "hafezzaza98@gmail.com";
 const ALLOWED_ORIGINS = new Set([
   "https://rehanamohamedalasd1234-bot.github.io",
   "https://localhost",

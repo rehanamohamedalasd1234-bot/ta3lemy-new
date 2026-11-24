@@ -451,11 +451,11 @@
           '<label style="font-size:12px;font-weight:700;color:#455A64;">طريقة العرض<select name="behavior" style="display:block;width:100%;box-sizing:border-box;margin-top:4px;padding:10px;border:1px solid #CFD8DC;border-radius:9px;font:inherit;"><option value="video">فيديو مرفوع من الجهاز (الأسهل)</option><option value="youtube">فيديو YouTube مسموح تضمينه</option><option value="hls">بث HLS أملكه أو أملك إذنًا به</option><option value="external">رابط رسمي خارجي</option></select></label>' +
         '</div>' +
         '<label style="font-size:12px;font-weight:700;color:#455A64;">فيديو القناة من الهاتف (الطريقة الأسهل)<input name="video_file" type="file" accept="video/mp4,video/webm,video/quicktime,video/ogg" style="display:block;width:100%;box-sizing:border-box;margin-top:4px;padding:9px;border:1px solid #CFD8DC;border-radius:9px;font:inherit;"><small style="display:block;margin-top:4px;color:#607D8B;line-height:1.7;">اختر «فيديو مرفوع من الجهاز» ثم اختر ملف الفيديو. سيعمل داخل شاشة التلفزيون دون كتابة رابط.</small></label>' +
-          '<label style="font-size:12px;font-weight:700;color:#455A64;">رابط HTTPS (اختياري عند رفع فيديو من الجهاز)<input name="watch_url" type="url" maxlength="2048" placeholder="يُملأ تلقائيًا عند رفع فيديو" style="display:block;width:100%;box-sizing:border-box;margin-top:4px;padding:10px;border:1px solid #CFD8DC;border-radius:9px;font:inherit;direction:ltr;text-align:left;"></label>' +
+          '<label style="font-size:12px;font-weight:700;color:#455A64;">رابط HTTPS (اتركيه فارغًا عند رفع فيديو من الجهاز)<input name="watch_url" type="url" maxlength="2048" placeholder="https://..." style="display:block;width:100%;box-sizing:border-box;margin-top:4px;padding:10px;border:1px solid #CFD8DC;border-radius:9px;font:inherit;direction:ltr;text-align:left;"></label>' +
         '<label style="font-size:12px;font-weight:700;color:#455A64;">رابط شعار اختياري<input name="logo_url" type="url" maxlength="2048" placeholder="https://..." style="display:block;width:100%;box-sizing:border-box;margin-top:4px;padding:10px;border:1px solid #CFD8DC;border-radius:9px;font:inherit;direction:ltr;text-align:left;"></label>' +
         '<label style="font-size:12px;font-weight:700;color:#455A64;">وصف مختصر<textarea name="description" maxlength="240" rows="2" placeholder="مثال: بث محاضرات قناتك الخاصة" style="display:block;width:100%;box-sizing:border-box;margin-top:4px;padding:10px;border:1px solid #CFD8DC;border-radius:9px;font:inherit;resize:vertical;"></textarea></label>' +
         '<div style="background:#FFF8E1;color:#6D4C41;border-radius:9px;padding:9px;font-size:11px;line-height:1.8;">أضيفي فقط بثًا تملكينه أو لديك إذن صريح لاستخدامه. قنوات beIN وON Time ومدرستنا تفتح من مصادرها الرسمية؛ لا نعيد بثها أو نتجاوز الاشتراك أو قيود التضمين.</div>' +
-        '<button type="submit" style="border:0;border-radius:10px;padding:11px;background:#2E7D32;color:#fff;font:inherit;font-weight:800;">＋ إضافة قناة / محطة</button>' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;"><button type="button" id="tvChannelPreviewBtn" style="border:1px solid #2E7D32;border-radius:10px;padding:11px;background:#fff;color:#2E7D32;font:inherit;font-weight:800;">👁 معاينة داخل الشاشة</button><button type="submit" style="border:0;border-radius:10px;padding:11px;background:#2E7D32;color:#fff;font:inherit;font-weight:800;">＋ إضافة قناة / محطة</button></div>' +
         '<div id="tvChannelFormStatus" role="status" style="font-size:12px;line-height:1.7;"></div>' +
       '</form></section>';
   }
@@ -489,6 +489,8 @@
     });
     var form = document.getElementById('tvChannelForm');
     if (form) form.addEventListener('submit', addChannel);
+    var previewButton = document.getElementById('tvChannelPreviewBtn');
+    if (previewButton) previewButton.addEventListener('click', previewChannelForm);
   }
 
   async function ownerSession() {
@@ -514,6 +516,25 @@
     try { body = await response.json(); } catch (_) { body = {}; }
     if (!response.ok || !body.ok) throw new Error(body.error || 'تعذر تنفيذ العملية.');
     return body.data;
+  }
+
+  function previewChannelForm() {
+    var form = document.getElementById('tvChannelForm');
+    var status = document.getElementById('tvChannelFormStatus');
+    if (!form) return;
+    var data = new FormData(form);
+    var url = String(data.get('watch_url') || '').trim();
+    var behavior = String(data.get('behavior') || 'external');
+    var file = form.querySelector('[name="video_file"]') && form.querySelector('[name="video_file"]').files[0];
+    if (behavior === 'video' && file) {
+      url = URL.createObjectURL(file);
+    }
+    if (!url || !safeHttps(url)) {
+      if (status) { status.textContent = 'للمعاينة: أدخلي رابط HTTPS أو اختاري ملف فيديو أولًا.'; status.style.color = '#B71C1C'; }
+      return;
+    }
+    playInTvStage({ id: 'preview', name: String(data.get('name') || 'معاينة القناة'), behavior: behavior, watch_url: url, logo_url: String(data.get('logo_url') || ''), description: String(data.get('description') || '') });
+    if (status) { status.textContent = 'تم تشغيل المعاينة داخل شاشة التلفزيون. لم تُحفظ القناة بعد.'; status.style.color = '#1B5E20'; }
   }
 
   async function addChannel(event) {

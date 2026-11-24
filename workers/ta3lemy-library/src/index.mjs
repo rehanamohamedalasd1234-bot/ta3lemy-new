@@ -1,5 +1,5 @@
 const CATALOG_KEY = 'ta3lemy-library-catalog-v1';
-const OWNER_EMAIL = 'rehanmohamedalasd1234@gmail.com';
+const OWNER_EMAIL = 'hafezzaza98@gmail.com';
 const PY4E_AR_URL = 'https://www.py4e.com/translations/AR/ar/book_ar_2023_01_01.pdf';
 const MAX_CATALOG_BYTES = 20 * 1024 * 1024;
 const MAX_BODY_BYTES = MAX_CATALOG_BYTES + 4 * 1024 * 1024;

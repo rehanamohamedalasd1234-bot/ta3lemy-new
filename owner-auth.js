@@ -2,7 +2,7 @@
 (function () {
   'use strict';
 
-  var OWNER_EMAIL = 'rehanamohamedalasd1234@gmail.com';
+  var OWNER_EMAIL = 'hafezzaza98@gmail.com';
   var STORAGE_KEY = 'ta3lemy-owner-auth-v1';
   var PUBLIC_APP_URL = 'https://rehanamohamedalasd1234-bot.github.io/ta3lemy-new/';
   var client = null;

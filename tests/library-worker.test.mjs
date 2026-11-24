@@ -30,7 +30,7 @@ function request(path, options = {}) {
 }
 
 function setSupabaseUser(t, user = {
-  email: 'rehanamohamedalasd1234@gmail.com',
+  email: 'hafezzaza98@gmail.com',
   email_confirmed_at: '2026-01-01T00:00:00Z',
   is_anonymous: false,
 }) {
@@ -161,7 +161,7 @@ test('another verified email cannot write to the library', async (t) => {
 
 test('unconfirmed owner email cannot write to the library', async (t) => {
   setSupabaseUser(t, {
-    email: 'rehanamohamedalasd1234@gmail.com',
+    email: 'hafezzaza98@gmail.com',
     email_confirmed_at: null,
     is_anonymous: false,
   });
@@ -177,7 +177,7 @@ test('unconfirmed owner email cannot write to the library', async (t) => {
 
 test('anonymous session cannot write to the library', async (t) => {
   setSupabaseUser(t, {
-    email: 'rehanamohamedalasd1234@gmail.com',
+    email: 'hafezzaza98@gmail.com',
     email_confirmed_at: '2026-01-01T00:00:00Z',
     is_anonymous: true,
   });
