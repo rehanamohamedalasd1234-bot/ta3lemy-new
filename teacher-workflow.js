@@ -179,6 +179,27 @@
     if (item.branch) details.push(item.branch);
     return details.join(' • ');
   }
+  function builtInHafezDemoDoc(filter) {
+    var scope = filter || {};
+    return {
+      id: 'hafez-demo-arabic-science-conscience',
+      data: function () { return {
+        title: 'العلم بين القانون والضمير — شرح تفاعلي', type: 'teacher_explanation', teacherContentType: 'lesson',
+        teacherName: 'مستر حافظ', teacherId: 'hafez_demo', teacherPhotoUrl: '',
+        stage: scope.stage || window.currentStage || 'bakkalorya', grade: scope.grade || window.currentGrade || 'الثاني',
+        subject: scope.subject || window.currentSubject || 'اللغة العربية', subjectLabel: scope.subject || window.currentSubject || 'اللغة العربية',
+        term: Number(scope.term || 1), created_at: '9999-01-01T00:00:00.000Z',
+        content: 'العلم يمنح الإنسان قدرة على الفهم والاختراع وتغيير العالم، لكن قيمة هذه القدرة تظهر في طريقة استخدامها. القانون يضع حدودًا عامة تحمي الإنسان، والضمير يجعلنا نسأل: هل ينبغي أن أفعل ما أستطيع فعله؟ لذلك يحتاج التقدم العلمي إلى معرفة ومسؤولية وأخلاق.',
+        question: 'هل تكفي معرفة الحقيقة العلمية، أم يجب أن يصاحب العلمَ ضميرٌ يوجّه استخدامه؟',
+        answer: 'لا تكفي المعرفة وحدها؛ فالقانون والضمير يوجهان استخدام العلم ويحميان الإنسان من الضرر.',
+        interactiveQuestions: [
+          { prompt: 'ما الفكرة الأساسية في الدرس؟', options: ['العلم قوة بلا حدود', 'العلم يحتاج إلى قانون وضمير', 'القانون يلغي العلم'], correct: 1, explanation: 'القيمة لا تكون في القدرة وحدها، بل في طريقة استخدامها وأثرها.' },
+          { prompt: 'أي سؤال يمثل دور الضمير؟', options: ['هل أستطيع فقط؟', 'هل ينبغي أن أفعل وما الأثر؟', 'هل أستطيع أن أسرع؟'], correct: 1, explanation: 'الضمير يضيف المسؤولية والنظر إلى أثر القرار.' }
+        ],
+        video_search: 'فكرة فيديو: العلم يفتح الأبواب، ثم يتوقف الطالب عند لحظة اختيار بين القدرة والمسؤولية.'
+      }; }
+    };
+  }
   function teacherTermName(term) { return Number(term) === 2 ? 'الترم الثاني' : 'الترم الأول'; }
   function applyTeacherDirectoryFilter(docs) {
     if (!teacherDirectoryFilter) return docs;
@@ -247,6 +268,7 @@
     try {
       var snapshot = await db.collection('lessons').where('type', '==', 'teacher_explanation').get();
       var docs = snapshot.docs ? snapshot.docs.slice() : [];
+      docs.push(builtInHafezDemoDoc(teacherDirectoryFilter || {}));
       if (!docs.length) {
         try {
           var saved = window.readOfflineLessons ? await window.readOfflineLessons() : JSON.parse(localStorage.getItem('offline_lessons') || '[]');
@@ -263,6 +285,7 @@
         var cached = window.readOfflineLessons ? await window.readOfflineLessons() : JSON.parse(localStorage.getItem('offline_lessons') || '[]');
         savedDocs = cached.filter(function (item) { return item && item.type === 'teacher_explanation'; }).map(function (item) { return { id: String(item.id), data: function () { return item; } }; });
       } catch (cacheError) { console.warn(cacheError); }
+      savedDocs.push(builtInHafezDemoDoc(teacherDirectoryFilter || {}));
       savedDocs = applyTeacherDirectoryFilter(savedDocs);
       if (savedDocs.length) renderTeacherDirectory(savedDocs);
       else list.innerHTML = '<div class="tw-empty">تعذر تحميل قائمة المعلمين. تحقق من الاتصال، أو افتحها بعد الاتصال بالإنترنت أول مرة.</div>';

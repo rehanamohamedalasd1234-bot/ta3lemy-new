@@ -263,6 +263,17 @@ async function viewContent(id){
       h+='</div></section>';
     }
     if(it.content)h+='<div style="line-height:2;font-size:15px;white-space:pre-wrap;">'+it.content+'</div>';
+    if(Array.isArray(it.interactiveQuestions)&&it.interactiveQuestions.length){
+      h+='<section style="margin-top:20px;padding:16px;border:1px solid #d8eadc;border-radius:14px;background:#fbfefb;"><h3 style="margin:0 0 8px;color:#245b35;">🧠 اختبر فهمك مع مستر حافظ</h3><div style="font-size:13px;color:#68756d;margin-bottom:12px;">اختر الإجابة، ثم اقرأ سبب التصحيح قبل الانتقال للسؤال التالي.</div>';
+      it.interactiveQuestions.forEach(function(q,qi){
+        h+='<div style="padding:13px 0;border-top:1px solid #e4eee5;"><div style="font-weight:700;color:#17352d;margin-bottom:7px;">'+(qi+1)+') '+reviewText(q.prompt||'')+'</div>';
+        (Array.isArray(q.options)?q.options:[]).forEach(function(option,oi){
+          h+='<button type="button" class="hafez-demo-choice" data-question="'+qi+'" data-option="'+oi+'" data-correct="'+Number(q.correct)+'" data-explanation="'+reviewText(q.explanation||'')+'" onclick="answerHafezDemo(this)" style="display:block;width:100%;text-align:right;padding:10px 12px;margin:7px 0;border:1px solid #dbe8df;border-radius:10px;background:#fff;font:inherit;cursor:pointer;">'+reviewText(option)+'</button>';
+        });
+        h+='<div id="hafezDemoFeedback'+qi+'" style="min-height:22px;font-size:13px;font-weight:700;"></div></div>';
+      });
+      h+='</section>';
+    }
     if(it.pdf_url||it.pdfUrl)h+=pdfAttachmentMarkup(it.pdf_url||it.pdfUrl,it.pdf_name||it.pdfName);
     if(it.video_url)h+=inAppVideoMarkup(it.video_url);else if(it.video_search)h+=inAppVideoMarkup('');
     if(it.question){
@@ -284,6 +295,7 @@ async function viewContent(id){
   }catch(e){console.error(e);showToast('❌ تعذر فتح المحتوى');}
 }
 function toggleAnswer(btn){const box=btn.nextElementSibling;if(box.style.display==='none'||!box.style.display){box.style.display='block';btn.textContent='🙈 إخفاء الإجابة';}else{box.style.display='none';btn.textContent='👁️ إظهار الإجابة';}}
+function answerHafezDemo(button){var q=button.getAttribute('data-question'),buttons=document.querySelectorAll('.hafez-demo-choice[data-question="'+q+'"]'),correct=Number(button.getAttribute('data-correct')),chosen=Number(button.getAttribute('data-option')),feedback=document.getElementById('hafezDemoFeedback'+q);Array.prototype.forEach.call(buttons,function(item){item.disabled=true;if(Number(item.getAttribute('data-option'))===correct){item.style.background='#E8F5E9';item.style.borderColor='#65A86F';}else if(item===button&&chosen!==correct){item.style.background='#FFEBEE';item.style.borderColor='#C62828';}});if(chosen===correct){feedback.textContent='✅ إجابة صحيحة — '+button.getAttribute('data-explanation');feedback.style.color='#23783e';}else{feedback.textContent='❌ راجع الفكرة — '+button.getAttribute('data-explanation');feedback.style.color='#a13c3c';}}
 function reviewText(value){return String(value||'').replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 async function loadStudentAnswerReview(lessonId){
   var box=document.getElementById('studentAnswerReview');
