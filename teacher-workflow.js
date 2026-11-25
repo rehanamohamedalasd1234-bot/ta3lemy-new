@@ -192,12 +192,24 @@
   ];
   function hafezDemoData(lesson, kind, scope) {
     var labels = { lesson: 'شرح تفاعلي', exercise: 'تدريبات', exam: 'امتحان قصير', video: 'فيديو تفاعلي' };
-    var data = { title: lesson.title + ' — ' + labels[kind], type: 'teacher_explanation', teacherContentType: kind,
+    var data = { title: lesson.title + ' — ' + labels[kind], type: 'teacher_explanation', teacherContentType: kind, hafezInteractive: true,
       teacherName: 'مستر حافظ', teacherId: 'hafez_demo', teacherPhotoUrl: '', stage: scope.stage || window.currentStage || 'bakkalorya',
       grade: scope.grade || window.currentGrade || 'الثاني', subject: scope.subject || window.currentSubject || 'اللغة العربية', subjectLabel: scope.subject || window.currentSubject || 'اللغة العربية',
       term: Number(scope.term || (lesson.id.indexOf('u2-') === 0 ? 1 : 1)), created_at: '9999-01-01T00:00:00.000Z', content: lesson.content,
       question: lesson.question, answer: lesson.answer, video_search: 'فيديو تفاعلي مقترح: موقف قصير من الدرس يتوقف عند سؤال، ثم يختار الطالب التصرف أو الفكرة الأقرب إلى المعنى.' };
-    if (kind === 'exercise' || kind === 'exam') data.interactiveQuestions = [{ prompt: lesson.question, options: lesson.options, correct: lesson.correct, explanation: lesson.answer }];
+    data.practiceQuestions = [
+      { type: 'mcq', prompt: lesson.question, options: lesson.options, correct: lesson.correct, explanation: lesson.answer },
+      { type: 'tf', prompt: 'الفكرة الواردة في درس «' + lesson.title + '» لا تحتاج إلى تطبيق عملي.', options: ['صح', 'خطأ'], correct: 1, explanation: 'الدرس يتحول إلى قيمة عندما يظهر في الفهم والسلوك والتطبيق.' },
+      { type: 'mcq', prompt: 'أي اختيار يعبّر عن الفهم الأعمق للدرس؟', options: [lesson.options[lesson.correct], 'الحفظ دون فهم', 'إصدار حكم سريع دون دليل'], correct: 0, explanation: 'الفهم الأعمق يربط الفكرة بالموقف والدليل والأثر.' },
+      { type: 'tf', prompt: 'يمكن للطالب أن يربط فكرة الدرس بموقف من حياته اليومية.', options: ['صح', 'خطأ'], correct: 0, explanation: 'التطبيق على موقف حقيقي يثبت الفهم ويجعل التعلم وظيفيًا.' }
+    ];
+    data.examQuestions = [
+      { type: 'mcq', prompt: lesson.question, options: lesson.options, correct: lesson.correct, explanation: lesson.answer },
+      { type: 'tf', prompt: 'الفكرة الأساسية في الدرس قابلة للمناقشة والتحليل وليست للحفظ فقط.', options: ['صح', 'خطأ'], correct: 0, explanation: 'أسئلة البكالوريا تقيس الفهم والتحليل والتطبيق.' },
+      { type: 'mcq', prompt: 'ما أفضل طريقة للإجابة عن سؤال تحليلي في هذا الدرس؟', options: ['ذكر الفكرة مع تعليل ومثال', 'كتابة كلمة واحدة', 'نسخ العنوان فقط'], correct: 0, explanation: 'الإجابة القوية تجمع الفكرة والتعليل والدليل أو المثال.' },
+      { type: 'text', prompt: 'اكتب في سطرين تطبيقًا من حياتك يوضح فكرة الدرس.', correct: null, explanation: 'تُقبل الإجابة إذا ربطت بين فكرة الدرس وموقف واضح.' }
+    ];
+    if (kind === 'exercise' || kind === 'exam') data.interactiveQuestions = data.practiceQuestions;
     if (kind === 'video') data.content = lesson.content + '\n\n🎥 شاهد الموقف المقترح ثم أجب: ما القرار أو الفكرة الأكثر مسؤولية؟';
     return data;
   }
