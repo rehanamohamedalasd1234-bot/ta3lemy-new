@@ -179,27 +179,39 @@
     if (item.branch) details.push(item.branch);
     return details.join(' • ');
   }
-  function builtInHafezDemoDoc(filter) {
-    var scope = filter || {};
-    return {
-      id: 'hafez-demo-arabic-science-conscience',
-      data: function () { return {
-        title: 'العلم بين القانون والضمير — شرح تفاعلي', type: 'teacher_explanation', teacherContentType: 'lesson',
-        teacherName: 'مستر حافظ', teacherId: 'hafez_demo', teacherPhotoUrl: '',
-        stage: scope.stage || window.currentStage || 'bakkalorya', grade: scope.grade || window.currentGrade || 'الثاني',
-        subject: scope.subject || window.currentSubject || 'اللغة العربية', subjectLabel: scope.subject || window.currentSubject || 'اللغة العربية',
-        term: Number(scope.term || 1), created_at: '9999-01-01T00:00:00.000Z',
-        content: 'العلم يمنح الإنسان قدرة على الفهم والاختراع وتغيير العالم، لكن قيمة هذه القدرة تظهر في طريقة استخدامها. القانون يضع حدودًا عامة تحمي الإنسان، والضمير يجعلنا نسأل: هل ينبغي أن أفعل ما أستطيع فعله؟ لذلك يحتاج التقدم العلمي إلى معرفة ومسؤولية وأخلاق.',
-        question: 'هل تكفي معرفة الحقيقة العلمية، أم يجب أن يصاحب العلمَ ضميرٌ يوجّه استخدامه؟',
-        answer: 'لا تكفي المعرفة وحدها؛ فالقانون والضمير يوجهان استخدام العلم ويحميان الإنسان من الضرر.',
-        interactiveQuestions: [
-          { prompt: 'ما الفكرة الأساسية في الدرس؟', options: ['العلم قوة بلا حدود', 'العلم يحتاج إلى قانون وضمير', 'القانون يلغي العلم'], correct: 1, explanation: 'القيمة لا تكون في القدرة وحدها، بل في طريقة استخدامها وأثرها.' },
-          { prompt: 'أي سؤال يمثل دور الضمير؟', options: ['هل أستطيع فقط؟', 'هل ينبغي أن أفعل وما الأثر؟', 'هل أستطيع أن أسرع؟'], correct: 1, explanation: 'الضمير يضيف المسؤولية والنظر إلى أثر القرار.' }
-        ],
-        video_search: 'فكرة فيديو: العلم يفتح الأبواب، ثم يتوقف الطالب عند لحظة اختيار بين القدرة والمسؤولية.'
-      }; }
-    };
+  var HAFEZ_LESSONS = [
+    { id: 'u1-l1', title: 'العلم بين القانون والضمير', content: 'العلم قدرة على الفهم والاختراع وتغيير العالم، لكن قيمته تظهر في طريقة استخدامه. القانون يضع حدودًا تحمي الإنسان، والضمير يجعلنا نسأل عن أثر ما نفعله ومسؤوليته.', question: 'هل تكفي معرفة الحقيقة العلمية أم يجب أن يصاحب العلم ضمير؟', answer: 'لا تكفي المعرفة وحدها؛ فالقانون والضمير يوجهان استخدام العلم ويحميان الإنسان.', options: ['العلم قوة بلا حدود', 'العلم يحتاج إلى قانون وضمير', 'القانون يلغي العلم'], correct: 1 },
+    { id: 'u1-l2', title: 'الخلق جوهر الفضيلة', content: 'تظهر قيمة الأخلاق في السلوك اليومي، فالفضيلة ليست كلامًا نظريًا بل اختيارًا يتكرر في التعامل مع الناس وحفظ الحقوق والالتزام بالأمانة.', question: 'كيف تتحول الأخلاق إلى فضيلة؟', answer: 'تتحول إلى فضيلة عندما تظهر في السلوك والاختيارات اليومية.', options: ['بالحفظ فقط', 'بالممارسة والالتزام', 'بتجاهل الآخرين'], correct: 1 },
+    { id: 'u1-l3', title: 'العلم نور', content: 'يصور النص الشعري العلم نورًا يهدي الإنسان ويكشف له الطريق، ويربط بين طلب المعرفة ورقي الفرد والمجتمع.', question: 'لماذا شُبّه العلم بالنور؟', answer: 'لأنه يكشف الجهل ويهدي الإنسان إلى الفهم والعمل الصحيح.', options: ['لأنه ضوء مادي فقط', 'لأنه يهدي ويكشف الحقيقة', 'لأنه يمنع السؤال'], correct: 1 },
+    { id: 'u2-l1', title: 'التقنية وصناعة الرأي العام', content: 'تؤثر التقنية ووسائل التواصل في تشكيل الرأي العام، لذلك يحتاج المتلقي إلى التحقق من المصدر ومقارنة المعلومات قبل نشرها أو الحكم عليها.', question: 'ما التصرف المسؤول أمام خبر رقمي؟', answer: 'التحقق من المصدر ومقارنة المعلومات قبل المشاركة أو إصدار الحكم.', options: ['نشره فورًا', 'التحقق من مصدره', 'حذفه بلا قراءة'], correct: 1 },
+    { id: 'u2-l2', title: 'بين الذوق والعقل', content: 'يجمع الحكم المتزن بين الذوق الذي يلتقط الجمال والعقل الذي يحلل ويميز، فلا نكتفي بالانطباع السريع ولا نلغي الإحساس.', question: 'ما الذي يحققه الجمع بين الذوق والعقل؟', answer: 'يحقق تذوقًا واعيًا وحكمًا متزنًا.', options: ['انطباعًا عشوائيًا', 'حكمًا متزنًا', 'رفض كل جمال'], correct: 1 },
+    { id: 'u2-l3', title: 'أثر الكلمة وحفظ اللسان', content: 'للكلمة أثر في بناء العلاقات أو إفسادها. يعلّم النص أن اختيار اللفظ مسؤولية، وأن حفظ اللسان يحمي الإنسان من الأذى والندم.', question: 'لماذا نحتاج إلى حفظ اللسان؟', answer: 'لأن الكلمة قد تبني أو تؤذي، وصاحبها مسؤول عن أثرها.', options: ['لأن الكلام غير مهم', 'لأن للكلمة أثرًا ومسؤولية', 'لمنع الحوار دائمًا'], correct: 1 },
+    { id: 'u3-l1', title: 'حقوق الإنسان بين العالمية والخصوصية', content: 'تقوم حقوق الإنسان على كرامة مشتركة، مع مراعاة اختلاف الثقافات والمجتمعات. الحوار والتوازن يساعدان على حماية الحقوق دون إلغاء الخصوصية.', question: 'ما الموقف المتزن من حقوق الإنسان؟', answer: 'حماية الكرامة الإنسانية مع فهم الخصوصيات الثقافية بالحوار.', options: ['إلغاء كل اختلاف', 'التوازن والحوار', 'رفض الحقوق'], correct: 1 },
+    { id: 'u3-l2', title: 'الحرية الفكرية', content: 'الحرية الفكرية حق في التفكير والتعبير، لكنها ترتبط بالمسؤولية واحترام الإنسان وعدم تحويل الاختلاف إلى إساءة أو اعتداء.', question: 'ما الذي يرافق الحرية الفكرية؟', answer: 'المسؤولية واحترام حقوق الآخرين.', options: ['الفوضى', 'المسؤولية والاحترام', 'منع التفكير'], correct: 1 },
+    { id: 'u3-l3', title: 'يا أخي الإنسان', content: 'يركز النص الشعري على الأخوة الإنسانية والتعاطف ورفض التمييز، ويدعو إلى رؤية الإنسان في الآخر قبل اختلاف اللغة أو المكان أو اللون.', question: 'ما الرسالة الإنسانية الأبرز؟', answer: 'احترام الإنسان والتعاون معه بعيدًا عن التمييز.', options: ['العزلة', 'الأخوة الإنسانية', 'التعصب'], correct: 1 }
+  ];
+  function hafezDemoData(lesson, kind, scope) {
+    var labels = { lesson: 'شرح تفاعلي', exercise: 'تدريبات', exam: 'امتحان قصير', video: 'فيديو تفاعلي' };
+    var data = { title: lesson.title + ' — ' + labels[kind], type: 'teacher_explanation', teacherContentType: kind,
+      teacherName: 'مستر حافظ', teacherId: 'hafez_demo', teacherPhotoUrl: '', stage: scope.stage || window.currentStage || 'bakkalorya',
+      grade: scope.grade || window.currentGrade || 'الثاني', subject: scope.subject || window.currentSubject || 'اللغة العربية', subjectLabel: scope.subject || window.currentSubject || 'اللغة العربية',
+      term: Number(scope.term || (lesson.id.indexOf('u2-') === 0 ? 1 : 1)), created_at: '9999-01-01T00:00:00.000Z', content: lesson.content,
+      question: lesson.question, answer: lesson.answer, video_search: 'فيديو تفاعلي مقترح: موقف قصير من الدرس يتوقف عند سؤال، ثم يختار الطالب التصرف أو الفكرة الأقرب إلى المعنى.' };
+    if (kind === 'exercise' || kind === 'exam') data.interactiveQuestions = [{ prompt: lesson.question, options: lesson.options, correct: lesson.correct, explanation: lesson.answer }];
+    if (kind === 'video') data.content = lesson.content + '\n\n🎥 شاهد الموقف المقترح ثم أجب: ما القرار أو الفكرة الأكثر مسؤولية؟';
+    return data;
   }
+  function builtInHafezDemoDocs(filter) {
+    var scope = filter || {}, docs = [];
+    HAFEZ_LESSONS.forEach(function (lesson) { ['lesson', 'exercise', 'exam', 'video'].forEach(function (kind) { docs.push({ id: 'hafez-demo-' + lesson.id + '-' + kind, data: function () { return hafezDemoData(lesson, kind, scope); } }); }); });
+    return docs;
+  }
+  window.getHafezDemoLesson = function (id) {
+    var match = String(id || '').match(/^hafez-demo-(u[1-3]-l[1-3])-(lesson|exercise|exam|video)$/);
+    if (!match) return null;
+    var lesson = HAFEZ_LESSONS.find(function (item) { return item.id === match[1]; });
+    return lesson ? hafezDemoData(lesson, match[2], {}) : null;
+  };
   function teacherTermName(term) { return Number(term) === 2 ? 'الترم الثاني' : 'الترم الأول'; }
   function applyTeacherDirectoryFilter(docs) {
     if (!teacherDirectoryFilter) return docs;
@@ -268,7 +280,7 @@
     try {
       var snapshot = await db.collection('lessons').where('type', '==', 'teacher_explanation').get();
       var docs = snapshot.docs ? snapshot.docs.slice() : [];
-      docs.push(builtInHafezDemoDoc(teacherDirectoryFilter || {}));
+      docs.push.apply(docs, builtInHafezDemoDocs(teacherDirectoryFilter || {}));
       if (!docs.length) {
         try {
           var saved = window.readOfflineLessons ? await window.readOfflineLessons() : JSON.parse(localStorage.getItem('offline_lessons') || '[]');
@@ -285,7 +297,7 @@
         var cached = window.readOfflineLessons ? await window.readOfflineLessons() : JSON.parse(localStorage.getItem('offline_lessons') || '[]');
         savedDocs = cached.filter(function (item) { return item && item.type === 'teacher_explanation'; }).map(function (item) { return { id: String(item.id), data: function () { return item; } }; });
       } catch (cacheError) { console.warn(cacheError); }
-      savedDocs.push(builtInHafezDemoDoc(teacherDirectoryFilter || {}));
+      savedDocs.push.apply(savedDocs, builtInHafezDemoDocs(teacherDirectoryFilter || {}));
       savedDocs = applyTeacherDirectoryFilter(savedDocs);
       if (savedDocs.length) renderTeacherDirectory(savedDocs);
       else list.innerHTML = '<div class="tw-empty">تعذر تحميل قائمة المعلمين. تحقق من الاتصال، أو افتحها بعد الاتصال بالإنترنت أول مرة.</div>';

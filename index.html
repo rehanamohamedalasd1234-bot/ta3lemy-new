@@ -227,6 +227,7 @@ function pdfAttachmentMarkup(rawUrl,rawName){
 async function viewContent(id){
   try{
     let it=null;
+    if(String(id).indexOf('hafez-demo-')===0&&typeof window.getHafezDemoLesson==='function')it=window.getHafezDemoLesson(id);
     if(navigator.onLine){try{const doc=await db.collection('lessons').doc(id).get();if(doc.exists)it=doc.data();}catch(e){console.warn('استخدام نسخة الدرس المحفوظة',e);}}
     if(!it){const saved=window.readOfflineLessons?await window.readOfflineLessons():JSON.parse(localStorage.getItem('offline_lessons')||'[]');it=saved.find(function(x){return String(x.id)===String(id);})||null;}
     if(!it){showToast('⚠️ الدرس غير محفوظ على هذا الجهاز');return;}
@@ -1097,7 +1098,7 @@ if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.s
 <script src="./teacher.js"></script>
 <script src="./owner-approvals.js?v=1.0.128"></script>
 <script src="./azhar-curriculum.js"></script>
-<script src="./teacher-workflow.js?v=1.0.134"></script>
+<script src="./teacher-workflow.js?v=1.0.158"></script>
 <script src="./creativity-config.js"></script>
 <script src="./creativity.js"></script>
 <script src="./chat-config.js"></script>
