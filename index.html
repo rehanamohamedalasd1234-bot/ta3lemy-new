@@ -1207,4 +1207,139 @@ if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.s
 <script src="./library.js?v=1.0.118"></script>
 <script src="./student-image-activity.js"></script>
 <script src="./session-restore.js?v=1.0.155"></script></body>
+<!-- نافذة الاستقصاء -->
+<div id="pollModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; justify-content:center; align-items:center; direction:rtl;">
+    <div style="background:#fff; padding:20px; border-radius:12px; width:90%; max-width:500px; text-align:right; position:relative;">
+        <span onclick="document.getElementById('pollModal').style.display='none'" style="position:absolute; top:10px; left:10px; cursor:pointer; font-size:24px; font-weight:bold;">&times;</span>
+        <h3 style="margin-top:0; color:#333;">رأيك يهمنا</h3>
+        <h4 id="pollQuestionText" style="color:#555; font-size:16px;">جاري التحميل...</h4>
+        <div id="pollOptionsContainer" style="margin-top:15px;"></div>
+        <div id="pollResultsContainer" style="display:none; margin-top:15px;">
+            <h4 style="color:#2c3e50;">النتائج:</h4>
+            <div id="pollResultsBars"></div>
+            <p id="pollTotalVotes" style="text-align:left; font-size:12px; color:#888;"></p>
+        </div>
+    </div>
+</div>
+
+<!-- كود JavaScript للاستقصاء -->
+<script>
+    // تأكد من أن Firebase مهيأ في مشروعك
+    // const db = firebase.firestore();
+    // const auth = firebase.auth();
+
+    function openPoll() {
+        document.getElementById('pollModal').style.display = 'flex';
+        loadActivePoll();
+    }
+
+    function loadActivePoll() {
+        const questionElement = document.getElementById('pollQuestionText');
+        const optionsContainer = document.getElementById('pollOptionsContainer');
+        const resultsContainer = document.getElementById('pollResultsContainer');
+        
+        questionElement.innerText = 'جاري التحميل...';
+        optionsContainer.innerHTML = '';
+        resultsContainer.style.display = 'none';
+
+        db.collection('polls').where('isActive', '==', true).limit(1).get()
+        .then(snapshot => {
+            if (snapshot.empty) {
+                questionElement.innerText = 'لا يوجد استقصاء حالياً.';
+                return;
+            }
+            const doc = snapshot.docs[0];
+            const data = doc.data();
+            
+            questionElement.innerText = data.question;
+            
+            data.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.innerText = opt;
+                btn.style.cssText = "display:block; width:100%; padding:10px; margin-bottom:8px; border:1px solid #ccc; border-radius:6px; background:#f8f9fa; cursor:pointer; font-size:16px;";
+                btn.onclick = () => submitVote(doc.id, index);
+                optionsContainer.appendChild(btn);
+            });
+
+            checkIfVoted(doc.id);
+        }).catch(err => {
+            console.error(err);
+            questionElement.innerText = 'حدث خطأ في تحميل الاستقصاء.';
+        });
+    }
+
+    function submitVote(pollId, optionIndex) {
+        const user = auth.currentUser;
+        if (!user) {
+            alert('يرجى تسجيل الدخول أولاً للتصويت.');
+            return;
+        }
+
+        db.collection('polls').doc(pollId).collection('votes').doc(user.uid).get()
+        .then(doc => {
+            if (doc.exists) {
+                alert('لقد قمت بالتصويت مسبقاً!');
+                showResults(pollId);
+            } else {
+                db.collection('polls').doc(pollId).collection('votes').doc(user.uid).set({
+                    optionIndex: optionIndex,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                }).then(() => {
+                    const increment = firebase.firestore.FieldValue.increment(1);
+                    const updateObj = {};
+                    updateObj[`results.${optionIndex}`] = increment;
+                    
+                    return db.collection('polls').doc(pollId).update(updateObj);
+                }).then(() => {
+                    showResults(pollId);
+                });
+            }
+        });
+    }
+
+    function checkIfVoted(pollId) {
+        const user = auth.currentUser;
+        if (user) {
+            db.collection('polls').doc(pollId).collection('votes').doc(user.uid).get()
+            .then(doc => {
+                if (doc.exists) {
+                    showResults(pollId);
+                }
+            });
+        }
+    }
+
+    function showResults(pollId) {
+        document.getElementById('pollOptionsContainer').style.display = 'none';
+        document.getElementById('pollResultsContainer').style.display = 'block';
+
+        db.collection('polls').doc(pollId).get().then(doc => {
+            const data = doc.data();
+            const results = data.results || {};
+            const total = Object.values(results).reduce((a, b) => a + b, 0);
+            
+            const barsContainer = document.getElementById('pollResultsBars');
+            barsContainer.innerHTML = '';
+            
+            data.options.forEach((opt, index) => {
+                const votes = results[index] || 0;
+                const percent = total === 0 ? 0 : Math.round((votes / total) * 100);
+                
+                barsContainer.innerHTML += `
+                    <div style="margin-bottom:10px;">
+                        <div style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:4px;">
+                            <span>${opt}</span>
+                            <span>${percent}% (${votes})</span>
+                        </div>
+                        <div style="background:#e0e0e0; border-radius:4px; overflow:hidden; height:12px;">
+                            <div style="background:#4CAF50; width:${percent}%; height:100%;"></div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            document.getElementById('pollTotalVotes').innerText = `إجمالي المشاركات: ${total}`;
+        });
+    }
+</script>
 </html>
