@@ -93,14 +93,16 @@ test('offline mode leaves local radio browsing and downloaded station playback a
   assert.match(guard[1], /addMyStationAudio/);
 });
 
-test('the updater checks the published repository version and refreshes the service worker', async () => {
+test('the updater checks the published repository version and refreshes cached web files', async () => {
   const updater = await read('app-update.js');
   const html = await read('index.html');
   const appVersion = JSON.parse(await read('version.json')).version;
   assert.match(updater, /var VERSION_URL = SITE_URL \+ 'version\.json'/);
   assert.match(updater, /fetch\('\.\/version\.json\?localVersionCheck='/);
   assert.doesNotMatch(updater, /releases\/latest\/download/);
-  assert.match(updater, /registration\.update\(\)/);
+  assert.match(updater, /registration\.unregister\(\)/);
+  assert.match(updater, /caches\.delete\(key\)/);
+  assert.match(updater, /window\.location\.replace\(target\.href\)/);
   assert.match(html, /onclick="openAppUpdate\(\)"/);
   assert.match(html, /name="ta3lemy-version" content="[^"]+"/);
   assert.ok(appVersion, 'version.json should define the current app version');
@@ -113,6 +115,21 @@ test('the library is reachable from the student home and owner administration su
   assert.match(library, /function openLibraryAdmin\(\)/);
   assert.match(library, /function signOutOwner\(\)/);
   assert.match(library, /HafezOwnerAuth\.signOut\(\)/);
+});
+
+test('owner administration uses password login without email links and retains verified sessions', async () => {
+  const ownerAuth = await read('owner-auth.js');
+  assert.match(ownerAuth, /auth\.signInWithPassword\(/);
+  assert.match(ownerAuth, /auth\.getUser\(session\.access_token\)/);
+  assert.match(ownerAuth, /user\.email_confirmed_at/);
+  assert.doesNotMatch(ownerAuth, /signInWithOtp|emailRedirectTo|requestMagicLink/);
+
+  for (const path of ['social-news.js', 'tv-channels.js', 'poll-system.js', 'library.js']) {
+    assert.match(await read(path), /requestPasswordLogin/);
+  }
+  const html = await read('index.html');
+  assert.match(html, /requestPollOwnerLogin\(\)/);
+  assert.doesNotMatch(html, /requestPollOwnerVerification|إرسال رابط التحقق للمالك/);
 });
 
 test('Quran offline downloads use compact verse strings and IndexedDB fallback', async () => {
@@ -174,7 +191,7 @@ test('students can answer image lessons with true/false, text and touch or mouse
   assert.match(activitySource, /MAX_POINTS = 12000/);
 
   const window = { addEventListener() {}, devicePixelRatio: 1 };
-  vm.runInNewContext(activitySource, { window, requestAnimationFrame(callback) { callback(); } });
+  vm.runInNewContext(activitySource, { window, document: { getElementById() { return null; } }, requestAnimationFrame(callback) { callback(); } });
   window.TeacherImageActivity.init({ querySelectorAll() { return []; } }, 'lesson-123');
   window.TeacherImageActivity.choose('صح');
   assert.deepEqual(JSON.parse(JSON.stringify(window.TeacherImageActivity.getSubmission())), {

@@ -44,11 +44,11 @@
   async function requireVerifiedOwner() {
     if (!isOwnerRole()) throw new Error('إدارة الاستقصاءات متاحة لمالك المنصة فقط.');
     if (!global.HafezOwnerAuth || typeof global.HafezOwnerAuth.getVerifiedSession !== 'function') {
-      throw new Error('خدمة التحقق من بريد المالك غير جاهزة. حدّث الصفحة وحاول مجددًا.');
+      throw new Error('خدمة تسجيل دخول المالك غير جاهزة. حدّث الصفحة وحاول مجددًا.');
     }
     var session = await global.HafezOwnerAuth.getVerifiedSession();
     if (!session || !session.access_token || !session.user) {
-      throw new Error('يجب التحقق من بريد المالك أولًا باستخدام رابط التحقق.');
+      throw new Error('سجّل دخول الإدارة بكلمة المرور أولًا.');
     }
     var verifiedEmail = String(session.user.email || '').trim().toLowerCase();
     var ownerEmail = String(global.HafezOwnerAuth.ownerEmail || '').trim().toLowerCase();
@@ -268,25 +268,26 @@
     } catch (error) {
       setDisplay('pollAdminContent', 'none');
       setDisplay('pollAdminOwnerVerification', 'block');
-      ownerStatus(error.message || 'يجب التحقق من بريد المالك قبل إدارة الاستقصاءات.', true);
+      ownerStatus(error.message || 'سجّل دخول الإدارة بكلمة المرور قبل إدارة الاستقصاءات.', true);
       return false;
     }
   }
 
-  async function requestPollOwnerVerification() {
+  async function requestPollOwnerLogin() {
     if (!isOwnerRole()) {
       ownerStatus('هذه اللوحة متاحة لمالك المنصة فقط.', true);
       return;
     }
-    if (!global.HafezOwnerAuth || typeof global.HafezOwnerAuth.requestMagicLink !== 'function') {
-      ownerStatus('خدمة التحقق من بريد المالك غير متاحة. حدّث الصفحة وحاول مجددًا.', true);
+    if (!global.HafezOwnerAuth || typeof global.HafezOwnerAuth.requestPasswordLogin !== 'function') {
+      ownerStatus('خدمة تسجيل دخول المالك غير متاحة. حدّث الصفحة وحاول مجددًا.', true);
       return;
     }
-    ownerStatus('جارٍ إرسال رابط التحقق إلى البريد المعتمد للمالك...', false);
+    ownerStatus('أدخل كلمة مرور الإدارة لتفعيل لوحة الاستقصاءات.', false);
     try {
-      await global.HafezOwnerAuth.requestMagicLink('pollOwnerAuthStatus');
+      var loggedIn = await global.HafezOwnerAuth.requestPasswordLogin('pollOwnerAuthStatus');
+      if (loggedIn) await refreshPollAdminAccess();
     } catch (error) {
-      ownerStatus(error.message || 'تعذر إرسال رابط التحقق.', true);
+      ownerStatus(error.message || 'تعذر تسجيل دخول المالك.', true);
     }
   }
 
@@ -458,7 +459,7 @@
   global.showResults = showResults;
   global.openPollAdmin = openPollAdmin;
   global.refreshPollAdminAccess = refreshPollAdminAccess;
-  global.requestPollOwnerVerification = requestPollOwnerVerification;
+  global.requestPollOwnerLogin = requestPollOwnerLogin;
   global.loadPollAdminList = loadPollAdminList;
   global.createPollFromAdmin = createPollFromAdmin;
   global.setPollActiveState = setPollActiveState;

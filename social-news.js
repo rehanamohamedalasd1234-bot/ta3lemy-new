@@ -179,9 +179,9 @@
   function ownerPanelMarkup() {
     return `
       <section style="background:#EAF3FF;border:1px solid #C7DDF8;border-radius:16px;padding:14px;margin-bottom:16px;">
-        <div style="font-weight:800;color:#174A7C;font-size:16px;margin-bottom:6px;">🛡️ مراجعة المنشورات — تحقق بريد المالك</div>
-        <div style="font-size:12px;color:#455A64;line-height:1.7;margin-bottom:9px;">إدارة المنشورات لا تعتمد على الدور الظاهر داخل التطبيق. أرسلي رابطًا آمنًا إلى بريد المالك المعتمد، ثم افتحيه على هذا الجهاز.</div>
-        <button type="button" id="socialOwnerLoginBtn" style="border:0;border-radius:10px;padding:10px 14px;background:#2E7D32;color:white;font-weight:700;">📧 إرسال رابط التحقق</button>
+        <div style="font-weight:800;color:#174A7C;font-size:16px;margin-bottom:6px;">🛡️ مراجعة المنشورات — دخول المالك</div>
+        <div style="font-size:12px;color:#455A64;line-height:1.7;margin-bottom:9px;">إدارة المنشورات لا تعتمد على الدور الظاهر داخل التطبيق؛ يلزم دخول المالك بكلمة المرور المعتمدة.</div>
+        <button type="button" id="socialOwnerLoginBtn" style="border:0;border-radius:10px;padding:10px 14px;background:#2E7D32;color:white;font-weight:700;">🔐 دخول الإدارة بكلمة المرور</button>
         <div id="socialOwnerAuthStatus" role="status" style="font-size:12px;line-height:1.7;margin-top:8px;"></div>
         <button type="button" data-social-admin-status="pending" style="border:0;border-radius:10px;padding:10px 14px;background:#1565C0;color:white;font-weight:700;margin-top:8px;">📥 عرض المنشورات المنتظرة</button>
         <button type="button" data-social-admin-status="approved" style="border:0;border-radius:10px;padding:10px 14px;background:#fff;color:#1565C0;font-weight:700;margin-right:6px;">📚 المنشورات المنشورة</button>
@@ -413,8 +413,11 @@
     });
     var ownerLoginButton = document.getElementById('socialOwnerLoginBtn');
     if (ownerLoginButton) ownerLoginButton.addEventListener('click', function () {
-      if (window.HafezOwnerAuth) window.HafezOwnerAuth.requestMagicLink('socialOwnerAuthStatus');
-      else toast('خدمة التحقق غير جاهزة؛ أعيدي تحميل الصفحة.');
+      if (window.HafezOwnerAuth && window.HafezOwnerAuth.requestPasswordLogin) {
+        window.HafezOwnerAuth.requestPasswordLogin('socialOwnerAuthStatus').then(function (ok) {
+          if (ok) refreshNews();
+        });
+      } else toast('خدمة تسجيل دخول المالك غير جاهزة؛ أعيدي تحميل الصفحة.');
     });
     c.querySelectorAll('[data-social-admin-status]').forEach(function (button) {
       button.addEventListener('click', function () { loadAdminPosts(button.getAttribute('data-social-admin-status')); });

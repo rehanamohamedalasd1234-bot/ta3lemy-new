@@ -24,7 +24,7 @@
 <meta name="description" content="منصة الأستاذ حافظ التعليمية — تعليم عام وأزهر وبكالوريا جديدة. دروس، تدريبات، امتحانات، قرآن كريم، مراجعة شاملة، وتطبيق يعمل بدون إنترنت.">
 <meta name="keywords" content="منصة تعليمية, بكالوريا, أزهر شريف, تعليم عام, دروس, قرآن كريم, امتحانات, مراجعة, الأستاذ حافظ">
 <meta name="author" content="الأستاذ حافظ">
-<meta name="ta3lemy-version" content="1.0.160">
+<meta name="ta3lemy-version" content="1.0.161">
 <meta name="robots" content="index, follow">
 <meta name="revisit-after" content="7 days">
 <meta property="og:type" content="website">
@@ -126,10 +126,10 @@
   </div>
   <div class="content">
     <section id="pollAdminOwnerVerification" style="background:#fff;border:1px solid #dce8df;border-radius:14px;padding:16px;margin-bottom:18px;">
-      <div style="font-weight:700;color:#17352d;margin-bottom:8px;">🔐 تحقق المالك</div>
-      <p style="font-size:13px;line-height:1.8;color:#526b57;">إدارة الاستقصاءات تتطلب جلسة بريد المالك الموثّقة. أرسل رابط التحقق وافتحه من البريد، ثم حدّث حالة التحقق.</p>
-      <button type="button" class="btn-primary" onclick="requestPollOwnerVerification()">📧 إرسال رابط التحقق للمالك</button>
-      <button type="button" class="btn-primary" onclick="refreshPollAdminAccess()" style="margin-top:8px;background:#1565C0;">✅ تحقّق من الجلسة</button>
+      <div style="font-weight:700;color:#17352d;margin-bottom:8px;">🔐 دخول المالك</div>
+      <p style="font-size:13px;line-height:1.8;color:#526b57;">إدارة الاستقصاءات محمية بجلسة المالك الموثّقة. أدخل كلمة مرور الإدارة للمتابعة؛ لن يتم إرسال بريد أو رابط تحقق.</p>
+      <button type="button" class="btn-primary" onclick="requestPollOwnerLogin()">🔐 دخول الإدارة بكلمة المرور</button>
+      <button type="button" class="btn-primary" onclick="refreshPollAdminAccess()" style="margin-top:8px;background:#1565C0;">✅ تحديث صلاحية الإدارة</button>
       <p id="pollOwnerAuthStatus" role="status" aria-live="polite" style="font-size:13px;line-height:1.7;margin:10px 0 0;"></p>
     </section>
     <div id="pollAdminContent" style="display:none;">
@@ -1269,6 +1269,6 @@ if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.s
     </div>
   </div>
 </div>
-<script src="./poll-system.js?v=1.0.160"></script>
+<script src="./poll-system.js?v=1.0.161"></script>
 </body>
 </html>

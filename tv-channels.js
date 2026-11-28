@@ -437,13 +437,13 @@
     if (!ownerRole()) return '';
     if (!verifiedOwnerSession) {
       return '<section style="background:#E8F5E9;border:1px solid #C8E6C9;border-radius:15px;padding:14px;margin-bottom:12px;">' +
-        '<div style="font-weight:800;color:#1B5E20;margin-bottom:6px;">🔐 إدارة القنوات — تحقق المالك</div>' +
-        '<div style="font-size:12px;color:#455A64;line-height:1.8;margin-bottom:10px;">تحقق المالك مطلوب فقط لإضافة أو حذف محطتك الخاصة. القنوات الرسمية الجاهزة متاحة للمشاهدة دون هذا الإجراء، وصفة الحساب الظاهرة في التطبيق وحدها لا تمنح صلاحية الإدارة.</div>' +
-        '<button type="button" id="tvOwnerLoginBtn" style="border:0;border-radius:10px;padding:10px 14px;background:#2E7D32;color:#fff;font:inherit;font-weight:700;">📧 إرسال رابط التحقق</button>' +
+        '<div style="font-weight:800;color:#1B5E20;margin-bottom:6px;">🔐 إدارة القنوات</div>' +
+        '<div style="font-size:12px;color:#455A64;line-height:1.8;margin-bottom:10px;">يلزم دخول المالك بكلمة المرور لإضافة أو حذف محطة خاصة. القنوات الرسمية الجاهزة متاحة للمشاهدة دون هذا الإجراء، وصفة الحساب الظاهرة في التطبيق وحدها لا تمنح صلاحية الإدارة.</div>' +
+        '<button type="button" id="tvOwnerLoginBtn" style="border:0;border-radius:10px;padding:10px 14px;background:#2E7D32;color:#fff;font:inherit;font-weight:700;">🔐 دخول الإدارة بكلمة المرور</button>' +
         '<div id="tvOwnerAuthStatus" role="status" style="font-size:12px;line-height:1.7;margin-top:8px;"></div></section>';
     }
     return '<section style="background:#E8F5E9;border:1px solid #C8E6C9;border-radius:15px;padding:14px;margin-bottom:12px;">' +
-      '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;"><div style="font-weight:800;color:#1B5E20;">✅ تم التحقق من بريد المالك</div><button type="button" id="tvOwnerLogoutBtn" style="border:1px solid #A5D6A7;border-radius:9px;padding:7px 10px;background:#fff;color:#1B5E20;font:inherit;font-size:12px;">تسجيل خروج الإدارة</button></div>' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;"><div style="font-weight:800;color:#1B5E20;">✅ دخول المالك مفعّل</div><button type="button" id="tvOwnerLogoutBtn" style="border:1px solid #A5D6A7;border-radius:9px;padding:7px 10px;background:#fff;color:#1B5E20;font:inherit;font-size:12px;">تسجيل خروج الإدارة</button></div>' +
       '<form id="tvChannelForm" style="display:grid;gap:8px;margin-top:12px;">' +
           '<label style="font-size:12px;font-weight:700;color:#455A64;">اسم القناة أو المحطة<input name="name" required maxlength="100" autocomplete="off" placeholder="مثال: محطتي التعليمية" style="display:block;width:100%;box-sizing:border-box;margin-top:4px;padding:10px;border:1px solid #CFD8DC;border-radius:9px;font:inherit;"></label>' +
         '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' +
@@ -475,7 +475,13 @@
     panel.innerHTML = managerOpen ? ownerPanelMarkup() : '';
     var loginButton = document.getElementById('tvOwnerLoginBtn');
     if (loginButton) loginButton.addEventListener('click', function () {
-      if (window.HafezOwnerAuth) window.HafezOwnerAuth.requestMagicLink('tvOwnerAuthStatus');
+      if (!window.HafezOwnerAuth || !window.HafezOwnerAuth.requestPasswordLogin) return notify('خدمة تسجيل دخول المالك غير جاهزة.');
+      window.HafezOwnerAuth.requestPasswordLogin('tvOwnerAuthStatus').then(async function (ok) {
+        if (!ok) return;
+        try { verifiedOwnerSession = await window.HafezOwnerAuth.getVerifiedSession(); } catch (_) { verifiedOwnerSession = null; }
+        renderOwnerPanel();
+        renderChannels();
+      });
     });
     var logoutButton = document.getElementById('tvOwnerLogoutBtn');
     if (logoutButton) logoutButton.addEventListener('click', async function () {
@@ -496,7 +502,7 @@
   async function ownerSession() {
     if (!ownerRole() || !window.HafezOwnerAuth) return null;
     verifiedOwnerSession = await window.HafezOwnerAuth.getVerifiedSession();
-    if (!verifiedOwnerSession) throw new Error('أرسلي رابط التحقق إلى بريد المالك وافتحيه أولًا.');
+    if (!verifiedOwnerSession) throw new Error('سجّلي دخول الإدارة بكلمة المرور أولًا.');
     return verifiedOwnerSession;
   }
 
